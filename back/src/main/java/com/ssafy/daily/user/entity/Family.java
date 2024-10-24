@@ -1,6 +1,5 @@
-package com.ssafy.daily.reward.entity;
+package com.ssafy.daily.user.entity;
 
-import com.ssafy.daily.user.entity.Member;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -10,19 +9,17 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class EarnedSticker {
+public class Family {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private int id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id", nullable = false)
-    private Member member;
+    @Column(nullable = false)
+    private String email;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sticker_id", nullable = false)
-    private Sticker sticker;
+    @Column(nullable = false)
+    private String password;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
