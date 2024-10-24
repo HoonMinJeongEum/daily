@@ -1,8 +1,11 @@
-package com.ssafy.daily.reward.entity;
+package com.ssafy.daily.diary.entity;
 
-import com.ssafy.daily.user.entity.Member;
+import com.ssafy.daily.user.entity.Family;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
@@ -10,19 +13,22 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class EarnedSticker {
+public class DiaryComment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private int id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id", nullable = false)
-    private Member member;
+    @JoinColumn(name = "family_id", nullable = false)
+    private Family family;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sticker_id", nullable = false)
-    private Sticker sticker;
+    @JoinColumn(name = "diary_id", nullable = false)
+    private Diary diary;
+
+    @Column(nullable = false)
+    private String comment;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

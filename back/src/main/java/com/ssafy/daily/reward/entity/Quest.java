@@ -7,22 +7,28 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class EarnedSticker {
+public class Quest {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private int id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sticker_id", nullable = false)
-    private Sticker sticker;
+    @Column(nullable = false)
+    private boolean diaryStatus;
+
+    @Column(nullable = false)
+    private boolean catchStatus;
+
+    @Column(nullable = false)
+    private boolean wordStatus;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

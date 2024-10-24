@@ -1,20 +1,18 @@
 package com.ssafy.daily.reward.service;
 
-
+import com.ssafy.daily.common.Content;
 import com.ssafy.daily.reward.dto.BuyStickerRequest;
-import com.ssafy.daily.reward.dto.StatusResponse;
 import com.ssafy.daily.reward.dto.EarnedStickerResponse;
 import com.ssafy.daily.reward.dto.StickerResponse;
 import com.ssafy.daily.reward.entity.*;
-import com.ssafy.daily.reward.entity.id.EarnedStickerId;
 import com.ssafy.daily.reward.repository.EarnedStickerRepository;
-import com.ssafy.daily.reward.repository.MemberRepository;
 import com.ssafy.daily.reward.repository.ShellRepository;
 import com.ssafy.daily.reward.repository.StickerRepository;
+import com.ssafy.daily.user.entity.Member;
+import com.ssafy.daily.user.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -52,57 +50,53 @@ public class StickerService {
     }
 
     @Transactional
-    public StatusResponse buySticker(BuyStickerRequest request) {
+    public String buySticker(BuyStickerRequest request) {
 
         // memberId 가져오기
         int memberId = 1; // 임의 데이터
 
         // 멤버 있는지 확인
-        Member member = memberRepository.findById(memberId).orElseThrow();
-    
-        // 스티커 있는지 확인
-        Sticker sticker = stickerRepository.findById(request.getStickerId()).orElseThrow();
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new RuntimeException("멤버를 찾을 수 없습니다."));
 
-        // 복합 키 객체 생성
-        EarnedStickerId earnedStickerId = new EarnedStickerId(sticker.getId(), member.getId());
+        // 스티커 있는지 확인
+        Sticker sticker = stickerRepository.findById(request.getStickerId())
+                .orElseThrow(() -> new RuntimeException("스티커를 찾을 수 없습니다."));
 
         // 멤버가 스티커를 이미 가지고 있는지 확인
-        boolean exists = earnedStickerRepository.existsById(earnedStickerId);
-
-        // 스티커를 이미 보유하고 있을 때
-        if (exists) {
-            return new StatusResponse(400, "해당 스티커를 이미 보유하고 있습니다.");
-        }
+//        boolean exists = earnedStickerRepository.existsById(memberId);
+//        if (exists) {
+//            return "해당 스티커를 이미 보유하고 있습니다.";
+//        }
 
         // 조개가 충분한지 확인
-        // shellLog 리스트에서 각 로그의 값을 합산하여 조개 수량을 계산하는 예시
-        int shellCount = member.getShellLog()
-                .stream()
-                .mapToInt(Shell::getStock)  // 각 Shell 로그의 stock 값을 가져옴
-                .sum();  // 합산하여 조개 수량 계산
+        int shellCount = calculateTotalStockForMember(memberId);
         if (shellCount < sticker.getPrice()) {
-            return new StatusResponse(400, "조개 수량이 부족합니다.");
+            return "조개 수량이 부족합니다.";
         }
 
-        // EarnedSticker 엔티티 생성 및 저장
-        EarnedSticker earnedSticker = EarnedSticker.builder()
-                .stickerId(sticker.getId())
-                .memberId(member.getId())
-                .createAt(LocalDateTime.now())
-                .build();
-        earnedStickerRepository.save(earnedSticker);
+//        // EarnedSticker 엔티티 생성 및 저장
+//        EarnedSticker earnedSticker = EarnedSticker.builder()
+//                .sticker(sticker)
+//                .memberId(member.getId())
+//                .createAt(LocalDateTime.now())
+//                .build();
+//        earnedStickerRepository.save(earnedSticker);
 
         // Shell 로그 남기기 (조개 수량 차감 로그)
         Shell shellLog = Shell.builder()
                 .member(member)
-                .stock((byte) (-sticker.getPrice()))  // 스티커 가격만큼 차감
-                .content(Content.STICKER)  // 스티커
-                .lastUpdated(LocalDateTime.now())  // 로그 시간 기록
+                .stock((byte) (-sticker.getPrice()))
+                .content(Content.STICKER)
+                .lastUpdated(LocalDateTime.now())
                 .build();
-        shellRepository.save(shellLog);  // 로그 저장
-        return new StatusResponse(200, "스티커가 정상적으로 구매되었습니다.");
+        shellRepository.save(shellLog);
+
+        return "스티커가 정상적으로 구매되었습니다.";
     }
 
-
-
+    public int calculateTotalStockForMember(int memberId) {
+        Integer totalStock = shellRepository.findTotalStockByMemberId(memberId);
+        return totalStock != null ? totalStock : 0;  // null인 경우 0으로 처리
+    }
 }

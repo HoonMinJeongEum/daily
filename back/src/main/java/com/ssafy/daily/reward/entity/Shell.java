@@ -1,13 +1,13 @@
 package com.ssafy.daily.reward.entity;
 
+import com.ssafy.daily.common.Content;
+import com.ssafy.daily.user.entity.Member;
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@ToString
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -17,9 +17,9 @@ public class Shell {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @ManyToOne  // 여러 Shell이 하나의 Member에 속함
-    @JoinColumn(name = "member_id")  // Shell 테이블에 외래 키로 저장
-    private Member member;  // Member와의 다대일 관계
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id", nullable = false)
+    private Member member;
 
     @Column(nullable = false)
     private byte stock;
@@ -31,4 +31,8 @@ public class Shell {
     @Column(nullable = false, updatable = false)
     private LocalDateTime lastUpdated;
 
+    @PrePersist
+    public void prePersist() {
+        this.lastUpdated = LocalDateTime.now();
+    }
 }
