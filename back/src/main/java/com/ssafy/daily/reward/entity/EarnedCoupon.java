@@ -27,14 +27,10 @@ public class EarnedCoupon {
     @JoinColumn(name = "coupon_id", nullable = false)
     private Coupon coupon;
 
-    @Column(updatable = false)
-    private LocalDateTime useDate;
+    @Column
+    private LocalDateTime usedAt;
 
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @PrePersist
-    public void prePersist() {
-        this.createdAt = LocalDateTime.now();
+    public void updateUsedAt(LocalDateTime usedAt) {
+        this.usedAt = usedAt;
     }
 }

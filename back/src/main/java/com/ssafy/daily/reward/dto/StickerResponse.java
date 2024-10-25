@@ -2,7 +2,6 @@ package com.ssafy.daily.reward.dto;
 
 import com.ssafy.daily.reward.entity.Sticker;
 import lombok.Data;
-import lombok.Getter;
 
 @Data
 public class StickerResponse {
