@@ -17,7 +17,7 @@ import androidx.compose.ui.platform.LocalContext
 // Dark theme color scheme
 private val DarkColorScheme = darkColorScheme(
     primary = PastelNavy,
-    secondary = Black,
+    secondary = PastelSkyBlue,
     background = PastelSkyBlue,
     surface = DeepPastelBlue,
     error = PastelSkyBlue,
@@ -31,7 +31,7 @@ private val DarkColorScheme = darkColorScheme(
 // Light theme color scheme
 private val LightColorScheme = lightColorScheme(
     primary = PastelNavy,
-    secondary = Black,
+    secondary = PastelSkyBlue,
     background = PastelYellow,
     surface = White,
     error = PastelSkyBlue,
@@ -42,6 +42,7 @@ private val LightColorScheme = lightColorScheme(
     onError = Black
 )
 
+//색상은 import 따로 안하고 MaterialTheme.colorScheme.primary 이런식으로 사용
 @Composable
 fun DiaryTabletTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -59,7 +60,7 @@ fun DiaryTabletTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography, // 정의한 Typography 사용
+        typography = MyTypography, // 정의한 Typography 사용
         content = content
     )
 }

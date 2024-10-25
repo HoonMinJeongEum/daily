@@ -13,11 +13,11 @@ val myFontFamily = FontFamily(
     Font(R.font.laundry_bold)
 )
 // Set of Material typography styles to start with
-val Typography = Typography(
+val MyTypography = Typography(
     bodyLarge = TextStyle(
         fontFamily = myFontFamily,
         fontWeight = FontWeight.Normal,
-        fontSize = 16.sp
+        fontSize = 40.sp
     )
 )
     /* Other default text styles to override
