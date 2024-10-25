@@ -3,6 +3,7 @@ package com.ssafy.daily.reward.entity;
 import com.ssafy.daily.user.entity.Family;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.DynamicUpdate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -26,11 +27,18 @@ public class Coupon {
     @Column(nullable = false)
     private int price;
 
+    @Column
+    private LocalDateTime purchasedAt;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
+    }
+
+    public void updatePurchasedAt(LocalDateTime purchasedAt) {
+        this.purchasedAt = purchasedAt;
     }
 }

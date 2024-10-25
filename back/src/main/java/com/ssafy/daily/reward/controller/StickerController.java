@@ -3,7 +3,6 @@ package com.ssafy.daily.reward.controller;
 import com.ssafy.daily.reward.dto.BuyStickerRequest;
 import com.ssafy.daily.reward.service.StickerService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,13 +25,8 @@ public class StickerController {
 
     @PostMapping("/buy")
     public ResponseEntity<String> buySticker(@RequestBody BuyStickerRequest request) {
-        String result = stickerService.buySticker(request);
+        stickerService.buySticker(request);
 
-        // 결과에 따라 응답 처리
-        if (result.equals("스티커가 정상적으로 구매되었습니다.")) {
-            return ResponseEntity.ok(result);  // 200 OK
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);  // 400 Bad Request
-        }
+        return ResponseEntity.ok("스티커가 정상적으로 구매되었습니다.");
     }
 }

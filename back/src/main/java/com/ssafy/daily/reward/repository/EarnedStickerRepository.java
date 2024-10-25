@@ -10,4 +10,7 @@ public interface EarnedStickerRepository extends JpaRepository<EarnedSticker, Lo
 
     // memberId로 EarnedSticker 조회하는 메서드
     List<EarnedSticker> findByMemberId(int memberId);
+
+    // memberId와 stickerId로 EarnedSticker 존재 여부 확인하는 메서드
+    boolean existsByMemberIdAndStickerId(int memberId, long stickerId);
 }
