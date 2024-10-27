@@ -20,7 +20,7 @@ public class AlarmController {
         return ResponseEntity.ok("알림 토큰이 정상적으로 등록되었습니다.");
     }
 
-    // 토큰 저장
+    // 알림 조회
     @GetMapping("/list")
     public ResponseEntity<?> getAlarms() {
         return ResponseEntity.ok(alarmService.getAlarms());
