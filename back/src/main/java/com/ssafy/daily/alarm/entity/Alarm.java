@@ -24,6 +24,9 @@ public class Alarm {
     private FCMToken fcmToken;
 
     @Column(nullable = false)
+    private String name;
+
+    @Column(nullable = false)
     private int titleId;
 
     @Column(nullable = false)

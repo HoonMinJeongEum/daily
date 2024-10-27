@@ -11,6 +11,8 @@ public class AlarmResponse {
 
     private final int titleId;
 
+    private final String name;
+
     private final String title;
 
     private final String body;
@@ -22,6 +24,7 @@ public class AlarmResponse {
     public AlarmResponse(Alarm alarm) {
         this.id = alarm.getId();
         this.titleId = alarm.getTitleId();
+        this.name = alarm.getName();
         this.title = alarm.getTitle();
         this.body = alarm.getBody();
         this.createdAt = alarm.getCreatedAt();

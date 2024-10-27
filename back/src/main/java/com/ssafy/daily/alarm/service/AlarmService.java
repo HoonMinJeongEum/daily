@@ -53,20 +53,21 @@ public class AlarmService {
     /*
     titleId : 수락이나 확인 누를 시 이동할 페이지에 필요한 id (그림 일기의 id or 그림 퀴즈 sessionId)
     userId : 받는 사람의 id(familyId or memberId)
+    name : 보내는 사람의 이름
     role : 받는 사람의 role(PARENT or CHILD)
     title : 알림 제목 (그림 일기 or 그림 퀴즈)
-    body : 알림 내용 ex) 자녀1 님의 그림 퀴즈 요청
+    body : 알림 내용 ex) 그림 퀴즈 요청
     */
-    public void sendNotification(int titleId, int userId, Role role, String title, String body) throws Exception {
+    public void sendNotification(String name, int titleId, int toId, Role role, String title, String body) throws Exception {
         // 토큰 조회
-        FCMToken fcmToken = getToken(userId, role);
+        FCMToken fcmToken = getToken(toId, role);
 
         // 알림 메시지
         String token = fcmToken.getToken();
         Message message = Message.builder()
                 .setToken(token)
                 .setNotification(Notification.builder()
-                        .setTitle(title)
+                        .setTitle(name + " 님의 " + title)
                         .setBody(body)
                         .build())
                 .build();
@@ -75,7 +76,7 @@ public class AlarmService {
         FirebaseMessaging.getInstance().send(message);
 
         // 알림 저장
-        saveAlarm(titleId, fcmToken, title, body);
+        saveAlarm(name, titleId, fcmToken, title, body);
     }
 
     // 알림 조회
@@ -111,12 +112,13 @@ public class AlarmService {
     }
 
     // 알림 저장
-    private void saveAlarm(int titleId, FCMToken fcmToken, String title, String body) {
+    private void saveAlarm(String name, int titleId, FCMToken fcmToken, String title, String body) {
         Alarm alarm = Alarm.builder()
                 .titleId(titleId)
                 .fcmToken(fcmToken)
                 .title(title)
                 .body(body)
+                .name(name)
                 .build();
         alarmRepository.save(alarm);
     }
