@@ -16,7 +16,7 @@ public class Family {
     private int id;
 
     @Column(nullable = false)
-    private String email;
+    private String username;
 
     @Column(nullable = false)
     private String password;
