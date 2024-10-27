@@ -27,7 +27,7 @@ public class CouponController {
         couponService.deleteCoupon(couponId);
         return ResponseEntity.ok("쿠폰이 정상적으로 삭제되었습니다.");
     }
-    
+
     // 쿠폰 리스트 조회
     @GetMapping
     public ResponseEntity<?> getCoupons() {
