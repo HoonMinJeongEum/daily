@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.diarytablet.R
@@ -71,5 +72,17 @@ fun MissionRow(mission: MissionItem) {
             color = MaterialTheme.colorScheme.onSurface // 텍스트 색상
         )
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun previewMissionBar() {
+    MissionBar(
+        missions = listOf( // 예시 미션 데이터 추가
+            MissionItem("미션 1", isSuccess = true),
+            MissionItem("미션 2", isSuccess = false),
+            MissionItem("미션 3", isSuccess = true)
+        )
+    )
 }
 
