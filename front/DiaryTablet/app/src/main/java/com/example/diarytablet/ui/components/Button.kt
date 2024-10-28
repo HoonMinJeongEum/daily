@@ -27,8 +27,8 @@ enum class BasicButtonColor {
     NORMAL, SEASHELL;
 
     fun getBackgroundColor(): Color = when (this) {
-        NORMAL -> PastelNavy
-        SEASHELL -> PastelSkyBlue
+        NORMAL -> PastelSkyBlue
+        SEASHELL -> PastelNavy
     }
 
     fun getTextColor(): Color = White
@@ -38,7 +38,7 @@ enum class BasicButtonShape {
     ROUNDED, FLAT;
 
     fun getShape(): RoundedCornerShape = when (this) {
-        ROUNDED -> RoundedCornerShape(16.dp)
+        ROUNDED -> RoundedCornerShape(50.dp)
         FLAT -> RoundedCornerShape(16.dp)
     }
 }

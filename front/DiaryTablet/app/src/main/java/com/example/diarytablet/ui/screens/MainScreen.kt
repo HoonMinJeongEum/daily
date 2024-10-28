@@ -11,20 +11,16 @@ import com.example.diarytablet.R
 import com.example.diarytablet.ui.components.BasicButton
 import com.example.diarytablet.ui.components.BlockButton
 import com.example.diarytablet.ui.components.ButtonType
-import com.example.diarytablet.ui.components.
 import com.example.diarytablet.ui.components.MissionBar
 import com.example.diarytablet.ui.components.MissionItem
+import com.example.diarytablet.ui.theme.BackgroundPlacement
 import com.example.diarytablet.ui.theme.BackgroundType
 import com.example.diarytablet.viewmodel.MainViewModel
 
 @Composable
 fun MainScreen(viewModel: MainViewModel,backgroundType: BackgroundType = BackgroundType.DEFAULT) {
-    // 배경 이미지 설정
-    Image(
-        painter = painterResource(id = backgroundType.getBackgroundResource()),
-        contentDescription = null,
-        modifier = Modifier.fillMaxSize()
-    )
+    BackgroundPlacement(backgroundType = backgroundType)
+
 
     // 전체 화면을 채우는 Box
     Box(

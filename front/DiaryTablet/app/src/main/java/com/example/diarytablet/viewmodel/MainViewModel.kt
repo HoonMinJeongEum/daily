@@ -3,16 +3,15 @@ package com.example.diarytablet.viewmodel
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.diarytablet.ui.components.MissionItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    // 필요한 종속성을 주입합니다. 예를 들어, Repository나 UseCase.
 ) : ViewModel() {
 
-    // UI 상태를 정의합니다. 예: 미션 목록, 사용자 데이터 등.
     private val _missions = mutableStateListOf<MissionItem>()
     val missions: List<MissionItem> get() = _missions
 
