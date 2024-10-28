@@ -36,6 +36,7 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	implementation 'com.google.firebase:firebase-admin:9.4.1'
+	implementation 'io.livekit:livekit-server:0.8.2'
 }
 
 tasks.named('test') {
