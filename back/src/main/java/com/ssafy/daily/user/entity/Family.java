@@ -28,4 +28,8 @@ public class Family {
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
     }
+
+    public void createFamily(String username) {
+        this.username = username;
+    }
 }

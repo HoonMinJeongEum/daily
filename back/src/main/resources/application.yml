@@ -2,3 +2,5 @@
 spring:
   profiles:
     active: secret
+  jwt:
+    secret: janguhwangubaekguningubangubbangu
