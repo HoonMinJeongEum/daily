@@ -16,7 +16,7 @@ public class Family {
     private int id;
 
     @Column(nullable = false)
-    private String email;
+    private String username;
 
     @Column(nullable = false)
     private String password;
@@ -27,5 +27,9 @@ public class Family {
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
+    }
+
+    public void createFamily(String username) {
+        this.username = username;
     }
 }
