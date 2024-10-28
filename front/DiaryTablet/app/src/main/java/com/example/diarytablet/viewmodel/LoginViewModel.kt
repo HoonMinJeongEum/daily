@@ -16,6 +16,10 @@ class LoginViewModel @Inject constructor(
 
     fun login(username: String, password: String) {
         _loginResult.value = userStore.login(username, password)
-        // 여기서 로그인 실패에 대한 추가 로직을 구현할 수 있습니다.
+        if (_loginResult.value) {
+            // 예: 사용자 정보를 가져오거나, 다음 화면으로 전환하는 로직을 추가
+        } else {
+            // 로그인 실패 시 처리할 로직 추가
+        }
     }
 }

@@ -53,12 +53,12 @@ fun BasicButton(
     imageResId: Int? = null // 이미지를 선택적으로 받음
 ) {
     val buttonShape = BasicButtonShape.ROUNDED
-    val buttonColor = if (imageResId != null) BasicButtonColor.NORMAL else BasicButtonColor.SEASHELL
+    val buttonColor = if (imageResId != null && imageResId != 11) BasicButtonColor.NORMAL else BasicButtonColor.SEASHELL
     val backgroundColor = buttonColor.getBackgroundColor()
     val contentColor = buttonColor.getTextColor()
     val image = when {
-        buttonColor == BasicButtonColor.SEASHELL -> R.drawable.jogae
         imageResId == 11 -> null
+        buttonColor == BasicButtonColor.SEASHELL -> R.drawable.jogae
         else -> imageResId
     }
 

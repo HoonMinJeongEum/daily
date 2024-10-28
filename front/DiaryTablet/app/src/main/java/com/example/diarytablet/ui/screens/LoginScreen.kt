@@ -1,11 +1,7 @@
-package com.example.diarytablet.ui.screens
-
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -15,20 +11,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.diarytablet.ui.theme.BackgroundPlacement
-import com.example.diarytablet.ui.theme.BackgroundType
-import com.example.diarytablet.viewmodel.LoginViewModel
 import com.example.diarytablet.R
 import com.example.diarytablet.datastore.UserStore
 import com.example.diarytablet.ui.components.BasicButton
+import com.example.diarytablet.ui.theme.BackgroundPlacement
+import com.example.diarytablet.ui.theme.BackgroundType
+import com.example.diarytablet.viewmodel.LoginViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(viewModel: LoginViewModel, onLoginSuccess: () -> Unit, backgroundType: BackgroundType = BackgroundType.DEFAULT) {
     var username by remember { mutableStateOf("") }
@@ -38,87 +34,116 @@ fun LoginScreen(viewModel: LoginViewModel, onLoginSuccess: () -> Unit, backgroun
     Box(
         modifier = Modifier
             .fillMaxSize()
-
     ) {
         Image(
-            painter = painterResource(id = R.drawable.logo), // 여기에 로고 리소스 ID를 넣으세요.
+            painter = painterResource(id = R.drawable.logo),
             contentDescription = "Logo",
             modifier = Modifier
-                .size(254.dp, 153.dp) // 크기 설정
-                .offset(x = 511.dp, y = 79.dp) // 위치 조정
+                .size(254.dp, 153.dp)
+                .offset(x = 511.dp, y = 79.dp)
         )
 
         Column(
             modifier = Modifier
                 .align(Alignment.Center)
-                .padding(20.dp), // 여백 조정
+                .width(560.dp)
+                .padding(20.dp),
             verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.Start
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 사용자 이름 텍스트 필드
-            TextField(
-                value = username,
-                onValueChange = { username = it },
-                placeholder = {
-                    Text("아이디", color = Color.White) // 플레이스홀더 텍스트 색상
-                },
+            // Username Field with Background Image
+            Box(
+                contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(106.dp) // 높이 설정
-                    .padding(vertical = 5.dp) // 위 아래 여백
-                    .background(
-                        color = Color.White.copy(alpha = 0.85f),
-                        shape = RoundedCornerShape(30.dp)
-                    )
-                    .shadow(2.dp, shape = RoundedCornerShape(30.dp)),
-                colors = TextFieldDefaults.textFieldColors(
-//                    backgroundColor = Color.Transparent, // 배경을 투명하게 설정
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent
-                )
-            )
+                    .height(120.dp)
+                    .padding(vertical = 5.dp)
 
-            // 비밀번호 텍스트 필드
-            TextField(
-                value = password,
-                onValueChange = { password = it },
-                placeholder = {
-                    Text("비밀번호", color = Color.White) // 플레이스홀더 텍스트 색상
-                },
-                visualTransformation = PasswordVisualTransformation(),
+            ) {
+                // Image behind TextField
+                Image(
+                    painter = painterResource(id = R.drawable.login),
+                    contentDescription = "아이디 아이콘",
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentScale = ContentScale.FillBounds
+                )
+
+                // TextField in front of the Image
+                TextField(
+                    value = username,
+                    onValueChange = { username = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 130.dp), // Adjust padding for text alignment
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent, // Remove focused underline
+                        unfocusedIndicatorColor = Color.Transparent
+                    )
+                )
+            }
+
+            // Password Field with Background Image
+            Box(
+                contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(106.dp) // 높이 설정
-                    .padding(vertical = 5.dp) // 위 아래 여백
-                    .background(
-                        color = Color.White.copy(alpha = 0.85f),
-                        shape = RoundedCornerShape(30.dp)
-                    )
-                    .shadow(2.dp, shape = RoundedCornerShape(30.dp)),
-                colors = TextFieldDefaults.textFieldColors(
-//                    backgroundColor = Color.Transparent, // 배경을 투명하게 설정
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent
+                    .height(120.dp)
+                    .padding(vertical = 5.dp)
+            ) {
+                // Image behind TextField
+                Image(
+                    painter = painterResource(id = R.drawable.password),
+                    contentDescription = "비밀번호 아이콘",
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentScale = ContentScale.FillBounds
                 )
-            )
-            // 로그인 버튼
+
+                // TextField in front of the Image
+                TextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 130.dp), // Adjust padding for text alignment
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent, // Remove focused underline
+                        unfocusedIndicatorColor = Color.Transparent
+                    )
+                )
+            }
+
+            // Login Button
             BasicButton(
                 text = "로그인",
-                onClick = {},
+                onClick = {
+                    viewModel.login(username, password)
+                    // 로그인 결과에 따라 행동 결정
+                    if (viewModel.loginResult.value) {
+                        onLoginSuccess() // 성공 시 호출
+                    } else {
+                        // 실패 시 알림 표시
+                    }
+                },
                 imageResId = 11
-
             )
         }
     }
 }
+
 class FakeUserStore : UserStore {
     override fun login(username: String, password: String): Boolean {
-        // 로그인 로직을 여기에 구현, 예시로 항상 true를 반환
         return username == "test" && password == "password"
     }
 }
 
-@Preview
+@Preview(showBackground = true, widthDp = 1280, heightDp = 800)
 @Composable
 fun previewLogin() {
     val fakeUserStore = FakeUserStore()
@@ -126,7 +151,7 @@ fun previewLogin() {
 
     LoginScreen(
         viewModel = viewModel,
-        onLoginSuccess = { } ,
+        onLoginSuccess = { },
         backgroundType = BackgroundType.DEFAULT
     )
 }
