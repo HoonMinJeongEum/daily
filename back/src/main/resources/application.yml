@@ -4,3 +4,25 @@ spring:
     active: secret
   jwt:
     secret: janguhwangubaekguningubangubbangu
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/test
+    username: root
+    password: ssafy
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  # JPA 설정
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+    open-in-view: true
+
+# OpenVidu 설정
+livekit:
+  api:
+    key: devkey
+    secret: secret

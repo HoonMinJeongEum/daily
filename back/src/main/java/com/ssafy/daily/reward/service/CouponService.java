@@ -152,15 +152,12 @@ public class CouponService {
         // 쿠폰 사용으로 변경
         earnedCoupon.updateUsedAt(LocalDateTime.now());
         earnedCouponRepository.save(earnedCoupon);
-        
-        // 부모에게 사용 알림 보내기
     }
 
+    // 보유한 조개 수량 계산
     public int calculateTotalStockForMember(int memberId) {
         Integer totalStock = shellRepository.findTotalStockByMemberId(memberId);
         return totalStock != null ? totalStock : 0;
     }
-
-
 
 }
