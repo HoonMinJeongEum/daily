@@ -4,28 +4,23 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.diarytablet.R
-
-
-// 미션 항목 데이터 클래스
+import com.example.diarytablet.ui.theme.MyTypography
 data class MissionItem(
     val text: String,
     val isSuccess: Boolean
@@ -36,13 +31,40 @@ fun MissionBar(
     modifier: Modifier = Modifier,
     missions: List<MissionItem> // 미션 리스트
 ) {
-    Column(
+    Surface(
         modifier = modifier
-            .fillMaxWidth()
+            .wrapContentWidth()
             .padding(16.dp)
+            .height(116.dp), // 원하는 높이 설정
+        shape = RoundedCornerShape(16.dp), // 모서리 둥글게 설정
+        color = Color.Transparent // 투명한 배경색 설정
     ) {
-        for (mission in missions) {
-            MissionRow(mission)
+        // missionContainer 배경 이미지
+        Image(
+            painter = painterResource(id = R.drawable.missioncontainer),
+            contentDescription = null,
+            modifier = Modifier.fillMaxWidth(), // 배경 이미지가 컨테이너 너비에 맞게 조정
+            contentScale = ContentScale.FillBounds
+        )
+
+        Row(
+            modifier = Modifier
+                .wrapContentWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp), // 여백 설정
+            horizontalArrangement = Arrangement.spacedBy(8.dp), // 각 MissionRow 간 간격
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                "오늘의 미션",
+                        style = TextStyle(
+                        fontSize = 25.sp,
+                fontFamily = MyTypography.bodyLarge.fontFamily,
+                fontWeight = MyTypography.bodyLarge.fontWeight
+            )
+            )
+            for (mission in missions) {
+                MissionRow(mission)
+            }
         }
     }
 }
@@ -51,25 +73,38 @@ fun MissionBar(
 fun MissionRow(mission: MissionItem) {
     Row(
         modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp)
+            .height(40.dp)
+            .wrapContentWidth()
             .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(8.dp))
-            .border(BorderStroke(1.dp, Color.Gray)) // 테두리 색상
-            .padding(16.dp), // 패딩
+            .padding(horizontal = 8.dp), // 가로 여백 조정
         verticalAlignment = Alignment.CenterVertically
     ) {
         // 체크 표시 아이콘
         Image(
-            painter = painterResource(id = if (mission.isSuccess) R.drawable.check_icon else R.drawable.uncheck_icon), // 성공/실패에 따라 아이콘 변경
+            painter = painterResource(id = if (mission.isSuccess) R.drawable.check_icon else R.drawable.uncheck_icon),
             contentDescription = null,
-            modifier = Modifier.size(24.dp) // 아이콘 크기
+            modifier = Modifier.size(30.dp)
         )
-        Spacer(modifier = Modifier.width(8.dp)) // 아이콘과 텍스트 사이 공간
+        Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = mission.text,
-            fontSize = 16.sp,
-            color = MaterialTheme.colorScheme.onSurface // 텍스트 색상
+            style = TextStyle(
+                fontSize = 22.sp,
+                fontFamily = MyTypography.bodyLarge.fontFamily,
+                fontWeight = MyTypography.bodyLarge.fontWeight
+            )
         )
     }
 }
 
+@Preview(showBackground = true)
+@Composable
+fun previewMissionBar() {
+    MissionBar(
+        missions = listOf(
+            MissionItem("미션 111111111111111111", isSuccess = true),
+            MissionItem("미션 2", isSuccess = false),
+            MissionItem("미션 3", isSuccess = true)
+        )
+    )
+}
