@@ -30,6 +30,7 @@ public class CouponService {
     private final MemberRepository memberRepository;
     private final FamilyRepository familyRepository;
     private final ShellRepository shellRepository;
+    private final ShellService shellService;
 
     // 쿠폰 등록
     @Transactional
@@ -82,7 +83,7 @@ public class CouponService {
 
     // 쿠폰 구매
     @Transactional
-    public void buyCoupon(CustomUserDetails userDetails, BuyCouponRequest request) {
+    public int buyCoupon(CustomUserDetails userDetails, BuyCouponRequest request) {
         // 멤버 있는지 확인
         int memberId =  userDetails.getMember().getId();
         Member member = memberRepository.findById(memberId)
@@ -98,7 +99,7 @@ public class CouponService {
         }
 
         // 조개가 충분한지 확인
-        int shellCount = calculateTotalStockForMember(memberId);
+        int shellCount = shellService.getUserShell(memberId);
         if (shellCount < coupon.getPrice()) {
             throw new InsufficientFundsException("재화가 부족합니다.");
         }
@@ -122,6 +123,8 @@ public class CouponService {
                 .lastUpdated(LocalDateTime.now())
                 .build();
         shellRepository.save(shellLog);
+
+        return shellService.getUserShell(memberId);
     }
 
     // 사용자가 보유한 쿠폰 조회
@@ -155,10 +158,13 @@ public class CouponService {
         earnedCouponRepository.save(earnedCoupon);
     }
 
-    // 보유한 조개 수량 계산
-    public int calculateTotalStockForMember(int memberId) {
-        Integer totalStock = shellRepository.findTotalStockByMemberId(memberId);
-        return totalStock != null ? totalStock : 0;
-    }
+    // 자식들 쿠폰 조회
+    public List<ChildCouponResponse> getChildCoupons(CustomUserDetails userDetails) {
+        int familyId = userDetails.getFamily().getId();
 
+        return memberRepository.findByFamilyId(familyId).stream()
+                .flatMap(member -> earnedCouponRepository.findByMemberId(member.getId()).stream())
+                .map(ChildCouponResponse::new)
+                .collect(Collectors.toList());
+    }
 }

@@ -12,13 +12,10 @@ import com.ssafy.daily.reward.repository.EarnedStickerRepository;
 import com.ssafy.daily.reward.repository.ShellRepository;
 import com.ssafy.daily.reward.repository.StickerRepository;
 import com.ssafy.daily.user.dto.CustomUserDetails;
-import com.ssafy.daily.user.entity.Family;
 import com.ssafy.daily.user.entity.Member;
 import com.ssafy.daily.user.repository.FamilyRepository;
 import com.ssafy.daily.user.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
@@ -34,6 +31,7 @@ public class StickerService {
     private final FamilyRepository familyRepository;
     private final ShellRepository shellRepository;
     private final EarnedStickerRepository earnedStickerRepository;
+    private final ShellService shellService;
 
     public List<EarnedStickerResponse> getUserSticker(CustomUserDetails userDetails) {
 
@@ -64,7 +62,7 @@ public class StickerService {
     }
 
     @Transactional
-    public void buySticker(CustomUserDetails userDetails, BuyStickerRequest request) {
+    public int buySticker(CustomUserDetails userDetails, BuyStickerRequest request) {
 
         // 멤버 있는지 확인
         int memberId = userDetails.getMember().getId();
@@ -82,7 +80,7 @@ public class StickerService {
         }
 
         // 조개가 충분한지 확인
-        int shellCount = calculateTotalStockForMember(memberId);
+        int shellCount = shellService.getUserShell(memberId);
         if (shellCount < sticker.getPrice()) {
             throw new InsufficientFundsException("재화 수량이 부족합니다.");
         }
@@ -102,10 +100,8 @@ public class StickerService {
                 .lastUpdated(LocalDateTime.now())
                 .build();
         shellRepository.save(shellLog);
+
+        return shellService.getUserShell(memberId);
     }
 
-    public int calculateTotalStockForMember(int memberId) {
-        Integer totalStock = shellRepository.findTotalStockByMemberId(memberId);
-        return totalStock != null ? totalStock : 0;
-    }
 }
