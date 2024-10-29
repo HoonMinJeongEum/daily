@@ -61,4 +61,9 @@ public class UserController {
                 .header("Authorization", "Bearer " + jwt)
                 .body("프로필 선택: " + memberId);
     }
+
+    @GetMapping("/main")
+    public ResponseEntity<?> getMainProfile(@AuthenticationPrincipal CustomUserDetails userDetails){
+        return ResponseEntity.ok(userService.getMainProfile(userDetails));
+    }
 }

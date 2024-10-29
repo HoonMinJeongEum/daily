@@ -1,10 +1,12 @@
 package com.ssafy.daily.user.service;
 
+import com.ssafy.daily.exception.QuestNotFoundException;
 import com.ssafy.daily.exception.UsernameAlreadyExistsException;
 import com.ssafy.daily.quiz.entity.Quiz;
 import com.ssafy.daily.quiz.repository.QuizRepository;
 import com.ssafy.daily.reward.entity.Quest;
 import com.ssafy.daily.reward.repository.QuestRepository;
+import com.ssafy.daily.reward.service.ShellService;
 import com.ssafy.daily.user.dto.*;
 import com.ssafy.daily.user.entity.Family;
 import com.ssafy.daily.user.entity.Member;
@@ -13,6 +15,7 @@ import com.ssafy.daily.user.jwt.JWTUtil;
 import com.ssafy.daily.user.repository.FamilyRepository;
 import com.ssafy.daily.user.repository.MemberRepository;
 import com.ssafy.daily.user.repository.RefreshRepository;
+import com.sun.tools.javac.Main;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +38,7 @@ public class UserService {
     private final QuestRepository questRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final JWTUtil jwtUtil;
+    private final ShellService shellService;
 
     public void checkExist(String username){
         Boolean isExist = familyRepository.existsByUsername(username);
@@ -136,4 +140,19 @@ public class UserService {
         refreshRepository.save(refreshEntity);
     }
 
+    public MainProfileResponse getMainProfile(CustomUserDetails userDetails) {
+        // img: Member 테이블
+        // diary & quiz & word status: quest 테이블
+        // shellCount: ShellService 에 getUserShell 갖다쓰기
+        int memberId = userDetails.getMemberId();
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new EmptyResultDataAccessException("해당 프로필을 찾을 수 없습니다.", 1));
+        Quest quest = questRepository.findByMemberId(memberId);
+        if (quest == null) {
+            throw new QuestNotFoundException("프로필에 해당하는 퀘스트를 찾을 수 없습니다.");
+        }
+        int shellCount = shellService.getUserShell(memberId);
+
+        return new MainProfileResponse(member, quest, shellCount);
+    }
 }
