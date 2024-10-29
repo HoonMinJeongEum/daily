@@ -123,13 +123,13 @@ fun LoginScreen(viewModel: LoginViewModel, onLoginSuccess: () -> Unit, backgroun
             BasicButton(
                 text = "로그인",
                 onClick = {
-                    viewModel.login(username, password)
-                    // 로그인 결과에 따라 행동 결정
-                    if (viewModel.loginResult.value) {
+                    viewModel.login(onSuccess = {
                         onLoginSuccess() // 성공 시 호출
-                    } else {
-                        // 실패 시 알림 표시
-                    }
+                    }, onErrorPassword = {
+                        // 비밀번호 오류 처리
+                    }, onError = {
+                        // 네트워크 오류 처리
+                    })
                 },
                 imageResId = 11
             )
@@ -137,21 +137,4 @@ fun LoginScreen(viewModel: LoginViewModel, onLoginSuccess: () -> Unit, backgroun
     }
 }
 
-class FakeUserStore : UserStore {
-    override fun login(username: String, password: String): Boolean {
-        return username == "test" && password == "password"
-    }
-}
 
-@Preview(showBackground = true, widthDp = 1280, heightDp = 800)
-@Composable
-fun previewLogin() {
-    val fakeUserStore = FakeUserStore()
-    val viewModel = LoginViewModel(userStore = fakeUserStore)
-
-    LoginScreen(
-        viewModel = viewModel,
-        onLoginSuccess = { },
-        backgroundType = BackgroundType.DEFAULT
-    )
-}
