@@ -11,6 +11,7 @@ import com.ssafy.daily.alarm.entity.FCMToken;
 import com.ssafy.daily.alarm.repository.AlarmRepository;
 import com.ssafy.daily.alarm.repository.FCMTokenRepository;
 import com.ssafy.daily.common.Role;
+import com.ssafy.daily.user.dto.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
@@ -25,11 +26,10 @@ public class AlarmService {
     private final AlarmRepository alarmRepository;
 
     // 토큰 저장
-    public void saveToken(SaveTokenRequest request) {
-        
-        // 임시 데이터
-        int id = 1;
-        Role role = Role.CHILD;
+    public void saveToken(CustomUserDetails userDetails, SaveTokenRequest request) {
+
+        int id = userDetails.getMember() == null ? userDetails.getFamily().getId() : userDetails.getMember().getId();
+        Role role = userDetails.getMember() == null ? Role.PARENT : Role.CHILD;
 
         // 기존 토큰 조회
         FCMToken existingToken = fcmTokenRepository.findByUserIdAndRole(id, role);
@@ -51,9 +51,9 @@ public class AlarmService {
 
     // 알림 전송
     /*
-    titleId : 수락이나 확인 누를 시 이동할 페이지에 필요한 id (그림 일기의 id or 그림 퀴즈 sessionId)
-    userId : 받는 사람의 id(familyId or memberId)
     name : 보내는 사람의 이름
+    titleId : 수락이나 확인 누를 시 이동할 페이지에 필요한 id (그림 일기의 id or 그림 퀴즈 sessionId)
+    toId : 받는 사람의 Id
     role : 받는 사람의 role(PARENT or CHILD)
     title : 알림 제목 (그림 일기 or 그림 퀴즈)
     body : 알림 내용 ex) 그림 퀴즈 요청
@@ -67,7 +67,7 @@ public class AlarmService {
         Message message = Message.builder()
                 .setToken(token)
                 .setNotification(Notification.builder()
-                        .setTitle(name + " 님의 " + title)
+                        .setTitle(title)
                         .setBody(body)
                         .build())
                 .build();
@@ -80,13 +80,12 @@ public class AlarmService {
     }
 
     // 알림 조회
-    public List<AlarmResponse> getAlarms() {
-        // 임시 데이터
-        Role role = Role.CHILD;
-        int userId = 1;
+    public List<AlarmResponse> getAlarms(CustomUserDetails userDetails) {
+        int id = userDetails.getMember() == null ? userDetails.getFamily().getId() : userDetails.getMember().getId();
+        Role role = userDetails.getMember() == null ? Role.PARENT : Role.CHILD;
         
         // 알림 조회
-        FCMToken fcmToken = getToken(userId, role);
+        FCMToken fcmToken = getToken(id, role);
         List<Alarm> list = alarmRepository.findByFcmTokenId(fcmToken.getId());
 
         return list.stream()

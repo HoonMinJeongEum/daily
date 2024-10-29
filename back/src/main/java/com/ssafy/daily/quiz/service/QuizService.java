@@ -1,10 +1,13 @@
 package com.ssafy.daily.quiz.service;
 
+import com.ssafy.daily.alarm.service.AlarmService;
+import com.ssafy.daily.common.Role;
 import com.ssafy.daily.quiz.dto.CheckWordRequest;
 import com.ssafy.daily.quiz.dto.RecommendWordResponse;
 import com.ssafy.daily.quiz.dto.SetWordRequest;
 import com.ssafy.daily.quiz.entity.Quiz;
 import com.ssafy.daily.quiz.repository.QuizRepository;
+import com.ssafy.daily.user.dto.CustomUserDetails;
 import com.ssafy.daily.word.entity.LearnedWord;
 import com.ssafy.daily.word.entity.Word;
 import com.ssafy.daily.word.repository.LearnedWordRepository;
@@ -18,10 +21,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RequiredArgsConstructor
 @Service
@@ -29,6 +29,7 @@ public class QuizService {
     private final WordRepository wordRepository;
     private final LearnedWordRepository learnedWordRepository;
     private final QuizRepository quizRepository;
+    private final AlarmService alarmService;
 
     @Value("${livekit.api.key}")
     private String LIVEKIT_API_KEY;
@@ -37,17 +38,21 @@ public class QuizService {
     private String LIVEKIT_API_SECRET;
 
     // 토큰 생성
-    public Map<String, String> createToken() {
-        // 임시 데이터
-        int familyId = 1;
+    public Map<String, String> createToken(CustomUserDetails userDetails) throws Exception {
+        int familyId = userDetails.getFamily().getId();
         String roomName = "quizRoom" + familyId;
-        String participantName = "임시 이름";
+        String participantName = (userDetails.getMember() != null)
+                ? userDetails.getMember().getName()
+                : userDetails.getFamily().getUsername();
 
         AccessToken token = new AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET);
 
         token.setName(participantName);
         token.setIdentity(participantName);
         token.addGrants(new RoomJoin(true), new RoomName(roomName));
+        if(userDetails.getMember() != null) {
+            alarmService.sendNotification(participantName, 0, familyId, Role.PARENT, "그림 퀴즈", "요청");
+        }
 
         return Map.of("token", token.toJwt());
     }
@@ -60,9 +65,8 @@ public class QuizService {
     }
     
     // 단어 추천
-    public List<RecommendWordResponse> recommendWord() {
-        // 임시 데이터
-        int memberId = 1;
+    public List<RecommendWordResponse> recommendWord(CustomUserDetails userDetails) {
+        int memberId = userDetails.getMember().getId();
         List<LearnedWord> learnedWords = learnedWordRepository.findByMemberId(memberId);
         List<RecommendWordResponse> recommendedWords = new ArrayList<>();
 
@@ -86,17 +90,16 @@ public class QuizService {
     }
 
     // 단어 설정
-    public void setWord(SetWordRequest request) {
-        // 임시 데이터
-        int familyId = 1;
+    public void setWord(CustomUserDetails userDetails, SetWordRequest request) {
+        int familyId = userDetails.getFamily().getId();
         Quiz quiz = quizRepository.findByFamilyId(familyId);
         quiz.updateWord(request.getWord());
         quizRepository.save(quiz);
     }
     
     // 단어 정답 확인
-    public boolean checkWord(CheckWordRequest request) {
-        int familyId = 1;
+    public boolean checkWord(CustomUserDetails userDetails, CheckWordRequest request) {
+        int familyId = userDetails.getFamily().getId();
         Quiz quiz = quizRepository.findByFamilyId(familyId);
         return request.getWord().equals(quiz.getWord());
     }

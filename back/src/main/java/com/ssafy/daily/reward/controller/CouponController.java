@@ -4,8 +4,10 @@ import com.ssafy.daily.reward.dto.AddCouponRequest;
 import com.ssafy.daily.reward.dto.BuyCouponRequest;
 import com.ssafy.daily.reward.dto.UseCouponRequest;
 import com.ssafy.daily.reward.service.CouponService;
+import com.ssafy.daily.user.dto.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
@@ -16,35 +18,35 @@ public class CouponController {
 
     // 쿠폰 등록
     @PostMapping
-    public ResponseEntity<?> addCoupon(@RequestBody AddCouponRequest request) {
-        couponService.addCoupon(request);
+    public ResponseEntity<?> addCoupon(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody AddCouponRequest request) {
+        couponService.addCoupon(userDetails, request);
         return ResponseEntity.ok("쿠폰이 정상적으로 등록되었습니다.");
     }
 
     // 쿠폰 삭제
     @DeleteMapping("{couponId}")
     public ResponseEntity<?> deleteCoupon(@PathVariable long couponId) {
-        couponService.deleteCoupon(couponId);
+        couponService.deleteCoupon( couponId);
         return ResponseEntity.ok("쿠폰이 정상적으로 삭제되었습니다.");
     }
 
     // 쿠폰 리스트 조회
     @GetMapping
-    public ResponseEntity<?> getCoupons() {
-        return ResponseEntity.ok(couponService.getCoupons());
+    public ResponseEntity<?> getCoupons(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(couponService.getCoupons(userDetails));
     }
 
     // 쿠폰 구매
     @PostMapping("/buy")
-    public ResponseEntity<?> buyCoupon(@RequestBody BuyCouponRequest request) {
-        couponService.buyCoupon(request);
+    public ResponseEntity<?> buyCoupon(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody BuyCouponRequest request) {
+        couponService.buyCoupon(userDetails, request);
         return ResponseEntity.ok("쿠폰이 정상적으로 구매되었습니다.");
     }
 
     // 사용자가 보유한 쿠폰 조회
     @GetMapping("/user")
-    public ResponseEntity<?> getUserCoupons() {
-        return ResponseEntity.ok(couponService.getUserCoupons());
+    public ResponseEntity<?> getUserCoupons(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(couponService.getUserCoupons(userDetails));
     }
 
     // 쿠폰 사용
