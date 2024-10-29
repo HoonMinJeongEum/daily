@@ -39,8 +39,7 @@ public class CouponController {
     // 쿠폰 구매
     @PostMapping("/buy")
     public ResponseEntity<?> buyCoupon(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody BuyCouponRequest request) {
-        couponService.buyCoupon(userDetails, request);
-        return ResponseEntity.ok("쿠폰이 정상적으로 구매되었습니다.");
+        return ResponseEntity.ok(couponService.buyCoupon(userDetails, request));
     }
 
     // 사용자가 보유한 쿠폰 조회
@@ -54,5 +53,11 @@ public class CouponController {
     public ResponseEntity<?> useCoupon(@RequestBody UseCouponRequest request) {
         couponService.useCoupon(request);
         return ResponseEntity.ok("쿠폰이 정상적으로 사용되었습니다.");
+    }
+
+    // 자식들 쿠폰 조회
+    @GetMapping("/child")
+    public ResponseEntity<?> getChildCoupons(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(couponService.getChildCoupons(userDetails));
     }
 }
