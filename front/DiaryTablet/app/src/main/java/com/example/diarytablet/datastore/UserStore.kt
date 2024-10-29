@@ -4,9 +4,8 @@ interface UserStore {
     fun login(username: String, password: String): Boolean
 }
 
-class UserStoreImpl : UserStore {
+class FakeUserStore : UserStore {
     override fun login(username: String, password: String): Boolean {
-        // 실제 로그인 로직 (예: 서버와 통신)
-        return username == "test" && password == "password"
+        return username == "test" && password == "1234"
     }
 }

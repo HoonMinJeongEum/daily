@@ -53,10 +53,14 @@ fun BasicButton(
     imageResId: Int? = null // 이미지를 선택적으로 받음
 ) {
     val buttonShape = BasicButtonShape.ROUNDED
-    val buttonColor = if (imageResId != null) BasicButtonColor.NORMAL else BasicButtonColor.SEASHELL
+    val buttonColor = if (imageResId != null && imageResId != 11) BasicButtonColor.NORMAL else BasicButtonColor.SEASHELL
     val backgroundColor = buttonColor.getBackgroundColor()
     val contentColor = buttonColor.getTextColor()
-    val image = if (buttonColor == BasicButtonColor.SEASHELL) R.drawable.jogae else imageResId
+    val image = when {
+        imageResId == 11 -> null
+        buttonColor == BasicButtonColor.SEASHELL -> R.drawable.jogae
+        else -> imageResId
+    }
 
     Button(
         onClick = onClick,
@@ -79,7 +83,7 @@ fun BasicButton(
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 8.dp)
+            modifier = Modifier.padding(12.dp)
         ) {
             image?.let {
                 Image(
@@ -91,7 +95,7 @@ fun BasicButton(
             }
             Text(
                 text = text,
-                fontSize = 16.sp,
+                fontSize = 24.sp,
                 style = MyTypography.bodyLarge,
                 color = contentColor,
                 modifier = Modifier.align(Alignment.CenterVertically)

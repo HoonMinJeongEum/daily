@@ -22,7 +22,7 @@ fun AlarmButton(
         painter = painterResource(id = alarmIcon),
         contentDescription = "Alarm Button",
         modifier = modifier
-            .size(40.dp) // 아이콘 크기
+            .size(75.dp) // 아이콘 크기
             .clickable(onClick = onClick) // 클릭 이벤트
     )
 }
