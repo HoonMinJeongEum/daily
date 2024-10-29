@@ -7,6 +7,8 @@ RUN ln -snf /usr/share/zoneinfo/Asia/Seoul /etc/localtime && echo Asia/Seoul > /
 ARG JAR_FILE=build/libs/daily-0.0.1-SNAPSHOT.jar
 # JAR_FILE을 agaproject.jar로 복사
 COPY ${JAR_FILE} daily.jar
+# resources 디렉토리 복사
+COPY src/main/resources/ /app/resources/
 # 운영 및 개발에서 사용되는 환경 설정을 분리
 # -Duser.timezone=Asia/Seoul JVM 옵션을 사용하여 애플리케이션 수준에서도 타임존을 설정
 ENTRYPOINT ["java", "-jar", "-Dspring.profiles.active=dev", "-Duser.timezone=Asia/Seoul", "/daily.jar"]
