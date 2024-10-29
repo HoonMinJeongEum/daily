@@ -29,7 +29,6 @@ public class CouponService {
     private final EarnedCouponRepository earnedCouponRepository;
     private final MemberRepository memberRepository;
     private final FamilyRepository familyRepository;
-    private final ShellRepository shellRepository;
     private final ShellService shellService;
 
     // 쿠폰 등록
@@ -75,7 +74,6 @@ public class CouponService {
         // 획득하지 않은 쿠폰을 제외하고 쿠폰 조회
         List<Coupon> list = couponRepository.findByPurchasedAtIsNullAndFamilyId(familyId);
 
-        // CouponResponse로 변환
         return list.stream()
                 .map(CouponResponse::new)
                 .collect(Collectors.toList());
@@ -105,8 +103,8 @@ public class CouponService {
         }
 
         // 쿠폰 구매 시간 설정
-        coupon.updatePurchasedAt(LocalDateTime.now()); // 구매 시간을 현재 시간으로 설정
-        couponRepository.save(coupon);  // 변경 사항 저장
+        coupon.updatePurchasedAt(LocalDateTime.now());
+        couponRepository.save(coupon);
 
         // earnedCoupon 엔티티 생성 및 저장
         EarnedCoupon earnedCoupon = EarnedCoupon.builder()
@@ -115,14 +113,8 @@ public class CouponService {
                 .build();
         earnedCouponRepository.save(earnedCoupon);
 
-        // Shell 로그 남기기 (조개 수량 차감 로그)
-        Shell shellLog = Shell.builder()
-                .member(member)
-                .stock((byte) (-coupon.getPrice()))
-                .content(Content.STICKER)
-                .lastUpdated(LocalDateTime.now())
-                .build();
-        shellRepository.save(shellLog);
+        // Shell 로그
+        shellService.saveShellLog(member, (byte) (-coupon.getPrice()), Content.COUPON);
 
         return shellService.getUserShell(memberId);
     }
