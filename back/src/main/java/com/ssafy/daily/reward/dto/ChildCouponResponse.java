@@ -6,16 +6,18 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-public class EarnedCouponResponse {
-
-    private final Long id;
+public class ChildCouponResponse {
+    private final int memberId;
+    private final long earnedCouponId;
+    private final String name;
     private final String description;
     private final LocalDateTime used_at;
     private final LocalDateTime created_at;
 
-
-    public EarnedCouponResponse(EarnedCoupon earnedCoupon) {
-        this.id = earnedCoupon.getId();
+    public ChildCouponResponse(EarnedCoupon earnedCoupon) {
+        this.memberId = earnedCoupon.getMember().getId();
+        this.earnedCouponId = earnedCoupon.getId();
+        this.name = earnedCoupon.getMember().getName();
         this.description = earnedCoupon.getCoupon().getDescription();
         this.used_at = earnedCoupon.getUsedAt();
         this.created_at = earnedCoupon.getCoupon().getPurchasedAt();

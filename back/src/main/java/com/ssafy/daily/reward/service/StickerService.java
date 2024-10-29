@@ -11,13 +11,11 @@ import com.ssafy.daily.reward.entity.*;
 import com.ssafy.daily.reward.repository.EarnedStickerRepository;
 import com.ssafy.daily.reward.repository.ShellRepository;
 import com.ssafy.daily.reward.repository.StickerRepository;
-import com.ssafy.daily.user.entity.Family;
+import com.ssafy.daily.user.dto.CustomUserDetails;
 import com.ssafy.daily.user.entity.Member;
 import com.ssafy.daily.user.repository.FamilyRepository;
 import com.ssafy.daily.user.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
@@ -33,11 +31,12 @@ public class StickerService {
     private final FamilyRepository familyRepository;
     private final ShellRepository shellRepository;
     private final EarnedStickerRepository earnedStickerRepository;
+    private final ShellService shellService;
 
-    public List<EarnedStickerResponse> getUserSticker() {
+    public List<EarnedStickerResponse> getUserSticker(CustomUserDetails userDetails) {
 
         // 멤버 있는지 확인
-        int memberId = 1;
+        int memberId = userDetails.getMember().getId();
 
         // memberId로 EarnedSticker 리스트 조회
         List<EarnedSticker> list = earnedStickerRepository.findByMemberId(memberId);
@@ -48,10 +47,10 @@ public class StickerService {
                 .collect(Collectors.toList());
     }
 
-    public List<StickerResponse> getSticker() {
+    public List<StickerResponse> getSticker(CustomUserDetails userDetails) {
 
         // 멤버 있는지 확인
-        int memberId = 1;
+        int memberId = userDetails.getMember().getId();
 
         // 멤버 ID를 기준으로 획득하지 않은 스티커만 조회
         List<Sticker> list = stickerRepository.findUnownedStickersByMemberId(memberId);
@@ -63,10 +62,10 @@ public class StickerService {
     }
 
     @Transactional
-    public void buySticker(BuyStickerRequest request) {
+    public int buySticker(CustomUserDetails userDetails, BuyStickerRequest request) {
 
         // 멤버 있는지 확인
-        int memberId = 1; // 임의 데이터
+        int memberId = userDetails.getMember().getId();
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new RuntimeException("구성원을 찾을 수 없습니다."));
 
@@ -81,7 +80,7 @@ public class StickerService {
         }
 
         // 조개가 충분한지 확인
-        int shellCount = calculateTotalStockForMember(memberId);
+        int shellCount = shellService.getUserShell(memberId);
         if (shellCount < sticker.getPrice()) {
             throw new InsufficientFundsException("재화 수량이 부족합니다.");
         }
@@ -101,10 +100,8 @@ public class StickerService {
                 .lastUpdated(LocalDateTime.now())
                 .build();
         shellRepository.save(shellLog);
+
+        return shellService.getUserShell(memberId);
     }
 
-    public int calculateTotalStockForMember(int memberId) {
-        Integer totalStock = shellRepository.findTotalStockByMemberId(memberId);
-        return totalStock != null ? totalStock : 0;
-    }
 }
