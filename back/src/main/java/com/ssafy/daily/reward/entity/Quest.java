@@ -25,7 +25,7 @@ public class Quest {
     private boolean diaryStatus;
 
     @Column(nullable = false)
-    private boolean catchStatus;
+    private boolean quizStatus;
 
     @Column(nullable = false)
     private boolean wordStatus;
