@@ -1,14 +1,18 @@
 # open jdk 17
 FROM openjdk:17
-# tzdata 패키지 설치 및 타임존 설정
+
+# 타임존 설정
 RUN ln -snf /usr/share/zoneinfo/Asia/Seoul /etc/localtime && echo Asia/Seoul > /etc/timezone
-# build가 되는 시점에 JAR_FILE이라는 변수 명에 build/libs/*.jar 선언
-# build/libs - gradle로 빌드했을 때 jar 파일이 생성되는 경로
+
+# build 시점에 JAR_FILE 변수 선언
 ARG JAR_FILE=build/libs/daily-0.0.1-SNAPSHOT.jar
-# JAR_FILE을 agaproject.jar로 복사
+
+# JAR 파일을 daily.jar로 복사
 COPY ${JAR_FILE} daily.jar
-# resources 디렉토리 복사
+
+# resources 디렉토리 및 JSON 파일 복사
 COPY src/main/resources/ /app/resources/
-# 운영 및 개발에서 사용되는 환경 설정을 분리
-# -Duser.timezone=Asia/Seoul JVM 옵션을 사용하여 애플리케이션 수준에서도 타임존을 설정
-ENTRYPOINT ["java", "-jar", "-Dspring.profiles.active=dev", "-Duser.timezone=Asia/Seoul", "/daily.jar"]
+COPY src/main/resources/serviceAccountKey.json /app/resources/serviceAccountKey.json
+
+# 애플리케이션 시작 시 환경 설정 및 타임존 설정
+ENTRYPOINT ["java", "-jar", "-Dspring.profiles.active=dev", "-Duser.timezone=Asia/Seoul", "-Dspring.config.location=file:/app/resources/", "/daily.jar"]
