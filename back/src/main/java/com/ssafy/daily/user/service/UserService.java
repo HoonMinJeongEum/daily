@@ -4,15 +4,20 @@ import com.ssafy.daily.exception.UsernameAlreadyExistsException;
 import com.ssafy.daily.user.dto.*;
 import com.ssafy.daily.user.entity.Family;
 import com.ssafy.daily.user.entity.Member;
+import com.ssafy.daily.user.entity.Refresh;
 import com.ssafy.daily.user.jwt.JWTUtil;
 import com.ssafy.daily.user.repository.FamilyRepository;
 import com.ssafy.daily.user.repository.MemberRepository;
+import com.ssafy.daily.user.repository.RefreshRepository;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,6 +26,7 @@ import java.util.stream.Collectors;
 public class UserService {
     private final FamilyRepository familyRepository;
     private final MemberRepository memberRepository;
+    private final RefreshRepository refreshRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final JWTUtil jwtUtil;
 
@@ -80,8 +86,35 @@ public class UserService {
         memberRepository.save(member);
     }
 
-    public String choiceMember(CustomUserDetails userDetails, ChoiceMemberRequest request) {
+    public String choiceMember(CustomUserDetails userDetails, ChoiceMemberRequest request, HttpServletResponse response) {
         int memberId = request.getMemberId();
-        return jwtUtil.createJwt("access", userDetails.getUsername(), "ROLE", userDetails.getId(), memberId, 600000L);
+
+        String newAccess = jwtUtil.createJwt("access", userDetails.getUsername(), "ROLE", userDetails.getFamilyId(), memberId, 600000L);
+        String newRefresh = jwtUtil.createJwt("refresh", userDetails.getUsername(), "ROLE", userDetails.getFamilyId(), memberId, 86400000L);
+
+        addRefreshEntity(userDetails.getUsername(), newRefresh, 86400000L); // 기존의 refresh 토큰을 대체
+
+        // 쿠키 생성 및 설정
+        Cookie refreshCookie = createCookie("refresh", newRefresh);
+        response.addCookie(refreshCookie);
+
+        return newAccess;
     }
+    private Cookie createCookie(String key, String value) {
+        Cookie cookie = new Cookie(key, value);
+        cookie.setMaxAge(24 * 60 * 60);
+        cookie.setHttpOnly(true);
+        return cookie;
+    }
+
+    // Refresh 토큰을 데이터베이스에 저장하는 메소드
+    private void addRefreshEntity(String username, String refresh, Long expiredMs) {
+        Date date = new Date(System.currentTimeMillis() + expiredMs);
+
+        Refresh refreshEntity = new Refresh();
+        refreshEntity.createRefresh(username, refresh, date.toString());
+
+        refreshRepository.save(refreshEntity);
+    }
+
 }

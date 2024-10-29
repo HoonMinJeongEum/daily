@@ -88,7 +88,7 @@ public class JWTFilter extends OncePerRequestFilter {
                     .orElse(null); // 멤버가 없을 경우 null 반환
 
             if (member != null) {
-                customUserDetails = new CustomUserDetails(null, member); // Member에 대한 CustomUserDetails
+                customUserDetails = new CustomUserDetails(family, member); // Member에 대한 CustomUserDetails
             } else {
                 // Member ID가 유효하지 않은 경우
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
