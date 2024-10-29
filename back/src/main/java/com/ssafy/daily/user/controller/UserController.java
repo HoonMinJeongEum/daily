@@ -6,6 +6,7 @@ import com.ssafy.daily.user.dto.ChoiceMemberRequest;
 import com.ssafy.daily.user.dto.CustomUserDetails;
 import com.ssafy.daily.user.dto.JoinRequest;
 import com.ssafy.daily.user.service.UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -52,9 +53,10 @@ public class UserController {
         return ResponseEntity.ok("프로필 등록 성공");
     }
     @PostMapping("/member")
-    public ResponseEntity<?> choiceMember(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody ChoiceMemberRequest request){
+    public ResponseEntity<?> choiceMember(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                          @RequestBody ChoiceMemberRequest request, HttpServletResponse response){
         int memberId = request.getMemberId();
-        String jwt = userService.choiceMember(userDetails, request);
+        String jwt = userService.choiceMember(userDetails, request, response);
         return ResponseEntity.ok()
                 .header("Authorization", "Bearer " + jwt)
                 .body("프로필 선택: " + memberId);

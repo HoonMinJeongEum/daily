@@ -39,11 +39,15 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public String getUsername() {
-        return family.getUsername();
+        return member != null ? member.getName() : family.getUsername();
     }
 
-    public int getId() {
-        return family != null ? family.getId() : member.getId(); // ID 처리
+    public int getFamilyId(){
+        return family.getId();
+    }
+
+    public int getMemberId(){
+        return member != null ? member.getId() : 0;
     }
 
     @Override

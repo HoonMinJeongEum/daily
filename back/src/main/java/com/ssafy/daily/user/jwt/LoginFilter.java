@@ -28,7 +28,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     private final JWTUtil jwtUtil;
     private final RefreshRepository refreshRepository;
     public LoginFilter (AuthenticationManager authenticationManager, JWTUtil jwtUtil, RefreshRepository refreshRepository){
-        super.setFilterProcessesUrl("/api/login");  // 이 줄을 추가하여 URL 매핑을 변경합니다.
+        super.setFilterProcessesUrl("/api/user/login");  // 이 줄을 추가하여 URL 매핑을 변경합니다.
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
         this.refreshRepository = refreshRepository;
@@ -56,7 +56,6 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     //로그인 성공시 실행하는 메소드 (여기서 JWT를 발급하면 됨)
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) {
-//        String username = customUserDetails.getUsername();
         //유저 정보
         String username = authentication.getName();
 
@@ -65,17 +64,16 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         GrantedAuthority auth = iterator.next();
         String role = auth.getAuthority();
 
-        int tableId = ((CustomUserDetails) authentication.getPrincipal()).getId();
-        System.out.println("LoginFilter - tableId: "+ tableId);
+        int familyId = ((CustomUserDetails) authentication.getPrincipal()).getFamilyId();
         //토큰 생성
-        String access = jwtUtil.createJwt("access", username, role,  tableId, 0, 600000L);
-        String refresh = jwtUtil.createJwt("refresh", username, role, tableId, 0, 86400000L);
+        String access = jwtUtil.createJwt("access", username, role,  familyId, 0, 600000L);
+        String refresh = jwtUtil.createJwt("refresh", username, role, familyId, 0, 86400000L);
 
         //Refresh 토큰 저장
         addRefreshEntity(username, refresh, 86400000L);
 
         //응답 설정
-        response.setHeader("access", access);
+        response.setHeader("Authorization", "Bearer " + access);
         response.addCookie(createCookie("refresh", refresh));
         response.setStatus(HttpStatus.OK.value());
     }

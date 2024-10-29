@@ -75,7 +75,7 @@ public class TokenService {
         addRefreshEntity(username, newRefresh, 86400000L);
 
         // 응답
-        response.setHeader("access", newAccess);
+        response.setHeader("Authorization", "Bearer " + newAccess);
         response.addCookie(createCookie("refresh", newRefresh));
 
         return new ResponseEntity<>(HttpStatus.OK);
