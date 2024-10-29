@@ -9,6 +9,7 @@ import com.ssafy.daily.reward.entity.*;
 import com.ssafy.daily.reward.repository.CouponRepository;
 import com.ssafy.daily.reward.repository.EarnedCouponRepository;
 import com.ssafy.daily.reward.repository.ShellRepository;
+import com.ssafy.daily.user.dto.CustomUserDetails;
 import com.ssafy.daily.user.entity.Family;
 import com.ssafy.daily.user.entity.Member;
 import com.ssafy.daily.user.repository.FamilyRepository;
@@ -32,7 +33,7 @@ public class CouponService {
 
     // 쿠폰 등록
     @Transactional
-    public void addCoupon(AddCouponRequest request) {
+    public void addCoupon(CustomUserDetails userDetails, AddCouponRequest request) {
         // 입력값 유효성 검사
         if (request.getDescription() == null || request.getDescription().isEmpty()) {
             throw new IllegalArgumentException("쿠폰 설명을 입력해 주세요.");  // 잘못된 요청
@@ -42,7 +43,7 @@ public class CouponService {
         }
 
         // 부모님 계정이 존재하는지 확인
-        int familyId = 1; // 임시
+        int familyId = userDetails.getFamily().getId();
         Family family = familyRepository.findById(familyId)
                 .orElseThrow(() -> new EmptyResultDataAccessException("해당 가족 계정을 찾을 수 없습니다.", 1));
 
@@ -67,8 +68,8 @@ public class CouponService {
 
     // 쿠폰 조회
     @Transactional
-    public List<CouponResponse> getCoupons() {
-        int familyId = 1;
+    public List<CouponResponse> getCoupons(CustomUserDetails userDetails) {
+        int familyId =  userDetails.getFamily().getId(); ;
 
         // 획득하지 않은 쿠폰을 제외하고 쿠폰 조회
         List<Coupon> list = couponRepository.findByPurchasedAtIsNullAndFamilyId(familyId);
@@ -81,9 +82,9 @@ public class CouponService {
 
     // 쿠폰 구매
     @Transactional
-    public void buyCoupon(BuyCouponRequest request) {
+    public void buyCoupon(CustomUserDetails userDetails, BuyCouponRequest request) {
         // 멤버 있는지 확인
-        int memberId = 1; // 임시
+        int memberId =  userDetails.getMember().getId();
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new EmptyResultDataAccessException("해당 구성원 계정을 찾을 수 없습니다.", 1));
 
@@ -125,10 +126,10 @@ public class CouponService {
 
     // 사용자가 보유한 쿠폰 조회
     @Transactional
-    public List<EarnedCouponResponse> getUserCoupons() {
+    public List<EarnedCouponResponse> getUserCoupons(CustomUserDetails userDetails) {
 
         // 멤버 있는지 확인
-        int memberId = 1;
+        int memberId = userDetails.getMember().getId();
 
         // memberId로 EarnedCoupon 리스트 조회
         List<EarnedCoupon> list = earnedCouponRepository.findByMemberId(memberId);

@@ -11,6 +11,7 @@ import com.ssafy.daily.reward.entity.*;
 import com.ssafy.daily.reward.repository.EarnedStickerRepository;
 import com.ssafy.daily.reward.repository.ShellRepository;
 import com.ssafy.daily.reward.repository.StickerRepository;
+import com.ssafy.daily.user.dto.CustomUserDetails;
 import com.ssafy.daily.user.entity.Family;
 import com.ssafy.daily.user.entity.Member;
 import com.ssafy.daily.user.repository.FamilyRepository;
@@ -34,10 +35,10 @@ public class StickerService {
     private final ShellRepository shellRepository;
     private final EarnedStickerRepository earnedStickerRepository;
 
-    public List<EarnedStickerResponse> getUserSticker() {
+    public List<EarnedStickerResponse> getUserSticker(CustomUserDetails userDetails) {
 
         // 멤버 있는지 확인
-        int memberId = 1;
+        int memberId = userDetails.getMember().getId();
 
         // memberId로 EarnedSticker 리스트 조회
         List<EarnedSticker> list = earnedStickerRepository.findByMemberId(memberId);
@@ -48,10 +49,10 @@ public class StickerService {
                 .collect(Collectors.toList());
     }
 
-    public List<StickerResponse> getSticker() {
+    public List<StickerResponse> getSticker(CustomUserDetails userDetails) {
 
         // 멤버 있는지 확인
-        int memberId = 1;
+        int memberId = userDetails.getMember().getId();
 
         // 멤버 ID를 기준으로 획득하지 않은 스티커만 조회
         List<Sticker> list = stickerRepository.findUnownedStickersByMemberId(memberId);
@@ -63,10 +64,10 @@ public class StickerService {
     }
 
     @Transactional
-    public void buySticker(BuyStickerRequest request) {
+    public void buySticker(CustomUserDetails userDetails, BuyStickerRequest request) {
 
         // 멤버 있는지 확인
-        int memberId = 1; // 임의 데이터
+        int memberId = userDetails.getMember().getId();
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new RuntimeException("구성원을 찾을 수 없습니다."));
 
