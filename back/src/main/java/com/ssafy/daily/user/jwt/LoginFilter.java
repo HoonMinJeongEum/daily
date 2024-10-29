@@ -28,7 +28,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     private final JWTUtil jwtUtil;
     private final RefreshRepository refreshRepository;
     public LoginFilter (AuthenticationManager authenticationManager, JWTUtil jwtUtil, RefreshRepository refreshRepository){
-        super.setFilterProcessesUrl("/api/login");  // 이 줄을 추가하여 URL 매핑을 변경합니다.
+        super.setFilterProcessesUrl("/api/user/login");  // 이 줄을 추가하여 URL 매핑을 변경합니다.
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
         this.refreshRepository = refreshRepository;

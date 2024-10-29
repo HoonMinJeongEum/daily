@@ -1,6 +1,10 @@
 package com.ssafy.daily.user.service;
 
 import com.ssafy.daily.exception.UsernameAlreadyExistsException;
+import com.ssafy.daily.quiz.entity.Quiz;
+import com.ssafy.daily.quiz.repository.QuizRepository;
+import com.ssafy.daily.reward.entity.Quest;
+import com.ssafy.daily.reward.repository.QuestRepository;
 import com.ssafy.daily.user.dto.*;
 import com.ssafy.daily.user.entity.Family;
 import com.ssafy.daily.user.entity.Member;
@@ -27,6 +31,8 @@ public class UserService {
     private final FamilyRepository familyRepository;
     private final MemberRepository memberRepository;
     private final RefreshRepository refreshRepository;
+    private final QuizRepository quizRepository;
+    private final QuestRepository questRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final JWTUtil jwtUtil;
 
@@ -51,7 +57,7 @@ public class UserService {
 
         // 비밀번호 유효성 체크 (영어, 숫자, 특수문자 포함 8-20자)
         if (!password.matches("^(?=.*[a-zA-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,20}$")) {
-            throw new IllegalArgumentException("비밀번호는 영어, 숫자, 특수문자를 포함한 8-20자로 설정해야 합니다.");
+            throw new IllegalArgumentException("비밀번호는 영어, 숫자, 특수문자를 포함한 6-20자로 설정해야 합니다.");
         }
 
         Family family = Family.builder()
@@ -59,6 +65,13 @@ public class UserService {
                 .password(bCryptPasswordEncoder.encode(password))
                 .build();
         familyRepository.save(family);
+
+        // Quiz 테이블 생성
+        Quiz quiz = Quiz.builder()
+                .family(family)
+                .build();
+        quizRepository.save(quiz);
+
     }
 
     public List<ProfilesResponse> getProfiles(int familyId) {
@@ -84,6 +97,12 @@ public class UserService {
                 .family(family)
                 .build();
         memberRepository.save(member);
+
+        // Quest 테이블 생성
+        Quest quest = Quest.builder()
+                .member(member)
+                .build();
+        questRepository.save(quest);
     }
 
     public String choiceMember(CustomUserDetails userDetails, ChoiceMemberRequest request, HttpServletResponse response) {
