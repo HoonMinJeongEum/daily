@@ -9,6 +9,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 @SpringBootApplication
 @EnableScheduling
@@ -16,8 +17,7 @@ public class DailyApplication {
 
 	public static void main(String[] args) throws IOException {
 		if (FirebaseApp.getApps().isEmpty()) {
-			FileInputStream serviceAccount =
-					new FileInputStream("src/main/resources/serviceAccountKey.json");
+			InputStream serviceAccount = DailyApplication.class.getClassLoader().getResourceAsStream("serviceAccountKey.json");
 
 			FirebaseOptions options = new FirebaseOptions.Builder()
 					.setCredentials(GoogleCredentials.fromStream(serviceAccount))
