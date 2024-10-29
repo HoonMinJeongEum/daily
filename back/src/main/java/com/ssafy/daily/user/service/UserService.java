@@ -60,7 +60,7 @@ public class UserService {
         }
 
         // 비밀번호 유효성 체크 (영어, 숫자, 특수문자 포함 8-20자)
-        if (!password.matches("^(?=.*[a-zA-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,20}$")) {
+        if (!password.matches("^(?=.*[a-zA-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{6,20}$")) {
             throw new IllegalArgumentException("비밀번호는 영어, 숫자, 특수문자를 포함한 6-20자로 설정해야 합니다.");
         }
 
