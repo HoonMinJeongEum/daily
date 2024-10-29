@@ -14,21 +14,22 @@ import org.springframework.web.bind.annotation.*;
 public class StickerController {
 
     private final StickerService stickerService;
-
+    
+    // 사용자 스티커 조회
     @GetMapping("/user")
     public ResponseEntity<?> getUserSticker(@AuthenticationPrincipal CustomUserDetails userDetails) {
         return ResponseEntity.ok(stickerService.getUserSticker(userDetails));
     }
-
+    
+    // 모든 스티커 조회
     @GetMapping
     public ResponseEntity<?> getSticker(@AuthenticationPrincipal CustomUserDetails userDetails) {
         return ResponseEntity.ok(stickerService.getSticker(userDetails));
     }
-
+    
+    // 스티커 구매
     @PostMapping("/buy")
-    public ResponseEntity<String> buySticker(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody BuyStickerRequest request) {
-        stickerService.buySticker(userDetails, request);
-
-        return ResponseEntity.ok("스티커가 정상적으로 구매되었습니다.");
+    public ResponseEntity<?> buySticker(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody BuyStickerRequest request) {
+        return ResponseEntity.ok(stickerService.buySticker(userDetails, request));
     }
 }
