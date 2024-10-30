@@ -17,6 +17,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.example.diarytablet.R
 import com.example.diarytablet.datastore.UserStore
 import com.example.diarytablet.ui.components.BasicButton
@@ -26,9 +28,14 @@ import com.example.diarytablet.viewmodel.LoginViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginScreen(viewModel: LoginViewModel, onLoginSuccess: () -> Unit, backgroundType: BackgroundType = BackgroundType.DEFAULT) {
-    var username by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+fun LoginScreen(
+    navController: NavController,
+    loginViewModel: LoginViewModel = hiltViewModel(),
+    onLoginSuccess: () -> Unit,
+    backgroundType: BackgroundType = BackgroundType.DEFAULT
+) {
+//    var username by remember { mutableStateOf("") }
+//    var password by remember { mutableStateOf("") }
     BackgroundPlacement(backgroundType = backgroundType)
 
     Box(
@@ -71,8 +78,8 @@ fun LoginScreen(viewModel: LoginViewModel, onLoginSuccess: () -> Unit, backgroun
 
                 // TextField in front of the Image
                 TextField(
-                    value = username,
-                    onValueChange = { username = it },
+                    value = loginViewModel.username.value,
+                    onValueChange = { loginViewModel.username.value = it },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(start = 130.dp), // Adjust padding for text alignment
@@ -104,8 +111,8 @@ fun LoginScreen(viewModel: LoginViewModel, onLoginSuccess: () -> Unit, backgroun
 
                 // TextField in front of the Image
                 TextField(
-                    value = password,
-                    onValueChange = { password = it },
+                    value = loginViewModel.password.value,
+                    onValueChange = { loginViewModel.password.value = it },
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -123,7 +130,7 @@ fun LoginScreen(viewModel: LoginViewModel, onLoginSuccess: () -> Unit, backgroun
             BasicButton(
                 text = "로그인",
                 onClick = {
-                    viewModel.login(onSuccess = {
+                    loginViewModel.login(onSuccess = {
                         onLoginSuccess() // 성공 시 호출
                     }, onErrorPassword = {
                         // 비밀번호 오류 처리

@@ -2,8 +2,11 @@ package com.example.diarytablet.di
 
 
 import com.example.diarytablet.domain.RetrofitClient
+import com.example.diarytablet.domain.repository.ProfileListRepository
+import com.example.diarytablet.domain.repository.ProfileListRepositoryImpl
 import com.example.diarytablet.domain.repository.UserRepository
 import com.example.diarytablet.domain.repository.UserRepositoryImpl
+import com.example.diarytablet.domain.service.ProfileListService
 import com.example.diarytablet.domain.service.UserService
 import dagger.Module
 import dagger.Provides
@@ -25,8 +28,17 @@ class AppModules {
     ): UserRepository = UserRepositoryImpl(userService)
 
     @Provides
+    fun provideProfileListRepository(
+        profileListService: ProfileListService
+    ) :ProfileListRepository = ProfileListRepositoryImpl(profileListService)
+    @Provides
     fun provideUserService(
         retrofit: Retrofit
     ): UserService = retrofit.create(UserService::class.java)
+
+    @Provides
+    fun provideProfileListService(retrofit: Retrofit): ProfileListService {
+        return retrofit.create(ProfileListService::class.java)
+    }
 
 }

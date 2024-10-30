@@ -8,6 +8,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.example.diarytablet.R
 import com.example.diarytablet.ui.components.BasicButton
 import com.example.diarytablet.ui.components.BlockButton
@@ -20,7 +22,11 @@ import com.example.diarytablet.ui.theme.BackgroundType
 import com.example.diarytablet.viewmodel.MainViewModel
 
 @Composable
-fun MainScreen(viewModel: MainViewModel,backgroundType: BackgroundType = BackgroundType.DEFAULT) {
+fun MainScreen(
+    navController: NavController,
+    viewModel: MainViewModel = hiltViewModel(),
+    backgroundType: BackgroundType = BackgroundType.DEFAULT
+) {
     BackgroundPlacement(backgroundType = backgroundType)
 
 
@@ -94,9 +100,9 @@ fun MainScreen(viewModel: MainViewModel,backgroundType: BackgroundType = Backgro
     }
 }
 
-@Preview(widthDp = 1280, heightDp = 800, showBackground = true)
-
-@Composable
-fun previewMain() {
-    MainScreen(viewModel = MainViewModel(), backgroundType = BackgroundType.DEFAULT)
-}
+//@Preview(widthDp = 1280, heightDp = 800, showBackground = true)
+//@Composable
+//fun previewMain() {
+//    MainScreen(viewModel = MainViewModel(),    navController= NavController,
+//        backgroundType = BackgroundType.DEFAULT)
+//}
