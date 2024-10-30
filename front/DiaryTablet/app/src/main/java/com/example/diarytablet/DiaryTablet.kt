@@ -1,5 +1,6 @@
 package com.example.diarytablet
 
+import LoginScreen
 import android.app.Application
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.runtime.Composable
@@ -8,7 +9,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.diarytablet.ui.screens.MainScreen
+import com.example.diarytablet.ui.screens.ProfileScreen
+import com.example.diarytablet.ui.theme.BackgroundType
 import com.example.diarytablet.ui.theme.DiaryTabletTheme
+import com.example.diarytablet.viewmodel.LoginViewModel
 import com.example.diarytablet.viewmodel.MainViewModel
 import dagger.hilt.android.HiltAndroidApp
 
@@ -16,21 +20,35 @@ import dagger.hilt.android.HiltAndroidApp
 @Composable
 fun DiaryTabletApp() {
     val navController = rememberNavController()
-    val viewModel: MainViewModel = hiltViewModel()
 
     DiaryTabletTheme {
-        NavHost(navController, startDestination = "main") {
-//            composable("login") {
-//                LoginScreen(viewModel) {
-//                    navController.navigate("main")
-//                }
-//            }
+        NavHost(navController, startDestination = "profileList") {
+            composable("login") {
+                LoginScreen(
+                    onLoginSuccess = {
+                        navController.navigate("main") {
+                            popUpTo("login") { inclusive = true }
+                        }
+                    },
+                    navController = navController,
+                    backgroundType = BackgroundType.DEFAULT // 여기에 적절한 BackgroundType 값을 추가
+                )
+            }
+
+            composable("profileList") {
+                ProfileScreen(
+                    navController = navController
+                )
+            }
             composable("main") {
-                MainScreen(viewModel)
+                // 메인 화면을 위한 뷰모델을 생성합니다.
+                MainScreen(navController = navController)
             }
         }
     }
 }
+
+
 
 @HiltAndroidApp
 class DiaryTablet : Application() {}

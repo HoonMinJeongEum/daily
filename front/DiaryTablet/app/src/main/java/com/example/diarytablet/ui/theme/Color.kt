@@ -8,3 +8,4 @@ val Black = Color(0xFF000000)  // 보조 색상
 val PastelSkyBlue = Color(0xFFD2E0FB)      // 에러 색상
 val DeepPastelBlue = Color(0xFF83B4FF) // 배경색
 val PastelYellow = Color(0xFFFEF9D9)    // 서피스 색상
+val LoginFont = Color(0xFF898989)

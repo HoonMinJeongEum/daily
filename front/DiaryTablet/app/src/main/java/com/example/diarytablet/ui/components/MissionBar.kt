@@ -33,24 +33,30 @@ fun MissionBar(
 ) {
     Surface(
         modifier = modifier
-            .wrapContentWidth()
             .padding(16.dp)
-            .height(116.dp), // 원하는 높이 설정
+            .height(116.dp) // 원하는 높이 설정
+            .wrapContentWidth(),
         shape = RoundedCornerShape(16.dp), // 모서리 둥글게 설정
         color = Color.Transparent // 투명한 배경색 설정
     ) {
         // missionContainer 배경 이미지
+        Box( // Box로 감싸서 Surface와 Image의 크기를 같게 설정
+            modifier = Modifier
+                .wrapContentWidth()
+                .height(116.dp), // Surface와 동일한 높이 설정
+            contentAlignment = Alignment.CenterStart
+        ) {
         Image(
             painter = painterResource(id = R.drawable.missioncontainer),
             contentDescription = null,
-            modifier = Modifier.fillMaxWidth(), // 배경 이미지가 컨테이너 너비에 맞게 조정
-            contentScale = ContentScale.FillBounds
+            modifier = Modifier
+                .fillMaxHeight(),
         )
 
         Row(
             modifier = Modifier
                 .wrapContentWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp), // 여백 설정
+                .padding(horizontal = 16.dp, vertical = 16.dp), // 여백 설정
             horizontalArrangement = Arrangement.spacedBy(8.dp), // 각 MissionRow 간 간격
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -64,6 +70,7 @@ fun MissionBar(
             )
             for (mission in missions) {
                 MissionRow(mission)
+            }
             }
         }
     }
@@ -102,7 +109,7 @@ fun MissionRow(mission: MissionItem) {
 fun previewMissionBar() {
     MissionBar(
         missions = listOf(
-            MissionItem("미션 111111111111111111", isSuccess = true),
+            MissionItem("미션 1", isSuccess = true),
             MissionItem("미션 2", isSuccess = false),
             MissionItem("미션 3", isSuccess = true)
         )
