@@ -1,10 +1,25 @@
 # application-secret.yml 설정
+server:
+  port: 8081
 spring:
   profiles:
     active: secret
   jwt:
     secret: janguhwangubaekguningubangubbangu
+  config:
+    activate:
+      on-profile: blue
 
+server:
+  port: 8082
+spring:
+  profiles:
+    active: secret
+  jwt:
+    secret: janguhwangubaekguningubangubbangu
+  config:
+    activate:
+      on-profile: green
 # OpenVidu 설정
 livekit:
   api:
