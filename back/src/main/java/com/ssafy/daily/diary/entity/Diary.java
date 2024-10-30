@@ -23,9 +23,6 @@ public class Diary {
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
-    @Column(nullable = false)
-    private String title;
-
     @Column(columnDefinition = "TEXT")
     private String content;
 
