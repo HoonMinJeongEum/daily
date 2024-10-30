@@ -10,3 +10,6 @@ livekit:
   api:
     key: devkey
     secret: secret
+
+server:
+  port: 8081
