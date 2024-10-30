@@ -1,4 +1,5 @@
-# application-secret.yml 설정
+## blue
+
 spring:
   profiles:
     active: secret
