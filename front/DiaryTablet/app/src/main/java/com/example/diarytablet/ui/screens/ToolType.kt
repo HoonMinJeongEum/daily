@@ -4,5 +4,6 @@ enum class ToolType {
     PENCIL,
     CRAYON,
     ERASER,
-    HIGHLIGHTER
+    HIGHLIGHTER,
+    BRUSH
 }
