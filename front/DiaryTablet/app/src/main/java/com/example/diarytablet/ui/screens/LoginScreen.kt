@@ -31,11 +31,15 @@ import com.example.diarytablet.viewmodel.LoginViewModel
 fun LoginScreen(
     navController: NavController,
     loginViewModel: LoginViewModel = hiltViewModel(),
-    onLoginSuccess: () -> Unit,
     backgroundType: BackgroundType = BackgroundType.DEFAULT
 ) {
-//    var username by remember { mutableStateOf("") }
-//    var password by remember { mutableStateOf("") }
+
+    fun onLoginSuccess() = {
+        navController.navigate("main") {
+            popUpTo("login") { inclusive = true }
+        }
+    }
+
     BackgroundPlacement(backgroundType = backgroundType)
 
     Box(

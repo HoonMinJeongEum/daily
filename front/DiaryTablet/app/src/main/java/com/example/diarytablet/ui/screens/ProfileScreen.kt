@@ -4,8 +4,10 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -29,6 +31,7 @@ fun ProfileScreen (
     Box(
         modifier = Modifier
             .fillMaxSize()
+
     ) {
         Image(
             painter = painterResource(id = R.drawable.logo),
@@ -38,7 +41,13 @@ fun ProfileScreen (
                 .offset(x = 511.dp, y = 79.dp)
         )
         ProfileList(
-            profileList = viewModel.profileList.value
+            profileList = viewModel.profileList.value,
+            modifier = Modifier
+                .align(Alignment.Center)
+                .padding(top = 100.dp),
+            onChooseProfile = {},
+            onCreateProfile = {}
+
         )
     }
 }
