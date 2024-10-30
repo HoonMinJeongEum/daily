@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.diarytablet.ui.components.BasicButton
-import com.example.diarytablet.ui.components.UserProfile
+import com.example.diarytablet.ui.components.Profile
 import com.example.diarytablet.ui.components.AlarmButton
 
 @Composable
@@ -38,7 +38,7 @@ fun Navbar(
             isAlarmOn = isAlarmOn,
             onClick = {}
         )
-        UserProfile(
+        Profile(
             onProfileClick = {}
         )
     }

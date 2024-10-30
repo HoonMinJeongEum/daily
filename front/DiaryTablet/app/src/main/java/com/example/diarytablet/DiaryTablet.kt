@@ -9,6 +9,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.diarytablet.ui.screens.MainScreen
+import com.example.diarytablet.ui.screens.ProfileScreen
 import com.example.diarytablet.ui.theme.BackgroundType
 import com.example.diarytablet.ui.theme.DiaryTabletTheme
 import com.example.diarytablet.viewmodel.LoginViewModel
@@ -19,25 +20,29 @@ import dagger.hilt.android.HiltAndroidApp
 @Composable
 fun DiaryTabletApp() {
     val navController = rememberNavController()
-    val loginViewModel: LoginViewModel = hiltViewModel() // 로그인 뷰모델을 생성합니다.
 
     DiaryTabletTheme {
-        NavHost(navController, startDestination = "login") {
+        NavHost(navController, startDestination = "profileList") {
             composable("login") {
                 LoginScreen(
-                    viewModel = loginViewModel,
                     onLoginSuccess = {
                         navController.navigate("main") {
                             popUpTo("login") { inclusive = true }
                         }
                     },
+                    navController = navController,
                     backgroundType = BackgroundType.DEFAULT // 여기에 적절한 BackgroundType 값을 추가
+                )
+            }
+
+            composable("profileList") {
+                ProfileScreen(
+                    navController = navController
                 )
             }
             composable("main") {
                 // 메인 화면을 위한 뷰모델을 생성합니다.
-                val mainViewModel: MainViewModel = hiltViewModel()
-                MainScreen(viewModel = mainViewModel)
+                MainScreen(navController = navController)
             }
         }
     }

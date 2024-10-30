@@ -20,7 +20,7 @@ import com.example.diarytablet.R
 import com.example.diarytablet.ui.theme.MyTypography
 
 @Composable
-fun UserProfile(
+fun Profile(
     onProfileClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -47,7 +47,7 @@ fun UserProfile(
 @Preview
 @Composable
 fun previewProfile(){
-    UserProfile(
+    Profile(
         onProfileClick = {}
     )
 }
