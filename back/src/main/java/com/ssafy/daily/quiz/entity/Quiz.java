@@ -25,7 +25,14 @@ public class Quiz {
     @Column
     private String word;
 
+    @Column
+    private String sessionId;
+
     public void updateWord(String word) {
         this.word = word;
+    }
+
+    public void updateSessionId(String sessionId) {
+        this.sessionId = sessionId;
     }
 }
