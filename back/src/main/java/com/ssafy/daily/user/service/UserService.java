@@ -1,5 +1,7 @@
 package com.ssafy.daily.user.service;
 
+import com.ssafy.daily.exception.InvalidRefreshTokenException;
+import com.ssafy.daily.exception.LoginFailedException;
 import com.ssafy.daily.exception.QuestNotFoundException;
 import com.ssafy.daily.exception.UsernameAlreadyExistsException;
 import com.ssafy.daily.quiz.entity.Quiz;
@@ -16,14 +18,24 @@ import com.ssafy.daily.user.repository.FamilyRepository;
 import com.ssafy.daily.user.repository.MemberRepository;
 import com.ssafy.daily.user.repository.RefreshRepository;
 import com.sun.tools.javac.Main;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -39,6 +51,7 @@ public class UserService {
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final JWTUtil jwtUtil;
     private final ShellService shellService;
+    private final AuthenticationManager authenticationManager;
 
     public void checkExist(String username){
         Boolean isExist = familyRepository.existsByUsername(username);
@@ -154,5 +167,78 @@ public class UserService {
         int shellCount = shellService.getUserShell(memberId);
 
         return new MainProfileResponse(member, quest, shellCount);
+    }
+
+    public void login(LoginRequest request, HttpServletResponse response){
+        try {
+            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                    request.getUsername(),
+                    request.getPassword()
+            );
+            Authentication authentication = authenticationManager.authenticate(authToken);
+            String username = authentication.getName();
+            Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+            String role = authorities.iterator().next().getAuthority();
+            int familyId = ((CustomUserDetails) authentication.getPrincipal()).getFamilyId();
+
+            // Access 및 Refresh 토큰 생성
+            String accessToken = jwtUtil.createJwt("access", username, role, familyId, 0, 600000L);
+            String refreshToken = jwtUtil.createJwt("refresh", username, role, familyId, 0, 86400000L);
+
+            // Refresh 토큰 저장
+            addRefreshEntity(username, refreshToken, 86400000L);
+
+            // 응답 헤더 및 쿠키 설정
+            response.setHeader("Authorization", "Bearer " + accessToken);
+            response.addCookie(createCookie("refresh", refreshToken));
+        }  catch (AuthenticationException e) {
+            throw new LoginFailedException("로그인 실패: 잘못된 아이디 또는 비밀번호입니다.");
+        }
+    }
+
+    public void logout(HttpServletRequest request, HttpServletResponse response) {
+        // refresh token 확인
+        String refresh = null;
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (cookie.getName().equals("refresh")) {
+                    refresh = cookie.getValue();
+                }
+            }
+        }
+
+        // refresh 토큰이 없으면 400 응답
+        if (refresh == null) {
+            throw new InvalidRefreshTokenException("Refresh 토큰이 존재하지 않습니다.");
+        }
+
+        // 만료된 토큰인지 확인
+        try {
+            jwtUtil.isExpired(refresh);
+        } catch (ExpiredJwtException e) {
+            throw new InvalidRefreshTokenException("만료된 토큰입니다.");
+        }
+
+        // refresh 토큰의 유형 확인
+        String category = jwtUtil.getCategory(refresh);
+        if (!"refresh".equals(category)) {
+            throw new InvalidRefreshTokenException("유효하지 않은 토큰입니다.");
+        }
+
+        // refresh 토큰이 DB에 있는지 확인
+        boolean isExist = refreshRepository.existsByRefresh(refresh);
+        if (!isExist) {
+            throw new InvalidRefreshTokenException("DB에 존재하지 않는 토큰입니다.");
+        }
+
+        // 로그아웃 처리: DB에서 refresh 토큰 삭제
+        refreshRepository.deleteByRefresh(refresh);
+
+        // 쿠키에서 refresh 토큰 제거
+        Cookie cookie = new Cookie("refresh", null);
+        cookie.setMaxAge(0);
+        cookie.setPath("/");
+        response.addCookie(cookie);
     }
 }
