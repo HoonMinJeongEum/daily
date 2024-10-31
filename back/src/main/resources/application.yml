@@ -6,7 +6,6 @@ spring:
     secret: janguhwangubaekguningubangubbangu
 
 # OpenVidu 설정
-livekit:
-  api:
-    key: devkey
-    secret: secret
+openvidu:
+  url: https://k11e204.p.ssafy.io:8443
+  secret: MY_SECRET

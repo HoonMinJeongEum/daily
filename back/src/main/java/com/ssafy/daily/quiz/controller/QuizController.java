@@ -1,13 +1,19 @@
 package com.ssafy.daily.quiz.controller;
 
+import javax.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
 import com.ssafy.daily.quiz.dto.CheckWordRequest;
 import com.ssafy.daily.quiz.dto.SetWordRequest;
 import com.ssafy.daily.quiz.service.QuizService;
 import com.ssafy.daily.user.dto.CustomUserDetails;
+import io.openvidu.java.client.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RequiredArgsConstructor
 @RestController
@@ -15,23 +21,21 @@ import org.springframework.web.bind.annotation.*;
 public class QuizController {
     private final QuizService quizService;
 
+    // 세션 아이디 생성
+    @PostMapping("/sessions")
+    public ResponseEntity<?> initializeSession(@RequestBody(required = false) Map<String, Object> params)
+            throws OpenViduJavaClientException, OpenViduHttpException {
+        return ResponseEntity.ok(quizService.initializeSession(params));
+    }
+
     // 토큰 생성
-    @GetMapping( "/token")
-    public ResponseEntity<?> createToken(@AuthenticationPrincipal CustomUserDetails userDetails) throws Exception {
-        return ResponseEntity.ok(quizService.createToken(userDetails));
+    @PostMapping("/sessions/{sessionId}/connections")
+    public ResponseEntity<?> createConnection(@PathVariable("sessionId") String sessionId,
+                                              @RequestBody(required = false) Map<String, Object> params)
+            throws OpenViduJavaClientException, OpenViduHttpException {
+        return ResponseEntity.ok(quizService.createConnection(sessionId, params));
     }
-    
-    // 웹훅
-    @PostMapping(value = "/livekit/webhook", consumes = "application/webhook+json")
-    public ResponseEntity<String> receiveWebhook(@RequestHeader("Authorization") String authHeader, @RequestBody String body) {
-        try {
-            quizService.receiveWebhook(authHeader, body);
-        } catch (Exception e) {
-            System.err.println("Error validating webhook event: " + e.getMessage());
-        }
-        return ResponseEntity.ok("Webhook received");
-    }
-    
+
     // 단어 추천
     @GetMapping("/word/recommend")
     public ResponseEntity<?> recommendWord(@AuthenticationPrincipal CustomUserDetails userDetails) {

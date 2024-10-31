@@ -43,7 +43,7 @@ dependencies {
 	implementation 'io.jsonwebtoken:jjwt-jackson:0.12.3'
 
 	implementation 'com.google.firebase:firebase-admin:9.4.1'
-	implementation 'io.livekit:livekit-server:0.8.2'
+	implementation 'io.openvidu:openvidu-java-client:2.30.0'
 }
 
 tasks.named('test') {
