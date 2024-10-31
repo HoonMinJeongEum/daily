@@ -1,6 +1,5 @@
 package com.example.diarytablet.datastore
 
-
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
@@ -10,25 +9,21 @@ import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.take
+import javax.inject.Inject
 
-//interface UserStore {
-//    fun login(username: String, password: String): Boolean
-//}
-class UserStore (private val context: Context) {
+class UserStore @Inject constructor(private val context: Context) { // @Inject 추가
     companion object {
         private val Context.dataStore: DataStore<Preferences> by preferencesDataStore("User")
         val KEY_ACCESS_TOKEN = stringPreferencesKey("access_token")
         val KEY_REFRESH_TOKEN = stringPreferencesKey("refresh_token")
         val KEY_USER_NAME = stringPreferencesKey("user_name")
         val KEY_PASSWORD = stringPreferencesKey("password")
-
     }
 
     fun getValue(key: Preferences.Key<String>): Flow<String> {
         return context.dataStore.data.map {
             it[key] ?: ""
-        }
-            .take(1)
+        }.take(1)
     }
 
     suspend fun setValue(
@@ -50,8 +45,3 @@ class UserStore (private val context: Context) {
         return this
     }
 }
-//class FakeUserStore : UserStore {
-//    override fun login(username: String, password: String): Boolean {
-//        return username == "test" && password == "1234"
-//    }
-//}

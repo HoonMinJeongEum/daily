@@ -1,20 +1,19 @@
 package com.example.diarytablet.viewmodel
 
 import android.app.Application
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.diarytablet.datastore.UserStore
 import com.example.diarytablet.domain.RetrofitClient
 import com.example.diarytablet.domain.dto.request.LoginRequestDto
-import com.example.diarytablet.domain.dto.response.LoginResponseDto
 import com.example.diarytablet.domain.repository.UserRepository
-import com.example.diarytablet.utils.Response
-import dagger.hilt.android.internal.Contexts.getApplication
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
+import retrofit2.Response
 import javax.inject.Inject
 
 @HiltViewModel
@@ -33,50 +32,82 @@ class LoginViewModel @Inject constructor(
         onError: () -> Unit
     ) {
         viewModelScope.launch {
-            userStore.getValue(UserStore.KEY_REFRESH_TOKEN)
-                .collect { token ->
-                    val loginRequestDto = LoginRequestDto(
-                        username = username.value,
-                        password = password.value
-                    )
-                    userRepository.login(loginRequestDto)
-                        .collect { response: Response<LoginResponseDto> ->  // 명시적 타입 추가
-                            when (response) {
-                                is Response.Failure -> {
-                                    if (response.e is HttpException) {
-                                        when (response.e.code()) {
-                                            401 -> onErrorPassword()
-                                            else -> onError() // 다른 오류 처리
-                                        }
-                                    } else {
-                                        onError() // 네트워크 오류 처리
-                                    }
-                                }
-                                is Response.Success -> {
-                                    saveUserInfo(response.data)
-                                    onSuccess()
-                                }
-                                Response.Loading -> {
-                                    // Optional: 로딩 상태 처리
-                                }
-                            }
-                        }
+            val loginRequestDto = LoginRequestDto(
+                username = username.value,
+                password = password.value
+            )
+
+            try {
+                val response: Response<Void> = userRepository.login(loginRequestDto)
+
+                Log.d("LoginViewModel", "Response: $response") // Response 로그
+
+                if (response.isSuccessful) {
+                    // 헤더에서 토큰 가져오기
+                    val headers = response.headers()
+                    val accessToken = headers["Authorization"] ?: headers["authorization"]
+                    val refreshToken = headers["Set-Cookie"]?.substringAfter("refresh=")?.substringBefore(";")
+
+                    if (!accessToken.isNullOrEmpty() && !refreshToken.isNullOrEmpty()) {
+                        Log.d("LoginViewModel", "Access Token: $accessToken")
+                        Log.d("LoginViewModel", "Refresh Token: $refreshToken")
+
+                        // RetrofitClient에 토큰 저장
+//                        RetrofitClient.login(accessToken, refreshToken)
+
+                        // UserStore에 사용자 정보 저장
+                        saveUserInfo(accessToken, refreshToken)
+
+                        onSuccess() // 로그인 성공 처리
+                    } else {
+                        Log.d("LoginViewModel", "Token not found in headers")
+                        onError() // 토큰이 없으면 에러 처리
+                    }
+                } else {
+                    handleErrorResponse(response.code(), onErrorPassword, onError)
                 }
+            } catch (e: Exception) {
+                handleException(e, onErrorPassword, onError)
+            }
         }
     }
 
-    private suspend fun saveUserInfo(
-        loginResponseDto: LoginResponseDto
-    ) {
-        with(loginResponseDto) {
-            // RetrofitClient.login()을 호출하여 액세스 토큰과 리프레시 토큰을 설정합니다.
-            RetrofitClient.login(accessToken, refreshToken)
+    private suspend fun saveUserInfo(accessToken: String, refreshToken: String) {
+        userStore.setValue(UserStore.KEY_PASSWORD, password.value)
+            .setValue(UserStore.KEY_REFRESH_TOKEN, refreshToken)
+            .setValue(UserStore.KEY_USER_NAME, username.value)
+            .setValue(UserStore.KEY_ACCESS_TOKEN, accessToken)
 
-            // UserStore에 비밀번호, 리프레시 토큰, 사용자 이름, 액세스 토큰을 저장합니다.
-            userStore.setValue(UserStore.KEY_PASSWORD, password.value)
-                .setValue(UserStore.KEY_REFRESH_TOKEN, refreshToken)
-                .setValue(UserStore.KEY_USER_NAME, username.value)
-                .setValue(UserStore.KEY_ACCESS_TOKEN, accessToken)
+        Log.d("LoginViewModel", "User info saved: Username: ${username.value}, AccessToken: $accessToken")
+    }
+
+    private fun handleErrorResponse(code: Int, onErrorPassword: () -> Unit, onError: () -> Unit) {
+        when (code) {
+            401 -> {
+                Log.d("LoginViewModel", "Unauthorized") // 비밀번호 오류
+                onErrorPassword()
+            }
+            else -> {
+                Log.d("LoginViewModel", "Error: $code") // 다른 오류
+                onError()
+            }
+        }
+    }
+
+    private fun handleException(e: Exception, onErrorPassword: () -> Unit, onError: () -> Unit) {
+        when (e) {
+            is HttpException -> {
+                if (e.code() == 401) {
+                    onErrorPassword() // 비밀번호 오류 처리
+                } else {
+                    Log.e("LoginViewModel", "HTTP error: ${e.message}")
+                    onError() // 일반 오류 처리
+                }
+            }
+            else -> {
+                Log.e("LoginViewModel", "Network error: ${e.message}")
+                onError() // 네트워크 오류 처리
+            }
         }
     }
 }

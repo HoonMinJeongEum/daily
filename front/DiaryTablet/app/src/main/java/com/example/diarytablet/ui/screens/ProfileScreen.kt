@@ -15,6 +15,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.diarytablet.R
+import com.example.diarytablet.domain.dto.request.SelectProfileRequestDto
+import com.example.diarytablet.domain.dto.response.Profile
 import com.example.diarytablet.domain.repository.ProfileListRepository
 import com.example.diarytablet.ui.components.ProfileList
 import com.example.diarytablet.ui.theme.BackgroundPlacement
@@ -26,7 +28,16 @@ fun ProfileScreen (
     navController: NavController,
     viewModel: ProfileViewModel = hiltViewModel(),
     backgroundType: BackgroundType= BackgroundType.DEFAULT) {
+
     BackgroundPlacement(backgroundType = backgroundType)
+
+    fun chooseProfile(profile: Profile) {
+        val selectProfileRequestDto = SelectProfileRequestDto(memberId = profile.id) // memberId를 프로필의 id로 설정
+        viewModel.selectProfile(selectProfileRequestDto) // ViewModel에 전달
+        navController.navigate("main") {
+            popUpTo("profileList") { inclusive = true }
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -45,7 +56,7 @@ fun ProfileScreen (
             modifier = Modifier
                 .align(Alignment.Center)
                 .padding(top = 100.dp),
-            onChooseProfile = {},
+            onChooseProfile = {profile -> chooseProfile(profile)},
             onCreateProfile = {}
 
         )

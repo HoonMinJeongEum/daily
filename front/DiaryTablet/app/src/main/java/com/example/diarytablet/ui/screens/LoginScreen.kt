@@ -1,3 +1,4 @@
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,6 +27,7 @@ import com.example.diarytablet.ui.theme.BackgroundPlacement
 import com.example.diarytablet.ui.theme.BackgroundType
 import com.example.diarytablet.viewmodel.LoginViewModel
 
+// 로그인 텍스트 필드 쪽 수정 필요
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
@@ -33,12 +35,6 @@ fun LoginScreen(
     loginViewModel: LoginViewModel = hiltViewModel(),
     backgroundType: BackgroundType = BackgroundType.DEFAULT
 ) {
-
-    fun onLoginSuccess() = {
-        navController.navigate("main") {
-            popUpTo("login") { inclusive = true }
-        }
-    }
 
     BackgroundPlacement(backgroundType = backgroundType)
 
@@ -134,8 +130,12 @@ fun LoginScreen(
             BasicButton(
                 text = "로그인",
                 onClick = {
-                    loginViewModel.login(onSuccess = {
-                        onLoginSuccess() // 성공 시 호출
+                    loginViewModel.login(
+                        onSuccess = {
+                            Log.d("LoginScreen", "onLoginSuccess called") // 로그 추가
+                            navController.navigate("profileList") {
+                                popUpTo("login") { inclusive = true }
+                            }
                     }, onErrorPassword = {
                         // 비밀번호 오류 처리
                     }, onError = {

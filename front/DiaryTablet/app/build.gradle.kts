@@ -56,6 +56,10 @@ android {
 }
 
 dependencies {
+    implementation ("io.reactivex.rxjava2:rxjava:2.2.21")
+    implementation ("com.squareup.retrofit2:adapter-rxjava2:2.9.0")
+    implementation ("io.reactivex.rxjava2:rxandroid:2.1.1")
+    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.google.dagger:hilt-android:2.51.1")
     implementation("com.google.code.gson:gson:2.11.0")
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
@@ -65,6 +69,7 @@ dependencies {
     implementation(libs.androidx.datastore.preferences.core.jvm)
     implementation("androidx.datastore:datastore-preferences:1.1.1")
     implementation ("com.squareup.okhttp3:logging-interceptor:4.12.0")
+    implementation(libs.volley)
     kapt("com.google.dagger:hilt-compiler:2.51.1")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
     implementation("androidx.compose.runtime:runtime-livedata:1.5.1") // Compose LiveData 연동

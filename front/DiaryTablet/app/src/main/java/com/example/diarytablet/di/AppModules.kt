@@ -1,6 +1,8 @@
 package com.example.diarytablet.di
 
 
+import android.app.Application
+import com.example.diarytablet.datastore.UserStore
 import com.example.diarytablet.domain.RetrofitClient
 import com.example.diarytablet.domain.repository.ProfileListRepository
 import com.example.diarytablet.domain.repository.ProfileListRepositoryImpl
@@ -20,12 +22,17 @@ import retrofit2.Retrofit
 class AppModules {
 
     @Provides
+    fun provideUserStore(application: Application): UserStore {
+        return UserStore(application)
+    }
+    @Provides
     fun provideRetrofit(): Retrofit = RetrofitClient.getInstance()
 
     @Provides
     fun provideUserRepository(
-        userService: UserService
-    ): UserRepository = UserRepositoryImpl(userService)
+        userService: UserService,
+        userStore: UserStore
+    ): UserRepository = UserRepositoryImpl(userService,userStore,)
 
     @Provides
     fun provideProfileListRepository(

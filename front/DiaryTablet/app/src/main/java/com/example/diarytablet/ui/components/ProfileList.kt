@@ -34,15 +34,17 @@ import coil3.request.ImageRequest
 import coil3.request.transformations
 import coil3.transform.CircleCropTransformation
 import com.example.diarytablet.R
+import com.example.diarytablet.domain.dto.request.CreateProfileRequestDto
+import com.example.diarytablet.domain.dto.request.SelectProfileRequestDto
 import com.example.diarytablet.ui.theme.MyTypography
 import com.example.diarytablet.ui.theme.PastelNavy
 
 @Composable
 fun ProfileList(
     modifier: Modifier = Modifier,
-    profileList: ProfileListResponse,
+    profileList: List<Profile>,
     onCreateProfile: () -> Unit,
-    onChooseProfile: () -> Unit
+    onChooseProfile: (Profile) -> Unit
 ) {
     Row(
         modifier = modifier
@@ -51,8 +53,8 @@ fun ProfileList(
         horizontalArrangement = Arrangement.spacedBy(32.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        profileList.profiles.forEach { profile ->
-            ProfileItem(profile = profile, onChooseProfile)
+        profileList.forEach { profile ->
+            ProfileItem(profile = profile, onChooseProfile = onChooseProfile)
         }
         Surface(
             modifier = Modifier
@@ -79,12 +81,12 @@ fun ProfileList(
 }
 
 @Composable
-fun ProfileItem(profile: Profile, onChooseProfile: () -> Unit ) {
+fun ProfileItem(profile: Profile, onChooseProfile: (Profile) -> Unit ) {
     Box(
         modifier = Modifier
             .size(246.dp, 336.dp)
             .padding(8.dp)
-        .clickable { onChooseProfile() }
+        .clickable { onChooseProfile(profile) }
     ) {
         // 프로필 전체 배경
         Image(
