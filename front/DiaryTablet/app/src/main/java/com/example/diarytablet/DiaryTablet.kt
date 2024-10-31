@@ -10,6 +10,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.diarytablet.ui.screens.MainScreen
 import com.example.diarytablet.ui.screens.ProfileScreen
+import com.example.diarytablet.ui.screens.ShopScreen
+import com.example.diarytablet.ui.screens.StockScreen
 import com.example.diarytablet.ui.theme.BackgroundType
 import com.example.diarytablet.ui.theme.DiaryTabletTheme
 import com.example.diarytablet.viewmodel.LoginViewModel
@@ -22,7 +24,7 @@ fun DiaryTabletApp() {
     val navController = rememberNavController()
 
     DiaryTabletTheme {
-        NavHost(navController, startDestination = "profileList") {
+        NavHost(navController, startDestination = "main") {
             composable("login") {
                 LoginScreen(
                     onLoginSuccess = {
@@ -43,6 +45,12 @@ fun DiaryTabletApp() {
             composable("main") {
                 // 메인 화면을 위한 뷰모델을 생성합니다.
                 MainScreen(navController = navController)
+            }
+            composable("shop"){
+                ShopScreen(navController = navController)
+            }
+            composable("stock"){
+                StockScreen(navController = navController)
             }
         }
     }
