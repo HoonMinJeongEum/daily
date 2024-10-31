@@ -89,7 +89,7 @@ public class DiaryService {
         body : 알림 내용 ex) 그림 퀴즈 요청
         */
 //        String name = userDetails.getMember().getName();
-//        int titleId = diary.getId();
+//        String titleId = String.valueOf(diary.getId());
 //        int toId = userDetails.getFamilyId();
 //        Role role = Role.PARENT;
 //        String title = "그림 일기";

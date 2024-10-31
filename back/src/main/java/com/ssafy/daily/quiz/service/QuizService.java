@@ -1,6 +1,7 @@
 package com.ssafy.daily.quiz.service;
 
 import com.ssafy.daily.alarm.service.AlarmService;
+import com.ssafy.daily.common.Role;
 import com.ssafy.daily.quiz.dto.CheckWordRequest;
 import com.ssafy.daily.quiz.dto.RecommendWordResponse;
 import com.ssafy.daily.quiz.dto.SetWordRequest;
@@ -15,7 +16,6 @@ import io.openvidu.java.client.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -44,10 +44,30 @@ public class QuizService {
     }
 
     // 세션 아이디 생성
-    public String initializeSession(Map<String, Object> params) throws OpenViduJavaClientException, OpenViduHttpException {
+    public String initializeSession(CustomUserDetails userDetails, Map<String, Object> params) throws Exception {
+        // 세션 아이디 생성
         SessionProperties properties = SessionProperties.fromJson(params).build();
         Session session = openvidu.createSession(properties);
-        return session.getSessionId();
+        String sessionId = session.getSessionId();
+
+        // 사용자 정보 가져오기
+//        int familyId = userDetails.getFamily().getId();
+//        String childName = userDetails.getMember().getName();
+//        Quiz quiz = quizRepository.findByFamilyId(familyId);
+//
+//        // 부모님이 이미 그림 퀴즈를 이용 중인 경우
+//        if (quiz.getSessionId() != null) {
+//            return "다른 사용자와 그림 퀴즈를 이용하고 있습니다.";
+//        }
+//
+//        // 세션 아이디 업데이트
+//        quiz.updateSessionId(sessionId);
+//        quizRepository.save(quiz);
+//
+//        // 알림
+//        alarmService.sendNotification(childName, sessionId, familyId, Role.PARENT, "그림 퀴즈", "요청");
+
+        return sessionId;
     }
 
     // 토큰 생성
@@ -100,7 +120,5 @@ public class QuizService {
         Quiz quiz = quizRepository.findByFamilyId(familyId);
         return request.getWord().equals(quiz.getWord());
     }
-
-
 
 }

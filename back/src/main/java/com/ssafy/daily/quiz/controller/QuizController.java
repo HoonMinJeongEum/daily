@@ -1,14 +1,11 @@
 package com.ssafy.daily.quiz.controller;
 
-import javax.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Value;
 import com.ssafy.daily.quiz.dto.CheckWordRequest;
 import com.ssafy.daily.quiz.dto.SetWordRequest;
 import com.ssafy.daily.quiz.service.QuizService;
 import com.ssafy.daily.user.dto.CustomUserDetails;
 import io.openvidu.java.client.*;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -23,9 +20,9 @@ public class QuizController {
 
     // 세션 아이디 생성
     @PostMapping("/sessions")
-    public ResponseEntity<?> initializeSession(@RequestBody(required = false) Map<String, Object> params)
-            throws OpenViduJavaClientException, OpenViduHttpException {
-        return ResponseEntity.ok(quizService.initializeSession(params));
+    public ResponseEntity<?> initializeSession(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody(required = false) Map<String, Object> params)
+            throws Exception {
+        return ResponseEntity.ok(quizService.initializeSession(userDetails, params));
     }
 
     // 토큰 생성

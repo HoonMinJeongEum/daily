@@ -27,7 +27,7 @@ public class Alarm {
     private String name;
 
     @Column(nullable = false)
-    private int titleId;
+    private String titleId;
 
     @Column(nullable = false)
     private String title;
