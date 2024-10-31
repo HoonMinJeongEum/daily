@@ -17,4 +17,4 @@ COPY src/main/resources/serviceAccountKey.json /app/resources/serviceAccountKey.
 EXPOSE 8081
 
 # 애플리케이션 시작 시 환경 설정 및 타임존 설정
-ENTRYPOINT ["java", "-jar", "-Dspring.profiles.active=dev", "-Duser.timezone=Asia/Seoul", "-Dspring.config.location=file:/app/resources/", "/daily.jar"]
+ENTRYPOINT ["java", "-jar", "-Duser.timezone=Asia/Seoul", "-Dspring.config.location=file:/app/resources/", "/daily.jar"]
