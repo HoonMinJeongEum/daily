@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 @Data
 @RequiredArgsConstructor
 public class MainProfileResponse {
+    private int memberId;
     private String img;
     private Boolean diaryStatus;
     private Boolean quizStatus;
@@ -16,6 +17,7 @@ public class MainProfileResponse {
 
     // 생성자
     public MainProfileResponse(Member member, Quest quest, int shellCount) {
+        this.memberId = member.getId();
         this.img = member.getImg();
         this.diaryStatus = quest.isDiaryStatus();
         this.quizStatus = quest.isQuizStatus();

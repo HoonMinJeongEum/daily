@@ -26,7 +26,6 @@ public class SecurityConfig {
     private final RefreshRepository refreshRepository;
     private final FamilyRepository familyRepository;
     private final MemberRepository memberRepository;
-    private final CustomAuthTokenFilter customAuthTokenFilter;
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder() {
         return new BCryptPasswordEncoder();
@@ -52,20 +51,13 @@ public class SecurityConfig {
         //경로별 인가 작업
         http
                 .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/api/login", "/api/user/join", "/api/user/check/*", "/api/health-check").permitAll()
+                        .requestMatchers("/api/user/login", "/api/user/join", "/api/user/check/*", "/api/health-check").permitAll()
                         .requestMatchers("/admin").hasRole("ADMIN")
                         .requestMatchers("/reissue").permitAll()
                         .anyRequest().authenticated());
         // 필터 추가
         http
-                .addFilterBefore(new JWTFilter(jwtUtil, familyRepository, memberRepository), LoginFilter.class);
-        http
-                .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil, refreshRepository), UsernamePasswordAuthenticationFilter.class);
-        http
-                .addFilterBefore(new CustomLogoutFilter(jwtUtil, refreshRepository), LogoutFilter.class);
-        // Custom 인증 필터 추가
-        http
-                .addFilterBefore(customAuthTokenFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(new JWTFilter(jwtUtil, familyRepository, memberRepository), UsernamePasswordAuthenticationFilter.class);
 
         //세션 설정 (꼭 STATELESS로)
         http

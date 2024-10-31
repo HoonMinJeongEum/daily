@@ -1,5 +1,6 @@
 package com.ssafy.daily.exception;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -41,5 +42,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(QuestNotFoundException.class)
     public ResponseEntity<String> handleCouponNotFoundException(QuestNotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    }
+
+    @ExceptionHandler(LoginFailedException.class)
+    public ResponseEntity<String> handleCouponNotFoundException(LoginFailedException e) {
+        return ResponseEntity.status(HttpServletResponse.SC_UNAUTHORIZED).body(e.getMessage());
+    }
+
+    @ExceptionHandler(InvalidRefreshTokenException.class)
+    public ResponseEntity<String> handleIllegalArgumentException(InvalidRefreshTokenException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
 }

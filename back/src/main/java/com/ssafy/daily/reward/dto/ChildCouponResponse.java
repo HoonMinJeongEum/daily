@@ -11,15 +11,15 @@ public class ChildCouponResponse {
     private final long earnedCouponId;
     private final String name;
     private final String description;
-    private final LocalDateTime used_at;
-    private final LocalDateTime created_at;
+    private final LocalDateTime usedAt;
+    private final LocalDateTime createdAt;
 
     public ChildCouponResponse(EarnedCoupon earnedCoupon) {
         this.memberId = earnedCoupon.getMember().getId();
         this.earnedCouponId = earnedCoupon.getId();
         this.name = earnedCoupon.getMember().getName();
         this.description = earnedCoupon.getCoupon().getDescription();
-        this.used_at = earnedCoupon.getUsedAt();
-        this.created_at = earnedCoupon.getCoupon().getPurchasedAt();
+        this.usedAt = earnedCoupon.getUsedAt();
+        this.createdAt = earnedCoupon.getCoupon().getPurchasedAt();
     }
 }
