@@ -5,9 +5,13 @@ import androidx.lifecycle.ViewModel
 import com.example.diarytablet.R
 import com.example.diarytablet.model.CouponStock
 import com.example.diarytablet.model.StickerStock
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
 
-class StockViewModel : ViewModel() {
+@HiltViewModel
+class StockViewModel @Inject constructor(
+) : ViewModel() {
     // 임시 쿠폰 목록 데이터
     val coupons: MutableLiveData<List<CouponStock>> = MutableLiveData(listOf(
         CouponStock(1, "꿀돈 생포 갈비 같이 먹으러 가기", "2024-10-25"),
