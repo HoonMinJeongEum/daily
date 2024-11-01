@@ -2,30 +2,30 @@
 package com.ssafy.daily.word.controller;
 
 import com.ssafy.daily.word.dto.LearnedWordResponse;
-import com.ssafy.daily.word.service.LearnedWordService;
+import com.ssafy.daily.word.service.WordService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 import com.ssafy.daily.user.dto.CustomUserDetails;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/word")
+@RequestMapping("/api/word/learned")
 @RequiredArgsConstructor
 public class LearnedWordController {
 
-    private final LearnedWordService learnedWordService;
+    private final WordService wordService;
 
-    @GetMapping("/learned")
+    // 학습된 단어 조회 API
+    @GetMapping
     public ResponseEntity<List<LearnedWordResponse>> getLearnedWordsByMember(@AuthenticationPrincipal CustomUserDetails userDetails) {
         int memberId = userDetails.getMemberId();
-        List<LearnedWordResponse> learnedWords = learnedWordService.getLearnedWordsByMember(memberId);
+        List<LearnedWordResponse> learnedWords = wordService.getLearnedWordsByMember(memberId);
 
         if (learnedWords.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+            return ResponseEntity.noContent().build();
         }
 
         return ResponseEntity.ok(learnedWords);

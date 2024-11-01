@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Table(indexes = {@Index(name = "idx_member_word", columnList = "member_id, word_id")})
 public class LearnedWord {
 
     @Id
