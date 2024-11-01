@@ -49,6 +49,30 @@ public class JWTUtil {
         return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().getExpiration().before(new Date());
     }
 
+
+    public String createAccessJwt(String username, String role, int tableId, int memberId, Long expiredMs){
+
+        return createJwt("access", username, role, tableId, memberId, expiredMs);
+
+    }
+
+    public String createRefreshJwt(String username, String role, int tableId, int memberId, Long expiredMs){
+
+        return createJwt("refresh", username, role, tableId, memberId, expiredMs);
+    }
+
+    public Boolean isAccessToken(String token){
+
+        return getCategory(token).equals("access");
+
+    }
+
+    public Boolean isRefreshToken(String token){
+
+        return getCategory(token).equals("refresh");
+
+    }
+
     public String createJwt(String category, String username, String role, int tableId, int memberId, Long expiredMs) {
 
         return Jwts.builder()
