@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -31,6 +33,7 @@ fun ProfileScreen (
     backgroundType: BackgroundType= BackgroundType.DEFAULT) {
 
     BackgroundPlacement(backgroundType = backgroundType)
+    val profileList by viewModel.profileList
 
     fun chooseProfile(profile: Profile) {
         val selectProfileRequestDto = SelectProfileRequestDto(memberId = profile.id) // memberId를 프로필의 id로 설정
@@ -53,13 +56,14 @@ fun ProfileScreen (
                 .offset(x = 511.dp, y = 79.dp)
         )
         ProfileList(
-            profileList = viewModel.profileList.value,
+            profileList = profileList,
             modifier = Modifier
                 .align(Alignment.Center)
                 .padding(top = 100.dp),
             onChooseProfile = {profile -> chooseProfile(profile)},
             onCreateProfile = { name, img -> // name과 imgUrl을 인자로 받도록 수정
-                val createProfileRequestDto = CreateProfileRequestDto(name = name, img = img) // CreateProfileRequestDto 객체 생성
+                val defaultImgUrl = "https://example.com/default_profile_image.png"
+                val createProfileRequestDto = CreateProfileRequestDto(name = name, img = defaultImgUrl)
                 viewModel.addProfile(createProfileRequestDto) // ViewModel에 전달
             }
         )
