@@ -1,5 +1,6 @@
 package com.example.diarytablet.domain
 
+import com.example.diarytablet.datastore.UserStore
 import com.example.diarytablet.utils.Const
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonDeserializer
@@ -20,6 +21,12 @@ object RetrofitClient {
     private var accessToken: String? = null
     private var refreshToken: String? = null
 
+    private lateinit var userStore: UserStore // UserStore 추가
+
+    fun init(userStore: UserStore) { // UserStore 초기화 메서드 추가
+        this.userStore = userStore
+    }
+
     fun getInstance(): Retrofit {
         if (instance == null) {
             initInstance()
@@ -35,8 +42,8 @@ object RetrofitClient {
                     val original: Request = it.request()
                     val request = original.newBuilder()
                         .header("Content-Type", "application/json")
-                        .header("access_token", accessToken ?: "")
-                        .header("refresh_token", refreshToken ?: "")
+                        .header("Authorization", "Bearer ${accessToken ?: ""}") // Authorization 헤더에 Bearer 추가
+                        .header("Set-Cookie", refreshToken ?: "")
                         .build()
                     it.proceed(request)
                 }
@@ -49,19 +56,23 @@ object RetrofitClient {
         instance = Retrofit.Builder()
             .baseUrl(Const.WEB_API)
             .addConverterFactory(getGsonConverterFactory())
-
             .client(client)
             .build()
     }
 
-    fun login(
-        accessToken: String,
-        refreshToken: String
-    ) {
+
+    fun login(accessToken: String, refreshToken: String) {
         this.accessToken = accessToken
         this.refreshToken = refreshToken
         initInstance()
     }
+
+//    private suspend fun saveTokensToStore(accessToken: String, refreshToken: String) {
+//        // UserStore에 accessToken과 refreshToken 저장
+//        userStore.setValue(UserStore.KEY_ACCESS_TOKEN, accessToken)
+//        userStore.setValue(UserStore.KEY_REFRESH_TOKEN, refreshToken)
+//    }
+
 
     fun resetAccessToken(accessToken: String) {
         this.accessToken = accessToken

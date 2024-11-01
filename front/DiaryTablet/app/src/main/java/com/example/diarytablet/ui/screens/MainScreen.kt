@@ -18,12 +18,19 @@ import com.example.diarytablet.ui.theme.BackgroundPlacement
 import com.example.diarytablet.ui.theme.BackgroundType
 import com.example.diarytablet.viewmodel.MainViewModel
 
+
 @Composable
 fun MainScreen(
     navController: NavController,
     viewModel: MainViewModel = hiltViewModel(),
     backgroundType: BackgroundType = BackgroundType.DEFAULT
 ) {
+    fun chooseProfile() = {
+        navController.navigate("main") {
+            popUpTo("login") { inclusive = true }
+        }
+    }
+
     BackgroundPlacement(backgroundType = backgroundType)
 
 
