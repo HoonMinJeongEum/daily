@@ -51,7 +51,7 @@ public class SecurityConfig {
         //경로별 인가 작업
         http
                 .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/api/user/login", "/api/user/join", "/api/user/check/*", "/api/health-check").permitAll()
+                        .requestMatchers("/api/user/login", "/api/user/join", "/api/user/check/*", "/api/health-check", "/api/quiz/sessions","/api/quiz/sessions/{sessionId}/connections").permitAll()
                         .requestMatchers("/admin").hasRole("ADMIN")
                         .requestMatchers("/reissue").permitAll()
                         .anyRequest().authenticated());

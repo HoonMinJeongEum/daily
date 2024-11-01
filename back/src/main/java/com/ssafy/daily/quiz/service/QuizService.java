@@ -12,15 +12,14 @@ import com.ssafy.daily.word.entity.LearnedWord;
 import com.ssafy.daily.word.entity.Word;
 import com.ssafy.daily.word.repository.LearnedWordRepository;
 import com.ssafy.daily.word.repository.WordRepository;
-import io.livekit.server.AccessToken;
-import io.livekit.server.RoomJoin;
-import io.livekit.server.RoomName;
-import io.livekit.server.WebhookReceiver;
-import livekit.LivekitWebhook;
+import io.openvidu.java.client.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
+import javax.annotation.PostConstruct;
 import java.util.*;
 
 @RequiredArgsConstructor
@@ -31,39 +30,57 @@ public class QuizService {
     private final QuizRepository quizRepository;
     private final AlarmService alarmService;
 
-    @Value("${livekit.api.key}")
-    private String LIVEKIT_API_KEY;
+    @Value("${openvidu.url}")
+    private String OPENVIDU_URL;
 
-    @Value("${livekit.api.secret}")
-    private String LIVEKIT_API_SECRET;
+    @Value("${openvidu.secret}")
+    private String OPENVIDU_SECRET;
+
+    private OpenVidu openvidu;
+
+    @PostConstruct
+    public void init() {
+        this.openvidu = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET);
+    }
+
+    // 세션 아이디 생성
+    public String initializeSession(CustomUserDetails userDetails, Map<String, Object> params) throws Exception {
+        // 세션 아이디 생성
+        SessionProperties properties = SessionProperties.fromJson(params).build();
+        Session session = openvidu.createSession(properties);
+        String sessionId = session.getSessionId();
+
+        // 사용자 정보 가져오기
+//        int familyId = userDetails.getFamily().getId();
+//        String childName = userDetails.getMember().getName();
+//        Quiz quiz = quizRepository.findByFamilyId(familyId);
+//
+//        // 부모님이 이미 그림 퀴즈를 이용 중인 경우
+//        if (quiz.getSessionId() != null) {
+//            return "다른 사용자와 그림 퀴즈를 이용하고 있습니다.";
+//        }
+//
+//        // 세션 아이디 업데이트
+//        quiz.updateSessionId(sessionId);
+//        quizRepository.save(quiz);
+//
+//        // 알림
+//        alarmService.sendNotification(childName, sessionId, familyId, Role.PARENT, "그림 퀴즈", "요청");
+
+        return sessionId;
+    }
 
     // 토큰 생성
-    public Map<String, String> createToken(CustomUserDetails userDetails) throws Exception {
-        int familyId = userDetails.getFamily().getId();
-        String roomName = "quizRoom" + familyId;
-        String participantName = (userDetails.getMember() != null)
-                ? userDetails.getMember().getName()
-                : userDetails.getFamily().getUsername();
-
-        AccessToken token = new AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET);
-
-        token.setName(participantName);
-        token.setIdentity(participantName);
-        token.addGrants(new RoomJoin(true), new RoomName(roomName));
-        if(userDetails.getMember() != null) {
-            alarmService.sendNotification(participantName, 0, familyId, Role.PARENT, "그림 퀴즈", "요청");
+    public String createConnection(String sessionId, Map<String, Object> params) throws OpenViduJavaClientException, OpenViduHttpException {
+        Session session = openvidu.getActiveSession(sessionId);
+        if (session == null) {
+          throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Session not found");
         }
-
-        return Map.of("token", token.toJwt());
+        ConnectionProperties properties = ConnectionProperties.fromJson(params).build();
+        Connection connection = session.createConnection(properties);
+        return connection.getToken();
     }
 
-    // 웹 훅
-    public void receiveWebhook(String authHeader, String body) {
-        WebhookReceiver webhookReceiver = new WebhookReceiver(LIVEKIT_API_KEY, LIVEKIT_API_SECRET);
-        LivekitWebhook.WebhookEvent event = webhookReceiver.receive(body, authHeader);
-        System.out.println("LiveKit Webhook: " + event.toString());
-    }
-    
     // 단어 추천
     public List<RecommendWordResponse> recommendWord(CustomUserDetails userDetails) {
         int memberId = userDetails.getMember().getId();
@@ -103,4 +120,5 @@ public class QuizService {
         Quiz quiz = quizRepository.findByFamilyId(familyId);
         return request.getWord().equals(quiz.getWord());
     }
+
 }

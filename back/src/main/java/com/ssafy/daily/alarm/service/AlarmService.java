@@ -58,7 +58,7 @@ public class AlarmService {
     title : 알림 제목 (그림 일기 or 그림 퀴즈)
     body : 알림 내용 ex) 그림 퀴즈 요청
     */
-    public void sendNotification(String name, int titleId, int toId, Role role, String title, String body) throws Exception {
+    public void sendNotification(String name, String titleId, int toId, Role role, String title, String body) throws Exception {
         // 토큰 조회
         FCMToken fcmToken = getToken(toId, role);
 
@@ -111,7 +111,7 @@ public class AlarmService {
     }
 
     // 알림 저장
-    private void saveAlarm(String name, int titleId, FCMToken fcmToken, String title, String body) {
+    private void saveAlarm(String name, String titleId, FCMToken fcmToken, String title, String body) {
         Alarm alarm = Alarm.builder()
                 .titleId(titleId)
                 .fcmToken(fcmToken)
