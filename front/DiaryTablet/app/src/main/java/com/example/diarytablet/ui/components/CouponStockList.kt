@@ -1,44 +1,95 @@
-package com.example.diarytablet.ui.components
-
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.diarytablet.model.CouponStock
+import com.example.diarytablet.R
+import kotlinx.coroutines.delay
 
 @Composable
 fun CouponStockList(coupons: List<CouponStock>) {
-    LazyColumn(contentPadding = PaddingValues(16.dp)) {
-        items(coupons) { coupon ->
-            CouponStockCard(coupon)
+    LazyColumn(
+        contentPadding = PaddingValues(5.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        itemsIndexed(coupons) { index, coupon ->
+            CouponStockBox(coupon, index)
         }
     }
 }
 
 @Composable
-fun CouponStockCard(coupon: CouponStock) {
-    Card(
-        modifier = Modifier
-            .padding(8.dp)
-            .fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(4.dp),
+fun CouponStockBox(coupon: CouponStock, index: Int) {
+    var isPressed by remember { mutableStateOf(false) }
 
+    // 배경 이미지를 클릭 상태에 따라 설정
+    val backgroundImage = if (isPressed) {
+        if (index % 2 == 0) R.drawable.coupon_yellow_down else R.drawable.coupon_blue_down
+    } else {
+        if (index % 2 == 0) R.drawable.coupon_yellow_up else R.drawable.coupon_blue_up
+    }
+
+    Box(
+        modifier = Modifier
+            .padding(0.dp)
+            .fillMaxWidth(0.9f)
+            .aspectRatio(6.8f / 1f)
+            .clickable(
+                indication = null, // 클릭 시 시각적 효과 제거
+                interactionSource = remember { MutableInteractionSource() }
+            ) {
+                isPressed = true
+            }
     ) {
+        // 클릭 후 일정 시간 후에 상태를 원래대로 복귀
+        LaunchedEffect(isPressed) {
+            if (isPressed) {
+                delay(100L) // 100밀리초 동안 `down` 상태 유지
+                isPressed = false // `up` 상태로 복귀
+            }
+        }
+
+        // 배경 이미지 설정
+        Image(
+            painter = painterResource(id = backgroundImage),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize()
+        )
+
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(start = 5.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = coupon.description, fontSize = 18.sp, modifier = Modifier.weight(1f))
+            // 쿠폰 아이콘
+            Image(
+                painter = painterResource(id = R.drawable.coupon_icon),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxHeight(0.6f)
+                    .aspectRatio(1f)
+                    .padding(start = 8.dp, end = 8.dp)
+            )
+            // 설명 텍스트
+            Text(
+                text = coupon.description,
+                fontSize = 28.sp,
+                color = Color.Black,
+                modifier = Modifier
+                    .weight(0.6f)
+                    .padding(start = 10.dp)
+            )
         }
     }
 }

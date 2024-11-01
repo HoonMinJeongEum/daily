@@ -1,13 +1,11 @@
-package com.example.diarytablet.ui.components
-
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -15,77 +13,94 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.diarytablet.model.Coupon
-import com.example.diarytablet.R // 배경 이미지 리소스 추가
+import com.example.diarytablet.R
+import kotlinx.coroutines.delay
 
 @Composable
 fun CouponShopList(coupons: List<Coupon>) {
     LazyColumn(
-        contentPadding = PaddingValues(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally // 가로 정렬을 중앙으로 설정
+        contentPadding = PaddingValues(5.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         itemsIndexed(coupons) { index, coupon ->
-            CouponCard(coupon, index)
+            CouponBox(coupon, index)
         }
     }
 }
 
 @Composable
-fun CouponCard(coupon: Coupon, index: Int) {
-    val backgroundImage = if (index % 2 == 0) {
-        R.drawable.coupon_yellow_up // 짝수 인덱스 배경 이미지
+fun CouponBox(coupon: Coupon, index: Int) {
+    var isPressed by remember { mutableStateOf(false) }
+
+    // 클릭 상태에 따라 배경 이미지 설정
+    val backgroundImage = if (isPressed) {
+        if (index % 2 == 0) R.drawable.coupon_yellow_down else R.drawable.coupon_blue_down
     } else {
-        R.drawable.coupon_blue_up // 홀수 인덱스 배경 이미지
+        if (index % 2 == 0) R.drawable.coupon_yellow_up else R.drawable.coupon_blue_up
     }
 
-    Card(
+    Box(
         modifier = Modifier
-            .padding(11.dp)
-            .width(950.dp)  // 고정된 너비를 이미지 크기와 맞춤
-            .height(120.dp), // 고정된 높이도 이미지 크기와 맞춤
-
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(0.dp) // 그림자 제거
+            .padding(0.dp)
+            .fillMaxWidth(0.9f)
+            .aspectRatio(6.8f / 1f)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = {
+                    // 클릭 시 상태를 `true`로 설정
+                    isPressed = true
+                }
+            )
     ) {
-        // 배경 이미지와 내용물을 위한 Box
+        // 클릭 후 일정 시간 후에 상태를 원래대로 복귀
+        LaunchedEffect(isPressed) {
+            if (isPressed) {
+                delay(100L) // 100ms 동안 `down` 상태 유지
+                isPressed = false // `up` 상태로 복귀
+            }
+        }
+
+        // 배경 이미지와 내용물 레이아웃
         Box(modifier = Modifier.fillMaxSize()) {
-            // 배경 이미지
             Image(
-                painter = painterResource(id = backgroundImage), // 인덱스에 따라 배경 이미지 변경
+                painter = painterResource(id = backgroundImage),
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize()
             )
 
-            // 카드의 내용물
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(16.dp),
+                    .padding(start = 5.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // 쿠폰 이미지
+                // 쿠폰 아이콘
                 Image(
-                    painter = painterResource(id = R.drawable.coupon_icon), // 쿠폰 이미지 리소스 ID
+                    painter = painterResource(id = R.drawable.coupon_icon),
                     contentDescription = null,
                     modifier = Modifier
-                        .size(100.dp) // 이미지 크기 조정
-                        .padding(start = 20.dp, end = 20.dp) // 텍스트와의 간격 설정
+                        .fillMaxHeight(0.6f)
+                        .aspectRatio(1f)
+                        .padding(start = 8.dp, end = 8.dp)
                 )
 
                 // 쿠폰 설명 텍스트
                 Text(
                     text = coupon.description,
-                    fontSize = 30.sp, // 폰트 크기 추가로 증가
+                    fontSize = 28.sp,
                     color = Color.Black,
                     modifier = Modifier
-                        .weight(1f)
+                        .weight(0.6f)
                         .padding(start = 10.dp)
                 )
 
                 // 가격 텍스트
                 Text(
                     text = "${coupon.price} 조개",
-                    fontSize = 22.sp, // 폰트 크기 증가
-                    color = Color.Gray
+                    fontSize = 20.sp,
+                    color = Color.Gray,
+                    modifier = Modifier.weight(0.1f)
                 )
             }
         }
