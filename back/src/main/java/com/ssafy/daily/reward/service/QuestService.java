@@ -1,6 +1,9 @@
 package com.ssafy.daily.reward.service;
 
 import com.ssafy.daily.common.Content;
+import com.ssafy.daily.quiz.entity.Quiz;
+import com.ssafy.daily.quiz.repository.QuizRepository;
+import com.ssafy.daily.quiz.service.QuizService;
 import com.ssafy.daily.reward.dto.UpdateQuestRequest;
 import com.ssafy.daily.reward.entity.Quest;
 import com.ssafy.daily.reward.repository.QuestRepository;
@@ -20,6 +23,7 @@ public class QuestService {
     private final QuestRepository questRepository;
     private final ShellService shellService;
     private final MemberRepository memberRepository;
+    private final QuizRepository quizRepository;
 
     // 퀘스트 완료
     public void updateQuest(CustomUserDetails userDetails, UpdateQuestRequest request) {
@@ -29,7 +33,7 @@ public class QuestService {
         Quest quest = questRepository.findByMemberId(memberId);
 
         // 퀘스트 완료 상태 업데이트
-        boolean isQuestUpdated = updateQuestStatus(quest, request);
+        boolean isQuestUpdated = updateQuestStatus(userDetails, quest, request);
 
         if (isQuestUpdated) {
             // 기본 보상 지급
@@ -60,7 +64,7 @@ public class QuestService {
     }
 
     // 퀘스트 상태 업데이트
-    private boolean updateQuestStatus(Quest quest, UpdateQuestRequest request) {
+    private boolean updateQuestStatus(CustomUserDetails userDetails, Quest quest, UpdateQuestRequest request) {
         switch (request.getQuestType()) {
             case DIARY:
                 if (!quest.isDiaryStatus()) {
@@ -69,6 +73,11 @@ public class QuestService {
                 }
                 break;
             case QUIZ:
+                // 세션 아이디 null 처리
+                Quiz quiz = quizRepository.findByFamilyId(userDetails.getFamily().getId());
+                quiz.updateSessionId(null);
+                quizRepository.save(quiz);
+
                 if (!quest.isQuizStatus()) {
                     quest.setQuizStatus(true);
                     return true;

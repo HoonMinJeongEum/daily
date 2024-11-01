@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 public class AlarmResponse {
     private final long id;
 
-    private final int titleId;
+    private final String titleId;
 
     private final String name;
 
