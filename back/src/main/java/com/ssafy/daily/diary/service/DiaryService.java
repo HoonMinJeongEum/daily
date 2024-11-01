@@ -16,8 +16,10 @@ import com.ssafy.daily.user.entity.Member;
 import com.ssafy.daily.user.repository.FamilyRepository;
 import com.ssafy.daily.user.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -30,6 +32,12 @@ public class DiaryService {
     private final AlarmService alarmService;
     private final MemberRepository memberRepository;
     private final FamilyRepository familyRepository;
+
+    @Value(("${clova.ocr.apiUrl}"))
+    private String apiUrl;
+
+    @Value("${clova.ocr.secretKey}")
+    private String secretKey;
 
     public List<DiaryResponse> getDiaries(CustomUserDetails userDetails, Integer memberId) {
         // memberId가 null이면 JWT 토큰에서 가져옴
@@ -53,31 +61,36 @@ public class DiaryService {
         }).collect(Collectors.toList());
     }
 
-    public void writeDiary(CustomUserDetails userDetails, WriteDiaryRequest request) {
-        String content = request.getContent();
-        String img = request.getImg();
-        String sound = request.getSound();
+    public void writeDiary(CustomUserDetails userDetails, MultipartFile file) {
+        // S3 이미지 업로드 후 url 받기
+        String imgUrl;
 
-        if (content == null || content.isEmpty()) {
-            throw new IllegalArgumentException("그림일기 내용을 작성해주세요.");
-        }
-        if (img == null || img.isEmpty()) {
-            throw new IllegalArgumentException("그림일기 이미지가 유효하지 않습니다.");
-        }
-        if (sound == null || sound.isEmpty()) {
-            throw new IllegalArgumentException("그림일기 BGM이 유효하지 않습니다.");
-        }
+        // 이미지 파일을 OCR 처리
+        String content;
+
+        // 추출한 텍스트로 BGM 생성
+        String sound;
+
+//        if (content == null || content.isEmpty()) {
+//            throw new IllegalArgumentException("그림일기 내용을 작성해주세요.");
+//        }
+//        if (img == null || img.isEmpty()) {
+//            throw new IllegalArgumentException("그림일기 이미지가 유효하지 않습니다.");
+//        }
+//        if (sound == null || sound.isEmpty()) {
+//            throw new IllegalArgumentException("그림일기 BGM이 유효하지 않습니다.");
+//        }
 
         Member member = memberRepository.findById(userDetails.getMemberId())
                 .orElseThrow(() -> new EmptyResultDataAccessException("해당 프로필을 찾을 수 없습니다.", 1));
 
-        Diary diary = Diary.builder()
-                .content(content)
-                .img(img)
-                .sound(sound)
-                .member(member)
-                .build();
-        diaryRepository.save(diary);
+//        Diary diary = Diary.builder()
+//                .content(content)
+//                .img(img)
+//                .sound(sound)
+//                .member(member)
+//                .build();
+//        diaryRepository.save(diary);
 
         // 알림 전송
        /*

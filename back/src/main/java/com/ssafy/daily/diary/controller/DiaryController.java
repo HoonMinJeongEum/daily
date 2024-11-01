@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequiredArgsConstructor
@@ -16,8 +17,8 @@ public class DiaryController {
     private final DiaryService diaryService;
 
     @PostMapping
-    public ResponseEntity<?> writeDiary(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody WriteDiaryRequest request){
-        diaryService.writeDiary(userDetails, request);
+    public ResponseEntity<?> writeDiary(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam("file") MultipartFile file){
+        diaryService.writeDiary(userDetails, file);
         return ResponseEntity.ok("그림일기가 정상적으로 저장되었습니다.");
     }
 
