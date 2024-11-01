@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.diarytablet.R
+import com.example.diarytablet.domain.dto.request.CreateProfileRequestDto
 import com.example.diarytablet.domain.dto.request.SelectProfileRequestDto
 import com.example.diarytablet.domain.dto.response.Profile
 import com.example.diarytablet.domain.repository.ProfileListRepository
@@ -57,8 +58,10 @@ fun ProfileScreen (
                 .align(Alignment.Center)
                 .padding(top = 100.dp),
             onChooseProfile = {profile -> chooseProfile(profile)},
-            onCreateProfile = {}
-
+            onCreateProfile = { name, img -> // name과 imgUrl을 인자로 받도록 수정
+                val createProfileRequestDto = CreateProfileRequestDto(name = name, img = img) // CreateProfileRequestDto 객체 생성
+                viewModel.addProfile(createProfileRequestDto) // ViewModel에 전달
+            }
         )
     }
 }

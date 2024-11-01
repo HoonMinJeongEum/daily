@@ -56,23 +56,22 @@ object RetrofitClient {
         instance = Retrofit.Builder()
             .baseUrl(Const.WEB_API)
             .addConverterFactory(getGsonConverterFactory())
-
             .client(client)
             .build()
     }
 
-    suspend fun login(accessToken: String, refreshToken: String) {
+
+    fun login(accessToken: String, refreshToken: String) {
         this.accessToken = accessToken
         this.refreshToken = refreshToken
-        saveTokensToStore(accessToken, refreshToken) // 토큰 저장 메서드 호출
         initInstance()
     }
 
-    private suspend fun saveTokensToStore(accessToken: String, refreshToken: String) {
-        // UserStore에 accessToken과 refreshToken 저장
-        userStore.setValue(UserStore.KEY_ACCESS_TOKEN, accessToken)
-        userStore.setValue(UserStore.KEY_REFRESH_TOKEN, refreshToken)
-    }
+//    private suspend fun saveTokensToStore(accessToken: String, refreshToken: String) {
+//        // UserStore에 accessToken과 refreshToken 저장
+//        userStore.setValue(UserStore.KEY_ACCESS_TOKEN, accessToken)
+//        userStore.setValue(UserStore.KEY_REFRESH_TOKEN, refreshToken)
+//    }
 
 
     fun resetAccessToken(accessToken: String) {

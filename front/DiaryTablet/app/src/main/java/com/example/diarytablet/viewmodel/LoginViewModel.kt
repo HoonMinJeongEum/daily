@@ -45,17 +45,12 @@ class LoginViewModel @Inject constructor(
                 if (response.isSuccessful) {
                     // 헤더에서 토큰 가져오기
                     val headers = response.headers()
-                    val accessToken = headers["Authorization"] ?: headers["authorization"]
-                    val refreshToken = headers["Set-Cookie"]?.substringAfter("refresh=")?.substringBefore(";")
+                    val accessToken = headers["Authorization"]?.removePrefix("Bearer ")?.trim()
+                    val refreshToken = headers["Set-Cookie"]
 
                     if (!accessToken.isNullOrEmpty() && !refreshToken.isNullOrEmpty()) {
                         Log.d("LoginViewModel", "Access Token: $accessToken")
                         Log.d("LoginViewModel", "Refresh Token: $refreshToken")
-
-                        // RetrofitClient에 토큰 저장
-//                        RetrofitClient.login(accessToken, refreshToken)
-
-                        // UserStore에 사용자 정보 저장
                         saveUserInfo(accessToken, refreshToken)
 
                         onSuccess() // 로그인 성공 처리
@@ -73,6 +68,7 @@ class LoginViewModel @Inject constructor(
     }
 
     private suspend fun saveUserInfo(accessToken: String, refreshToken: String) {
+        RetrofitClient.login(accessToken,refreshToken)
         userStore.setValue(UserStore.KEY_PASSWORD, password.value)
             .setValue(UserStore.KEY_REFRESH_TOKEN, refreshToken)
             .setValue(UserStore.KEY_USER_NAME, username.value)

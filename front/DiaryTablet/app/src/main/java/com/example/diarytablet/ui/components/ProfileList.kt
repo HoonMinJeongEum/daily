@@ -43,8 +43,8 @@ import com.example.diarytablet.ui.theme.PastelNavy
 fun ProfileList(
     modifier: Modifier = Modifier,
     profileList: List<Profile>,
-    onCreateProfile: () -> Unit,
-    onChooseProfile: (Profile) -> Unit
+    onChooseProfile: (Profile) -> Unit,
+    onCreateProfile: (String, String) -> Unit
 ) {
     Row(
         modifier = modifier
@@ -67,7 +67,7 @@ fun ProfileList(
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier.fillMaxSize()
-                    .clickable { onCreateProfile() }
+//                    .clickable {name,img -> onCreateProfile(name,img) }
 
             ) {
                 Image(
