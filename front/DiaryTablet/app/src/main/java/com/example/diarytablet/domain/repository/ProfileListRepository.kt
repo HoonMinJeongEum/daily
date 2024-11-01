@@ -7,7 +7,7 @@ import com.example.diarytablet.utils.Response
 import kotlinx.coroutines.flow.Flow
 
 interface ProfileListRepository {
-    suspend fun getProfileList(): Flow<Response<List<Profile>>>
+    suspend fun getProfileList(): MutableList<Profile>
     suspend fun selectProfile(selectProfileRequestDto: SelectProfileRequestDto)
     suspend fun createProfile(createProfileRequestDto: CreateProfileRequestDto)
 }

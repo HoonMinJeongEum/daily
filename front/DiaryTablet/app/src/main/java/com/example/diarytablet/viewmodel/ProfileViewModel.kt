@@ -1,5 +1,7 @@
 package com.example.diarytablet.viewmodel
 
+import android.util.Log
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -17,7 +19,8 @@ class ProfileViewModel @Inject constructor(
     private val profileListRepository: ProfileListRepository
 ) : ViewModel() {
 
-    val profileList = mutableStateOf<List<Profile>>(emptyList())
+    val _profileList = mutableStateOf<List<Profile>>(emptyList())
+    val profileList: State<List<Profile>> get() = _profileList
     val isLoading = mutableStateOf(false)
     val errorMessage = mutableStateOf<String?>(null)
 
@@ -27,24 +30,21 @@ class ProfileViewModel @Inject constructor(
 
     private fun loadProfiles() {
         viewModelScope.launch {
-            profileListRepository.getProfileList().collect { response ->
-                when (response) {
-                    is Response.Success -> {
-                        profileList.value = response.data!!
-                        isLoading.value = false
-                        errorMessage.value = null
-                    }
-                    is Response.Failure -> {
-                        errorMessage.value = response.e?.message
-                        isLoading.value = false
-                    }
-                    Response.Loading -> {
-                        isLoading.value = true
-                    }
-                }
+            isLoading.value = true
+            try {
+                val profiles = profileListRepository.getProfileList()
+                _profileList.value = profiles
+                Log.d("ProfileViewModel", "Profile list updated: ${_profileList.value}")
+                errorMessage.value = null
+            } catch (e: Exception) {
+                errorMessage.value = e.message
+                Log.e("ProfileViewModel", "Error loading profiles: ${e.message}")
+            } finally {
+                isLoading.value = false
             }
         }
     }
+
 
     fun selectProfile(profile: SelectProfileRequestDto) {
         viewModelScope.launch {

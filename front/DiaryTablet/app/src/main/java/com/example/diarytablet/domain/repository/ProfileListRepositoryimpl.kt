@@ -15,16 +15,8 @@ import javax.inject.Singleton
 class ProfileListRepositoryImpl @Inject constructor(
     private val profileListService: ProfileListService
 ) : ProfileListRepository {
-    override suspend fun getProfileList(): Flow<Response<List<Profile>>> {
-        return flow {
-            emit(Response.Loading) // Optional: 로딩 상태
-            try {
-                val response = profileListService.getProfileList()
-                emit(Response.Success(response.profiles))
-            } catch (e: Exception) {
-                emit(Response.Failure(e))
-            }
-        }
+    override suspend fun getProfileList(): MutableList<Profile> {
+        return profileListService.getProfileList()
     }
 
     override suspend fun selectProfile(selectProfileRequestDto: SelectProfileRequestDto) {

@@ -1,5 +1,6 @@
 package com.example.diarytablet.ui.components
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -18,6 +19,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -46,6 +51,8 @@ fun ProfileList(
     onChooseProfile: (Profile) -> Unit,
     onCreateProfile: (String, String) -> Unit
 ) {
+    var showDialog by remember { mutableStateOf(false) }
+    Log.d("ProfileScreen","${profileList}")
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -54,7 +61,13 @@ fun ProfileList(
         verticalAlignment = Alignment.CenterVertically
     ) {
         profileList.forEach { profile ->
-            ProfileItem(profile = profile, onChooseProfile = onChooseProfile)
+            // img가 null이거나 빈 문자열일 경우 기본 이미지를 설정
+            val profileWithDefaultImg = if (profile.img.isNullOrEmpty()) {
+                profile.copy(img = "https://example.com/default-image.jpg") // 기본 이미지 URL 또는 리소스 ID 사용
+            } else {
+                profile
+            }
+            ProfileItem(profile = profileWithDefaultImg, onChooseProfile = onChooseProfile)
         }
         Surface(
             modifier = Modifier
@@ -67,7 +80,7 @@ fun ProfileList(
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier.fillMaxSize()
-//                    .clickable {name,img -> onCreateProfile(name,img) }
+                    .clickable {showDialog = true  }
 
             ) {
                 Image(
@@ -77,6 +90,17 @@ fun ProfileList(
                 )
             }
         }
+    }
+    if (showDialog) {
+        CreateProfileModal(
+            showDialog = showDialog,
+            onConfirm = { username, password ->
+
+                onCreateProfile(username, password)
+                showDialog = false // 모달 닫기
+            },
+            onCancel = { showDialog = false } // 취소 시 모달 닫기
+        )
     }
 }
 
@@ -110,11 +134,17 @@ fun ProfileItem(profile: Profile, onChooseProfile: (Profile) -> Unit ) {
                 shape = RoundedCornerShape(12.dp),
                 color = Color.Transparent // Surface 투명하게 설정
             ) {
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(profile.img)
-                        .transformations(CircleCropTransformation())
-                        .build(),
+//                AsyncImage(
+//                    model = ImageRequest.Builder(LocalContext.current)
+//                        .data(profile.img)
+//                        .transformations(CircleCropTransformation())
+//                        .build(),
+//                    contentDescription = null, // 필요에 따라 이미지 설명 추가
+//                    modifier = Modifier.fillMaxSize(),
+//                    contentScale = ContentScale.Crop
+//                )
+                Image(
+                    painter = painterResource(id = R.drawable.id),
                     contentDescription = null, // 필요에 따라 이미지 설명 추가
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
