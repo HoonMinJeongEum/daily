@@ -45,6 +45,8 @@ dependencies {
 
 	implementation 'com.google.firebase:firebase-admin:9.4.1'
 	implementation 'io.livekit:livekit-server:0.8.2'
+
+	implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
 }
 
 tasks.named('test') {
