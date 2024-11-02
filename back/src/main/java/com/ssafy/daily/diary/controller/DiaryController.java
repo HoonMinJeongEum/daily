@@ -1,7 +1,6 @@
 package com.ssafy.daily.diary.controller;
 
 import com.ssafy.daily.diary.dto.WriteCommentRequest;
-import com.ssafy.daily.diary.dto.WriteDiaryRequest;
 import com.ssafy.daily.diary.service.DiaryService;
 import com.ssafy.daily.user.dto.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
@@ -17,8 +16,11 @@ public class DiaryController {
     private final DiaryService diaryService;
 
     @PostMapping
-    public ResponseEntity<?> writeDiary(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam("file") MultipartFile file){
-        diaryService.writeDiary(userDetails, file);
+    public ResponseEntity<?> writeDiary(@AuthenticationPrincipal CustomUserDetails userDetails
+//            , @RequestParam("drawFile") MultipartFile drawFile
+//            , @RequestParam("writeFile") MultipartFile writeFile
+    ){
+        diaryService.writeDiary(userDetails, null, null);
         return ResponseEntity.ok("그림일기가 정상적으로 저장되었습니다.");
     }
 
