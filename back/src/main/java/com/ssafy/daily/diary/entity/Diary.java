@@ -27,7 +27,10 @@ public class Diary {
     private String content;
 
     @Column(nullable = false)
-    private String img;
+    private String drawImg;
+
+    @Column(nullable = false)
+    private String writeImg;
 
     @Column(nullable = false)
     private String sound;

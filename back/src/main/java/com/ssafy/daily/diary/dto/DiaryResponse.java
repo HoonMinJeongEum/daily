@@ -10,7 +10,8 @@ import java.util.List;
 public class DiaryResponse {
     private int id;
     private String content;
-    private String img;
+    private String drawImg;
+    private String writeImg;
     private String sound;
     private LocalDateTime createdAt;
     private List<CommentResponse> comments;
@@ -18,7 +19,8 @@ public class DiaryResponse {
     public DiaryResponse(Diary diary, List<CommentResponse> comments){
         this.id = diary.getId();
         this.content = diary.getContent();
-        this.img = diary.getImg();
+        this.drawImg = diary.getDrawImg();
+        this.writeImg = diary.getWriteImg();
         this.sound = diary.getSound();
         this.createdAt = diary.getCreatedAt();
         this.comments = comments;
