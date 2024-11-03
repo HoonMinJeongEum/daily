@@ -22,7 +22,6 @@ public class TokenService {
     private final RefreshRepository refreshRepository;
     public ResponseEntity<?> reissueToken(HttpServletRequest request,
                                           HttpServletResponse response) {
-        // refresh 토큰 찾기
         String refresh = null;
         Cookie[] cookies = request.getCookies();
         for (Cookie cookie : cookies) {
@@ -31,33 +30,22 @@ public class TokenService {
             }
         }
 
-        // 토큰이 없을 경우
         if (refresh == null) {
-            // 에러 응답 (프론트와 추후 협의)
             return new ResponseEntity<>("refresh token null", HttpStatus.BAD_REQUEST);
         }
 
-        // 만료되었는지 체크
         try {
             jwtUtil.isExpired(refresh);
         } catch (ExpiredJwtException e) {
-            // 만료 에러 응답
             return new ResponseEntity<>("refresh token expired", HttpStatus.BAD_REQUEST);
         }
 
-        // 토큰이 refresh인지 확인 (발급시 페이로드에 명시)
-        String category = jwtUtil.getCategory(refresh);
-
-        if (!category.equals("refresh")) {
-            // refresh 토큰 체크
+        if (!jwtUtil.isRefreshToken(refresh)){
             return new ResponseEntity<>("invalid refresh token", HttpStatus.BAD_REQUEST);
         }
 
-        //DB에 저장되어 있는지 확인
         Boolean isExist = refreshRepository.existsByRefresh(refresh);
         if (!isExist) {
-
-            //response body
             return new ResponseEntity<>("invalid refresh token", HttpStatus.BAD_REQUEST);
         }
 
@@ -66,15 +54,13 @@ public class TokenService {
 
         int tableId = jwtUtil.getTableId(refresh);
         int memberId = jwtUtil.getMemberId(refresh);
-        // 새로운 JWT 토큰 생성
-        String newAccess = jwtUtil.createJwt("access", username, role, tableId,memberId,600000L);
-        String newRefresh = jwtUtil.createJwt("refresh", username, role, tableId,memberId,86400000L);
 
-        //Refresh 토큰 저장 DB에 기존의 Refresh 토큰 삭제 후 새 Refresh 토큰 저장
+        String newAccess = jwtUtil.createAccessJwt(username, role, tableId,memberId,600000L);
+        String newRefresh = jwtUtil.createRefreshJwt(username, role, tableId,memberId,86400000L);
+
         refreshRepository.deleteByRefresh(refresh);
         addRefreshEntity(username, newRefresh, 86400000L);
 
-        // 응답
         response.setHeader("Authorization", "Bearer " + newAccess);
         response.addCookie(createCookie("refresh", newRefresh));
 

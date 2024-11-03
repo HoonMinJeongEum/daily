@@ -20,16 +20,13 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Family familyData = familyRepository.findByUsername(username);
         if (familyData != null) {
-            System.out.println("UserDetailsService - Family ID: " + familyData.getId()); // ID 확인
             return new CustomUserDetails(familyData, null);
         }
-        // Member 조회 (부모가 선택한 자녀가 있는 경우)
         try {
-            int memberId = Integer.parseInt(username); // username를 memberId로 변환
+            int memberId = Integer.parseInt(username);
             Member memberData = memberRepository.findById(memberId)
-                    .orElseThrow(() -> new UsernameNotFoundException("Member not found: " + memberId)); // Member ID로 찾기
-            System.out.println("UserDetailsService - Member ID: " + memberData.getId()); // ID 확인
-            return new CustomUserDetails(null, memberData); // Member 정보로 CustomUserDetails 생성
+                    .orElseThrow(() -> new UsernameNotFoundException("Member not found: " + memberId));
+            return new CustomUserDetails(familyData, memberData);
         } catch (NumberFormatException e) {
             throw new UsernameNotFoundException("Invalid identifier: " + username);
         }
