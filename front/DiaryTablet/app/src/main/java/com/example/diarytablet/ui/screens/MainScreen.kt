@@ -1,10 +1,21 @@
 package com.example.diarytablet.ui.screens
 
+import MainModal
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.diarytablet.R
@@ -25,14 +36,10 @@ fun MainScreen(
     viewModel: MainViewModel = hiltViewModel(),
     backgroundType: BackgroundType = BackgroundType.DEFAULT
 ) {
-    fun chooseProfile() = {
-        navController.navigate("main") {
-            popUpTo("login") { inclusive = true }
-        }
-    }
 
     BackgroundPlacement(backgroundType = backgroundType)
 
+    var isModalVisible by remember { mutableStateOf(false) }
 
     // 전체 화면을 채우는 Box
     Box(
@@ -67,14 +74,46 @@ fun MainScreen(
 
         }
 
-        Row(
-            modifier = Modifier.align(Alignment.Center),
-            horizontalArrangement = Arrangement.spacedBy(50.dp), // 버튼 간 간격 조정
-            verticalAlignment = Alignment.CenterVertically // 수직 정렬
+        Box(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .size(432.dp, 450.dp)
         ) {
-            BlockButton(onClick = {}, buttonType = ButtonType.WORD_LEARNING)
-            BlockButton(onClick = {}, buttonType = ButtonType.DRAWING_DIARY)
-            BlockButton(onClick = {}, buttonType = ButtonType.DRAWING_QUIZ)
+            Image(
+                modifier = Modifier.fillMaxSize(),
+                painter = painterResource(id = R.drawable.text_balloon),
+                contentDescription = "Text Balloon"
+            )
+
+            Column(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "다일리에 온 걸 환영해!",
+                    color = Color.Black,
+                    fontSize = 26.sp,
+                    lineHeight = 44.sp
+                )
+                Text(
+                    text = "나랑 그림일기도 쓰고",
+                    color = Color.Black,
+                    fontSize = 26.sp,
+                    lineHeight = 44.sp              )
+                Text(
+                    text = "단어도 학습해보자!",
+                    color = Color.Black,
+                    fontSize = 26.sp,
+                    lineHeight = 44.sp               )
+                Text(
+                    text = "그림퀴즈도 할 수 있어~",
+                    color = Color.Black,
+                    fontSize = 26.sp,
+                    lineHeight = 44.sp               )
+            }
         }
 
         // BasicButton 배치 (왼쪽 하단)
@@ -101,6 +140,43 @@ fun MainScreen(
                 imageResId = R.drawable.record // 기록 이미지 리소스
             )
         }
+
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(30.dp)
+        ) {
+            BasicButton(
+                onClick = { isModalVisible = true },
+                text = "시작하기",
+                imageResId = 11,
+                fontSize = 36f
+
+            )
+        }
+        MainModal(
+            isModalVisible = isModalVisible,
+            onDismiss = { isModalVisible = false },
+            navController = navController,
+            onWordLearningClick = {
+                navController.navigate("wordLearning") {
+                    popUpTo("main") { inclusive = true }
+                }
+                isModalVisible = false
+            },
+            onDrawingDiaryClick = {
+                navController.navigate("wordLearning") {
+                    popUpTo("main") { inclusive = true }
+                }
+                isModalVisible = false
+            },
+            onDrawingQuizClick = {
+                navController.navigate("wordLearning") {
+                    popUpTo("main") { inclusive = true }
+                }
+                isModalVisible = false
+            }
+        )
     }
 }
 
