@@ -1,25 +1,13 @@
-package com.example.diarytablet.ui.components
-
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,47 +15,80 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.diarytablet.model.Sticker
+import com.example.diarytablet.R
+import kotlinx.coroutines.delay
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun StickerShopList(stickers: List<Sticker>) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(4),
-        contentPadding = PaddingValues(16.dp),
+        contentPadding = PaddingValues(start = 15.dp, end = 15.dp),
         modifier = Modifier.fillMaxSize()
     ) {
-        items(stickers) { sticker ->
-            StickerCard(sticker)
+        itemsIndexed(stickers) { index, sticker ->
+            StickerCard(sticker, index)
         }
     }
 }
 
 @Composable
-fun StickerCard(sticker: Sticker) {
-    Card(
+fun StickerCard(sticker: Sticker, index: Int) {
+    var isPressed by remember { mutableStateOf(false) }
+
+    // 클릭 상태에 따라 배경 이미지 설정
+    val backgroundImage = if (isPressed) {
+        if (index % 2 == 0) R.drawable.sticker_yellow_down else R.drawable.sticker_blue_down
+    } else {
+        if (index % 2 == 0) R.drawable.sticker_yellow_up else R.drawable.sticker_blue_up
+    }
+
+    Box(
         modifier = Modifier
-            .padding(8.dp)
-            .size(width = 174.dp, height = 204.dp), // 카드 크기 설정
-        elevation = CardDefaults.cardElevation(4.dp)
+            .padding(5.dp, bottom = 20.dp)
+            .fillMaxWidth(0.9f)
+            .aspectRatio(1f)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ) {
+                isPressed = true
+            }
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally, // 수평 중앙 정렬
-            verticalArrangement = Arrangement.Center // 수직 중앙 정렬
-        ) {
+        // 클릭 후 일정 시간 후에 상태를 원래대로 복귀
+        LaunchedEffect(isPressed) {
+            if (isPressed) {
+                delay(100L) // 100밀리초 동안 `down` 상태 유지
+                isPressed = false // `up` 상태로 복귀
+            }
+        }
+
+        // 배경 이미지와 내용물 레이아웃
+        Box(modifier = Modifier.fillMaxSize()) {
             Image(
-                painter = painterResource(sticker.imgRes), // ID로 이미지 로딩
-                contentDescription = "스티커 이미지",
-                modifier = Modifier.size(100.dp) // 이미지 크기 설정
+                painter = painterResource(id = backgroundImage),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize()
             )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "${sticker.price} 조개",
-                fontSize = 16.sp,
-                color = Color.Gray
-            )
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Image(
+                    painter = painterResource(sticker.imgRes),
+                    contentDescription = "스티커 이미지",
+                    modifier = Modifier.size(100.dp)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "${sticker.price} 조개",
+                    fontSize = 16.sp,
+                    color = Color.Gray
+                )
+            }
         }
     }
 }

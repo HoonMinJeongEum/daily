@@ -1,118 +1,103 @@
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.diarytablet.model.CouponStock
 import com.example.diarytablet.model.StickerStock
-import com.example.diarytablet.ui.components.CouponStockList
-import com.example.diarytablet.ui.components.StickerStockList
 
 @Composable
 fun StockTab(
     coupons: List<CouponStock>,
-    stickers: List<StickerStock>
+    stickers: List<StickerStock>,
+    modifier: Modifier = Modifier
 ) {
-    var selectedTab by remember { mutableStateOf("Coupon") }
+    var selectedTabIndex by remember { mutableStateOf(0) }
+    val tabTitles = listOf("쿠폰", "스티커")
 
-    Row(
-        modifier = Modifier
-            .size(1160.dp, 570.dp)
-            .background(Color.LightGray)
-            .padding(16.dp)
+    // 메인 박스: 전체 탭 및 내용물 레이아웃
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color.White, shape = RoundedCornerShape(16.dp))
+            .padding(top = 30.dp)
     ) {
-        // 좌측 세로 탭
-        Column(
-            modifier = Modifier
-                .width(150.dp)
-                .fillMaxHeight()
-                .padding(vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+        Row(
+            modifier = Modifier.fillMaxSize()
         ) {
-            // 쿠폰 탭
-            TextButton(
-                onClick = { selectedTab = "Coupon" },
+            // 왼쪽 탭 Column
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-//                    .background(
-//                        if (selectedTab == "Coupon") Color(0xFFDCEEFF) else Color.Transparent,
-//                        shape = RoundedCornerShape(8.dp)
-//                    )
-                    .padding(8.dp)
+                    .fillMaxWidth(0.15f)
+                    .fillMaxHeight()
+                    .padding(top = 40.dp),
+                verticalArrangement = Arrangement.spacedBy(25.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    if (selectedTab == "Coupon") {
-                        Box(
-                            modifier = Modifier
-                                .width(4.dp)
-                                .height(20.dp)
-                                .background(Color.Blue) // 파란색 강조선
-                        )
+                // 탭 타이틀 구성
+                tabTitles.forEachIndexed { index, title ->
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { selectedTabIndex = index }
+                            .padding(vertical = 1.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = title,
+                                fontSize = 35.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (selectedTabIndex == index) Color(0xFF83B4FF) else Color(0xFF959595),
+                                modifier = Modifier
+                                    .padding(start = 35.dp)
+                                    .weight(1f)
+                            )
+
+                            // 선택된 탭에 강조 표시
+                            if (selectedTabIndex == index) {
+                                Box(
+                                    modifier = Modifier
+                                        .width(8.dp)
+                                        .height(40.dp)
+                                        .background(Color(0xFF83B4FF), shape = RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp))
+                                )
+                            }
+                        }
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = "쿠폰", color = if (selectedTab == "Coupon") Color.Blue else Color.Gray)
                 }
             }
 
-            // 스티커 탭
-            TextButton(
-                onClick = { selectedTab = "Sticker" },
+            // 탭과 내용물 사이의 구분선
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-//                    .background(
-//                        if (selectedTab == "Sticker") Color(0xFFDCEEFF) else Color.Transparent,
-//                        shape = RoundedCornerShape(8.dp)
-//                    )
-                    .padding(8.dp)
+                    .width(1.dp)
+                    .fillMaxHeight()
+                    .background(Color.Gray)
+            )
+
+            // 오른쪽 내용물 표시 박스
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(start = 16.dp),
+                contentAlignment = Alignment.Center
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    if (selectedTab == "Sticker") {
-                        Box(
-                            modifier = Modifier
-                                .width(4.dp)
-                                .height(20.dp)
-                                .background(Color.Blue) // 파란색 강조선
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = "스티커", color = if (selectedTab == "Sticker") Color.Blue else Color.Gray)
+                if (selectedTabIndex == 0) {
+                    CouponStockList(coupons) // "쿠폰" 탭 선택 시
+                } else {
+                    StickerStockList(stickers) // "스티커" 탭 선택 시
                 }
-            }
-        }
-
-        Spacer(modifier = Modifier.width(16.dp))
-
-        // 우측 콘텐츠 영역
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.White, shape = RoundedCornerShape(16.dp))
-                .padding(16.dp)
-        ) {
-            if (selectedTab == "Coupon") {
-                CouponStockList(coupons)
-            } else {
-                StickerStockList(stickers)
             }
         }
     }
 }
-

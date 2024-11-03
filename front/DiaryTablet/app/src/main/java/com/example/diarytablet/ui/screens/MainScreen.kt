@@ -125,12 +125,12 @@ fun MainScreen(
                 .padding(16.dp) // 여백 설정
         ) {
             BasicButton(
-                onClick = { /* 상점 클릭 이벤트 */ },
+                onClick = { navController.navigate("shop") },
                 text = "상점",
                 imageResId = R.drawable.shop // 상점 이미지 리소스
             )
             BasicButton(
-                onClick = { /* 보관함 클릭 이벤트 */ },
+                onClick = { navController.navigate("stock")},
                 text = "보관함",
                 imageResId = R.drawable.stack_room // 보관함 이미지 리소스
             )
