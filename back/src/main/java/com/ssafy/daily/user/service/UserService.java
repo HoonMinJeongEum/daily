@@ -64,15 +64,12 @@ public class UserService {
         String username = request.getUsername();
         String password = request.getPassword();
 
-        // 중복아이디 체크
         checkExist(username);
 
-        // 아이디 유효성 체크 (영어, 숫자 포함 4-20자)
         if (!username.matches("^[a-zA-Z0-9]{4,20}$")) {
             throw new IllegalArgumentException("아이디는 영어와 숫자를 포함한 4-20자로 설정해야 합니다.");
         }
 
-        // 비밀번호 유효성 체크 (영어, 숫자, 특수문자 포함 8-20자)
         if (!password.matches("^(?=.*[a-zA-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{6,20}$")) {
             throw new IllegalArgumentException("비밀번호는 영어, 숫자, 특수문자를 포함한 6-20자로 설정해야 합니다.");
         }
@@ -83,7 +80,6 @@ public class UserService {
                 .build();
         familyRepository.save(family);
 
-        // Quiz 테이블 생성
         Quiz quiz = Quiz.builder()
                 .family(family)
                 .build();
@@ -92,10 +88,8 @@ public class UserService {
     }
 
     public List<ProfilesResponse> getProfiles(int familyId) {
-        // familyId로 Member 조회
         List<Member> list = memberRepository.findByFamilyId(familyId);
 
-        // 리스트로 리턴
         return list.stream()
                 .map(ProfilesResponse::new)
                 .collect(Collectors.toList());
@@ -115,7 +109,6 @@ public class UserService {
                 .build();
         memberRepository.save(member);
 
-        // Quest 테이블 생성
         Quest quest = Quest.builder()
                 .member(member)
                 .build();
@@ -130,7 +123,6 @@ public class UserService {
 
         addRefreshEntity(userDetails.getUsername(), newRefresh, 86400000L); // 기존의 refresh 토큰을 대체
 
-        // 쿠키 생성 및 설정
         Cookie refreshCookie = createCookie("refresh", newRefresh);
         response.addCookie(refreshCookie);
 
@@ -143,7 +135,6 @@ public class UserService {
         return cookie;
     }
 
-    // Refresh 토큰을 데이터베이스에 저장하는 메소드
     private void addRefreshEntity(String username, String refresh, Long expiredMs) {
         Date date = new Date(System.currentTimeMillis() + expiredMs);
 
@@ -154,9 +145,6 @@ public class UserService {
     }
 
     public MainProfileResponse getMainProfile(CustomUserDetails userDetails) {
-        // img: Member 테이블
-        // diary & quiz & word status: quest 테이블
-        // shellCount: ShellService 에 getUserShell 갖다쓰기
         int memberId = userDetails.getMemberId();
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new EmptyResultDataAccessException("해당 프로필을 찾을 수 없습니다.", 1));
@@ -181,14 +169,11 @@ public class UserService {
             String role = authorities.iterator().next().getAuthority();
             int familyId = ((CustomUserDetails) authentication.getPrincipal()).getFamilyId();
 
-            // Access 및 Refresh 토큰 생성
-            String accessToken = jwtUtil.createJwt("access", username, role, familyId, 0, 600000L);
-            String refreshToken = jwtUtil.createJwt("refresh", username, role, familyId, 0, 86400000L);
+            String accessToken = jwtUtil.createAccessJwt(username, role, familyId, 0, 600000L);
+            String refreshToken = jwtUtil.createRefreshJwt(username, role, familyId, 0, 86400000L);
 
-            // Refresh 토큰 저장
             addRefreshEntity(username, refreshToken, 86400000L);
 
-            // 응답 헤더 및 쿠키 설정
             response.setHeader("Authorization", "Bearer " + accessToken);
             response.addCookie(createCookie("refresh", refreshToken));
         }  catch (AuthenticationException e) {
@@ -197,7 +182,6 @@ public class UserService {
     }
 
     public void logout(HttpServletRequest request, HttpServletResponse response) {
-        // refresh token 확인
         String refresh = null;
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
@@ -208,34 +192,27 @@ public class UserService {
             }
         }
 
-        // refresh 토큰이 없으면 400 응답
         if (refresh == null) {
             throw new InvalidRefreshTokenException("Refresh 토큰이 존재하지 않습니다.");
         }
 
-        // 만료된 토큰인지 확인
         try {
             jwtUtil.isExpired(refresh);
         } catch (ExpiredJwtException e) {
             throw new InvalidRefreshTokenException("만료된 토큰입니다.");
         }
 
-        // refresh 토큰의 유형 확인
-        String category = jwtUtil.getCategory(refresh);
-        if (!"refresh".equals(category)) {
+        if (!jwtUtil.isRefreshToken(refresh)){
             throw new InvalidRefreshTokenException("유효하지 않은 토큰입니다.");
         }
 
-        // refresh 토큰이 DB에 있는지 확인
         boolean isExist = refreshRepository.existsByRefresh(refresh);
         if (!isExist) {
             throw new InvalidRefreshTokenException("DB에 존재하지 않는 토큰입니다.");
         }
 
-        // 로그아웃 처리: DB에서 refresh 토큰 삭제
         refreshRepository.deleteByRefresh(refresh);
 
-        // 쿠키에서 refresh 토큰 제거
         Cookie cookie = new Cookie("refresh", null);
         cookie.setMaxAge(0);
         cookie.setPath("/");

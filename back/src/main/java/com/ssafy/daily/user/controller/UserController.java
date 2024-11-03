@@ -53,15 +53,12 @@ public class UserController {
 
     @GetMapping("/profile")
     public ResponseEntity<?> getProfiles(@AuthenticationPrincipal CustomUserDetails userDetails){
-        // jwt에서 familyId 가져오기
         int familyId = userDetails.getFamily().getId();
         return ResponseEntity.ok(userService.getProfiles(familyId));
     }
 
     @PostMapping("/add")
     public ResponseEntity<?> addProfile(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody AddProfileRequest request){
-
-        // jwt에서 familyId 가져오기
         int familyId = userDetails.getFamily().getId();
 
         userService.addProfile(familyId, request);
