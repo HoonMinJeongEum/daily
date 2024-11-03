@@ -50,7 +50,8 @@ fun BasicButton(
     text: String,
     enabled: Boolean = true,
     isOutlined: Boolean = false,
-    imageResId: Int? = null // 이미지를 선택적으로 받음
+    imageResId: Int? = null, // 이미지를 선택적으로 받음
+    fontSize: Float = 24f
 ) {
     val buttonShape = BasicButtonShape.ROUNDED
     val buttonColor = if (imageResId != null && imageResId != 11) BasicButtonColor.NORMAL else BasicButtonColor.SEASHELL
@@ -95,7 +96,7 @@ fun BasicButton(
             }
             Text(
                 text = text,
-                fontSize = 24.sp,
+                fontSize = fontSize.sp,
                 style = MyTypography.bodyLarge,
                 color = contentColor,
                 modifier = Modifier.align(Alignment.CenterVertically)

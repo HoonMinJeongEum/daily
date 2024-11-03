@@ -15,7 +15,6 @@ class MainViewModel @Inject constructor(
     private val _missions = mutableStateListOf<MissionItem>()
     val missions: List<MissionItem> get() = _missions
 
-    // 초기화 시 데이터 로드
     init {
         loadMissions()
     }
