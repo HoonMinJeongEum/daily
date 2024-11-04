@@ -17,8 +17,8 @@ public class DiaryController {
 
     @PostMapping
     public ResponseEntity<?> writeDiary(@AuthenticationPrincipal CustomUserDetails userDetails
-            , @RequestParam("drawFile") MultipartFile drawFile
-            , @RequestParam("writeFile") MultipartFile writeFile){
+            , @RequestPart("drawFile") MultipartFile drawFile
+            , @RequestPart("writeFile") MultipartFile writeFile){
         diaryService.writeDiary(userDetails, drawFile, writeFile);
         return ResponseEntity.ok("그림일기가 정상적으로 저장되었습니다.");
     }

@@ -43,4 +43,9 @@ public class LearningSessionController {
         return ResponseEntity.status(HttpStatus.CREATED).body("자식 사용자가 단어 학습을 완료하였습니다.");
     }
 
+    @PostMapping("/validate")
+    public ResponseEntity<?> checkWordSimilarity(@RequestPart MultipartFile orgFile, @RequestPart MultipartFile writeFile){
+        wordService.checkSimilarity(orgFile, writeFile);
+        return ResponseEntity.ok("단어가 정확하게 작성되었습니다!");
+    }
 }

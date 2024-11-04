@@ -29,4 +29,5 @@ public class LearnedWordController {
 
         return ResponseEntity.ok(learnedWords);
     }
+
 }

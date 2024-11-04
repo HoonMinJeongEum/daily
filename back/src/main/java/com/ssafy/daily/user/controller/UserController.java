@@ -61,8 +61,8 @@ public class UserController {
 
     @PostMapping("/add")
     public ResponseEntity<?> addProfile(@AuthenticationPrincipal CustomUserDetails userDetails
-        , @RequestParam("file") MultipartFile file,
-          @RequestParam("memberName") String memberName){
+        , @RequestPart("file") MultipartFile file,
+          @RequestPart("memberName") String memberName){
         int familyId = userDetails.getFamily().getId();
 
         userService.addProfile(familyId, file, memberName);

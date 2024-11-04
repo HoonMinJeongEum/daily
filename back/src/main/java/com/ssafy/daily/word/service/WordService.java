@@ -83,4 +83,7 @@ public class WordService {
         learnedWordRepository.saveAll(learnedWords);
     }
 
+    public void checkSimilarity(MultipartFile orgFile, MultipartFile writeFile) {
+        
+    }
 }
