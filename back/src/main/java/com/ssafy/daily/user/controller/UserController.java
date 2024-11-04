@@ -54,7 +54,8 @@ public class UserController {
     @GetMapping("/profile")
     public ResponseEntity<?> getProfiles(@AuthenticationPrincipal CustomUserDetails userDetails){
         int familyId = userDetails.getFamily().getId();
-        return ResponseEntity.ok(userService.getProfiles(familyId));
+        int memberId = userDetails.getMemberId();
+        return ResponseEntity.ok(userService.getProfiles(familyId, memberId));
     }
 
     @PostMapping("/add")

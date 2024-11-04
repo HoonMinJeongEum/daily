@@ -87,11 +87,14 @@ public class UserService {
 
     }
 
-    public List<ProfilesResponse> getProfiles(int familyId) {
+    public List<ProfilesResponse> getProfiles(int familyId, int memberId) {
         List<Member> list = memberRepository.findByFamilyId(familyId);
 
         return list.stream()
-                .map(ProfilesResponse::new)
+                .map(member -> {
+                    int shellCount = shellService.getUserShell(memberId);
+                    return new ProfilesResponse(member, shellCount);
+                })
                 .collect(Collectors.toList());
     }
 
