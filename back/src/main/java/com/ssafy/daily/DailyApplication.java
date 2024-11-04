@@ -10,6 +10,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.TimeZone;
 
 @SpringBootApplication
 @EnableScheduling
@@ -25,6 +26,8 @@ public class DailyApplication {
 
 			FirebaseApp.initializeApp(options);
 		}
+
+		TimeZone.setDefault(TimeZone.getTimeZone("Asia/Seoul"));
 		SpringApplication.run(DailyApplication.class, args);
 	}
 
