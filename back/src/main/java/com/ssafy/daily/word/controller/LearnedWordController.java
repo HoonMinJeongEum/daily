@@ -18,7 +18,6 @@ public class LearnedWordController {
 
     private final WordService wordService;
 
-    // 학습된 단어 조회 API
     @GetMapping
     public ResponseEntity<List<LearnedWordResponse>> getLearnedWordsByMember(@AuthenticationPrincipal CustomUserDetails userDetails) {
         int memberId = userDetails.getMemberId();

@@ -1,6 +1,6 @@
 package com.ssafy.daily.word.service;
 
-import com.ssafy.daily.storage.S3Service;
+import com.ssafy.daily.file.service.S3UploadService;
 import com.ssafy.daily.word.dto.CompleteLearningRequest;
 import com.ssafy.daily.word.dto.LearnedWordResponse;
 import com.ssafy.daily.word.dto.LearningWordResponse;
@@ -13,8 +13,8 @@ import com.ssafy.daily.user.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,7 +26,7 @@ public class WordService {
     private final LearnedWordRepository learnedWordRepository;
     private final WordRepository wordRepository;
     private final MemberRepository memberRepository;
-    private final S3Service s3Service;
+    private final S3UploadService s3UploadService;
 
     public List<LearnedWordResponse> getLearnedWordsByMember(int memberId) {
         List<LearnedWord> learnedWords = learnedWordRepository.findByMemberId(memberId);
@@ -55,14 +55,17 @@ public class WordService {
                     Word word = wordRepository.findById(wordReq.getId())
                             .orElseThrow(() -> new IllegalArgumentException("해당 단어id가 없습니다: " + wordReq.getId()));
 
-                    // S3에 이미지 업로드 후 URL 반환, memberId와 wordId를 경로에 포함
-//                    String imageUrl = s3Service.upload(wordReq.getImage(),
-//                            "word-images/" + memberId + "/" + wordReq.getId() + "/" + wordReq.getImage().getOriginalFilename());
+                    String imageUrl = null;
+                    try {
+                        imageUrl = s3UploadService.saveFile(wordReq.getImage());
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
 
                     return LearnedWord.builder()
                             .member(member)
                             .word(word)
-//                            .img(imageUrl) // S3에 저장된 이미지 URL 설정
+                            .img(imageUrl)
                             .createdAt(LocalDateTime.now())
                             .build();
                 })
