@@ -1,9 +1,7 @@
 package com.ssafy.daily.user.service;
 
-import com.ssafy.daily.exception.InvalidRefreshTokenException;
-import com.ssafy.daily.exception.LoginFailedException;
-import com.ssafy.daily.exception.QuestNotFoundException;
-import com.ssafy.daily.exception.UsernameAlreadyExistsException;
+import com.ssafy.daily.exception.*;
+import com.ssafy.daily.file.service.S3UploadService;
 import com.ssafy.daily.quiz.entity.Quiz;
 import com.ssafy.daily.quiz.repository.QuizRepository;
 import com.ssafy.daily.reward.entity.Quest;
@@ -33,6 +31,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -52,6 +51,7 @@ public class UserService {
     private final JWTUtil jwtUtil;
     private final ShellService shellService;
     private final AuthenticationManager authenticationManager;
+    private final S3UploadService s3UploadService;
 
     public void checkExist(String username){
         Boolean isExist = familyRepository.existsByUsername(username);
@@ -98,17 +98,24 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-    public void addProfile(int familyId, AddProfileRequest request) {
-        String name = request.getName();
-        if (name.length() > 20 || name.isEmpty()){
+    public void addProfile(int familyId, MultipartFile file, String memberName) {
+        if (memberName.length() > 20 || memberName.isEmpty()){
             throw new IllegalArgumentException("이름은 20자 이내로 설정해야 합니다.");
         }
         Family family = familyRepository.findById(familyId)
                 .orElseThrow(() -> new EmptyResultDataAccessException("해당 가족 계정을 찾을 수 없습니다.", 1));
 
+        String imageUrl = null;
+        try {
+            imageUrl = s3UploadService.saveFile(file);
+        } catch (IOException e) {
+            throw new S3UploadException("S3 프로필 이미지 업로드 실패");
+        }
+
         Member member = Member.builder()
-                .name(name)
+                .name(memberName)
                 .family(family)
+                .img(imageUrl)
                 .build();
         memberRepository.save(member);
 
