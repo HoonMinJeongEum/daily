@@ -40,17 +40,22 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(QuestNotFoundException.class)
-    public ResponseEntity<String> handleCouponNotFoundException(QuestNotFoundException e) {
+    public ResponseEntity<String> handleQuestNotFoundException(QuestNotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
     }
 
     @ExceptionHandler(LoginFailedException.class)
-    public ResponseEntity<String> handleCouponNotFoundException(LoginFailedException e) {
+    public ResponseEntity<String> handleLoginFailedException(LoginFailedException e) {
         return ResponseEntity.status(HttpServletResponse.SC_UNAUTHORIZED).body(e.getMessage());
     }
 
     @ExceptionHandler(InvalidRefreshTokenException.class)
-    public ResponseEntity<String> handleIllegalArgumentException(InvalidRefreshTokenException e) {
+    public ResponseEntity<String> handleInvalidRefreshTokenException(InvalidRefreshTokenException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
+    @ExceptionHandler(S3UploadException.class)
+    public ResponseEntity<String> handleS3UploadException(S3UploadException e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+    }
+
 }

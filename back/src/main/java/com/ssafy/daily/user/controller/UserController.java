@@ -16,6 +16,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.HandlerMapping;
 
 import java.util.Collection;
@@ -59,10 +60,12 @@ public class UserController {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<?> addProfile(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody AddProfileRequest request){
+    public ResponseEntity<?> addProfile(@AuthenticationPrincipal CustomUserDetails userDetails
+        , @RequestParam("file") MultipartFile file,
+          @RequestParam("memberName") String memberName){
         int familyId = userDetails.getFamily().getId();
 
-        userService.addProfile(familyId, request);
+        userService.addProfile(familyId, file, memberName);
         return ResponseEntity.ok("프로필 등록 성공");
     }
     @PostMapping("/member")
