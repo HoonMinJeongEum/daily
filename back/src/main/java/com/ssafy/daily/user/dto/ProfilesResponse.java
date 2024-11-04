@@ -8,10 +8,12 @@ public class ProfilesResponse {
     private int id;
     private String name;
     private String img;
+    private int shellCount;
 
-    public ProfilesResponse(Member member){
+    public ProfilesResponse(Member member, int shellCount){
         this.id = member.getId();
         this.name = member.getName();
         this.img = member.getImg();
+        this.shellCount = shellCount;
     }
 }
