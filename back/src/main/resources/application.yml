@@ -1,8 +1,9 @@
 spring:
   profiles:
     active: secret
-  jwt:
-    secret: janguhwangubaekguningubangubbangu
+  servlet:
+    multipart:
+      max-request-size: 5MB
 
 # OpenVidu 설정
 openvidu:
