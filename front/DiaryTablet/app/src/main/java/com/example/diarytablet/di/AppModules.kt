@@ -8,8 +8,11 @@ import com.example.diarytablet.domain.repository.ProfileListRepository
 import com.example.diarytablet.domain.repository.ProfileListRepositoryImpl
 import com.example.diarytablet.domain.repository.UserRepository
 import com.example.diarytablet.domain.repository.UserRepositoryImpl
+import com.example.diarytablet.domain.repository.WordRepository
+import com.example.diarytablet.domain.repository.WordRepositoryImpl
 import com.example.diarytablet.domain.service.ProfileListService
 import com.example.diarytablet.domain.service.UserService
+import com.example.diarytablet.domain.service.WordService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -48,4 +51,13 @@ class AppModules {
         return retrofit.create(ProfileListService::class.java)
     }
 
+    @Provides
+    fun provideWordService(
+        retrofit: Retrofit
+    ): WordService = retrofit.create(WordService::class.java)
+
+    @Provides
+    fun provideWordRepository(
+        wordService: WordService
+    ): WordRepository = WordRepositoryImpl(wordService)
 }

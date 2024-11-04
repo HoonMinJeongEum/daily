@@ -39,6 +39,16 @@ fun MainModal(
                 .fillMaxSize()
                 .background(Color(0xB3000000)) // 검정색 배경, opacity 70%
         ) {
+            Row(
+                modifier = Modifier.align(Alignment.Center),
+                horizontalArrangement = Arrangement.spacedBy(50.dp), // 버튼 간 간격 조정
+                verticalAlignment = Alignment.CenterVertically // 수직 정렬
+            ) {
+
+                BlockButton(onClick = onWordLearningClick, buttonType = ButtonType.WORD_LEARNING, navController = navController)
+                BlockButton(onClick = onDrawingDiaryClick, buttonType = ButtonType.DRAWING_DIARY, navController = navController)
+                BlockButton(onClick = onDrawingQuizClick, buttonType = ButtonType.DRAWING_QUIZ, navController = navController)
+            }
 
             Image(
                     modifier = Modifier.align(Alignment.TopStart)
@@ -51,16 +61,7 @@ fun MainModal(
 
 
             // 모달 컨텐츠
-            Row(
-                modifier = Modifier.align(Alignment.Center),
-                horizontalArrangement = Arrangement.spacedBy(50.dp), // 버튼 간 간격 조정
-                verticalAlignment = Alignment.CenterVertically // 수직 정렬
-            ) {
 
-                BlockButton(onClick = onWordLearningClick, buttonType = ButtonType.WORD_LEARNING)
-                BlockButton(onClick = onDrawingDiaryClick, buttonType = ButtonType.DRAWING_DIARY)
-                BlockButton(onClick = onDrawingQuizClick, buttonType = ButtonType.DRAWING_QUIZ)
-            }
         }
     }
 }
