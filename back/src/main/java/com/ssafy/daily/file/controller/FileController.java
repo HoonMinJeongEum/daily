@@ -18,7 +18,7 @@ public class FileController {
     private final S3UploadService s3UploadService;
 
     @PostMapping("/upload")
-    public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<String> uploadFile(@RequestPart("file") MultipartFile file) {
         try {
             String fileUrl = s3UploadService.saveFile(file);
             return ResponseEntity.ok(fileUrl);
