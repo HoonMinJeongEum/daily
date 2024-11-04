@@ -9,3 +9,5 @@ val PastelSkyBlue = Color(0xFFD2E0FB)      // 에러 색상
 val DeepPastelBlue = Color(0xFF83B4FF) // 배경색
 val PastelYellow = Color(0xFFFEF9D9)    // 서피스 색상
 val DeepPastelNavy = Color(0xFF49566F) // NavBar 메뉴 색상
+val NavWhite = Color(0xFFF5F8FA
+)

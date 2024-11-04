@@ -39,8 +39,8 @@ object RetrofitClient {
                     val original: Request = it.request()
                     val request = original.newBuilder()
                         .header("Content-Type", "application/json")
-                        .header("access_token", accessToken ?: "")
-                        .header("refresh_token", refreshToken ?: "")
+                        .header("Authorization", "Bearer ${accessToken ?: ""}") // Authorization 헤더에 Bearer 추가
+                        .header("Set-Cookie", refreshToken ?: "")
                         .build()
                     it.proceed(request)
                 }

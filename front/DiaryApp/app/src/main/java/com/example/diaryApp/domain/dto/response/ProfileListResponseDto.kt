@@ -10,7 +10,10 @@ data class Profile(
     val name: String,
 
     @SerializedName("img")
-    val img: String
+    val img: String,
+
+    @SerializedName("shellCount")
+    val shellCount: Int
 )
 
 data class ProfileListResponse(

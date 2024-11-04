@@ -67,6 +67,7 @@ dependencies {
     implementation("androidx.compose.runtime:runtime-livedata:1.5.1")
     implementation("androidx.core:core-splashscreen:1.0.0")
     implementation("com.google.android.material:material:1.9.0")
+    implementation("io.coil-kt:coil-compose:2.0.0")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)

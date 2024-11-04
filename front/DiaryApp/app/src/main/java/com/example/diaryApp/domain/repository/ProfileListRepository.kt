@@ -1,14 +1,11 @@
 package com.example.diaryApp.domain.repository
 
-import com.example.diaryApp.domain.dto.response.ProfileListResponse
-import com.example.diaryApp.utils.Response
-import com.example.diarytablet.domain.dto.request.CreateProfileRequestDto
-import com.example.diarytablet.domain.dto.request.SelectProfileRequestDto
-import kotlinx.coroutines.flow.Flow
+import com.example.diaryApp.domain.dto.response.Profile
+import okhttp3.MultipartBody
+import okhttp3.Request
+import okhttp3.RequestBody
 
 interface ProfileListRepository {
-    suspend fun getProfileList(): Flow<Response<ProfileListResponse>>
-    suspend fun selectProfile(selectProfileRequestDto: SelectProfileRequestDto)
-    suspend fun createProfile(createProfileRequestDto: CreateProfileRequestDto)
-
+    suspend fun getProfileList(): MutableList<Profile>
+    suspend fun createProfile(name: RequestBody, file: MultipartBody.Part?)
 }
