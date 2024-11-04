@@ -25,7 +25,7 @@ public class S3UploadServiceTest {
     private AmazonS3 amazonS3;
 
     private String drawFileUrl = "";
-    private String writeFileUrl = "";
+    private String writeFileUrl = "https://sjsbucket.s3.ap-northeast-2.amazonaws.com/46039185-887c-494f-8398-3b92d100e361.jpg";
 
     @Test
     public void testUpload() throws IOException {
@@ -58,12 +58,13 @@ public class S3UploadServiceTest {
     public void testDelete() {
         // 파일 삭제
         String fileName = s3UploadService.getFileNameFromUrl(writeFileUrl);
-        System.out.println(fileName);
+        System.out.println("url is " + writeFileUrl);
+        System.out.println("file name is " + fileName);
         s3UploadService.deleteImage(fileName);
         System.out.println("File deleted: " + fileName);
 
         // 파일이 S3에서 삭제되었는지 확인
-        boolean doesExistAfterDelete = amazonS3.doesObjectExist("mynameisdaily", fileName);
+        boolean doesExistAfterDelete = amazonS3.doesObjectExist("sjsbucket", fileName);
         System.out.println("S3 object exists after delete: " + doesExistAfterDelete);
         assertThat(doesExistAfterDelete).isFalse();
     }

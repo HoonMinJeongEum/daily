@@ -61,16 +61,16 @@ public class S3UploadService {
         return learnedWord.getImg();
     }
 
-//    public Map<String, String> getDiaryDownloadUrl(int diaryId) {
-//        Diary diary = diaryRepository.findById(diaryId)
-//                .orElseThrow(() -> new IllegalArgumentException("해당 다이어리 id가 없습니다: " + diaryId));
-//
-//        Map<String, String> urls = new HashMap<>();
-//        urls.put("writeImg", diary.getWriteImg());
-//        urls.put("drawImg", diary.getDrawImg());
-//
-//        return urls;
-//    }
+    public Map<String, String> getDiaryDownloadUrl(int diaryId) {
+        Diary diary = diaryRepository.findById(diaryId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 다이어리 id가 없습니다: " + diaryId));
+
+        Map<String, String> urls = new HashMap<>();
+        urls.put("writeImg", diary.getWriteImg());
+        urls.put("drawImg", diary.getDrawImg());
+
+        return urls;
+    }
 
     public void deleteImage(String originalFilename) {
         amazonS3.deleteObject(bucket, originalFilename);
