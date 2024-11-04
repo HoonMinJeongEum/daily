@@ -8,6 +8,8 @@ import com.ssafy.daily.diary.entity.Diary;
 import com.ssafy.daily.diary.entity.DiaryComment;
 import com.ssafy.daily.diary.repository.DiaryCommentRepository;
 import com.ssafy.daily.diary.repository.DiaryRepository;
+import com.ssafy.daily.exception.S3UploadException;
+import com.ssafy.daily.file.service.S3UploadService;
 import com.ssafy.daily.user.dto.CustomUserDetails;
 import com.ssafy.daily.user.entity.Family;
 import com.ssafy.daily.user.entity.Member;
@@ -22,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +40,7 @@ public class DiaryService {
     private final MemberRepository memberRepository;
     private final FamilyRepository familyRepository;
     private final ObjectMapper objectMapper;
+    private final S3UploadService s3UploadService;
 
     @Value(("${clova.ocr.apiUrl}"))
     private String apiUrl;
@@ -67,14 +71,21 @@ public class DiaryService {
     }
 
     public void writeDiary(CustomUserDetails userDetails, MultipartFile drawFile, MultipartFile writeFile) {
-        // S3 이미지 업로드 후 url 받기
-        String drawImgUrl = "";
-        String writeImgUrl = "";
+        String drawImgUrl = null;
+        try {
+            drawImgUrl = s3UploadService.saveFile(drawFile);
+        } catch (IOException e) {
+            throw new S3UploadException("S3 그림 이미지 업로드 실패");
+        }
+        String writeImgUrl = null;
+        try {
+            writeImgUrl = s3UploadService.saveFile(writeFile);
+        } catch (IOException e) {
+            throw new S3UploadException("S3 일기 이미지 업로드 실패");
+        }
 
-        // 이미지 파일을 OCR 처리
         List<FieldDto> fields = processOcr(writeImgUrl);
 
-        // BGM 생성 처리
         String sound = generateBgm(fields);
 
         // DB에 저장
