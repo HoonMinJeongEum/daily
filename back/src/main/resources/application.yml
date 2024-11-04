@@ -1,0 +1,15 @@
+spring:
+  profiles:
+    active: secret
+  servlet:
+    multipart:
+      max-request-size: 5MB
+
+# OpenVidu 설정
+openvidu:
+  url: https://k11e204.p.ssafy.io:8443
+  secret: MY_SECRET
+
+server:
+  port: 8081
+
