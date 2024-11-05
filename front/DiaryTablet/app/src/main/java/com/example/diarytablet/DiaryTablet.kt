@@ -9,6 +9,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.diarytablet.ui.screens.MainScreen
 import com.example.diarytablet.ui.screens.ProfileScreen
+import com.example.diarytablet.ui.screens.QuizScreen
 import com.example.diarytablet.ui.screens.WordLearningScreen
 import com.example.diarytablet.ui.screens.ShopScreen
 import com.example.diarytablet.ui.screens.StockScreen
@@ -51,6 +52,12 @@ fun DiaryTabletApp() {
             }
             composable("stock"){
                 StockScreen(navController = navController)
+            }
+
+            composable("quiz") {
+                QuizScreen(
+                    navController = navController
+                )
             }
         }
     }
