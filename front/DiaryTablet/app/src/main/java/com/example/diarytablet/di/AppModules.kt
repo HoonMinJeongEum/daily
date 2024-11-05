@@ -38,6 +38,7 @@ class AppModules {
     fun provideProfileListRepository(
         profileListService: ProfileListService
     ) :ProfileListRepository = ProfileListRepositoryImpl(profileListService)
+
     @Provides
     fun provideUserService(
         retrofit: Retrofit
