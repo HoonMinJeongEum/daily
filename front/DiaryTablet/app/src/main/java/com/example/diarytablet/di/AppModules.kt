@@ -15,10 +15,17 @@ import com.example.diarytablet.domain.repository.UserRepositoryImpl
 import com.example.diarytablet.domain.service.DiaryService
 import com.example.diarytablet.domain.repository.WordRepository
 import com.example.diarytablet.domain.repository.WordRepositoryImpl
+import com.example.diarytablet.domain.service.AlarmService
 import com.example.diarytablet.domain.service.ProfileListService
 import com.example.diarytablet.domain.service.QuizService
 import com.example.diarytablet.domain.service.UserService
+import com.ssafy.daily.alarm.repository.AlarmRepository
+import com.ssafy.daily.alarm.repository.AlarmRepositoryImpl
+
+import com.example.diarytablet.domain.repository.WordRepository
+import com.example.diarytablet.domain.repository.WordRepositoryImpl
 import com.example.diarytablet.domain.service.WordService
+
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -79,6 +86,15 @@ class AppModules {
     @Provides
     fun provideDiaryService(retrofit: Retrofit): DiaryService {
         return retrofit.create(DiaryService::class.java)
+    fun provideAlarmRepository(
+        alarmService: AlarmService
+    ): AlarmRepository {
+        return AlarmRepositoryImpl(alarmService)
+    }
+
+    @Provides
+    fun provideAlarmService(retrofit: Retrofit): AlarmService {
+        return retrofit.create(AlarmService::class.java)
     }
 
     @Provides
@@ -90,4 +106,5 @@ class AppModules {
     fun provideWordRepository(
         wordService: WordService
     ): WordRepository = WordRepositoryImpl(wordService)
+
 }
