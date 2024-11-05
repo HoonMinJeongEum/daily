@@ -1,6 +1,7 @@
 package com.ssafy.daily.quiz.controller;
 
 import com.ssafy.daily.quiz.dto.CheckWordRequest;
+import com.ssafy.daily.quiz.dto.SessionRequest;
 import com.ssafy.daily.quiz.dto.SetWordRequest;
 import com.ssafy.daily.quiz.service.QuizService;
 import com.ssafy.daily.user.dto.CustomUserDetails;
@@ -9,8 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @CrossOrigin(origins = "*")
 @RequiredArgsConstructor
@@ -21,17 +20,17 @@ public class QuizController {
 
     // 세션 아이디 생성
     @PostMapping("/sessions")
-    public ResponseEntity<?> initializeSession(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody(required = false) Map<String, Object> params)
+    public ResponseEntity<?> initializeSession(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody SessionRequest request)
             throws Exception {
-        return ResponseEntity.ok(quizService.initializeSession(userDetails, params));
+        return ResponseEntity.ok(quizService.initializeSession(userDetails, request));
     }
 
     // 토큰 생성
     @PostMapping("/sessions/{sessionId}/connections")
-    public ResponseEntity<?> createConnection(@PathVariable("sessionId") String sessionId,
-                                              @RequestBody(required = false) Map<String, Object> params)
+    public ResponseEntity<?> createConnection(@PathVariable("sessionId") String sessionId
+                                              )
             throws OpenViduJavaClientException, OpenViduHttpException {
-        return ResponseEntity.ok(quizService.createConnection(sessionId, params));
+        return ResponseEntity.ok(quizService.createConnection(sessionId));
     }
 
     // 단어 추천

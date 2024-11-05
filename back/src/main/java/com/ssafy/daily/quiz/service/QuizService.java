@@ -1,10 +1,7 @@
 package com.ssafy.daily.quiz.service;
 
 import com.ssafy.daily.alarm.service.AlarmService;
-import com.ssafy.daily.common.Role;
-import com.ssafy.daily.quiz.dto.CheckWordRequest;
-import com.ssafy.daily.quiz.dto.RecommendWordResponse;
-import com.ssafy.daily.quiz.dto.SetWordRequest;
+import com.ssafy.daily.quiz.dto.*;
 import com.ssafy.daily.quiz.entity.Quiz;
 import com.ssafy.daily.quiz.repository.QuizRepository;
 import com.ssafy.daily.user.dto.CustomUserDetails;
@@ -44,9 +41,11 @@ public class QuizService {
     }
 
     // 세션 아이디 생성
-    public String initializeSession(CustomUserDetails userDetails, Map<String, Object> params) throws Exception {
+    public SessionResponse initializeSession(CustomUserDetails userDetails, SessionRequest request) throws Exception {
         // 세션 아이디 생성
-        SessionProperties properties = SessionProperties.fromJson(params).build();
+        Map<String,Object> map = new HashMap<>();
+        map.put("customSessionId", request.getCustomSessionId());
+        SessionProperties properties = SessionProperties.fromJson(map).build();
         Session session = openvidu.createSession(properties);
         String sessionId = session.getSessionId();
 
@@ -66,19 +65,20 @@ public class QuizService {
 //
 //        // 알림
 //        alarmService.sendNotification(childName, sessionId, familyId, Role.PARENT, "그림 퀴즈", "요청");
-
-        return sessionId;
+        SessionResponse sessionResponse = new SessionResponse(sessionId);
+        return sessionResponse;
     }
 
     // 토큰 생성
-    public String createConnection(String sessionId, Map<String, Object> params) throws OpenViduJavaClientException, OpenViduHttpException {
+    public TokenResponse createConnection(String sessionId) throws OpenViduJavaClientException, OpenViduHttpException {
         Session session = openvidu.getActiveSession(sessionId);
         if (session == null) {
           throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Session not found");
         }
-        ConnectionProperties properties = ConnectionProperties.fromJson(params).build();
+        Map<String,Object> map = new HashMap<>();
+        ConnectionProperties properties = ConnectionProperties.fromJson(map).build();
         Connection connection = session.createConnection(properties);
-        return connection.getToken();
+        return new TokenResponse(connection.getToken());
     }
 
     // 단어 추천
