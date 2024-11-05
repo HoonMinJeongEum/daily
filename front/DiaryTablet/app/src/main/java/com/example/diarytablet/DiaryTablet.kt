@@ -9,7 +9,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.diarytablet.ui.screens.MainScreen
 import com.example.diarytablet.ui.screens.ProfileScreen
-import com.example.diarytablet.ui.screens.WordLearningScreen
 import com.example.diarytablet.ui.screens.ShopScreen
 import com.example.diarytablet.ui.screens.StockScreen
 import com.example.diarytablet.ui.theme.BackgroundType
@@ -35,16 +34,7 @@ fun DiaryTabletApp() {
                 )
             }
             composable("main") {
-                MainScreen(
-                    navController = navController
-                )
-            }
-
-            composable("wordLearning") {
-                WordLearningScreen(
-                    navController = navController
-                )
-
+                MainScreen(navController = navController)
             }
             composable("shop"){
                 ShopScreen(navController = navController)

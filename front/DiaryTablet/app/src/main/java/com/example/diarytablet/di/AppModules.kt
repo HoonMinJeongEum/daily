@@ -6,11 +6,14 @@ import com.example.diarytablet.datastore.UserStore
 import com.example.diarytablet.domain.RetrofitClient
 import com.example.diarytablet.domain.repository.ProfileListRepository
 import com.example.diarytablet.domain.repository.ProfileListRepositoryImpl
+import com.example.diarytablet.domain.repository.QuizRepository
+import com.example.diarytablet.domain.repository.QuizRepositoryImpl
 import com.example.diarytablet.domain.repository.UserRepository
 import com.example.diarytablet.domain.repository.UserRepositoryImpl
 import com.example.diarytablet.domain.repository.WordRepository
 import com.example.diarytablet.domain.repository.WordRepositoryImpl
 import com.example.diarytablet.domain.service.ProfileListService
+import com.example.diarytablet.domain.service.QuizService
 import com.example.diarytablet.domain.service.UserService
 import com.example.diarytablet.domain.service.WordService
 import dagger.Module
@@ -51,6 +54,17 @@ class AppModules {
         return retrofit.create(ProfileListService::class.java)
     }
 
+    @Provides
+    fun provideQuizRepository(
+        quizService: QuizService
+    ): QuizRepository {
+        return QuizRepositoryImpl(quizService)
+    }
+
+    @Provides
+    fun provideQuizService(retrofit: Retrofit): QuizService {
+        return retrofit.create(QuizService::class.java)
+    }
     @Provides
     fun provideWordService(
         retrofit: Retrofit

@@ -1,15 +1,19 @@
+package com.example.diarytablet.ui
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.diarytablet.ui.screens.ToolType
+import com.example.diarytablet.model.ToolType
 
 @Composable
 fun PaletteTool(
@@ -18,45 +22,32 @@ fun PaletteTool(
     onThicknessChange: (Float) -> Unit,
     onToolSelect: (ToolType) -> Unit
 ) {
-    val colors = listOf(Color.Black, Color.Red, Color.Green, Color.Blue, Color.Yellow)
-    var selectedColor by remember { mutableStateOf(colors.first()) }
-    var thickness by remember { mutableStateOf(6f) }
-
-    Column(modifier = Modifier.padding(8.dp)) {
-        // 색상 팔레트
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            colors.forEach { color ->
+    Column(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
+        // 도구 선택 UI
+        Row(modifier = Modifier.fillMaxWidth()) {
+            ToolType.values().forEach { tool ->
                 Box(
                     modifier = Modifier
-                        .size(36.dp)
-                        .background(color, shape = CircleShape)
-                        .clickable {
-                            selectedColor = color
-                            onColorChange(color)
-                        }
-                )
+                        .size(60.dp)
+                        .background(if (tool == selectedTool) Color.Gray else Color.LightGray)
+                        .padding(4.dp)
+                        .clickable { onToolSelect(tool) }
+                ) {
+                    Text(text = tool.name, color = Color.Black)
+                }
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 도구 선택
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            ToolType.values().forEach { tool ->
-                Text(
-                    text = tool.name,
-                    color = if (tool == selectedTool) Color.Blue else Color.Black,
+        // 색상 선택 UI (단순히 예시로 여러 색상 제공)
+        Row(modifier = Modifier.fillMaxWidth()) {
+            listOf(Color.Red, Color.Green, Color.Blue, Color.Yellow, Color.Black).forEach { color ->
+                Box(
                     modifier = Modifier
-                        .padding(8.dp)
-                        .clickable {
-                            onToolSelect(tool)
-                        }
+                        .size(40.dp)
+                        .background(color)
+                        .clickable { onColorChange(color) }
                 )
             }
         }
@@ -64,14 +55,16 @@ fun PaletteTool(
         Spacer(modifier = Modifier.height(16.dp))
 
         // 두께 조절 슬라이더
-        Text("Thickness")
+        Text(text = "Brush Thickness")
+        var thickness by remember { mutableStateOf(5f) } // 두께 상태 기억
         Slider(
             value = thickness,
-            onValueChange = {
-                thickness = it
-                onThicknessChange(it)
+            onValueChange = { newThickness ->
+                thickness = newThickness
+                onThicknessChange(newThickness)
             },
-            valueRange = 1f..20f
+            valueRange = 1f..50f,
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }
