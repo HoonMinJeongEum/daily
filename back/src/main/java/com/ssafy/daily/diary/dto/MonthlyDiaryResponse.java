@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 @Data
 public class MonthlyDiaryResponse {
-    int id;
+    private int id;
     private LocalDateTime createdAt;
     public MonthlyDiaryResponse(Diary diary){
         this.id = diary.getId();

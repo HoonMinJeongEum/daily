@@ -22,15 +22,12 @@ import com.ssafy.daily.user.repository.FamilyRepository;
 import com.ssafy.daily.user.repository.MemberRepository;
 import com.ssafy.daily.user.repository.RefreshRepository;
 import com.ssafy.daily.word.repository.LearnedWordRepository;
-import com.sun.tools.javac.Main;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -101,7 +98,8 @@ public class UserService {
 
     }
 
-    public List<ProfilesResponse> getProfiles(int familyId) {
+    public List<ProfilesResponse> getProfiles(CustomUserDetails userDetails) {
+        int familyId = userDetails.getFamily().getId();
         List<Member> list = memberRepository.findByFamilyId(familyId);
 
         return list.stream()
@@ -112,10 +110,12 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-    public void addProfile(int familyId, MultipartFile file, String memberName) {
+    public void addProfile(CustomUserDetails userDetails, MultipartFile file, String memberName) {
         if (memberName.length() > 20 || memberName.isEmpty()){
             throw new IllegalArgumentException("이름은 20자 이내로 설정해야 합니다.");
         }
+
+        int familyId = userDetails.getFamily().getId();
         Family family = familyRepository.findById(familyId)
                 .orElseThrow(() -> new EmptyResultDataAccessException("해당 가족 계정을 찾을 수 없습니다.", 1));
 
@@ -259,5 +259,39 @@ public class UserService {
         shellRepository.deleteByMemberId(memberId);
         earnedStickerRepository.deleteByMemberId(memberId);
         memberRepository.deleteById(memberId);
+    }
+
+    @Transactional
+    public void modifyMemberName(ModifyNameRequest request, CustomUserDetails userDetails) {
+        String newName = request.getName();
+        if (newName.length() > 20 || newName.isEmpty()){
+            throw new IllegalArgumentException("이름은 20자 이내로 설정해야 합니다.");
+        }
+
+        int memberId = userDetails.getMemberId();
+        Member orgMember = memberRepository.findById(memberId)
+                .orElseThrow(() -> new EmptyResultDataAccessException("해당 프로필을 찾을 수 없습니다.", 1));
+
+        orgMember.updateName(newName);
+    }
+
+    @Transactional
+    public void modifyProfileImg(MultipartFile file, CustomUserDetails userDetails) {
+        int memberId = userDetails.getMemberId();
+
+        Member orgMember = memberRepository.findById(memberId)
+                .orElseThrow(() -> new EmptyResultDataAccessException("해당 프로필을 찾을 수 없습니다.", 1));
+
+        String orgImg = s3UploadService.getFileNameFromUrl(orgMember.getImg());
+        s3UploadService.deleteImage(orgImg);
+
+        String imageUrl = null;
+        try {
+            imageUrl = s3UploadService.saveFile(file);
+        } catch (IOException e) {
+            throw new S3UploadException("S3 프로필 이미지 업로드 실패");
+        }
+
+        orgMember.updateImg(imageUrl);
     }
 }
