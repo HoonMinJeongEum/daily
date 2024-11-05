@@ -7,6 +7,7 @@ import com.example.diarytablet.domain.dto.response.Profile
 import com.example.diarytablet.domain.dto.response.WordLearnedResponseDto
 import com.example.diarytablet.domain.dto.response.WordResponseDto
 import com.example.diarytablet.utils.Const
+import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Multipart
@@ -16,7 +17,7 @@ import retrofit2.http.Part
 interface WordRepository {
     suspend fun getWordList(): MutableList<WordResponseDto>
     suspend fun getLearnedWordList(): MutableList<WordLearnedResponseDto>
-    suspend fun checkWordValidate(wordRequest: WordRequestDto
+    suspend fun checkWordValidate(orgFile: MultipartBody.Part, writeFile: MultipartBody.Part
     ): Response<String>
     suspend fun finishWordLearning(words: List<WordRequestDto>
     ): Response<String>

@@ -4,6 +4,7 @@ import com.example.diarytablet.domain.dto.request.WordRequestDto
 import com.example.diarytablet.domain.dto.response.WordLearnedResponseDto
 import com.example.diarytablet.domain.dto.response.WordResponseDto
 import com.example.diarytablet.utils.Const
+import okhttp3.MultipartBody
 import retrofit2.http.GET
 import retrofit2.http.Multipart
 import retrofit2.http.POST
@@ -20,7 +21,8 @@ interface WordService {
     @Multipart
     @POST("${Const.API_PATH}word/validate")
     suspend fun checkWordValidate(
-        @Part wordRequest: WordRequestDto
+        @Part orgFile: MultipartBody.Part,
+        @Part writeFile: MultipartBody.Part
     ): Response<String>
 
     @Multipart

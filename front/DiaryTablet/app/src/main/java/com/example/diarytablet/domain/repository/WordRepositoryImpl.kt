@@ -8,6 +8,7 @@ import com.example.diarytablet.domain.dto.response.WordLearnedResponseDto
 import com.example.diarytablet.domain.dto.response.WordResponseDto
 import com.example.diarytablet.domain.service.ProfileListService
 import com.example.diarytablet.domain.service.WordService
+import okhttp3.MultipartBody
 import retrofit2.Response
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -24,8 +25,8 @@ class WordRepositoryImpl @Inject constructor(
         return wordService.getLearnedWordList()
     }
 
-    override suspend fun checkWordValidate(wordRequest: WordRequestDto): Response<String> {
-        return wordService.checkWordValidate(wordRequest)
+    override suspend fun checkWordValidate(orgFile: MultipartBody.Part, writeFile: MultipartBody.Part): Response<String> {
+        return wordService.checkWordValidate(orgFile,writeFile)
     }
 
     override suspend fun finishWordLearning(words: List<WordRequestDto>): Response<String> {

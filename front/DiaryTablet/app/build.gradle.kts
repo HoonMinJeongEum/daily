@@ -70,6 +70,7 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences:1.1.1")
     implementation ("com.squareup.okhttp3:logging-interceptor:4.12.0")
     implementation(libs.volley)
+    implementation(libs.androidx.ui.test.android)
     kapt("com.google.dagger:hilt-compiler:2.51.1")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
     implementation("androidx.compose.runtime:runtime-livedata:1.5.1") // Compose LiveData 연동

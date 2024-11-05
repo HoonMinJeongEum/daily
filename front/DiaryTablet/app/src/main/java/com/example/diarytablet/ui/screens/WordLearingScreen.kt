@@ -43,42 +43,52 @@ fun WordLearningScreen(
 
     BackgroundPlacement(backgroundType = backgroundType)
 
-    Box (
+    Box(
         modifier = Modifier
             .fillMaxSize(),
         contentAlignment = Alignment.Center
-    ){
-        Row(
-            modifier = Modifier
-                .padding(top = 40.dp, start = 60.dp)
-                .align(Alignment.TopStart),
-            verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.back_button), // 뒤로가기 이미지 리소스
-                contentDescription = "뒤로가기 버튼",
+            // 상단 뒤로가기 및 타이틀
+            Row(
                 modifier = Modifier
-                    .size(60.dp) // 이미지 크기 조정
-                    .clickable { /* 뒤로가기 버튼 클릭 시 동작 */ }
-            )
-            Spacer(modifier = Modifier.width(30.dp)) // 버튼과 텍스트 간 간격
-            Text(
-                text = "단어 학습",
-                fontSize = 40.sp,
-                color = Color.White,
-                textAlign = TextAlign.Start
+                    .padding(top = 40.dp, start = 60.dp)
+                    .align(Alignment.Start),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.cute_back), // 뒤로가기 이미지 리소스
+                    contentDescription = "뒤로가기 버튼",
+                    modifier = Modifier
+                        .size(60.dp)
+                        .clickable { /* 뒤로가기 버튼 클릭 시 동작 */ }
+                )
+                Spacer(modifier = Modifier.width(30.dp))
+                Text(
+                    text = "단어 학습",
+                    fontSize = 40.sp,
+                    color = Color.White,
+                    textAlign = TextAlign.Start
+                )
+            }
+
+            Spacer(modifier = Modifier.height(20.dp)) // 상단 텍스트와 WordTap 간격
+
+            // WordTap 수직 중앙 배치
+            WordTap(
+                wordList = wordList,
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+                onValidate = { context, originalBitmap, writtenBitmap ->
+                    viewModel.checkWordValidate(context, originalBitmap, writtenBitmap)
+                },
+                onFinish = { words ->
+                    viewModel.finishWordLearning(words)
+                }
             )
         }
-        WordTap (
-            wordList = wordList,
-            modifier = Modifier.align(Alignment.Center),
-            onValidate = { wordRequest ->
-                viewModel.checkWordValidate(wordRequest)
-            },
-            onFinish = { words ->
-                viewModel.finishWordLearning(words)
-            },
-
-        )
     }
 }
