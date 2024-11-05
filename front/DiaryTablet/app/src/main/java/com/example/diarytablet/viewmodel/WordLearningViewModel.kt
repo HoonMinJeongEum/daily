@@ -15,7 +15,6 @@ import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
-import saveBitmapToFile
 import java.io.File
 import javax.inject.Inject
 
@@ -67,27 +66,27 @@ class WordLearningViewModel @Inject constructor(
 
     // 단어 검증 함수
     fun checkWordValidate(context: Context, originalBitmap: Bitmap, writtenBitmap: Bitmap) {
-        isLoading.value = true
-        viewModelScope.launch {
-            try {
-                val orgFile = saveBitmapToFile(context, originalBitmap, "original.jpg")
-                val writeFile = saveBitmapToFile(context, writtenBitmap, "written.jpg")
+//        isLoading.value = true
+//        viewModelScope.launch {
+//            try {
+//                val orgFile = saveBitmapToFile(context, originalBitmap, "original.jpg")
+//                val writeFile = saveBitmapToFile(context, writtenBitmap, "written.jpg")
 
                 // 파일을 MultipartBody.Part로 변환
-                val orgFilePart = createMultipartBodyPart(orgFile, "orgFile")
-                val writeFilePart = createMultipartBodyPart(writeFile, "writeFile")
+//                val orgFilePart = createMultipartBodyPart(orgFile, "orgFile")
+//                val writeFilePart = createMultipartBodyPart(writeFile, "writeFile")
 
 
-                val validationResponse = wordRepository.checkWordValidate(orgFilePart, writeFilePart)
-                if (validationResponse.isSuccessful) { // 검증이 성공했을 때
+//                val validationResponse = wordRepository.checkWordValidate(orgFilePart, writeFilePart)
+//                if (validationResponse.isSuccessful) { // 검증이 성공했을 때
 //                    _learnedWordList.value = _learnedWordList.value + wordRequest // 단어 추가
-                }
-            } catch (e: Exception) {
-                errorMessage.value = e.message
-            } finally {
-                isLoading.value = false
-            }
-        }
+//                }
+//            } catch (e: Exception) {
+//                errorMessage.value = e.message
+//            } finally {
+//                isLoading.value = false
+//            }
+//        }
     }
 
     private fun createMultipartBodyPart(file: File, paramName: String): MultipartBody.Part {

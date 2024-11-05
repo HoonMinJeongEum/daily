@@ -11,6 +11,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 
+
 interface ProfileListService {
     @GET("${Const.API_PATH}user/profile")
     suspend fun getProfileList(): MutableList<Profile>

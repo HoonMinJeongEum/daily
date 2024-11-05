@@ -30,6 +30,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.NavController
 import com.example.diarytablet.R
 import com.example.diarytablet.model.ToolType
 import com.example.diarytablet.ui.PaletteTool
@@ -48,8 +49,10 @@ data class DrawingStep(val path: Path, val color: Color, val thickness: Float)
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DiaryScreen(
-    backgroundType: BackgroundType = BackgroundType.DEFAULT
-) {
+    backgroundType: BackgroundType = BackgroundType.DEFAULT,
+    navController: NavController,
+
+    ) {
     BackgroundPlacement(backgroundType = backgroundType)
 
     var isDrawingMode by remember { mutableStateOf(true) }

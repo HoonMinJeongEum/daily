@@ -2,7 +2,6 @@ package com.example.diarytablet.ui.components
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -25,7 +24,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -41,12 +39,15 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.asAndroidPath
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.input.pointer.changedToDown
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -55,12 +56,12 @@ import androidx.compose.ui.unit.dp
 import com.example.diarytablet.R
 import com.example.diarytablet.domain.dto.request.WordRequestDto
 import com.example.diarytablet.domain.dto.response.WordResponseDto
+import com.example.diarytablet.model.ToolType
 import com.example.diarytablet.ui.theme.DeepPastelBlue
 import com.example.diarytablet.ui.theme.PastelNavy
 import com.example.diarytablet.ui.theme.PastelSkyBlue
+import createPaintForTool
 import kotlinx.coroutines.launch
-import kotlin.io.path.Path
-import kotlin.io.path.moveTo
 
 @Composable
 fun WordTap(
@@ -79,6 +80,7 @@ fun WordTap(
     val context = LocalContext.current
     var textSize by remember { mutableStateOf(IntSize.Zero) }
     var canvasSize by remember { mutableStateOf(IntSize.Zero) }
+    val isDrawingMode by remember { mutableStateOf(true) }
 
     Column(modifier = modifier.fillMaxSize()) {
 
@@ -95,7 +97,9 @@ fun WordTap(
 
     ){
         itemsIndexed(wordList) { index, word ->
-    Box(
+            val currentBitmap = Bitmap.createBitmap(780, 510, Bitmap.Config.ARGB_8888) // 예시 크기
+
+            Box(
         modifier = modifier
             .width(780.dp)
             .height(510.dp)
@@ -181,7 +185,9 @@ fun WordTap(
                     DrawCanvas(
                         modifier = Modifier
                             .fillMaxWidth(0.8f)
-                            .height(100.dp)
+                            .height(100.dp),
+                        currentBitmap = currentBitmap,
+                        isDrawingMode = isDrawingMode
 //                            .captureToBitmap { bitmap -> writtenBitmap = bitmap }
                     )
 
@@ -234,53 +240,54 @@ fun WordTap(
 }
 
 @Composable
-fun DrawCanvas(modifier: Modifier = Modifier) {
+fun DrawCanvas(
+    modifier: Modifier = Modifier,
+    currentBitmap: Bitmap,
+    isDrawingMode: Boolean
+) {
     val path = remember { androidx.compose.ui.graphics.Path() }
     var lastX by remember { mutableStateOf(0f) }
     var lastY by remember { mutableStateOf(0f) }
 
-    var isDrawing by remember { mutableStateOf(false) }
-
     Canvas(
         modifier = modifier
-            .fillMaxWidth(0.8f)
-            .height(100.dp)
-            .pointerInput(Unit) {
-                detectDragGestures(
-                    onDragStart = { offset ->
-                        // 드래그 시작 시 초기 위치 설정
-                        path.moveTo(offset.x, offset.y)
-                        lastX = offset.x
-                        lastY = offset.y
-                        isDrawing = !isDrawing // 트리거를 반전시켜 다시 그리기
-                    },
-                    onDrag = { change, _ ->
-                        val (x, y) = change.position
-                        // 경계 내에서만 경로를 업데이트
-                        if (x in 0f..size.width.toFloat() && y in 0f..size.height.toFloat()) {
-                            path.lineTo(x, y)
-                            lastX = x
-                            lastY = y
-                            isDrawing = !isDrawing // 경로가 변경되었을 때마다 다시 그리기 트리거 업데이트
-                            change.consume() // 이벤트 소모
+            .fillMaxSize()
+            .clipToBounds()
+            .pointerInput(isDrawingMode) {
+                if (isDrawingMode) {
+                    detectDragGestures(
+                        onDragStart = { offset ->
+                            path.reset()
+                            path.moveTo(offset.x, offset.y)
+                            lastX = offset.x
+                            lastY = offset.y
+                        },
+                        onDrag = { change, _ ->
+                            path.lineTo(change.position.x, change.position.y)
+
+                            // 비트맵에 즉시 반영
+                            val canvas = android.graphics.Canvas(currentBitmap)
+                            val paint = createPaintForTool(
+                                ToolType.PENCIL, // assuming PENCIL as default, update as needed
+                                Color.Black,
+                                1f
+                            )
+                            canvas.drawPath(path.asAndroidPath(), paint)
+                        },
+                        onDragEnd = {
+                            path.reset() // Reset path for next drag
                         }
-                    }
-                )
+                    )
+                }
             }
-            .border(1.dp, shape = RectangleShape, color = Color.Gray)  // 경계선
     ) {
-        // 그리는 과정을 실시간으로 보여주기 위해 Canvas에 경로 그리기
-        drawPath(
-            path = path,
-            color = Color.Black,
-            style = Stroke(
-                width = 4.dp.toPx(),
-                cap = StrokeCap.Round,
-                join = StrokeJoin.Round
-            )
-        )
+        drawIntoCanvas { canvas ->
+            // Display updated bitmap
+            canvas.nativeCanvas.drawBitmap(currentBitmap, 0f, 0f, null)
+        }
     }
 }
+
 
 
 @Composable

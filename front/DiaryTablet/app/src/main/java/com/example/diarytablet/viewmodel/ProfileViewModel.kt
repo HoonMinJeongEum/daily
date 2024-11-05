@@ -55,7 +55,7 @@ class ProfileViewModel @Inject constructor(
     fun selectProfile(profile: SelectProfileRequestDto) {
         viewModelScope.launch {
             try {
-            val response: retrofit2.Response<Void> = profileListRepository.selectProfile(profile)
+                val response: retrofit2.Response<Void> = profileListRepository.selectProfile(profile)
 
                     if (response.isSuccessful) {
                         // 헤더에서 토큰 가져오기
