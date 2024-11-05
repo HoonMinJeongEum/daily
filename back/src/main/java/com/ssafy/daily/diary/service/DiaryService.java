@@ -92,14 +92,14 @@ public class DiaryService {
         Member member = memberRepository.findById(userDetails.getMemberId())
                 .orElseThrow(() -> new EmptyResultDataAccessException("해당 프로필을 찾을 수 없습니다.", 1));
 
-//        Diary diary = Diary.builder()
-//                .content(content)
-//                .drawImg(drawImgUrl)
-//                .writeImg(writeImgUtl)
-//                .sound(sound)
-//                .member(member)
-//                .build();
-//        diaryRepository.save(diary);
+        Diary diary = Diary.builder()
+                .content(sound)     // 임시로 sound 데이터 저장
+                .drawImg(drawImgUrl)
+                .writeImg(writeImgUrl)
+                .sound(sound)
+                .member(member)
+                .build();
+        diaryRepository.save(diary);
 
         // 알림 전송
        /*
