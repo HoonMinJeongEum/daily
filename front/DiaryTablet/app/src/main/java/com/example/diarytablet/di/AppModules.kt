@@ -4,12 +4,15 @@ package com.example.diarytablet.di
 import android.app.Application
 import com.example.diarytablet.datastore.UserStore
 import com.example.diarytablet.domain.RetrofitClient
+import com.example.diarytablet.domain.repository.DiaryRepository
+import com.example.diarytablet.domain.repository.DiaryRepositoryImpl
 import com.example.diarytablet.domain.repository.ProfileListRepository
 import com.example.diarytablet.domain.repository.ProfileListRepositoryImpl
 import com.example.diarytablet.domain.repository.QuizRepository
 import com.example.diarytablet.domain.repository.QuizRepositoryImpl
 import com.example.diarytablet.domain.repository.UserRepository
 import com.example.diarytablet.domain.repository.UserRepositoryImpl
+import com.example.diarytablet.domain.service.DiaryService
 import com.example.diarytablet.domain.service.ProfileListService
 import com.example.diarytablet.domain.service.QuizService
 import com.example.diarytablet.domain.service.UserService
@@ -62,5 +65,17 @@ class AppModules {
     @Provides
     fun provideQuizService(retrofit: Retrofit): QuizService {
         return retrofit.create(QuizService::class.java)
+    }
+
+    @Provides
+    fun provideDiaryRepository(
+        diaryService: DiaryService,
+    ): DiaryRepository {
+        return DiaryRepositoryImpl(diaryService)
+    }
+
+    @Provides
+    fun provideDiaryService(retrofit: Retrofit): DiaryService {
+        return retrofit.create(DiaryService::class.java)
     }
 }

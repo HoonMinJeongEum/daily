@@ -1,5 +1,6 @@
 package com.example.diarytablet
 
+import DiaryScreen
 import LoginScreen
 import android.app.Application
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -41,6 +42,9 @@ fun DiaryTabletApp() {
             }
             composable("stock"){
                 StockScreen(navController = navController)
+            }
+            composable("diary"){
+                DiaryScreen(navController = navController)
             }
         }
     }

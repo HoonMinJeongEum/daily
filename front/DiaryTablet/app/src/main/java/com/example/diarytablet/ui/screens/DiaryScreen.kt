@@ -7,6 +7,7 @@ import android.graphics.PorterDuffXfermode
 import android.graphics.Canvas as AndroidCanvas
 import android.graphics.Paint as AndroidPaint
 import android.graphics.Shader
+import android.net.Uri
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -30,11 +31,14 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.platform.LocalContext
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.example.diarytablet.R
 import com.example.diarytablet.model.ToolType
 import com.example.diarytablet.ui.PaletteTool
 import com.example.diarytablet.ui.theme.BackgroundPlacement
 import com.example.diarytablet.ui.theme.BackgroundType
+import com.example.diarytablet.viewmodel.DiaryViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -48,8 +52,13 @@ data class DrawingStep(val path: Path, val color: Color, val thickness: Float)
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DiaryScreen(
-    backgroundType: BackgroundType = BackgroundType.DEFAULT
+    navController: NavController,
+    backgroundType: BackgroundType = BackgroundType.DEFAULT,
+    diaryViewModel: DiaryViewModel = hiltViewModel() // Hilt를 통해 ViewModel 주입
 ) {
+
+    var drawFileUri: Uri? =null
+    var writeFileUri: Uri? =null
     BackgroundPlacement(backgroundType = backgroundType)
 
     var isDrawingMode by remember { mutableStateOf(true) }
@@ -176,11 +185,21 @@ fun DiaryScreen(
             Button(onClick = {
                 CoroutineScope(Dispatchers.IO).launch {
                     savePageImagesWithTemplate(bitmapsList, pagerState.currentPage, context)
+                    drawFileUri = Uri.fromFile(File(context.filesDir, "drawing_combined_0.png"))
+                    writeFileUri = Uri.fromFile(File(context.filesDir, "drawing_combined_1.png"))
+
+                    // 이미지 파일이 생성된 후 업로드
+                    drawFileUri?.let { drawUri ->
+                        writeFileUri?.let { writeUri ->
+                            diaryViewModel.uploadDiary(drawUri, writeUri)
+                        }
+                    }
                 }
                 isPlaying.value = true
             }) {
                 Text("완료 및 저장")
             }
+
             // 완료 후 재생되는 작은 미니 플레이어
             Box(
                 modifier = Modifier
@@ -294,10 +313,9 @@ fun DrawingPlaybackView(drawingSteps: List<DrawingStep>) {
     }
 }
 
-// 템플릿과 그림을 결합하여 저장하는 함수
-suspend fun savePageImagesWithTemplate(bitmapsList: List<Bitmap>, pageIndex: Int, context: Context) {
-    withContext(Dispatchers.IO) {
-        bitmapsList.forEachIndexed { index, drawingBitmap ->
+suspend fun savePageImagesWithTemplate(bitmapsList: List<Bitmap>, pageIndex: Int, context: Context): List<File> {
+    return withContext(Dispatchers.IO) {
+        bitmapsList.mapIndexed { index, drawingBitmap ->
             val templateBitmap = if (index == 0) {
                 BitmapFactory.decodeResource(context.resources, R.drawable.draw_template)
             } else {
@@ -310,11 +328,52 @@ suspend fun savePageImagesWithTemplate(bitmapsList: List<Bitmap>, pageIndex: Int
             canvas.drawBitmap(templateBitmap, 0f, 0f, null)
             canvas.drawBitmap(drawingBitmap, 0f, 0f, null)
 
-            val file = File(context.filesDir, "drawing_combined_$index.png")
-            FileOutputStream(file).use { out ->
-                combinedBitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
-            }
+            // 이미지 크기 줄이기 (예: 해상도 1000x750으로 축소)
+            val resizedBitmap = resizeBitmap(combinedBitmap, 1000, 750)
+
+            // 압축하여 파일로 저장
+            val file = File(context.filesDir, "drawing_combined_$index.jpg")
+            compressBitmap(resizedBitmap, file, quality = 50)
+
+            file // 파일 반환
         }
     }
 }
+
+// 해상도를 조절하는 함수
+fun resizeBitmap(bitmap: Bitmap, width: Int, height: Int): Bitmap {
+    return Bitmap.createScaledBitmap(bitmap, width, height, true)
+}
+
+// 품질을 낮춰서 압축하는 함수
+fun compressBitmap(bitmap: Bitmap, outputFile: File, quality: Int = 30) {
+    FileOutputStream(outputFile).use { out ->
+        bitmap.compress(Bitmap.CompressFormat.JPEG, quality, out)
+    }
+}
+
+
+//// 템플릿과 그림을 결합하여 저장하는 함수
+//suspend fun savePageImagesWithTemplate(bitmapsList: List<Bitmap>, pageIndex: Int, context: Context) {
+//    withContext(Dispatchers.IO) {
+//        bitmapsList.forEachIndexed { index, drawingBitmap ->
+//            val templateBitmap = if (index == 0) {
+//                BitmapFactory.decodeResource(context.resources, R.drawable.draw_template)
+//            } else {
+//                BitmapFactory.decodeResource(context.resources, R.drawable.write_template)
+//            }
+//
+//            val combinedBitmap = Bitmap.createBitmap(drawingBitmap.width, drawingBitmap.height, Bitmap.Config.ARGB_8888)
+//            val canvas = AndroidCanvas(combinedBitmap)
+//
+//            canvas.drawBitmap(templateBitmap, 0f, 0f, null)
+//            canvas.drawBitmap(drawingBitmap, 0f, 0f, null)
+//
+//            val file = File(context.filesDir, "drawing_combined_$index.png")
+//            FileOutputStream(file).use { out ->
+//                combinedBitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+//            }
+//        }
+//    }
+//}
 

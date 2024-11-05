@@ -165,7 +165,7 @@ fun MainScreen(
                 isModalVisible = false
             },
             onDrawingDiaryClick = {
-                navController.navigate("wordLearning") {
+                navController.navigate("diary") {
                     popUpTo("main") { inclusive = true }
                 }
                 isModalVisible = false
