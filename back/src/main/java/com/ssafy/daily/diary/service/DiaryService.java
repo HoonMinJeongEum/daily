@@ -10,6 +10,7 @@ import com.ssafy.daily.diary.repository.DiaryCommentRepository;
 import com.ssafy.daily.diary.repository.DiaryRepository;
 import com.ssafy.daily.exception.S3UploadException;
 import com.ssafy.daily.file.service.S3UploadService;
+import com.ssafy.daily.reward.dto.CouponResponse;
 import com.ssafy.daily.user.dto.CustomUserDetails;
 import com.ssafy.daily.user.entity.Family;
 import com.ssafy.daily.user.entity.Member;
@@ -48,26 +49,16 @@ public class DiaryService {
     @Value("${clova.ocr.secretKey}")
     private String secretKey;
 
-    public List<DiaryResponse> getDiaries(CustomUserDetails userDetails, Integer memberId) {
-        // memberId가 null이면 JWT 토큰에서 가져옴
+    public List<MonthlyDiaryResponse> getDiaries(CustomUserDetails userDetails, Integer memberId,
+                                          int year, int month) {
         if (memberId == null) {
             memberId = userDetails.getMemberId();
         }
-        List<Diary> list = diaryRepository.findByMemberId(memberId);
+        List<Diary> list = diaryRepository.findByMemberIdAndYearAndMonth(memberId, year, month);
 
-        // DiaryResponse로 변환 후 반환
-        return list.stream().map(diary -> {
-            // 다이어리와 연결된 모든 DiaryComment 가져오기
-            List<CommentResponse> comments = diaryCommentRepository.findByDiaryId(diary.getId())
-                    .stream()
-                    .map(CommentResponse::new)
-                    .collect(Collectors.toList());
-
-            return new DiaryResponse(
-                    diary,
-                    comments  // CommentResponse 리스트로 설정
-            );
-        }).collect(Collectors.toList());
+        return list.stream()
+                .map(MonthlyDiaryResponse::new)
+                .collect(Collectors.toList());
     }
 
     public void writeDiary(CustomUserDetails userDetails, MultipartFile drawFile, MultipartFile writeFile) {
