@@ -44,8 +44,9 @@ public class LearningSessionController {
     }
 
     @PostMapping("/validate")
-    public ResponseEntity<?> checkWordSimilarity(@RequestPart MultipartFile orgFile, @RequestPart MultipartFile writeFile){
-        wordService.checkSimilarity(orgFile, writeFile);
+    public ResponseEntity<?> checkWordSimilarity(@RequestPart MultipartFile writeFile,
+                                                 @RequestPart String word){
+        wordService.checkSimilarity(word, writeFile);
         return ResponseEntity.ok("단어가 정확하게 작성되었습니다!");
     }
 }
