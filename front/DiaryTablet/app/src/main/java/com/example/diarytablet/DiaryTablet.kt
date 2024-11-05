@@ -24,7 +24,7 @@ fun DiaryTabletApp() {
     val navController = rememberNavController()
 
     DiaryTabletTheme {
-        NavHost(navController, startDestination = "wordLearning") {
+        NavHost(navController, startDestination = "login") {
             composable("login") {
                 LoginScreen(
                     navController = navController)
@@ -43,11 +43,7 @@ fun DiaryTabletApp() {
             composable("stock"){
                 StockScreen(navController = navController)
             }
-<<<<<<< HEAD
-            composable("diary"){
-                DiaryScreen(navController = navController)
-            }
-=======
+
             composable("diary") {
                 DiaryScreen(navController = navController)
             }
@@ -55,7 +51,6 @@ fun DiaryTabletApp() {
             composable("wordLearning") {
                 WordLearningScreen(navController = navController)
             }
->>>>>>> 1a83e2854da8034d5cecf68e5e995ad0baf1aee7
         }
     }
 }

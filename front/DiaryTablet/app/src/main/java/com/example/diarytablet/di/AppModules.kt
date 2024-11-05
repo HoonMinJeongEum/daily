@@ -12,12 +12,9 @@ import com.example.diarytablet.domain.repository.QuizRepository
 import com.example.diarytablet.domain.repository.QuizRepositoryImpl
 import com.example.diarytablet.domain.repository.UserRepository
 import com.example.diarytablet.domain.repository.UserRepositoryImpl
-<<<<<<< HEAD
 import com.example.diarytablet.domain.service.DiaryService
-=======
 import com.example.diarytablet.domain.repository.WordRepository
 import com.example.diarytablet.domain.repository.WordRepositoryImpl
->>>>>>> 1a83e2854da8034d5cecf68e5e995ad0baf1aee7
 import com.example.diarytablet.domain.service.ProfileListService
 import com.example.diarytablet.domain.service.QuizService
 import com.example.diarytablet.domain.service.UserService
@@ -71,7 +68,6 @@ class AppModules {
     fun provideQuizService(retrofit: Retrofit): QuizService {
         return retrofit.create(QuizService::class.java)
     }
-<<<<<<< HEAD
 
     @Provides
     fun provideDiaryRepository(
@@ -84,7 +80,7 @@ class AppModules {
     fun provideDiaryService(retrofit: Retrofit): DiaryService {
         return retrofit.create(DiaryService::class.java)
     }
-=======
+
     @Provides
     fun provideWordService(
         retrofit: Retrofit
@@ -94,5 +90,4 @@ class AppModules {
     fun provideWordRepository(
         wordService: WordService
     ): WordRepository = WordRepositoryImpl(wordService)
->>>>>>> 1a83e2854da8034d5cecf68e5e995ad0baf1aee7
 }
