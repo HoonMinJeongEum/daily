@@ -1,6 +1,7 @@
 package com.example.diarytablet.ui.screens
 
 import MainModal
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
@@ -163,15 +164,16 @@ fun MainScreen(
                     popUpTo("main") { inclusive = true }
                 }
                 isModalVisible = false
+                Log.d("main","goWord")
             },
             onDrawingDiaryClick = {
-                navController.navigate("wordLearning") {
+                navController.navigate("drawingDiary") {  // 수정된 부분
                     popUpTo("main") { inclusive = true }
                 }
                 isModalVisible = false
             },
             onDrawingQuizClick = {
-                navController.navigate("wordLearning") {
+                navController.navigate("drawingQuiz") {  // 수정된 부분
                     popUpTo("main") { inclusive = true }
                 }
                 isModalVisible = false
@@ -180,9 +182,3 @@ fun MainScreen(
     }
 }
 
-//@Preview(widthDp = 1280, heightDp = 800, showBackground = true)
-//@Composable
-//fun previewMain() {
-//    MainScreen(viewModel = MainViewModel(),    navController= NavController,
-//        backgroundType = BackgroundType.DEFAULT)
-//}
