@@ -52,6 +52,7 @@ fun MainScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 100.dp),
+                navController = navController
             )
         }
 
@@ -60,7 +61,7 @@ fun MainScreen(
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter)
         ) {
-            NavMenu(navController)
+            NavMenu(navController, "main", "main")
         }
     }
 }

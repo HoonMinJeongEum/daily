@@ -20,9 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -30,21 +28,24 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.diaryApp.R
 import com.example.diaryApp.ui.theme.DeepPastelNavy
 import com.example.diaryApp.ui.theme.NavWhite
-import com.example.diaryApp.ui.theme.White
-import kotlinx.coroutines.selects.select
 
 @Composable
 fun NavMenu(
-    navController: NavController
+    navController: NavController,
+    nowPage: String,
+    destination: String?,
 ) {
-    val selectedMenu = rememberSaveable { mutableStateOf("main") } // 상태 유지
-    val currentBackStackEntry by navController.currentBackStackEntryAsState() // 현재 경로 감지
+    val selectedMenu = rememberSaveable { mutableStateOf(nowPage) }
+    val currentBackStackEntry by navController.currentBackStackEntryAsState()
 
-    // 현재 경로를 기반으로 selectedMenu 값 업데이트
     LaunchedEffect(currentBackStackEntry) {
         val currentRoute = currentBackStackEntry?.destination?.route
-        if (currentRoute != null && currentRoute in listOf("main", "shop", "notification", "setting")) {
-            selectedMenu.value = currentRoute
+        if (currentRoute in listOf("diary", "word", "catchMind")) {
+            selectedMenu.value = "main"
+        } else if (currentRoute in listOf("main", "shop", "notification", "setting")) {
+            if (currentRoute != null) {
+                selectedMenu.value = currentRoute
+            }
         }
     }
 
@@ -65,16 +66,15 @@ fun NavMenu(
             R.drawable.nav_before_main_icon,
             R.drawable.nav_before_shopping_icon,
             R.drawable.nav_before_notification_icon,
-            R.drawable.nav_before_setting_icon
+            R.drawable.nav_before_setting_icon,
         )
         val afterImages = listOf(
             R.drawable.nav_after_main_icon,
             R.drawable.nav_after_shopping_icon,
             R.drawable.nav_after_notification_icon,
-            R.drawable.nav_after_setting_icon
+            R.drawable.nav_after_setting_icon,
         )
 
-        // 메뉴 아이템을 반복문으로 생성
         menuItems.forEachIndexed { index, menuItem ->
             val isSelected = selectedMenu.value == menuItem
             Box(
@@ -83,7 +83,12 @@ fun NavMenu(
                     .clickable(
                         onClick = {
                             selectedMenu.value = menuItem
-                            navController.navigate(destinations[index])
+                            if (destination !in listOf("diary", "word", "catchMind")) {
+                                navController.navigate(destinations[index]) {
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            }
                         },
                         indication = null,
                         interactionSource = remember { MutableInteractionSource() },

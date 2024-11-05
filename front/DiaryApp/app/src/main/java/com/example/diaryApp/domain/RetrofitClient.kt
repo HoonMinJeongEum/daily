@@ -79,12 +79,15 @@ object RetrofitClient {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun getGsonConverterFactory(): GsonConverterFactory {
         val gson = GsonBuilder()
+            .setLenient()
             .registerTypeAdapter(
                 LocalDateTime::class.java,
                 JsonDeserializer<Any?> { json, _, _ ->
                     LocalDateTime.parse(
                         json.asString,
                         when (json.asString.length) {
+                            26 -> DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
+                            25 -> DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSS")
                             23 -> DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")
                             22 -> DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SS")
                             21 -> DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.S")

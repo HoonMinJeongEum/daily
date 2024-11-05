@@ -1,8 +1,8 @@
-package com.example.diaryApp.domain.repository
+package com.example.diaryApp.domain.repository.user
 
 import com.example.diaryApp.datastore.UserStore
-import com.example.diaryApp.domain.dto.request.JoinRequestDto
-import com.example.diaryApp.domain.dto.request.LoginRequestDto
+import com.example.diaryApp.domain.dto.request.user.JoinRequestDto
+import com.example.diaryApp.domain.dto.request.user.LoginRequestDto
 import com.example.diaryApp.domain.services.UserService
 import retrofit2.Response
 import javax.inject.Inject

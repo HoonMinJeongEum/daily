@@ -1,8 +1,7 @@
 package com.example.diaryApp.domain.services
 
-import com.example.diaryApp.domain.dto.request.JoinRequestDto
-import com.example.diaryApp.domain.dto.response.LoginResponseDto
-import com.example.diaryApp.domain.dto.request.LoginRequestDto
+import com.example.diaryApp.domain.dto.request.user.JoinRequestDto
+import com.example.diaryApp.domain.dto.request.user.LoginRequestDto
 import com.example.diaryApp.utils.Const
 import retrofit2.Response
 import retrofit2.http.Body

@@ -1,26 +1,37 @@
 package com.example.diaryApp.ui.screens
 
+import DailyCalendar
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.diaryApp.ui.components.TopLogoImg
 import com.example.diaryApp.ui.theme.BackgroundPlacement
 import com.example.diaryApp.ui.theme.BackgroundType
 import com.example.diaryApp.R
 import com.example.diaryApp.ui.components.NavMenu
+import com.example.diaryApp.ui.components.TopBackImage
+import com.example.diaryApp.viewmodel.ProfileViewModel
 
 @Composable
 fun DiaryScreen(
     navController: NavController,
-    backgroundType: BackgroundType = BackgroundType.ACTIVE
+    backgroundType: BackgroundType = BackgroundType.ACTIVE,
 ) {
+    val profileViewModel: ProfileViewModel = hiltViewModel()
+
     BackgroundPlacement(backgroundType = backgroundType)
 
     Box(
@@ -31,18 +42,42 @@ fun DiaryScreen(
                 .fillMaxSize()
                 .align(Alignment.TopCenter)
         ) {
-            TopLogoImg(
-                logoImg = R.drawable.daily_logo,
-                characterImg = R.drawable.daily_character
+            TopBackImage(
+                logoText = "${profileViewModel.memberName.value}의 그림 일기!",
+                BackImage = R.drawable.navigate_back,
+                onBackClick = {
+                    navController.popBackStack()
+                    profileViewModel.memberName.value = ""
+                }
             )
         }
-
         Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter) // NavMenu를 화면 하단에 고정
+                .fillMaxSize()
+                .align(Alignment.Center),
+            contentAlignment = Alignment.BottomCenter
         ) {
-            NavMenu(navController)
+
+            Box(
+                modifier = Modifier
+                    .background(
+                        Color.White,
+                        shape = RoundedCornerShape(topEnd = 50.dp, topStart = 50.dp)
+                    )
+                    .fillMaxWidth()
+                    .height(780.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                DailyCalendar()
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+            ) {
+                NavMenu(navController, "main", "diary")
+            }
         }
     }
 }

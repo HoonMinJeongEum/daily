@@ -7,20 +7,16 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.diaryApp.domain.dto.response.Profile
-import com.example.diaryApp.domain.repository.ProfileListRepository
+import com.example.diaryApp.domain.dto.response.profile.Profile
+import com.example.diaryApp.domain.repository.profile.ProfileListRepository
 import com.example.diaryApp.utils.FileConverter.uriToFile
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.launch
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
-import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
-import java.io.File
-import java.io.FileOutputStream
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
@@ -59,12 +55,12 @@ class ProfileViewModel @Inject constructor(
 
     fun addProfile(
         onSuccess: () -> Unit,
-        onErrorPassword: () -> Unit,
         onError: () -> Unit
     ) {
         viewModelScope.launch {
             isLoading.value = true
             val memberImgFile = memberImg.value?.let { uriToFile(getApplication(),it) }
+
             if (memberImgFile == null) {
                 errorMessage.value = "이미지를 선택해주세요."
                 isLoading.value = false
@@ -86,5 +82,22 @@ class ProfileViewModel @Inject constructor(
                 loadProfiles()
             }
         }
+    }
+
+    suspend fun deleteProfile(memberId: Int
+    ) {
+        viewModelScope.launch {
+            isLoading.value = true
+        }
+        try {
+            profileListRepository.deleteProfile(memberId)
+            Log.d("ProfileViewModel", "Succes Delete Profile")
+        } catch(e:Exception) {
+            errorMessage.value = e.message
+            Log.e("ProfileViewModel", "Error adding profile: ${e.message}")
+        } finally {
+            loadProfiles()
+        }
+
     }
 }

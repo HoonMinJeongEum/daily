@@ -1,4 +1,4 @@
-package com.example.diaryApp.domain.dto.request
+package com.example.diaryApp.domain.dto.request.user
 
 
 import com.google.gson.annotations.SerializedName

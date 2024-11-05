@@ -53,7 +53,6 @@ fun CreateProfile(
     profileViewModel: ProfileViewModel,
     onCancel: () -> Unit
 ) {
-    var name by remember { mutableStateOf("") }
     var selectedImageUri by remember { mutableStateOf<android.net.Uri?>(null) }
 
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: android.net.Uri? ->
@@ -154,10 +153,6 @@ fun CreateProfile(
                         profileViewModel.addProfile(
                             onSuccess = {
                                 Log.d("JoinScreen", "JoinSuccess called")
-                                onCancel()
-                            },
-                            onErrorPassword = {
-                                Log.d("JoinScreen", "JoinSuccess Fail")
                                 onCancel()
                             },
                             onError = {

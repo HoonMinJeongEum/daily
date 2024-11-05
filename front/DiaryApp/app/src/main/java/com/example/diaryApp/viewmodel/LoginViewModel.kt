@@ -7,9 +7,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.diaryApp.datastore.UserStore
 import com.example.diaryApp.domain.RetrofitClient
-import com.example.diaryApp.domain.dto.request.LoginRequestDto
-import com.example.diaryApp.domain.repository.UserRepository
-import com.google.android.material.color.utilities.MaterialDynamicColors.onError
+import com.example.diaryApp.domain.dto.request.user.LoginRequestDto
+import com.example.diaryApp.domain.repository.user.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import retrofit2.HttpException

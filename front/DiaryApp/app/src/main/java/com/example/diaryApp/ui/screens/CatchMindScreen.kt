@@ -42,7 +42,7 @@ fun CatchMindScreen(
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter) // NavMenu를 화면 하단에 고정
         ) {
-            NavMenu(navController)
+            NavMenu(navController, "main", "catchMind")
         }
     }
 }

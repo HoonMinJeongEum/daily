@@ -6,9 +6,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.diaryApp.datastore.UserStore
-import com.example.diaryApp.domain.dto.request.JoinRequestDto
-import com.example.diaryApp.domain.dto.request.LoginRequestDto
-import com.example.diaryApp.domain.repository.UserRepository
+import com.example.diaryApp.domain.dto.request.user.JoinRequestDto
+import com.example.diaryApp.domain.repository.user.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
