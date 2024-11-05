@@ -51,12 +51,10 @@ fun WordTap(
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     var currentIndex by remember { mutableIntStateOf(0) }
+    var finishedIndex by remember { mutableIntStateOf(0) }
     Column(modifier = modifier.fillMaxSize()) {
 
-    ProgressBar(
-        currentIndex = currentIndex,
-        total = wordList.size
-    )
+
 
     LazyRow (
         state = listState,
@@ -154,6 +152,10 @@ fun WordTap(
             }
         }}}
     }
+        ProgressBar(
+            currentIndex = currentIndex,
+            total = wordList.size
+        )
 }}
 
 @Composable
