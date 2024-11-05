@@ -1,5 +1,6 @@
 package com.example.diarytablet
 
+import DiaryScreen
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
@@ -16,7 +17,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         askForPermissions()
         setContent {
-            DiaryTabletApp()
+            DiaryScreen()
         }
     }
 
