@@ -2,6 +2,7 @@ package com.example.diarytablet.ui.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,6 +19,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.diarytablet.R
 import com.example.diarytablet.ui.theme.MyTypography
 import com.example.diarytablet.ui.theme.PastelNavy
@@ -30,7 +32,8 @@ enum class ButtonType {
 fun BlockButton(
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
-    buttonType: ButtonType
+    buttonType: ButtonType,
+    navController: NavController
 ) {
     val (imageResId, text) = when (buttonType) {
         ButtonType.DRAWING_DIARY -> R.drawable.drawing_diary to "그림 일기"
@@ -52,6 +55,7 @@ fun BlockButton(
                     onPress = {
                         isHovered = true
                         tryAwaitRelease() // 사용자가 손을 뗄 때까지 대기
+                        onClick()
                         isHovered = false
                     }
                 )
@@ -94,11 +98,3 @@ fun BlockButton(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun PreviewBlockButton() {
-    BlockButton(
-        onClick = { /* TODO: Handle click event */ },
-        buttonType = ButtonType.DRAWING_DIARY
-    )
-}

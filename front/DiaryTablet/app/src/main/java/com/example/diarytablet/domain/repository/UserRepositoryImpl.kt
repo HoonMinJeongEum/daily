@@ -2,15 +2,10 @@ package com.example.diarytablet.domain.repository
 
 import com.example.diarytablet.datastore.UserStore
 import com.example.diarytablet.domain.dto.request.LoginRequestDto
-import com.example.diarytablet.domain.dto.response.LoginResponseDto
 import com.example.diarytablet.domain.service.UserService
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import okhttp3.ResponseBody
 import retrofit2.Response
 import javax.inject.Inject
 import javax.inject.Singleton
-import io.reactivex.Single
 
 
 @Singleton

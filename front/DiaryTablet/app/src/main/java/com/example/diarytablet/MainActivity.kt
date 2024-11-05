@@ -17,7 +17,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         askForPermissions()
         setContent {
-            DiaryScreen()
+            DiaryTabletApp()
         }
     }
 
