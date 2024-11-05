@@ -1,5 +1,10 @@
 package com.ssafy.daily.word.service;
 
+import com.ssafy.daily.diary.dto.FieldDto;
+import com.ssafy.daily.diary.service.DiaryService;
+import com.ssafy.daily.exception.EmptyOcrResultException;
+import com.ssafy.daily.exception.S3UploadException;
+import com.ssafy.daily.exception.WordMismatchException;
 import com.ssafy.daily.file.service.S3UploadService;
 import com.ssafy.daily.word.dto.LearnedWordResponse;
 import com.ssafy.daily.word.dto.LearningWordResponse;
@@ -9,6 +14,7 @@ import com.ssafy.daily.user.entity.Member;
 import com.ssafy.daily.word.repository.LearnedWordRepository;
 import com.ssafy.daily.word.repository.WordRepository;
 import com.ssafy.daily.user.repository.MemberRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -28,6 +34,13 @@ public class WordService {
     private final WordRepository wordRepository;
     private final MemberRepository memberRepository;
     private final S3UploadService s3UploadService;
+    private final DiaryService diaryService;
+
+    @Value(("${clova.ocr.apiUrl}"))
+    private String apiUrl;
+
+    @Value("${clova.ocr.secretKey}")
+    private String secretKey;
 
     public List<LearnedWordResponse> getLearnedWordsByMember(int memberId) {
         List<LearnedWord> learnedWords = learnedWordRepository.findByMemberId(memberId);
@@ -83,4 +96,31 @@ public class WordService {
         learnedWordRepository.saveAll(learnedWords);
     }
 
+    public void checkSimilarity(String word, MultipartFile writeFile) {
+        String writeUrl = null;
+        try {
+            writeUrl = s3UploadService.saveFile(writeFile);
+        } catch (IOException e) {
+            throw new S3UploadException("S3 작성한 단어 이미지 업로드 실패");
+        }
+
+        List<FieldDto> fields = diaryService.processOcr(writeUrl);
+
+        StringBuilder result = new StringBuilder();
+        for (FieldDto field : fields) {
+            System.out.println(field.getInferText());
+            result.append(field.getInferText());
+        }
+
+        String orgImg = s3UploadService.getFileNameFromUrl(writeUrl);
+        s3UploadService.deleteImage(orgImg);
+
+        String resultWord = result.toString().trim();
+        if (resultWord.isEmpty()) {
+            throw new EmptyOcrResultException("인식된 단어가 없습니다. 단어를 작성해주세요.");
+        } if (!resultWord.equals(word)) {
+            throw new WordMismatchException(resultWord + "의 유사도가 낮습니다. 다시 시도해주세요!");
+        }
+
+    }
 }

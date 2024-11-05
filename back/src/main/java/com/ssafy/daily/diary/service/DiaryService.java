@@ -114,7 +114,7 @@ public class DiaryService {
 //        }
     }
 
-    private List<FieldDto> processOcr(String imgUrl) {
+    public List<FieldDto> processOcr(String imgUrl) {
         Map<String, Object> requestBody = createRequestBody(imgUrl);
         ResponseEntity<String> response = callOcrApi(requestBody);
 

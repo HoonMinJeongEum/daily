@@ -58,4 +58,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
     }
 
+    @ExceptionHandler(EmptyOcrResultException.class)
+    public ResponseEntity<String> handleEmptyOcrResultException(EmptyOcrResultException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    }
+
+    @ExceptionHandler(WordMismatchException.class)
+    public ResponseEntity<String> handleWordMismatchException(WordMismatchException e) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(e.getMessage());
+    }
 }
