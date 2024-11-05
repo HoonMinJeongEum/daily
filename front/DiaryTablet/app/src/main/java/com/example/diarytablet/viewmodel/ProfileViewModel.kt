@@ -16,11 +16,15 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import com.example.diarytablet.domain.repository.ProfileListRepository
 import com.example.diarytablet.utils.Response
+import com.google.firebase.messaging.FirebaseMessaging
+import com.ssafy.daily.alarm.dto.SaveTokenRequestDto
+import com.ssafy.daily.alarm.repository.AlarmRepository
 import kotlinx.coroutines.launch
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val profileListRepository: ProfileListRepository,
+    private val alarmRepository: AlarmRepository,
     application: Application,
 ) : ViewModel() {
 
@@ -84,6 +88,28 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch {
             profileListRepository.createProfile(profile)
             loadProfiles() // 새로운 프로필 추가 후 리스트 갱신
+        }
+    }
+
+    // FCM 토큰을 가져와 저장하는 함수
+    private fun saveFcmToken() {
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (!task.isSuccessful) {
+                Log.w("LoginViewModel", "Fetching FCM registration token failed", task.exception)
+                return@addOnCompleteListener
+            }
+
+            val token = task.result
+            Log.d("LoginViewModel", "FCM 토큰: $token")
+
+            viewModelScope.launch {
+                val response = alarmRepository.saveToken(SaveTokenRequestDto(token))
+                if (response.isSuccessful) {
+                    Log.d("LoginViewModel", "알림 토큰이 정상적으로 등록되었습니다.")
+                } else {
+                    Log.e("LoginViewModel", "토큰 저장 실패: ${response.message()}")
+                }
+            }
         }
     }
 }

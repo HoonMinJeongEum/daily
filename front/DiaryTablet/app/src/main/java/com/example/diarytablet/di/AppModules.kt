@@ -10,12 +10,18 @@ import com.example.diarytablet.domain.repository.QuizRepository
 import com.example.diarytablet.domain.repository.QuizRepositoryImpl
 import com.example.diarytablet.domain.repository.UserRepository
 import com.example.diarytablet.domain.repository.UserRepositoryImpl
-import com.example.diarytablet.domain.repository.WordRepository
-import com.example.diarytablet.domain.repository.WordRepositoryImpl
+
+import com.example.diarytablet.domain.service.AlarmService
 import com.example.diarytablet.domain.service.ProfileListService
 import com.example.diarytablet.domain.service.QuizService
 import com.example.diarytablet.domain.service.UserService
+import com.ssafy.daily.alarm.repository.AlarmRepository
+import com.ssafy.daily.alarm.repository.AlarmRepositoryImpl
+
+import com.example.diarytablet.domain.repository.WordRepository
+import com.example.diarytablet.domain.repository.WordRepositoryImpl
 import com.example.diarytablet.domain.service.WordService
+
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -65,6 +71,19 @@ class AppModules {
     fun provideQuizService(retrofit: Retrofit): QuizService {
         return retrofit.create(QuizService::class.java)
     }
+
+    @Provides
+    fun provideAlarmRepository(
+        alarmService: AlarmService
+    ): AlarmRepository {
+        return AlarmRepositoryImpl(alarmService)
+    }
+
+    @Provides
+    fun provideAlarmService(retrofit: Retrofit): AlarmService {
+        return retrofit.create(AlarmService::class.java)
+    }
+
     @Provides
     fun provideWordService(
         retrofit: Retrofit
@@ -74,4 +93,5 @@ class AppModules {
     fun provideWordRepository(
         wordService: WordService
     ): WordRepository = WordRepositoryImpl(wordService)
+
 }
