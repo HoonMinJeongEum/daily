@@ -25,8 +25,9 @@ public class DiaryController {
 
     @GetMapping
     public ResponseEntity<?> getDiaries(@AuthenticationPrincipal CustomUserDetails userDetails,
-                                        @RequestParam(required = false) Integer memberId){
-        return ResponseEntity.ok(diaryService.getDiaries(userDetails, memberId));
+                                        @RequestParam(required = false) Integer memberId,
+                                        @RequestParam int year, @RequestParam int month){
+        return ResponseEntity.ok(diaryService.getDiaries(userDetails, memberId, year, month));
     }
 
     @GetMapping("/{diaryId}")

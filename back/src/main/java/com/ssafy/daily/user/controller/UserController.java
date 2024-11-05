@@ -1,26 +1,14 @@
 package com.ssafy.daily.user.controller;
 
-import com.ssafy.daily.exception.UsernameAlreadyExistsException;
 import com.ssafy.daily.user.dto.*;
-import com.ssafy.daily.user.jwt.JWTUtil;
-import com.ssafy.daily.user.repository.RefreshRepository;
 import com.ssafy.daily.user.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.HandlerMapping;
-
-import java.util.Collection;
-import java.util.Iterator;
 
 @RestController
 @RequiredArgsConstructor
@@ -54,18 +42,14 @@ public class UserController {
 
     @GetMapping("/profile")
     public ResponseEntity<?> getProfiles(@AuthenticationPrincipal CustomUserDetails userDetails){
-        int familyId = userDetails.getFamily().getId();
-        int memberId = userDetails.getMemberId();
-        return ResponseEntity.ok(userService.getProfiles(familyId, memberId));
+        return ResponseEntity.ok(userService.getProfiles(userDetails));
     }
 
     @PostMapping("/add")
     public ResponseEntity<?> addProfile(@AuthenticationPrincipal CustomUserDetails userDetails
-        , @RequestPart("file") MultipartFile file,
-          @RequestPart("memberName") String memberName){
-        int familyId = userDetails.getFamily().getId();
-
-        userService.addProfile(familyId, file, memberName);
+        , @RequestParam("file") MultipartFile file,
+          @RequestParam("memberName") String memberName){
+        userService.addProfile(userDetails, file, memberName);
         return ResponseEntity.ok("프로필 등록 성공");
     }
     @PostMapping("/member")
@@ -82,6 +66,20 @@ public class UserController {
     public ResponseEntity<?> deleteMember(@PathVariable int memberId){
         userService.deleteMember(memberId);
         return ResponseEntity.ok("성공적으로 프로필이 삭제되었습니다.");
+    }
+
+    @PatchMapping("/member")
+    public ResponseEntity<?> modifyMember(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                          @RequestBody ModifyNameRequest request){
+        userService.modifyMemberName(request, userDetails);
+        return ResponseEntity.ok("프로필 이름이 정상적으로 수정되었습니다.");
+    }
+
+    @PatchMapping("/member/img")
+    public ResponseEntity<?> modifyMember(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                          @RequestParam("file") MultipartFile file){
+        userService.modifyProfileImg(file, userDetails);
+        return ResponseEntity.ok("프로필 사진이 정상적으로 수정되었습니다.");
     }
 
     @GetMapping("/main")
