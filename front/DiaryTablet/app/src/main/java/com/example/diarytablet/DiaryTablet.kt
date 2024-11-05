@@ -22,7 +22,7 @@ fun DiaryTabletApp() {
     val navController = rememberNavController()
 
     DiaryTabletTheme {
-        NavHost(navController, startDestination = "main") {
+        NavHost(navController, startDestination = "login") {
             composable("login") {
                 LoginScreen(
                     navController = navController)
@@ -42,9 +42,6 @@ fun DiaryTabletApp() {
             composable("stock"){
                 StockScreen(navController = navController)
             }
-//            composable("diary"){
-//                DiaryScreen(navController = navController)
-//            }
         }
     }
 }

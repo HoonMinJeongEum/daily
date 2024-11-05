@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     id("kotlin-kapt")
     id("com.google.dagger.hilt.android") version "2.51.1"
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -44,6 +45,7 @@ android {
     }
     buildFeatures {
         compose = true
+        viewBinding = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
@@ -73,6 +75,11 @@ dependencies {
     kapt("com.google.dagger:hilt-compiler:2.51.1")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
     implementation("androidx.compose.runtime:runtime-livedata:1.5.1") // Compose LiveData 연동
+    implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
+    implementation("com.neovisionaries:nv-websocket-client:2.9")
+    implementation("com.github.webrtc-sdk:android:104.+")
+    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+    implementation("io.socket:socket.io-client:2.0.1")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
