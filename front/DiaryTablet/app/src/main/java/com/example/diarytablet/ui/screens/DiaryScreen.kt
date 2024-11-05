@@ -31,7 +31,10 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.platform.LocalContext
+<<<<<<< HEAD
 import androidx.hilt.navigation.compose.hiltViewModel
+=======
+>>>>>>> 1a83e2854da8034d5cecf68e5e995ad0baf1aee7
 import androidx.navigation.NavController
 import com.example.diarytablet.R
 import com.example.diarytablet.model.ToolType
@@ -52,6 +55,7 @@ data class DrawingStep(val path: Path, val color: Color, val thickness: Float)
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DiaryScreen(
+<<<<<<< HEAD
     navController: NavController,
     backgroundType: BackgroundType = BackgroundType.DEFAULT,
     diaryViewModel: DiaryViewModel = hiltViewModel() // Hilt를 통해 ViewModel 주입
@@ -59,6 +63,12 @@ fun DiaryScreen(
 
     var drawFileUri: Uri? =null
     var writeFileUri: Uri? =null
+=======
+    backgroundType: BackgroundType = BackgroundType.DEFAULT,
+    navController: NavController,
+
+    ) {
+>>>>>>> 1a83e2854da8034d5cecf68e5e995ad0baf1aee7
     BackgroundPlacement(backgroundType = backgroundType)
 
     var isDrawingMode by remember { mutableStateOf(true) }

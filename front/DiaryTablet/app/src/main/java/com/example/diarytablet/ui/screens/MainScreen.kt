@@ -1,6 +1,7 @@
 package com.example.diarytablet.ui.screens
 
 import MainModal
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
@@ -165,7 +166,7 @@ fun MainScreen(
                 isModalVisible = false
             },
             onDrawingDiaryClick = {
-                navController.navigate("diary") {
+                navController.navigate("wordLearning") {
                     popUpTo("main") { inclusive = true }
                 }
                 isModalVisible = false
