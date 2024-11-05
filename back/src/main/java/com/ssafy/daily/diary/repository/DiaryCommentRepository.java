@@ -10,4 +10,6 @@ import java.util.List;
 @Repository
 public interface DiaryCommentRepository extends JpaRepository<DiaryComment, Integer> {
     List<DiaryComment> findByDiaryId(int id);
+
+    void deleteByDiaryId(int id);
 }

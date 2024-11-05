@@ -78,6 +78,12 @@ public class UserController {
                 .body("프로필 선택: " + memberId);
     }
 
+    @DeleteMapping("/member/{memberId}")
+    public ResponseEntity<?> deleteMember(@PathVariable int memberId){
+        userService.deleteMember(memberId);
+        return ResponseEntity.ok("성공적으로 프로필이 삭제되었습니다.");
+    }
+
     @GetMapping("/main")
     public ResponseEntity<?> getMainProfile(@AuthenticationPrincipal CustomUserDetails userDetails){
         return ResponseEntity.ok(userService.getMainProfile(userDetails));

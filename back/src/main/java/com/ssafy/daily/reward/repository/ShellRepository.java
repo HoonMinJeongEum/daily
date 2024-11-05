@@ -12,4 +12,6 @@ public interface ShellRepository extends JpaRepository<Shell, Long> {
     // 특정 Member의 stock 총합을 구하는 JPQL 쿼리
     @Query("SELECT SUM(s.stock) FROM Shell s WHERE s.member.id = :memberId")
     Integer findTotalStockByMemberId(@Param("memberId") int memberId);
+
+    void deleteByMemberId(int memberId);
 }

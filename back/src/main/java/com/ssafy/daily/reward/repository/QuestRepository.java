@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface QuestRepository extends JpaRepository<Quest, Integer> {
     Quest findByMemberId(int memberId);
+    void deleteByMemberId(int memberId);
 }
