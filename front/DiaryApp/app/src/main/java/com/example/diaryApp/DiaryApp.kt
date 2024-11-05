@@ -3,9 +3,12 @@ package com.example.diaryApp
 import android.app.Application
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.runtime.Composable
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.diaryApp.presentation.viewmodel.DiaryViewModel
 import com.example.diaryApp.ui.screens.CatchMindScreen
 import com.example.diaryApp.ui.screens.DiaryScreen
 import com.example.diaryApp.ui.screens.JoinScreen
@@ -17,13 +20,16 @@ import com.example.diaryApp.ui.screens.SettingScreen
 import com.example.diaryApp.ui.screens.ShoppingScreen
 import com.example.diaryApp.ui.screens.WordScreen
 import com.example.diaryApp.ui.theme.DiaryAppTheme
+import com.example.diaryApp.viewmodel.ProfileViewModel
 import dagger.hilt.android.HiltAndroidApp
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun DiaryMobileApp() {
-    val navController = rememberNavController()
-
+fun DiaryMobileApp(
+    navController: NavHostController,
+    diaryViewModel: DiaryViewModel,
+    profileViewModel: ProfileViewModel
+) {
     DiaryAppTheme() {
         NavHost(navController, startDestination = "landing") {
             composable("landing") {
@@ -36,13 +42,13 @@ fun DiaryMobileApp() {
                 JoinScreen(navController = navController)
             }
             composable("main" ) {
-                MainScreen(navController = navController)
+                MainScreen(navController = navController, profileViewModel, diaryViewModel)
             }
             composable("catchMind") {
                 CatchMindScreen(navController = navController)
             }
             composable("diary") {
-                DiaryScreen(navController = navController)
+                DiaryScreen(navController = navController, diaryViewModel = diaryViewModel)
             }
             composable("notification") {
                 NotificationScreen(navController = navController)

@@ -32,11 +32,7 @@ class ProfileViewModel @Inject constructor(
     val memberName = mutableStateOf<String>("")
     val memberImg = mutableStateOf<Uri?>(null)
 
-    init {
-        loadProfiles()
-    }
-
-    private fun loadProfiles() {
+    fun loadProfiles() {
         viewModelScope.launch {
             isLoading.value = true
             try {

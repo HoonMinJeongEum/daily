@@ -35,6 +35,7 @@ import coil.compose.rememberAsyncImagePainter
 import androidx.navigation.NavController
 import com.example.diaryApp.R
 import com.example.diaryApp.domain.dto.response.profile.Profile
+import com.example.diaryApp.presentation.viewmodel.DiaryViewModel
 import com.example.diaryApp.ui.theme.Black
 import com.example.diaryApp.ui.theme.PastelGreen
 import com.example.diaryApp.ui.theme.PastelLightGreen
@@ -44,13 +45,17 @@ import com.example.diaryApp.ui.theme.PastelSkyBlue
 import com.example.diaryApp.ui.theme.PastelYellow
 import com.example.diaryApp.ui.theme.White
 import com.example.diaryApp.viewmodel.ProfileViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.time.delay
+import kotlin.time.toDuration
+import kotlinx.coroutines.*
 
 @Composable
 fun ProfileItem(
     profile: Profile,
     navController: NavController,
-    profileViewModel: ProfileViewModel
+    diaryViewModel: DiaryViewModel,
 ) {
 
     Box(
@@ -107,8 +112,8 @@ fun ProfileItem(
                     height = 42,
                     shadowElevation = 8.dp,
                     onClick = {
-                        profileViewModel.memberName.value = profile.name
-                        if (profileViewModel.memberName.value.isNotEmpty()) {
+                        runBlocking {
+                            updateMemberInfo(profile, diaryViewModel)
                             navController.navigate("diary")
                         }
                   },
@@ -170,6 +175,7 @@ fun DeleteProfileItem(profile: Profile) {
     var showDialog by remember { mutableStateOf(false) }
     val profileViewModel: ProfileViewModel = hiltViewModel()
     val coroutineScope = rememberCoroutineScope()
+
     Box(
         modifier = Modifier
             .size(394.dp, 165.dp)
@@ -191,7 +197,7 @@ fun DeleteProfileItem(profile: Profile) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
-                painter = rememberAsyncImagePainter(model = profile.img), // profile.img를 URI로 받아 사용
+                painter = rememberAsyncImagePainter(model = profile.img),
                 contentDescription = "Profile Image",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -250,4 +256,16 @@ fun DeleteProfileItem(profile: Profile) {
             }
         )
     }
+}
+
+
+suspend fun updateMemberInfo(
+    profile:Profile,
+    diaryViewModel: DiaryViewModel
+
+) {
+    diaryViewModel.memberName.value = profile.name
+    diaryViewModel.memberId.intValue = profile.id
+    delay(1000)
+
 }

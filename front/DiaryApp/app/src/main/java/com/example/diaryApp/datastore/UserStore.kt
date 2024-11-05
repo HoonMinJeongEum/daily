@@ -16,6 +16,7 @@ import javax.inject.Inject
 //    fun login(username: String, password: String): Boolean
 //}
 class UserStore @Inject constructor(private val context: Context) {
+
     companion object {
         private val Context.dataStore: DataStore<Preferences> by preferencesDataStore("User")
         val KEY_ACCESS_TOKEN = stringPreferencesKey("access_token")
@@ -51,8 +52,3 @@ class UserStore @Inject constructor(private val context: Context) {
         return this
     }
 }
-//class FakeUserStore : UserStore {
-//    override fun login(username: String, password: String): Boolean {
-//        return username == "test" && password == "1234"
-//    }
-//}

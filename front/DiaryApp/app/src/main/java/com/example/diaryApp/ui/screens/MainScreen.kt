@@ -16,6 +16,7 @@ import com.example.diaryApp.ui.components.TopLogoImg
 import com.example.diaryApp.ui.theme.BackgroundPlacement
 import com.example.diaryApp.ui.theme.BackgroundType
 import com.example.diaryApp.R
+import com.example.diaryApp.presentation.viewmodel.DiaryViewModel
 import com.example.diaryApp.ui.components.NavMenu
 import com.example.diaryApp.ui.components.ProfileList
 import com.example.diaryApp.viewmodel.ProfileViewModel
@@ -23,11 +24,12 @@ import com.example.diaryApp.viewmodel.ProfileViewModel
 @Composable
 fun MainScreen(
     navController: NavController,
-    viewModel: ProfileViewModel = hiltViewModel(),
+    profileViewModel: ProfileViewModel,
+    diaryViewModel: DiaryViewModel,
     backgroundType: BackgroundType = BackgroundType.ACTIVE
 ) {
     BackgroundPlacement(backgroundType = backgroundType)
-    val profileList by viewModel.profileList
+    val profileList by profileViewModel.profileList
 
     Box(
         modifier = Modifier.fillMaxSize()
@@ -52,7 +54,9 @@ fun MainScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 100.dp),
-                navController = navController
+                navController = navController,
+                profileViewModel = profileViewModel,
+                diaryViewModel = diaryViewModel
             )
         }
 

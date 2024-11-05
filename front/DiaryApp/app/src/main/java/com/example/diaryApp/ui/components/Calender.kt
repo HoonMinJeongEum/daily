@@ -1,33 +1,39 @@
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.diaryApp.R
+import com.example.diaryApp.presentation.viewmodel.DiaryViewModel
 import com.example.diaryApp.ui.theme.DeepPastelNavy
-import com.example.diaryApp.ui.theme.Gray
 import com.example.diaryApp.ui.theme.GrayText
+import java.time.LocalDateTime
 import java.util.*
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun DailyCalendar() {
-    var year by remember { mutableStateOf(Calendar.getInstance().get(Calendar.YEAR)) }
-    var month by remember { mutableStateOf(Calendar.getInstance().get(Calendar.MONTH)) }
-    var selectedDate by remember { mutableStateOf(Calendar.getInstance().time) }
+fun DailyCalendar(viewModel: DiaryViewModel) {
+
+    val year by viewModel.year.collectAsState()
+    val month by viewModel.month.collectAsState()
+    val diaryList by viewModel.diaryList.observeAsState(emptyList())
+
+    LaunchedEffect(Unit) {
+        viewModel.fetchDiaryList()
+    }
 
     val monthYearText = "${year}년 ${month + 1}월"
     val daysOfWeek = listOf("일", "월", "화", "수", "목", "금", "토")
@@ -40,6 +46,8 @@ fun DailyCalendar() {
 
     val startDayOfWeek = calendar.get(Calendar.DAY_OF_WEEK) - 1
     val daysInMonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
+
+    val diaryDatesSet = diaryList.map { it.createdAt.toLocalDate() }.toSet()
 
     var day = 1
     val totalCells = startDayOfWeek + daysInMonth
@@ -59,8 +67,7 @@ fun DailyCalendar() {
         ) {
 
             IconButton(onClick = { navigateToPreviousMonth(year, month) { updatedYear, updatedMonth ->
-                year = updatedYear
-                month = updatedMonth
+                viewModel.updateYearMonth(updatedYear, updatedMonth)
             } }) {
                 Image(painter = painterResource(R.drawable.calender_back),
                     contentDescription = "Previous Month",
@@ -77,8 +84,7 @@ fun DailyCalendar() {
             )
 
             IconButton(onClick = { navigateToNextMonth(year, month) { updatedYear, updatedMonth ->
-                year = updatedYear
-                month = updatedMonth
+                viewModel.updateYearMonth(updatedYear, updatedMonth)
             } }) {
                 Image(painter = painterResource(R.drawable.calender_next),
                     contentDescription = "Previous Month",
@@ -89,8 +95,7 @@ fun DailyCalendar() {
         Spacer(modifier = Modifier.height(16.dp))
 
         Row(
-            modifier = Modifier
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceAround
         ) {
             daysOfWeek.forEach { day ->
@@ -119,11 +124,15 @@ fun DailyCalendar() {
                             Spacer(modifier = Modifier.size(36.dp))
                         } else {
                             val date = calendar.apply { set(Calendar.DAY_OF_MONTH, day) }.time
-                            DateCell(
-                                date = day,
-                                isSelected = selectedDate.isSameDay(date),
+                            val isDiaryDate = diaryDatesSet.contains(
+                                LocalDateTime.of(year, month + 1, day, 0, 0).toLocalDate())
+                            DateCell(date = day,
+                                isDiaryDate = isDiaryDate,
                                 onClick = {
-                                    selectedDate = date
+                                    if (isDiaryDate) {
+                                        val diaryId = diaryList.first { it.createdAt.toLocalDate() == LocalDateTime.of(year, month + 1, day, 0, 0).toLocalDate() }.id
+                                        viewModel.fetchDiaryById(diaryId)
+                                    }
                                 }
                             )
                             day++
@@ -136,12 +145,12 @@ fun DailyCalendar() {
 }
 
 @Composable
-fun DateCell(date: Int, isSelected: Boolean, onClick: () -> Unit) {
+fun DateCell(date: Int, isDiaryDate: Boolean, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .size(36.dp)
             .background(
-                if (isSelected) DeepPastelNavy else Color.Transparent,
+                if (isDiaryDate) DeepPastelNavy else Color.Transparent,
                 shape = CircleShape
             )
             .clickable { onClick() },
@@ -151,8 +160,8 @@ fun DateCell(date: Int, isSelected: Boolean, onClick: () -> Unit) {
             text = "$date",
             style = MaterialTheme.typography.bodySmall,
             fontSize = 18.sp,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-            color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
+            fontWeight = if (isDiaryDate) FontWeight.Bold else FontWeight.Normal,
+            color = if (isDiaryDate) Color.White else MaterialTheme.colorScheme.onSurface
         )
     }
 }

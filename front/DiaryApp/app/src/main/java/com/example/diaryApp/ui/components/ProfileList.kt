@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -17,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.diaryApp.domain.dto.response.profile.Profile
+import com.example.diaryApp.presentation.viewmodel.DiaryViewModel
 import com.example.diaryApp.viewmodel.ProfileViewModel
 
 @Composable
@@ -24,10 +26,14 @@ fun ProfileList(
     modifier: Modifier = Modifier,
     profileList : List<Profile>,
     navController: NavController,
+    profileViewModel: ProfileViewModel,
+    diaryViewModel: DiaryViewModel
 ) {
-    val profileViewModel: ProfileViewModel = hiltViewModel()
     var showDialog by remember { mutableStateOf(false) }
-    Log.d("ProfileScreen", "${profileList}")
+
+    LaunchedEffect(Unit) {
+        profileViewModel.loadProfiles()
+    }
 
     Column (
         modifier = modifier
@@ -36,7 +42,7 @@ fun ProfileList(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         profileList.forEach { profile ->
-            ProfileItem(profile, navController = navController, profileViewModel)
+            ProfileItem(profile, navController = navController, diaryViewModel)
         }
 
         Spacer(modifier = Modifier.height(16.dp))

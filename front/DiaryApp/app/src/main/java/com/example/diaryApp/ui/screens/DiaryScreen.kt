@@ -1,6 +1,8 @@
 package com.example.diaryApp.ui.screens
 
 import DailyCalendar
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,17 +23,18 @@ import com.example.diaryApp.ui.components.TopLogoImg
 import com.example.diaryApp.ui.theme.BackgroundPlacement
 import com.example.diaryApp.ui.theme.BackgroundType
 import com.example.diaryApp.R
+import com.example.diaryApp.presentation.viewmodel.DiaryViewModel
 import com.example.diaryApp.ui.components.NavMenu
 import com.example.diaryApp.ui.components.TopBackImage
 import com.example.diaryApp.viewmodel.ProfileViewModel
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun DiaryScreen(
     navController: NavController,
+    diaryViewModel: DiaryViewModel,
     backgroundType: BackgroundType = BackgroundType.ACTIVE,
 ) {
-    val profileViewModel: ProfileViewModel = hiltViewModel()
-
     BackgroundPlacement(backgroundType = backgroundType)
 
     Box(
@@ -43,11 +46,12 @@ fun DiaryScreen(
                 .align(Alignment.TopCenter)
         ) {
             TopBackImage(
-                logoText = "${profileViewModel.memberName.value}의 그림 일기!",
+                logoText = "${diaryViewModel.memberName.value}의 그림 일기!",
                 BackImage = R.drawable.navigate_back,
                 onBackClick = {
                     navController.popBackStack()
-                    profileViewModel.memberName.value = ""
+                    diaryViewModel.memberName.value = ""
+                    diaryViewModel.memberId.intValue = 0
                 }
             )
         }
@@ -68,7 +72,7 @@ fun DiaryScreen(
                     .height(780.dp),
                 contentAlignment = Alignment.Center
             ) {
-                DailyCalendar()
+                DailyCalendar(viewModel = diaryViewModel)
             }
 
             Box(

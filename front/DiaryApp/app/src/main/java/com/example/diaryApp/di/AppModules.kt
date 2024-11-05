@@ -8,6 +8,8 @@ import com.example.diaryApp.domain.repository.alarm.AlarmRepository
 import com.example.diaryApp.domain.repository.alarm.AlarmRepositoryImpl
 import com.example.diaryApp.domain.repository.coupon.CouponRepository
 import com.example.diaryApp.domain.repository.coupon.CouponRepositoryImpl
+import com.example.diaryApp.domain.repository.diary.DiaryRepository
+import com.example.diaryApp.domain.repository.diary.DiaryRepositoryImpl
 import com.example.diaryApp.domain.repository.profile.ProfileListRepository
 import com.example.diaryApp.domain.repository.profile.ProfileListRepositoryImpl
 import com.example.diaryApp.domain.repository.quiz.QuizRepository
@@ -16,6 +18,7 @@ import com.example.diaryApp.domain.repository.user.UserRepository
 import com.example.diaryApp.domain.repository.user.UserRepositoryImpl
 import com.example.diaryApp.domain.services.AlarmService
 import com.example.diaryApp.domain.services.CouponService
+import com.example.diaryApp.domain.services.DiaryService
 import com.example.diaryApp.domain.services.ProfileListService
 import com.example.diaryApp.domain.services.QuizService
 import com.example.diaryApp.domain.services.UserService
@@ -69,6 +72,16 @@ class AppModules {
         return retrofit.create(CouponService::class.java)
     }
 
+    @Provides
+    fun provideDiaryRepository(
+        diaryService: DiaryService
+    ) : DiaryRepository = DiaryRepositoryImpl(diaryService)
+
+    @Provides
+    fun provideDiaryService(retrofit: Retrofit) : DiaryService {
+        return retrofit.create(DiaryService::class.java)
+
+    }
     @Provides
     fun provideQuizRepository(quizService: QuizService): QuizRepository {
         return QuizRepositoryImpl(quizService)
