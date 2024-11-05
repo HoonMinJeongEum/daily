@@ -11,4 +11,6 @@ import java.util.List;
 @Repository
 public interface LearnedWordRepository extends JpaRepository<LearnedWord, Long> {
     List<LearnedWord> findByMemberId(int memberId);
+
+    void deleteByMemberId(int memberId);
 }

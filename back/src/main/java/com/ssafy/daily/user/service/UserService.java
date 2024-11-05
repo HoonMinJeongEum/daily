@@ -1,11 +1,17 @@
 package com.ssafy.daily.user.service;
 
+import com.ssafy.daily.diary.entity.Diary;
+import com.ssafy.daily.diary.repository.DiaryCommentRepository;
+import com.ssafy.daily.diary.repository.DiaryRepository;
 import com.ssafy.daily.exception.*;
 import com.ssafy.daily.file.service.S3UploadService;
 import com.ssafy.daily.quiz.entity.Quiz;
 import com.ssafy.daily.quiz.repository.QuizRepository;
 import com.ssafy.daily.reward.entity.Quest;
+import com.ssafy.daily.reward.repository.EarnedCouponRepository;
+import com.ssafy.daily.reward.repository.EarnedStickerRepository;
 import com.ssafy.daily.reward.repository.QuestRepository;
+import com.ssafy.daily.reward.repository.ShellRepository;
 import com.ssafy.daily.reward.service.ShellService;
 import com.ssafy.daily.user.dto.*;
 import com.ssafy.daily.user.entity.Family;
@@ -15,6 +21,7 @@ import com.ssafy.daily.user.jwt.JWTUtil;
 import com.ssafy.daily.user.repository.FamilyRepository;
 import com.ssafy.daily.user.repository.MemberRepository;
 import com.ssafy.daily.user.repository.RefreshRepository;
+import com.ssafy.daily.word.repository.LearnedWordRepository;
 import com.sun.tools.javac.Main;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.Cookie;
@@ -31,6 +38,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -52,6 +60,12 @@ public class UserService {
     private final ShellService shellService;
     private final AuthenticationManager authenticationManager;
     private final S3UploadService s3UploadService;
+    private final DiaryRepository diaryRepository;
+    private final LearnedWordRepository learnedWordRepository;
+    private final EarnedCouponRepository earnedCouponRepository;
+    private final ShellRepository shellRepository;
+    private final EarnedStickerRepository earnedStickerRepository;
+    private final DiaryCommentRepository diaryCommentRepository;
 
     public void checkExist(String username){
         Boolean isExist = familyRepository.existsByUsername(username);
@@ -227,5 +241,20 @@ public class UserService {
         cookie.setMaxAge(0);
         cookie.setPath("/");
         response.addCookie(cookie);
+    }
+
+    @Transactional
+    public void deleteMember(int memberId) {
+        questRepository.deleteByMemberId(memberId);
+        List<Diary> diaries = diaryRepository.findByMemberId(memberId);
+        for (Diary diary : diaries) {
+            diaryCommentRepository.deleteByDiaryId(diary.getId());
+        }
+        diaryRepository.deleteByMemberId(memberId);
+        learnedWordRepository.deleteByMemberId(memberId);
+        earnedCouponRepository.deleteByMemberId(memberId);
+        shellRepository.deleteByMemberId(memberId);
+        earnedStickerRepository.deleteByMemberId(memberId);
+        memberRepository.deleteById(memberId);
     }
 }
