@@ -101,12 +101,12 @@ public class UserService {
 
     }
 
-    public List<ProfilesResponse> getProfiles(int familyId, int memberId) {
+    public List<ProfilesResponse> getProfiles(int familyId) {
         List<Member> list = memberRepository.findByFamilyId(familyId);
 
         return list.stream()
                 .map(member -> {
-                    int shellCount = shellService.getUserShell(memberId);
+                    int shellCount = shellService.getUserShell(member.getId());
                     return new ProfilesResponse(member, shellCount);
                 })
                 .collect(Collectors.toList());
@@ -141,6 +141,9 @@ public class UserService {
 
     public String choiceMember(CustomUserDetails userDetails, ChoiceMemberRequest request, HttpServletResponse response) {
         int memberId = request.getMemberId();
+
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 프로필은 존재하지 않습니다: " + memberId));
 
         String newAccess = jwtUtil.createJwt("access", userDetails.getUsername(), "ROLE", userDetails.getFamilyId(), memberId, 600000L);
         String newRefresh = jwtUtil.createJwt("refresh", userDetails.getUsername(), "ROLE", userDetails.getFamilyId(), memberId, 86400000L);
