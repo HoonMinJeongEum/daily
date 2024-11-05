@@ -164,16 +164,15 @@ fun MainScreen(
                     popUpTo("main") { inclusive = true }
                 }
                 isModalVisible = false
-                Log.d("main","goWord")
             },
             onDrawingDiaryClick = {
-                navController.navigate("drawingDiary") {  // 수정된 부분
+                navController.navigate("diary") {
                     popUpTo("main") { inclusive = true }
                 }
                 isModalVisible = false
             },
             onDrawingQuizClick = {
-                navController.navigate("drawingQuiz") {  // 수정된 부분
+                navController.navigate("wordLearning") {
                     popUpTo("main") { inclusive = true }
                 }
                 isModalVisible = false
@@ -182,3 +181,9 @@ fun MainScreen(
     }
 }
 
+//@Preview(widthDp = 1280, heightDp = 800, showBackground = true)
+//@Composable
+//fun previewMain() {
+//    MainScreen(viewModel = MainViewModel(),    navController= NavController,
+//        backgroundType = BackgroundType.DEFAULT)
+//}
