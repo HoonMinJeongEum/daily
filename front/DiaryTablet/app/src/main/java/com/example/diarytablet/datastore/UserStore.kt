@@ -18,6 +18,7 @@ class UserStore @Inject constructor(private val context: Context) { // @Inject ì
         val KEY_REFRESH_TOKEN = stringPreferencesKey("refresh_token")
         val KEY_USER_NAME = stringPreferencesKey("user_name")
         val KEY_PASSWORD = stringPreferencesKey("password")
+        val KEY_PROFILE_IMAGE = stringPreferencesKey("profile_image")
     }
 
     fun getValue(key: Preferences.Key<String>): Flow<String> {

@@ -1,3 +1,7 @@
+package com.example.diarytablet.ui.components
+
+import CouponStockList
+import StickerStockList
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -10,17 +14,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
 import com.example.diarytablet.model.CouponStock
 import com.example.diarytablet.model.StickerStock
+import com.example.diarytablet.viewmodel.ShopStockViewModel
 
 @Composable
 fun StockTab(
     coupons: List<CouponStock>,
     stickers: List<StickerStock>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: ShopStockViewModel
 ) {
     var selectedTabIndex by remember { mutableStateOf(0) }
-    val tabTitles = listOf("쿠폰", "스티커")
+    val tabTitles = listOf("쿠  폰", "스티커")
 
     // 메인 박스: 전체 탭 및 내용물 레이아웃
     Box(
@@ -93,7 +100,7 @@ fun StockTab(
                 contentAlignment = Alignment.Center
             ) {
                 if (selectedTabIndex == 0) {
-                    CouponStockList(coupons) // "쿠폰" 탭 선택 시
+                    CouponStockList(coupons, viewModel) // "쿠폰" 탭 선택 시
                 } else {
                     StickerStockList(stickers) // "스티커" 탭 선택 시
                 }

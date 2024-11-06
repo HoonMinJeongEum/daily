@@ -42,6 +42,9 @@ fun MainScreen(
 
     var isModalVisible by remember { mutableStateOf(false) }
 
+    val missions = viewModel.missions
+
+
     // 전체 화면을 채우는 Box
     Box(
         modifier = Modifier.fillMaxSize()
@@ -52,22 +55,13 @@ fun MainScreen(
             verticalAlignment = Alignment.Top // 수직 정렬
         )  {
             MissionBar(
-                missions = listOf( // 예시 미션 데이터 추가
-                    MissionItem("미션 1", isSuccess = true),
-                    MissionItem("미션 2", isSuccess = false),
-                    MissionItem("미션 3", isSuccess = true)
-                ),
+                missions = missions,
                 modifier = Modifier
                     .offset(x = 58.dp, y = 27.dp) // 위치 조정
             )
 
             Navbar(
-                point = "240",
-                isBasicButtonOutlined = false,
-                isAlarmOn = true,
-                onBasicButtonClick = { /* TODO: BasicButton 클릭 이벤트 */ },
-                onAlarmButtonClick = { /* TODO: AlarmButton 클릭 이벤트 */ },
-                onProfileClick = { /* TODO: UserProfile 클릭 이벤트 */ },
+
                 modifier = Modifier
                     .padding(end = 16.dp) // 오른쪽 여백 조정
             )
@@ -164,16 +158,15 @@ fun MainScreen(
                     popUpTo("main") { inclusive = true }
                 }
                 isModalVisible = false
-                Log.d("main","goWord")
             },
             onDrawingDiaryClick = {
-                navController.navigate("drawingDiary") {  // 수정된 부분
+                navController.navigate("diary") {
                     popUpTo("main") { inclusive = true }
                 }
                 isModalVisible = false
             },
             onDrawingQuizClick = {
-                navController.navigate("drawingQuiz") {  // 수정된 부분
+                navController.navigate("wordLearning") {
                     popUpTo("main") { inclusive = true }
                 }
                 isModalVisible = false
@@ -182,3 +175,9 @@ fun MainScreen(
     }
 }
 
+//@Preview(widthDp = 1280, heightDp = 800, showBackground = true)
+//@Composable
+//fun previewMain() {
+//    MainScreen(viewModel = MainViewModel(),    navController= NavController,
+//        backgroundType = BackgroundType.DEFAULT)
+//}

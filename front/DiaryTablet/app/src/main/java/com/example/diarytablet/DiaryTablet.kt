@@ -44,6 +44,7 @@ fun DiaryTabletApp() {
             composable("stock"){
                 StockScreen(navController = navController)
             }
+
             composable("diary") {
                 DiaryScreen(navController = navController)
             }
