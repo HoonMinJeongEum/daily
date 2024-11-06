@@ -26,6 +26,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,6 +63,21 @@ public class DiaryService {
     }
 
     public void writeDiary(CustomUserDetails userDetails, MultipartFile drawFile, MultipartFile writeFile) {
+        int memberId = userDetails.getMemberId();
+        LocalDate today = LocalDate.now();
+        boolean diaryExists = diaryRepository.findByMemberIdAndDate(memberId, today).isPresent();
+
+        if (diaryExists) {
+            throw new IllegalStateException("오늘 날짜의 일기는 이미 존재합니다.");
+        }
+
+        if (drawFile == null || drawFile.isEmpty()) {
+            throw new IllegalArgumentException("그림 파일이 유효하지 않습니다.");
+        }
+        if (writeFile == null || writeFile.isEmpty()) {
+            throw new IllegalArgumentException("일기 파일이 유효하지 않습니다.");
+        }
+
         String drawImgUrl = null;
         try {
             drawImgUrl = s3UploadService.saveFile(drawFile);
@@ -80,7 +96,7 @@ public class DiaryService {
         String sound = generateBgm(fields);
 
         // DB에 저장
-        Member member = memberRepository.findById(userDetails.getMemberId())
+        Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new EmptyResultDataAccessException("해당 프로필을 찾을 수 없습니다.", 1));
 
         Diary diary = Diary.builder()
