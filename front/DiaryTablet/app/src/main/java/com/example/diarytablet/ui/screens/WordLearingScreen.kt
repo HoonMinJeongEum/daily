@@ -53,7 +53,6 @@ fun WordLearningScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // 상단 뒤로가기 및 타이틀
             Row(
                 modifier = Modifier
                     .padding(top = 40.dp, start = 60.dp)
@@ -65,7 +64,9 @@ fun WordLearningScreen(
                     contentDescription = "뒤로가기 버튼",
                     modifier = Modifier
                         .size(60.dp)
-                        .clickable { /* 뒤로가기 버튼 클릭 시 동작 */ }
+                        .clickable {
+                            navController.popBackStack()
+                        }
                 )
                 Spacer(modifier = Modifier.width(30.dp))
                 Text(

@@ -7,6 +7,27 @@ import com.example.diarytablet.domain.repository.*
 import com.example.diarytablet.domain.service.*
 import com.ssafy.daily.alarm.repository.AlarmRepository
 import com.ssafy.daily.alarm.repository.AlarmRepositoryImpl
+import com.example.diarytablet.domain.repository.DiaryRepository
+import com.example.diarytablet.domain.repository.DiaryRepositoryImpl
+import com.example.diarytablet.domain.repository.MainScreenRepository
+import com.example.diarytablet.domain.repository.MainScreenRepositoryImpl
+import com.example.diarytablet.domain.repository.ProfileListRepository
+import com.example.diarytablet.domain.repository.ProfileListRepositoryImpl
+import com.example.diarytablet.domain.repository.QuizRepository
+import com.example.diarytablet.domain.repository.QuizRepositoryImpl
+import com.example.diarytablet.domain.repository.UserRepository
+import com.example.diarytablet.domain.repository.UserRepositoryImpl
+import com.example.diarytablet.domain.service.DiaryService
+import com.example.diarytablet.domain.repository.WordRepository
+import com.example.diarytablet.domain.repository.WordRepositoryImpl
+import com.example.diarytablet.domain.service.MainScreenService
+import com.example.diarytablet.domain.service.AlarmService
+import com.example.diarytablet.domain.service.ProfileListService
+import com.example.diarytablet.domain.service.QuizService
+import com.example.diarytablet.domain.service.UserService
+import com.ssafy.daily.alarm.repository.AlarmRepository
+import com.ssafy.daily.alarm.repository.AlarmRepositoryImpl
+import com.example.diarytablet.domain.service.WordService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -72,6 +93,13 @@ class AppModules {
     }
 
     @Provides
+    fun provideAlarmRepository(
+        alarmService: AlarmService
+    ): AlarmRepository {
+        return AlarmRepositoryImpl(alarmService)
+    }
+
+    @Provides
     @Singleton
     fun provideDiaryRepository(
         diaryService: DiaryService
@@ -101,7 +129,6 @@ class AppModules {
         wordService: WordService
     ): WordRepository = WordRepositoryImpl(wordService)
 
-    // 추가: ShopStockService와 ShopStockRepository
     @Provides
     @Singleton
     fun provideShopStockService(retrofit: Retrofit): ShopStockService {
@@ -113,4 +140,14 @@ class AppModules {
     fun provideShopStockRepository(
         shopStockService: ShopStockService
     ): ShopStockRepository = ShopStockRepository(shopStockService)
+    @Provides
+    fun provideMainScreenRepository(
+        mainScreenService: MainScreenService
+    ): MainScreenRepository = MainScreenRepositoryImpl(mainScreenService)
+
+    @Provides
+    fun provideMainScreenService(
+        retrofit: Retrofit
+    ):MainScreenService = retrofit.create((MainScreenService::class.java))
+
 }

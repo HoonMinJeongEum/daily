@@ -51,7 +51,8 @@ fun BasicButton(
     enabled: Boolean = true,
     isOutlined: Boolean = false,
     imageResId: Int? = null, // 이미지를 선택적으로 받음
-    fontSize: Float = 24f
+    fontSize: Float = 24f,
+    ButtonColor: Color = Color.White
 ) {
     val buttonShape = BasicButtonShape.ROUNDED
     val buttonColor = if (imageResId != null && imageResId != 11) BasicButtonColor.NORMAL else BasicButtonColor.SEASHELL
@@ -62,6 +63,7 @@ fun BasicButton(
         buttonColor == BasicButtonColor.SEASHELL -> R.drawable.jogae
         else -> imageResId
     }
+
 
     Button(
         onClick = onClick,
@@ -75,10 +77,17 @@ fun BasicButton(
                 contentColor = contentColor
             )
         } else {
-            ButtonDefaults.buttonColors(
-                containerColor = backgroundColor,
-                contentColor = contentColor
-            )
+            if (ButtonColor == Color.White) {
+                ButtonDefaults.buttonColors(
+                    containerColor = backgroundColor,
+                    contentColor = contentColor
+                )
+            } else {
+                ButtonDefaults.buttonColors(
+                    containerColor = ButtonColor,
+                    contentColor = contentColor
+                )
+            }
         },
         border = if (isOutlined) BorderStroke(1.dp, backgroundColor) else null
     ) {

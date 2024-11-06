@@ -16,11 +16,13 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil3.compose.rememberAsyncImagePainter
 import com.example.diarytablet.R
 import com.example.diarytablet.ui.theme.MyTypography
 
 @Composable
 fun Profile(
+    imageUrl: String?,
     onProfileClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -35,19 +37,19 @@ fun Profile(
             shape = MaterialTheme.shapes.small.copy(CornerSize(percent = 50)), // 동그란 모양
             color = Color.LightGray // 배경색 설정 (필요에 따라 수정 가능)
         ) {
+            val painter = if (imageUrl.isNullOrEmpty()) {
+                painterResource(id = R.drawable.duck)
+            } else {
+                rememberAsyncImagePainter(model = imageUrl)
+            }
+
             Image(
-                painter = painterResource(id = R.drawable.duck), // 기본 프로필 이미지 리소스
-                contentDescription = "User Profile",
-                modifier = Modifier.size(75.dp) // 프로필 이미지 크기
+                painter = painter,
+                contentDescription = null,
+                modifier = Modifier.size(75.dp)
             )
         }
     }
 }
 
-@Preview
-@Composable
-fun previewProfile(){
-    Profile(
-        onProfileClick = {}
-    )
-}
+

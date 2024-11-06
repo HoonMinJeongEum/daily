@@ -26,9 +26,9 @@ class ProfileViewModel @Inject constructor(
     private val profileListRepository: ProfileListRepository,
     private val alarmRepository: AlarmRepository,
     application: Application,
+    private val userStore: UserStore
 ) : ViewModel() {
 
-    private val userStore: UserStore = UserStore(application)
     val _profileList = mutableStateOf<List<Profile>>(emptyList())
     val profileList: State<List<Profile>> get() = _profileList
     val isLoading = mutableStateOf(false)
@@ -59,7 +59,7 @@ class ProfileViewModel @Inject constructor(
     fun selectProfile(profile: SelectProfileRequestDto) {
         viewModelScope.launch {
             try {
-                val response: retrofit2.Response<Void> = profileListRepository.selectProfile(profile)
+                    val response: retrofit2.Response<Void> = profileListRepository.selectProfile(profile)
 
                     if (response.isSuccessful) {
                         // 헤더에서 토큰 가져오기

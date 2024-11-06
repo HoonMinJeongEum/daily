@@ -18,13 +18,11 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    application: Application,
+    private val userStore: UserStore,
     private val userRepository: UserRepository
 ) : ViewModel() {
     val username = mutableStateOf("")
     val password = mutableStateOf("")
-
-    private val userStore: UserStore = UserStore(application)
 
     fun login(
         onSuccess: () -> Unit,
