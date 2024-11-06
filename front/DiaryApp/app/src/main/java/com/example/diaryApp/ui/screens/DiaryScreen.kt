@@ -72,7 +72,7 @@ fun DiaryScreen(
                     .height(780.dp),
                 contentAlignment = Alignment.Center
             ) {
-                DailyCalendar(viewModel = diaryViewModel)
+                DailyCalendar(viewModel = diaryViewModel, navController = navController)
             }
 
             Box(

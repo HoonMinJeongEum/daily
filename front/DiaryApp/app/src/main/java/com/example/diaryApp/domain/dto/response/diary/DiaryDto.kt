@@ -5,7 +5,8 @@ import java.time.LocalDateTime
 
 data class Diary(
     val id: Int,
-    val img: String,
+    val drawImg: String,
+    val writeImg: String,
     val sound: String,
     val createdAt: LocalDateTime,
     val comments: List<Comment>

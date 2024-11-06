@@ -270,7 +270,7 @@ suspend fun updateMemberInfoDiary(
     diaryViewModel: DiaryViewModel
 ) {
     diaryViewModel.memberName.value = profile.name
-    diaryViewModel.memberId.intValue = profile.id
+    diaryViewModel.memberId.value = profile.id
     delay(1000)
 }
 

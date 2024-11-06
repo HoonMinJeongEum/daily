@@ -10,6 +10,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.diaryApp.presentation.viewmodel.DiaryViewModel
 import com.example.diaryApp.ui.screens.CatchMindScreen
+import com.example.diaryApp.ui.screens.DiaryDetailScreen
 import com.example.diaryApp.ui.screens.DiaryScreen
 import com.example.diaryApp.ui.screens.JoinScreen
 import com.example.diaryApp.ui.screens.LandingScreen
@@ -63,6 +64,10 @@ fun DiaryMobileApp(
             }
             composable("setting") {
                 SettingScreen(navController = navController)
+            }
+            composable("diary/{diaryId}") { backStackEntry ->
+                val diaryId = backStackEntry.arguments?.getString("diaryId")
+                DiaryDetailScreen(navController = navController, diaryId = diaryId, diaryViewModel = diaryViewModel)
             }
         }
     }

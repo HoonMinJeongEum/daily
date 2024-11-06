@@ -17,6 +17,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import retrofit2.Response
 import java.util.Calendar
 import javax.inject.Inject
 
@@ -35,14 +36,15 @@ class DiaryViewModel @Inject constructor(
     private val _diaryId = MutableLiveData<Int>()
     val diaryId: LiveData<Int> get() = _diaryId
 
-    private val _diaryList = MutableLiveData<List<DiaryForList>>()
-    val diaryList: LiveData<List<DiaryForList>> get() = _diaryList
+    private val _diaryList = MutableLiveData<Response<List<DiaryForList>>>()
+    val diaryList: LiveData<Response<List<DiaryForList>>> get() = _diaryList
 
-    private val _diaryDetail = MutableLiveData<Diary>()
-    val diaryDetail: LiveData<Diary> get() = _diaryDetail
+    private val _diaryDetail = MutableLiveData<Diary?>()
+    val diaryDetail: LiveData<Diary?> get() = _diaryDetail
 
     val memberName = mutableStateOf<String>("")
     val memberId = mutableIntStateOf(0)
+
 
     fun updateYearMonth(selectedYear: Int, selectedMonth: Int) {
         _year.value = selectedYear
@@ -60,7 +62,12 @@ class DiaryViewModel @Inject constructor(
     fun fetchDiaryById(diaryId: Int) {
         _diaryId.value = diaryId
         viewModelScope.launch {
-            diaryRepository.getDiaryById(diaryId)
+            val response = diaryRepository.getDiaryById(diaryId)
+            _diaryDetail.value = response
         }
+    }
+
+    fun clearDiaryDetail() {
+        _diaryDetail.value = null
     }
 }

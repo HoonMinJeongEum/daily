@@ -40,7 +40,7 @@ fun CatchMindScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .align(Alignment.BottomCenter) // NavMenu를 화면 하단에 고정
+                .align(Alignment.BottomCenter)
         ) {
             NavMenu(navController, "main", "catchMind")
         }

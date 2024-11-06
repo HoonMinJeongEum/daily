@@ -3,6 +3,7 @@ package com.example.diaryApp.domain.services
 import com.example.diaryApp.domain.dto.response.diary.Diary
 import com.example.diaryApp.domain.dto.response.diary.DiaryForList
 import com.example.diaryApp.utils.Const
+import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -14,7 +15,7 @@ interface DiaryService {
         @Query("memberId") memberId: Int,
         @Query("year") year: Int,
         @Query("month") month: Int
-    ) : List<DiaryForList>
+    ) : Response<List<DiaryForList>>
 
     @GET("${Const.API_PATH}diaries/{diaryId}")
     suspend fun getDiaryById(
