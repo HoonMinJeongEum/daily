@@ -1,110 +1,116 @@
 package com.example.diarytablet.di
 
-
 import android.app.Application
 import com.example.diarytablet.datastore.UserStore
 import com.example.diarytablet.domain.RetrofitClient
-import com.example.diarytablet.domain.repository.DiaryRepository
-import com.example.diarytablet.domain.repository.DiaryRepositoryImpl
-import com.example.diarytablet.domain.repository.ProfileListRepository
-import com.example.diarytablet.domain.repository.ProfileListRepositoryImpl
-import com.example.diarytablet.domain.repository.QuizRepository
-import com.example.diarytablet.domain.repository.QuizRepositoryImpl
-import com.example.diarytablet.domain.repository.UserRepository
-import com.example.diarytablet.domain.repository.UserRepositoryImpl
-import com.example.diarytablet.domain.service.DiaryService
-import com.example.diarytablet.domain.repository.WordRepository
-import com.example.diarytablet.domain.repository.WordRepositoryImpl
-import com.example.diarytablet.domain.service.AlarmService
-import com.example.diarytablet.domain.service.ProfileListService
-import com.example.diarytablet.domain.service.QuizService
-import com.example.diarytablet.domain.service.UserService
+import com.example.diarytablet.domain.repository.*
+import com.example.diarytablet.domain.service.*
 import com.ssafy.daily.alarm.repository.AlarmRepository
 import com.ssafy.daily.alarm.repository.AlarmRepositoryImpl
-
-import com.example.diarytablet.domain.repository.WordRepository
-import com.example.diarytablet.domain.repository.WordRepositoryImpl
-import com.example.diarytablet.domain.service.WordService
-
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import retrofit2.Retrofit
-
+import javax.inject.Singleton
 
 @Module
-@InstallIn(SingletonComponent::class)  // 필요에 맞는 컴포넌트로 설치
+@InstallIn(SingletonComponent::class)
 class AppModules {
 
     @Provides
+    @Singleton
     fun provideUserStore(application: Application): UserStore {
         return UserStore(application)
     }
+
     @Provides
+    @Singleton
     fun provideRetrofit(): Retrofit = RetrofitClient.getInstance()
 
     @Provides
+    @Singleton
+    fun provideUserService(retrofit: Retrofit): UserService {
+        return retrofit.create(UserService::class.java)
+    }
+
+    @Provides
+    @Singleton
     fun provideUserRepository(
         userService: UserService,
         userStore: UserStore
-    ): UserRepository = UserRepositoryImpl(userService,userStore,)
+    ): UserRepository = UserRepositoryImpl(userService, userStore)
 
     @Provides
-    fun provideProfileListRepository(
-        profileListService: ProfileListService
-    ) :ProfileListRepository = ProfileListRepositoryImpl(profileListService)
-    @Provides
-    fun provideUserService(
-        retrofit: Retrofit
-    ): UserService = retrofit.create(UserService::class.java)
-
-    @Provides
+    @Singleton
     fun provideProfileListService(retrofit: Retrofit): ProfileListService {
         return retrofit.create(ProfileListService::class.java)
     }
 
     @Provides
-    fun provideQuizRepository(
-        quizService: QuizService
-    ): QuizRepository {
-        return QuizRepositoryImpl(quizService)
-    }
+    @Singleton
+    fun provideProfileListRepository(
+        profileListService: ProfileListService
+    ): ProfileListRepository = ProfileListRepositoryImpl(profileListService)
 
     @Provides
+    @Singleton
     fun provideQuizService(retrofit: Retrofit): QuizService {
         return retrofit.create(QuizService::class.java)
     }
 
     @Provides
-    fun provideDiaryRepository(
-        diaryService: DiaryService,
-    ): DiaryRepository {
-        return DiaryRepositoryImpl(diaryService)
-    }
+    @Singleton
+    fun provideQuizRepository(
+        quizService: QuizService
+    ): QuizRepository = QuizRepositoryImpl(quizService)
 
     @Provides
+    @Singleton
     fun provideDiaryService(retrofit: Retrofit): DiaryService {
         return retrofit.create(DiaryService::class.java)
-    fun provideAlarmRepository(
-        alarmService: AlarmService
-    ): AlarmRepository {
-        return AlarmRepositoryImpl(alarmService)
     }
 
     @Provides
+    @Singleton
+    fun provideDiaryRepository(
+        diaryService: DiaryService
+    ): DiaryRepository = DiaryRepositoryImpl(diaryService)
+
+    @Provides
+    @Singleton
     fun provideAlarmService(retrofit: Retrofit): AlarmService {
         return retrofit.create(AlarmService::class.java)
     }
 
     @Provides
-    fun provideWordService(
-        retrofit: Retrofit
-    ): WordService = retrofit.create(WordService::class.java)
+    @Singleton
+    fun provideAlarmRepository(
+        alarmService: AlarmService
+    ): AlarmRepository = AlarmRepositoryImpl(alarmService)
 
     @Provides
+    @Singleton
+    fun provideWordService(retrofit: Retrofit): WordService {
+        return retrofit.create(WordService::class.java)
+    }
+
+    @Provides
+    @Singleton
     fun provideWordRepository(
         wordService: WordService
     ): WordRepository = WordRepositoryImpl(wordService)
 
+    // 추가: ShopStockService와 ShopStockRepository
+    @Provides
+    @Singleton
+    fun provideShopStockService(retrofit: Retrofit): ShopStockService {
+        return retrofit.create(ShopStockService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideShopStockRepository(
+        shopStockService: ShopStockService
+    ): ShopStockRepository = ShopStockRepository(shopStockService)
 }

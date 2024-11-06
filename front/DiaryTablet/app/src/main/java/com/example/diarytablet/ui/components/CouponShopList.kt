@@ -14,22 +14,25 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.diarytablet.model.Coupon
 import com.example.diarytablet.R
+import com.example.diarytablet.viewmodel.ShopStockViewModel
 import kotlinx.coroutines.delay
 
 @Composable
-fun CouponShopList(coupons: List<Coupon>) {
+fun CouponShopList(coupons: List<Coupon>, viewModel: ShopStockViewModel) {
     LazyColumn(
         contentPadding = PaddingValues(5.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         itemsIndexed(coupons) { index, coupon ->
-            CouponBox(coupon, index)
+            CouponBox(coupon, index) { couponId ->
+                viewModel.buyCoupon(couponId) // 클릭 시 쿠폰 구매 API 호출
+            }
         }
     }
 }
 
 @Composable
-fun CouponBox(coupon: Coupon, index: Int) {
+fun CouponBox(coupon: Coupon, index: Int, onClick: (Int) -> Unit) {
     var isPressed by remember { mutableStateOf(false) }
 
     // 클릭 상태에 따라 배경 이미지 설정
@@ -48,8 +51,8 @@ fun CouponBox(coupon: Coupon, index: Int) {
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
                 onClick = {
-                    // 클릭 시 상태를 `true`로 설정
                     isPressed = true
+                    onClick(coupon.id) // coupon.id를 넘겨 API 요청을 트리거
                 }
             )
     ) {
@@ -106,3 +109,4 @@ fun CouponBox(coupon: Coupon, index: Int) {
         }
     }
 }
+

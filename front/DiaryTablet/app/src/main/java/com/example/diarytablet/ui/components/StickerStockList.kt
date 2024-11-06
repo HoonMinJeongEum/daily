@@ -1,4 +1,3 @@
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -11,9 +10,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.example.diarytablet.model.StickerStock
 import com.example.diarytablet.R
+import com.example.diarytablet.model.Sticker
 import kotlinx.coroutines.delay
+import coil3.compose.rememberAsyncImagePainter
+import com.example.diarytablet.model.StickerStock
 
 @Composable
 fun StickerStockList(stickers: List<StickerStock>) {
@@ -75,7 +76,7 @@ fun StickerStockCard(sticker: StickerStock, index: Int) {
             verticalArrangement = Arrangement.Center
         ) {
             Image(
-                painter = painterResource(sticker.img),
+                painter = rememberAsyncImagePainter(sticker.img),
                 contentDescription = "스티커 이미지",
                 modifier = Modifier.size(100.dp)
             )
