@@ -10,6 +10,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.diarytablet.ui.screens.MainScreen
 import com.example.diarytablet.ui.screens.ProfileScreen
+import com.example.diarytablet.ui.screens.QuizScreen
 import com.example.diarytablet.ui.screens.ShopScreen
 import com.example.diarytablet.ui.screens.StockScreen
 import com.example.diarytablet.ui.screens.WordLearningScreen
@@ -24,7 +25,7 @@ fun DiaryTabletApp() {
     val navController = rememberNavController()
 
     DiaryTabletTheme {
-        NavHost(navController, startDestination = "wordLearning") {
+        NavHost(navController, startDestination = "login") {
             composable("login") {
                 LoginScreen(
                     navController = navController)
@@ -49,6 +50,9 @@ fun DiaryTabletApp() {
 
             composable("wordLearning") {
                 WordLearningScreen(navController = navController)
+            }
+            composable("quiz") {
+                QuizScreen(navController = navController)
             }
         }
     }
