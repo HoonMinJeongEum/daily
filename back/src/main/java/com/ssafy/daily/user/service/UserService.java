@@ -141,9 +141,10 @@ public class UserService {
 
     public String choiceMember(CustomUserDetails userDetails, ChoiceMemberRequest request, HttpServletResponse response) {
         int memberId = request.getMemberId();
+        int familyId = userDetails.getFamilyId();
 
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 프로필은 존재하지 않습니다: " + memberId));
+        Member member = memberRepository.findByIdAndFamilyId(memberId, familyId)
+                .orElseThrow(() -> new IllegalArgumentException("현재 계정에 해당 프로필이 존재하지 않습니다.: " + memberId));
 
         String newAccess = jwtUtil.createJwt("access", userDetails.getUsername(), "ROLE", userDetails.getFamilyId(), memberId, 600000L);
         String newRefresh = jwtUtil.createJwt("refresh", userDetails.getUsername(), "ROLE", userDetails.getFamilyId(), memberId, 86400000L);
