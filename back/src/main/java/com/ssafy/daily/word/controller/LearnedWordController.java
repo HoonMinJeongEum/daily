@@ -1,6 +1,5 @@
 package com.ssafy.daily.word.controller;
 
-import com.ssafy.daily.user.entity.Member;
 import com.ssafy.daily.user.repository.MemberRepository;
 import com.ssafy.daily.word.dto.LearnedWordResponse;
 import com.ssafy.daily.word.service.WordService;
@@ -13,7 +12,6 @@ import com.ssafy.daily.user.dto.CustomUserDetails;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/word/learned")
@@ -21,12 +19,10 @@ import java.util.Optional;
 public class LearnedWordController {
 
     private final WordService wordService;
-    private final MemberRepository memberRepository;
 
     @GetMapping
     public ResponseEntity<List<LearnedWordResponse>> getOwnLearnedWords(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        int memberId = userDetails.getMemberId();
-        List<LearnedWordResponse> learnedWords = wordService.getLearnedWordsByMember(memberId);
+        List<LearnedWordResponse> learnedWords = wordService.getLearnedWordsByMember(userDetails.getMemberId());
 
         if (learnedWords.isEmpty()) {
             return ResponseEntity.noContent().build();
@@ -37,27 +33,17 @@ public class LearnedWordController {
 
     @GetMapping("/{childId}")
     public ResponseEntity<List<LearnedWordResponse>> getChildLearnedWords(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable int childId) {
-        Optional<Member> optionalMember = memberRepository.findById(childId);
+        List<LearnedWordResponse> learnedWords = wordService.getChildLearnedWordsWithParentCheck(userDetails, childId);
 
-        if (optionalMember.isPresent()) {
-            Member child = optionalMember.get();
-            int childFamilyId = child.getFamily().getId();
-            int parentFamilyId = userDetails.getFamilyId();
-            int parentId = userDetails.getMemberId();
-
-            if (parentFamilyId == childFamilyId && parentId == 0) {
-                List<LearnedWordResponse> learnedWords = wordService.getLearnedWordsByMember(childId);
-
-                if (learnedWords.isEmpty()) {
-                    return ResponseEntity.noContent().build();
-                }
-
-                return ResponseEntity.ok(learnedWords);
-            } else {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Collections.emptyList());
-            }
-        } else {
-            return ResponseEntity.notFound().build();
+        if (learnedWords == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Collections.emptyList());
         }
+
+        if (learnedWords.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+
+        return ResponseEntity.ok(learnedWords);
     }
+
 }

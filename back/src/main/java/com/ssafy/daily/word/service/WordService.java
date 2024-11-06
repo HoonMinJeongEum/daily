@@ -6,6 +6,7 @@ import com.ssafy.daily.exception.EmptyOcrResultException;
 import com.ssafy.daily.exception.S3UploadException;
 import com.ssafy.daily.exception.WordMismatchException;
 import com.ssafy.daily.file.service.S3UploadService;
+import com.ssafy.daily.user.dto.CustomUserDetails;
 import com.ssafy.daily.word.dto.LearnedWordResponse;
 import com.ssafy.daily.word.dto.LearningWordResponse;
 import com.ssafy.daily.word.entity.LearnedWord;
@@ -24,6 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -51,6 +53,27 @@ public class WordService {
                         word.getImg(),
                         word.getCreatedAt()))
                 .collect(Collectors.toList());
+    }
+
+    public List<LearnedWordResponse> getChildLearnedWordsWithParentCheck(CustomUserDetails userDetails, int childId) {
+        if (!isParentOfChild(userDetails, childId)) {
+            return null;
+        }
+
+        return getLearnedWordsByMember(childId);
+    }
+
+    private boolean isParentOfChild(CustomUserDetails userDetails, int childId) {
+        Optional<Member> optionalMember = memberRepository.findById(childId);
+
+        if (optionalMember.isPresent()) {
+            Member child = optionalMember.get();
+            int childFamilyId = child.getFamily().getId();
+            int parentFamilyId = userDetails.getFamilyId();
+
+            return parentFamilyId == childFamilyId;
+        }
+        return false;
     }
 
     public List<LearningWordResponse> getUnlearnedWords(int memberId) {
