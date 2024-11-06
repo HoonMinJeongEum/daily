@@ -6,6 +6,8 @@ import com.example.diarytablet.datastore.UserStore
 import com.example.diarytablet.domain.RetrofitClient
 import com.example.diarytablet.domain.repository.DiaryRepository
 import com.example.diarytablet.domain.repository.DiaryRepositoryImpl
+import com.example.diarytablet.domain.repository.MainScreenRepository
+import com.example.diarytablet.domain.repository.MainScreenRepositoryImpl
 import com.example.diarytablet.domain.repository.ProfileListRepository
 import com.example.diarytablet.domain.repository.ProfileListRepositoryImpl
 import com.example.diarytablet.domain.repository.QuizRepository
@@ -15,15 +17,13 @@ import com.example.diarytablet.domain.repository.UserRepositoryImpl
 import com.example.diarytablet.domain.service.DiaryService
 import com.example.diarytablet.domain.repository.WordRepository
 import com.example.diarytablet.domain.repository.WordRepositoryImpl
+import com.example.diarytablet.domain.service.MainScreenService
 import com.example.diarytablet.domain.service.AlarmService
 import com.example.diarytablet.domain.service.ProfileListService
 import com.example.diarytablet.domain.service.QuizService
 import com.example.diarytablet.domain.service.UserService
 import com.ssafy.daily.alarm.repository.AlarmRepository
 import com.ssafy.daily.alarm.repository.AlarmRepositoryImpl
-
-import com.example.diarytablet.domain.repository.WordRepository
-import com.example.diarytablet.domain.repository.WordRepositoryImpl
 import com.example.diarytablet.domain.service.WordService
 
 import dagger.Module
@@ -86,6 +86,9 @@ class AppModules {
     @Provides
     fun provideDiaryService(retrofit: Retrofit): DiaryService {
         return retrofit.create(DiaryService::class.java)
+    }
+
+    @Provides
     fun provideAlarmRepository(
         alarmService: AlarmService
     ): AlarmRepository {
@@ -106,5 +109,15 @@ class AppModules {
     fun provideWordRepository(
         wordService: WordService
     ): WordRepository = WordRepositoryImpl(wordService)
+
+    @Provides
+    fun provideMainScreenRepository(
+        mainScreenService: MainScreenService
+    ): MainScreenRepository = MainScreenRepositoryImpl(mainScreenService)
+
+    @Provides
+    fun provideMainScreenService(
+        retrofit: Retrofit
+    ):MainScreenService = retrofit.create((MainScreenService::class.java))
 
 }
