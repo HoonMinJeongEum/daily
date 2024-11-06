@@ -130,7 +130,7 @@ fun MainScreen(
                 imageResId = R.drawable.stack_room // 보관함 이미지 리소스
             )
             BasicButton(
-                onClick = { /* 기록 클릭 이벤트 */ },
+                onClick = { navController.navigate("record") },
                 text = "기록",
                 imageResId = R.drawable.record // 기록 이미지 리소스
             )
