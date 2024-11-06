@@ -1,12 +1,8 @@
 package com.example.diarytablet.domain.repository
 
-import com.example.diarytablet.domain.dto.request.CreateProfileRequestDto
-import com.example.diarytablet.domain.dto.request.SelectProfileRequestDto
 import com.example.diarytablet.domain.dto.request.WordRequestDto
-import com.example.diarytablet.domain.dto.response.Profile
 import com.example.diarytablet.domain.dto.response.WordLearnedResponseDto
 import com.example.diarytablet.domain.dto.response.WordResponseDto
-import com.example.diarytablet.domain.service.ProfileListService
 import com.example.diarytablet.domain.service.WordService
 import okhttp3.MultipartBody
 import retrofit2.Response

@@ -1,3 +1,7 @@
+package com.example.diarytablet.ui.components
+
+import CouponShopList
+import StickerShopList
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -13,12 +17,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.diarytablet.model.Coupon
 import com.example.diarytablet.model.Sticker
+import com.example.diarytablet.viewmodel.ShopStockViewModel
 
 @Composable
 fun ShopTab(
     coupons: List<Coupon>,
     stickers: List<Sticker>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: ShopStockViewModel
 ) {
     var selectedTabIndex by remember { mutableStateOf(0) }
     val tabTitles = listOf("쿠  폰", "스티커")
@@ -94,9 +100,9 @@ fun ShopTab(
                 contentAlignment = Center // 오른쪽 박스의 중앙 정렬
             ) {
                 if (selectedTabIndex == 0) {
-                    CouponShopList(coupons)
+                    CouponShopList(coupons, viewModel)
                 } else {
-                    StickerShopList(stickers)
+                    StickerShopList(stickers, viewModel)
                 }
             }
         }

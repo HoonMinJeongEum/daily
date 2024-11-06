@@ -1,6 +1,5 @@
 package com.example.diarytablet.ui.screens
 
-import ShopTab
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -8,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -16,14 +16,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.diarytablet.ui.components.ShopTab
 import com.example.diarytablet.ui.theme.BackgroundPlacement
 import com.example.diarytablet.ui.theme.BackgroundType
-import com.example.diarytablet.viewmodel.ShopViewModel
+import com.example.diarytablet.viewmodel.ShopStockViewModel
 
 @Composable
 fun ShopScreen(
     navController: NavController,
-    viewModel: ShopViewModel = hiltViewModel(),
+    viewModel: ShopStockViewModel = hiltViewModel(),
     backgroundType: BackgroundType = BackgroundType.DEFAULT
 ) {
     BackgroundPlacement(backgroundType = backgroundType)
@@ -31,9 +32,15 @@ fun ShopScreen(
     val coupons by viewModel.coupons.observeAsState(emptyList())
     val stickers by viewModel.stickers.observeAsState(emptyList())
 
+    LaunchedEffect(Unit) {
+        viewModel.fetchCoupons()
+        viewModel.fetchStickers()
+    }
+
+
     Box(
         modifier = Modifier
-            .fillMaxSize() // 화면 전체를 채우도록 설정
+            .fillMaxSize()
             .background(Color.Transparent)
             .padding(40.dp)
     ) {
@@ -42,12 +49,14 @@ fun ShopScreen(
                 .fillMaxWidth()
                 .fillMaxHeight(0.85f)
                 .align(Alignment.BottomCenter) // 하단에 배치
+
         ) {
             ShopTab(
                 coupons = coupons,
                 stickers = stickers,
                 modifier = Modifier
-                    .align(Alignment.Center)
+                    .align(Alignment.Center),
+                viewModel = viewModel
             )
         }
     }

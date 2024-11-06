@@ -12,24 +12,28 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.diarytablet.model.CouponStock
 import com.example.diarytablet.R
+import com.example.diarytablet.model.Coupon
+import com.example.diarytablet.model.CouponStock
+import com.example.diarytablet.viewmodel.ShopStockViewModel
 import kotlinx.coroutines.delay
 
 @Composable
-fun CouponStockList(coupons: List<CouponStock>) {
+fun CouponStockList(coupons: List<CouponStock>, viewModel: ShopStockViewModel) {
     LazyColumn(
         contentPadding = PaddingValues(5.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         itemsIndexed(coupons) { index, coupon ->
-            CouponStockBox(coupon, index)
+            CouponStockBox(coupon, index) { couponId ->
+                viewModel.useCoupon(couponId)
+            }
         }
     }
 }
 
 @Composable
-fun CouponStockBox(coupon: CouponStock, index: Int) {
+fun CouponStockBox(coupon: CouponStock, index: Int, onClick: (Int) -> Unit) {
     var isPressed by remember { mutableStateOf(false) }
 
     // 배경 이미지를 클릭 상태에 따라 설정
@@ -49,6 +53,7 @@ fun CouponStockBox(coupon: CouponStock, index: Int) {
                 interactionSource = remember { MutableInteractionSource() }
             ) {
                 isPressed = true
+                onClick(coupon.id)
             }
     ) {
         // 클릭 후 일정 시간 후에 상태를 원래대로 복귀
