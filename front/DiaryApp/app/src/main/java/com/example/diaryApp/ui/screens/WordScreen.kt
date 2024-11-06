@@ -28,10 +28,12 @@ import com.example.diaryApp.R
 import com.example.diaryApp.ui.components.DailyRegisterButton
 import com.example.diaryApp.ui.components.NavMenu
 import com.example.diaryApp.ui.components.TopBackImage
+import com.example.diaryApp.viewmodel.WordViewModel
 
 @Composable
 fun WordScreen(
     navController: NavController,
+    wordViewModel: WordViewModel,
     backgroundType: BackgroundType = BackgroundType.ACTIVE
 ) {
     BackgroundPlacement(backgroundType = backgroundType)
@@ -47,7 +49,7 @@ fun WordScreen(
                 .align(Alignment.TopCenter)
         ) {
             TopBackImage(
-                logoText = "의 단어장!",
+                logoText = "${wordViewModel.memberName.value} 의 단어장!",
                 BackImage = R.drawable.navigate_back,
                 onBackClick = {
                     navController.popBackStack()
@@ -106,7 +108,6 @@ fun WordScreen(
                 }
             }
 
-
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -114,6 +115,7 @@ fun WordScreen(
             ) {
                 NavMenu(navController, "main", "word")
             }
+
         }
     }
 }

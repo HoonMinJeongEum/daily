@@ -20,12 +20,14 @@ import com.example.diaryApp.presentation.viewmodel.DiaryViewModel
 import com.example.diaryApp.ui.components.NavMenu
 import com.example.diaryApp.ui.components.ProfileList
 import com.example.diaryApp.viewmodel.ProfileViewModel
+import com.example.diaryApp.viewmodel.WordViewModel
 
 @Composable
 fun MainScreen(
     navController: NavController,
     profileViewModel: ProfileViewModel,
     diaryViewModel: DiaryViewModel,
+    wordViewModel: WordViewModel,
     backgroundType: BackgroundType = BackgroundType.ACTIVE
 ) {
     BackgroundPlacement(backgroundType = backgroundType)
@@ -56,7 +58,8 @@ fun MainScreen(
                     .padding(top = 100.dp),
                 navController = navController,
                 profileViewModel = profileViewModel,
-                diaryViewModel = diaryViewModel
+                diaryViewModel = diaryViewModel,
+                wordViewModel = wordViewModel,
             )
         }
 

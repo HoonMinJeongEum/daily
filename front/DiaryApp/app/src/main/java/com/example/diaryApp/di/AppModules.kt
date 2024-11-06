@@ -16,12 +16,15 @@ import com.example.diaryApp.domain.repository.quiz.QuizRepository
 import com.example.diaryApp.domain.repository.quiz.QuizRepositoryImpl
 import com.example.diaryApp.domain.repository.user.UserRepository
 import com.example.diaryApp.domain.repository.user.UserRepositoryImpl
+import com.example.diaryApp.domain.repository.word.WordRepository
+import com.example.diaryApp.domain.repository.word.WordRepositoryImpl
 import com.example.diaryApp.domain.services.AlarmService
 import com.example.diaryApp.domain.services.CouponService
 import com.example.diaryApp.domain.services.DiaryService
 import com.example.diaryApp.domain.services.ProfileListService
 import com.example.diaryApp.domain.services.QuizService
 import com.example.diaryApp.domain.services.UserService
+import com.example.diaryApp.domain.services.WordService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -80,8 +83,18 @@ class AppModules {
     @Provides
     fun provideDiaryService(retrofit: Retrofit) : DiaryService {
         return retrofit.create(DiaryService::class.java)
-
     }
+
+    @Provides
+    fun provideWordRepository(
+        wordService: WordService
+    ) : WordRepository = WordRepositoryImpl(wordService)
+
+    @Provides
+    fun provideWordService(retrofit: Retrofit) : WordService {
+        return retrofit.create(WordService::class.java)
+    }
+
     @Provides
     fun provideQuizRepository(quizService: QuizService): QuizRepository {
         return QuizRepositoryImpl(quizService)

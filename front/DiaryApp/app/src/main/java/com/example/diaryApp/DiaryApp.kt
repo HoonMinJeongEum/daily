@@ -21,6 +21,7 @@ import com.example.diaryApp.ui.screens.ShoppingScreen
 import com.example.diaryApp.ui.screens.WordScreen
 import com.example.diaryApp.ui.theme.DiaryAppTheme
 import com.example.diaryApp.viewmodel.ProfileViewModel
+import com.example.diaryApp.viewmodel.WordViewModel
 import dagger.hilt.android.HiltAndroidApp
 
 @OptIn(ExperimentalAnimationApi::class)
@@ -28,7 +29,8 @@ import dagger.hilt.android.HiltAndroidApp
 fun DiaryMobileApp(
     navController: NavHostController,
     diaryViewModel: DiaryViewModel,
-    profileViewModel: ProfileViewModel
+    profileViewModel: ProfileViewModel,
+    wordViewModel: WordViewModel
 ) {
     DiaryAppTheme() {
         NavHost(navController, startDestination = "landing") {
@@ -42,7 +44,7 @@ fun DiaryMobileApp(
                 JoinScreen(navController = navController)
             }
             composable("main" ) {
-                MainScreen(navController = navController, profileViewModel, diaryViewModel)
+                MainScreen(navController = navController, profileViewModel, diaryViewModel, wordViewModel)
             }
             composable("catchMind") {
                 CatchMindScreen(navController = navController)
@@ -57,7 +59,7 @@ fun DiaryMobileApp(
                 ShoppingScreen(navController = navController)
             }
             composable("word") {
-                WordScreen(navController = navController)
+                WordScreen(navController = navController, wordViewModel = wordViewModel)
             }
             composable("setting") {
                 SettingScreen(navController = navController)

@@ -16,7 +16,7 @@ interface DiaryService {
         @Query("month") month: Int
     ) : List<DiaryForList>
 
-    @GET("${Const.API_PATH}diarise/{diaryId}")
+    @GET("${Const.API_PATH}diaries/{diaryId}")
     suspend fun getDiaryById(
         @Path("diaryId") diaryId:Int
     ) : Diary

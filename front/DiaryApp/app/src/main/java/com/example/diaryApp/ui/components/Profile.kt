@@ -45,6 +45,7 @@ import com.example.diaryApp.ui.theme.PastelSkyBlue
 import com.example.diaryApp.ui.theme.PastelYellow
 import com.example.diaryApp.ui.theme.White
 import com.example.diaryApp.viewmodel.ProfileViewModel
+import com.example.diaryApp.viewmodel.WordViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.time.delay
@@ -56,6 +57,7 @@ fun ProfileItem(
     profile: Profile,
     navController: NavController,
     diaryViewModel: DiaryViewModel,
+    wordViewModel: WordViewModel
 ) {
 
     Box(
@@ -113,7 +115,7 @@ fun ProfileItem(
                     shadowElevation = 8.dp,
                     onClick = {
                         runBlocking {
-                            updateMemberInfo(profile, diaryViewModel)
+                            updateMemberInfoDiary(profile, diaryViewModel)
                             navController.navigate("diary")
                         }
                   },
@@ -147,7 +149,11 @@ fun ProfileItem(
                     width = 110,
                     height = 42,
                     shadowElevation = 8.dp,
-                    onClick = { navController.navigate("word") },
+                    onClick = {
+                        runBlocking {
+                        updateMemberInfoWord(profile, wordViewModel)
+                        navController.navigate("word")
+                    }},
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -259,13 +265,21 @@ fun DeleteProfileItem(profile: Profile) {
 }
 
 
-suspend fun updateMemberInfo(
+suspend fun updateMemberInfoDiary(
     profile:Profile,
     diaryViewModel: DiaryViewModel
-
 ) {
     diaryViewModel.memberName.value = profile.name
     diaryViewModel.memberId.intValue = profile.id
     delay(1000)
-
 }
+
+suspend fun updateMemberInfoWord(
+    profile:Profile,
+    wordViewModel: WordViewModel
+) {
+    wordViewModel.memberName.value = profile.name
+    wordViewModel.memberId.intValue = profile.id
+    delay(1000)
+}
+
