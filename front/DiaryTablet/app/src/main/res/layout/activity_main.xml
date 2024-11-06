@@ -7,42 +7,20 @@
     tools:context="com.example.diarytablet.MainActivity">
 
     <LinearLayout
-        android:id="@+id/linearLayout2"
+        android:id="@+id/views_container"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        android:orientation="vertical">
+        android:layout_height="match_parent">
 
-        <ScrollView
-            android:id="@+id/scrollView"
+        <FrameLayout
+            android:id="@+id/peer_container"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <LinearLayout
-                android:id="@+id/views_container"
+            <org.webrtc.SurfaceViewRenderer
+                android:id="@+id/local_gl_surface_view"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="8dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginRight="8dp"
-                android:orientation="vertical"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
-
-                <FrameLayout
-                    android:id="@+id/peer_container"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="5dp">
-
-                    <org.webrtc.SurfaceViewRenderer
-                        android:id="@+id/local_gl_surface_view"
-                        android:layout_width="match_parent"
-                        android:layout_height="250dp"
-                        android:visibility="visible" />
-                </FrameLayout>
-            </LinearLayout>
-        </ScrollView>
+                android:layout_height="match_parent"
+                android:visibility="visible" />
+        </FrameLayout>
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
