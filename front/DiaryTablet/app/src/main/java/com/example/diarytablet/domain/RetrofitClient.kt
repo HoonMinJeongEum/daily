@@ -85,6 +85,7 @@ object RetrofitClient {
 
     private fun getGsonConverterFactory(): GsonConverterFactory {
         val gson = GsonBuilder()
+            .setLenient()
             .registerTypeAdapter(
                 LocalDateTime::class.java,
                 JsonDeserializer<Any?> { json, _, _ ->
@@ -115,6 +116,8 @@ object RetrofitClient {
                     )
                 })
             .create()
+
+
         return GsonConverterFactory.create(gson)
     }
 }

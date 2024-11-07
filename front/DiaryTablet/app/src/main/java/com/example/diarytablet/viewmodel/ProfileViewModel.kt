@@ -56,32 +56,35 @@ class ProfileViewModel @Inject constructor(
     }
 
 
-    fun selectProfile(profile: SelectProfileRequestDto) {
+    fun selectProfile(profile: SelectProfileRequestDto, onComplete: (Boolean) -> Unit) {
         viewModelScope.launch {
             try {
-                    val response: retrofit2.Response<Void> = profileListRepository.selectProfile(profile)
+                val response: retrofit2.Response<Void> = profileListRepository.selectProfile(profile)
 
-                    if (response.isSuccessful) {
-                        // 헤더에서 토큰 가져오기
-                        val headers = response.headers()
-                        val accessToken = headers["Authorization"]?.removePrefix("Bearer ")?.trim()
-                        val refreshToken = headers["Set-Cookie"]
-                        if (!accessToken.isNullOrEmpty() && !refreshToken.isNullOrEmpty()) {
+                if (response.isSuccessful) {
+                    val headers = response.headers()
+                    val accessToken = headers["Authorization"]?.removePrefix("Bearer ")?.trim()
+                    val refreshToken = headers["Set-Cookie"]
 
-                            RetrofitClient.login(accessToken, refreshToken)
-                            userStore
-                                .setValue(UserStore.KEY_REFRESH_TOKEN, refreshToken)
-                                .setValue(UserStore.KEY_ACCESS_TOKEN, accessToken)
-
-                        }
-                    } else {
-                        Log.d("ProfilePage","ProfileSelect Fail")
+                    if (!accessToken.isNullOrEmpty() && !refreshToken.isNullOrEmpty()) {
+                        RetrofitClient.login(accessToken, refreshToken)
+                        userStore
+                            .setValue(UserStore.KEY_REFRESH_TOKEN, refreshToken)
+                            .setValue(UserStore.KEY_ACCESS_TOKEN, accessToken)
+                        Log.d("ProfileList", "Tokens stored successfully")
+                        onComplete(true) // 성공 시 콜백 호출
                     }
-                } catch (e: Exception) {
-                    Log.d("ProfilePage","ProfilePage RealFail")
+                } else {
+                    Log.d("ProfilePage", "ProfileSelect Fail")
+                    onComplete(false) // 실패 시 콜백 호출
                 }
+            } catch (e: Exception) {
+                Log.e("ProfilePage", "Profile selection error", e)
+                onComplete(false) // 실패 시 콜백 호출
             }
         }
+    }
+
 
 
     fun addProfile(profile: CreateProfileRequestDto) {

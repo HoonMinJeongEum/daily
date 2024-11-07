@@ -25,8 +25,6 @@ import com.example.diarytablet.domain.service.AlarmService
 import com.example.diarytablet.domain.service.ProfileListService
 import com.example.diarytablet.domain.service.QuizService
 import com.example.diarytablet.domain.service.UserService
-import com.ssafy.daily.alarm.repository.AlarmRepository
-import com.ssafy.daily.alarm.repository.AlarmRepositoryImpl
 import com.example.diarytablet.domain.service.WordService
 import dagger.Module
 import dagger.Provides
@@ -92,12 +90,6 @@ class AppModules {
         return retrofit.create(DiaryService::class.java)
     }
 
-    @Provides
-    fun provideAlarmRepository(
-        alarmService: AlarmService
-    ): AlarmRepository {
-        return AlarmRepositoryImpl(alarmService)
-    }
 
     @Provides
     @Singleton
@@ -141,11 +133,13 @@ class AppModules {
         shopStockService: ShopStockService
     ): ShopStockRepository = ShopStockRepository(shopStockService)
     @Provides
+    @Singleton
     fun provideMainScreenRepository(
         mainScreenService: MainScreenService
     ): MainScreenRepository = MainScreenRepositoryImpl(mainScreenService)
 
     @Provides
+    @Singleton
     fun provideMainScreenService(
         retrofit: Retrofit
     ):MainScreenService = retrofit.create((MainScreenService::class.java))
