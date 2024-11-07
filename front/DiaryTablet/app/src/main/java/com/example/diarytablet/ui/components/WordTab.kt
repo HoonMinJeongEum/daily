@@ -3,6 +3,7 @@ package com.example.diarytablet.ui.components
 import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
+import android.widget.ProgressBar
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -56,6 +57,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
@@ -75,7 +77,9 @@ fun WordTap(
     wordList: List<WordResponseDto>,
     onValidate: suspend (Context, WordResponseDto, Bitmap) -> Int,
     onFinish:suspend () -> Unit,
-    learnedWordList: List<WordRequestDto>
+    learnedWordList: List<WordRequestDto>,
+    navController: NavController
+
 ) {
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
@@ -95,9 +99,11 @@ fun WordTap(
     val isDrawingMode by remember { mutableStateOf(true) }
     var buttonText by remember { mutableStateOf("제출") }
     var buttonColor by remember { mutableStateOf(Color.White) }
+    var initialized by remember { mutableStateOf(false) }
 
     fun clearCanvas() {
         writtenBitmap.eraseColor(android.graphics.Color.TRANSPARENT)
+
     }
 
     Column(modifier = modifier.fillMaxSize()) {
@@ -193,17 +199,25 @@ fun WordTap(
                         modifier = Modifier
                             .wrapContentSize()
                             .onSizeChanged { size ->
-                                // 캔버스의 실제 크기를 가져와 Bitmap을 업데이트
-                                if (canvasWidth != size.width || canvasHeight != size.height) {
-                                    canvasWidth = size.width
-                                    canvasHeight = size.height
-                                    writtenBitmap = Bitmap.createBitmap(canvasWidth, canvasHeight, Bitmap.Config.ARGB_8888)
+                                Log.d("wordtest","$${index} ${word}")
+                                val characterCount = wordList[currentIndex].word.length
+                                val targetWidth = characterCount * 200
+                                val targetHeight = 200
+
+                                if (!initialized && ( canvasWidth != targetWidth || canvasHeight != targetHeight)) {
+                                    canvasWidth = targetWidth
+                                    canvasHeight = targetHeight
+                                    writtenBitmap = Bitmap.createBitmap(canvasWidth, canvasHeight, Bitmap.Config.ARGB_8888).apply {
+                                        eraseColor(android.graphics.Color.TRANSPARENT)
+                                    }
+                                    Log.d("sizeTest", "Updated Bitmap size: $canvasWidth x $canvasHeight")
+                                    initialized = true
                                 }
                             },
                         contentAlignment = Alignment.Center
                     ) {
                         // 각 글자를 개별 박스로 나누어 배치
-                        val characters = word.word.chunked(1)
+                        val characters = wordList[currentIndex].word.chunked(1)
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(0.dp),
                             verticalAlignment = Alignment.CenterVertically,
@@ -245,7 +259,7 @@ fun WordTap(
                             if (currentIndex == finishedIndex + 1) {
                                 Log.d("gon", "Button clicked")
                                 coroutineScope.launch {
-                                    val statusCode = onValidate(context, word, writtenBitmap!!)
+                                    val statusCode = onValidate(context, wordList[currentIndex], writtenBitmap!!)
                                     Log.d("wordTap","success ${statusCode}")
 
                                     when (statusCode) {
@@ -254,9 +268,13 @@ fun WordTap(
                                             finishedIndex = currentIndex
                                             buttonText = "제출"
                                             buttonColor = Color.White
-
-                                            if (finishedIndex == 10) {
+                                            initialized = false
+                                            if (finishedIndex == 9) {
                                                 onFinish()
+                                                navController.navigate("main") {
+                                                    popUpTo("wordLearning") { inclusive = true }
+                                                }
+
                                             } else {
                                                 listState.animateScrollToItem(++currentIndex)
                                             }
@@ -365,6 +383,9 @@ fun DrawCanvas(
         }
     }
 }
+
+
+
 
 
 

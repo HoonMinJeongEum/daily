@@ -25,6 +25,6 @@ interface WordRepository {
     ): Response<WordStatusDto>
     suspend fun finishWordLearning(
         ids: RequestBody,
-        files: List<MultipartBody.Part>
+        writeFile: List<MultipartBody.Part>
     ): Response<String>
 }

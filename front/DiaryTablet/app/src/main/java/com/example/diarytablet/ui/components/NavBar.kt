@@ -29,7 +29,9 @@ fun Navbar(
     val profileImageUrl by viewModel.profileImageUrl
     val isAlarmOn by viewModel.isAlarmOn
     val userName by viewModel.userName
-    var isModalVisible by remember { mutableStateOf(false) }
+    var isProfileModalVisible by remember { mutableStateOf(false) }
+    var isAlarmModalVisible by remember { mutableStateOf(false) }
+
 
 
     Row(
@@ -45,22 +47,29 @@ fun Navbar(
         )
         AlarmButton(
             isAlarmOn = isAlarmOn,
-            onClick = {}
+            onClick = {
+                viewModel.setAlarmState(false)
+                isAlarmModalVisible = true
+            }
         )
         Profile(
-            onProfileClick = {isModalVisible = true},
+            onProfileClick = {isProfileModalVisible = true},
             imageUrl = profileImageUrl
         )
     }
 
-    if (isModalVisible) {
+    if (isProfileModalVisible) {
         ProfileModal(
-            isModalVisible = isModalVisible,
-            onDismiss = { isModalVisible = false },
+            isModalVisible = isProfileModalVisible,
+            onDismiss = { isProfileModalVisible = false },
             profileImageUrl = profileImageUrl,
             userName = userName,
             onEditNameClick = { newName -> viewModel.updateUserName(newName) }
         )
+    }
+
+    if (isAlarmModalVisible) {
+
     }
 }
 

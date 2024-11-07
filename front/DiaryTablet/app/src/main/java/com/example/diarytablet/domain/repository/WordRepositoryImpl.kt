@@ -30,7 +30,7 @@ class WordRepositoryImpl @Inject constructor(
         return wordService.checkWordValidate(writeFile,word)
     }
 
-    override suspend fun finishWordLearning(ids: RequestBody, files: List<MultipartBody.Part>): Response<String> {
-        return wordService.finishWordLearning(ids,files)
+    override suspend fun finishWordLearning(ids: RequestBody, writeFile: List<MultipartBody.Part>): Response<String> {
+        return wordService.finishWordLearning(ids,writeFile)
     }
 }

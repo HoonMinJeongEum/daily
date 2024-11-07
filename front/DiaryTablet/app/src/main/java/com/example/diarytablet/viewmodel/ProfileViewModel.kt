@@ -73,6 +73,7 @@ class ProfileViewModel @Inject constructor(
                             .setValue(UserStore.KEY_ACCESS_TOKEN, accessToken)
                         Log.d("ProfileList", "Tokens stored successfully")
                         onComplete(true) // 성공 시 콜백 호출
+
                     }
                 } else {
                     Log.d("ProfilePage", "ProfileSelect Fail")

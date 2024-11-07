@@ -178,8 +178,8 @@ suspend fun finishWordLearning() {
     withContext(Dispatchers.IO) {
         try {
             // ids와 images 리스트 생성
-            val idsRequestBody = _learnedWordList.value.joinToString(",") { it.id.toString() }
-                .toRequestBody("text/plain".toMediaTypeOrNull())
+            val idsJson = _learnedWordList.value.joinToString(",", prefix = "[", postfix = "]") { it.id.toString() }
+            val idsRequestBody = idsJson.toRequestBody("application/json".toMediaTypeOrNull())
             val imageFiles = _learnedWordList.value.map { it.image }
 
             // 요청 전송
@@ -187,7 +187,7 @@ suspend fun finishWordLearning() {
             if (response.isSuccessful) {
                 Log.d("gon", "Word learning session completed successfully.")
             } else {
-                Log.e("gon", "Error in finishing word learning: ${response.errorBody()?.string()}")
+                Log.e("gon", "Error in finishing word learning: ${response}")
             }
         } catch (e: Exception) {
             errorMessage.value = e.message

@@ -3,6 +3,7 @@ package com.example.diarytablet.datastore
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -19,6 +20,7 @@ class UserStore @Inject constructor(private val context: Context) { // @Inject ì
         val KEY_USER_NAME = stringPreferencesKey("user_name")
         val KEY_PASSWORD = stringPreferencesKey("password")
         val KEY_PROFILE_IMAGE = stringPreferencesKey("profile_image")
+        val KEY_ALARM_ON = booleanPreferencesKey("alarm_on")
     }
 
     fun getValue(key: Preferences.Key<String>): Flow<String> {
@@ -39,6 +41,17 @@ class UserStore @Inject constructor(private val context: Context) { // @Inject ì
         return this
     }
 
+    fun getAlarmState(): Flow<Boolean> {
+        return context.dataStore.data.map {
+            it[KEY_ALARM_ON] ?: false
+        }
+    }
+
+    suspend fun setAlarmState(value: Boolean) {
+        context.dataStore.edit {
+            it[KEY_ALARM_ON] = value
+        }
+    }
     suspend fun clearValue(key: Preferences.Key<String>): UserStore {
         context.dataStore.edit {
             it.remove(key)

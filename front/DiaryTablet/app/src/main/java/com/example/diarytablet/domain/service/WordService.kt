@@ -31,7 +31,7 @@ interface WordService {
     @POST("${Const.API_PATH}word/session/complete")
     suspend fun finishWordLearning(
         @Part("ids") ids: RequestBody,
-        @Part("files") files: List<MultipartBody.Part>
+        @Part writeFile: List<MultipartBody.Part>
     ): Response<String>
 
 
