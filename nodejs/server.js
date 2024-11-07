@@ -23,11 +23,20 @@ io.on("connection", (socket) => {
     socket.join(roomId);
     socket.roomId = roomId;
     roomWords[roomId] = "";
+    
+    console.log(`클라이언트가 방 ${roomId}에 참여했습니다.`);
+  });
 
+  // 부모님 입장
+  socket.on("joinParents", (roomId) => {
+    socket.join(roomId);
+    socket.roomId = roomId;
+    
     // 새로운 사용자가 접속하면 현재 그림 데이터 전송
     if (roomDrawings[roomId]) {
       socket.emit("initDrawing", roomDrawings[roomId]); // 현재까지의 드로잉 데이터 전송
     }
+    socket.to(socket.roomId).emit("joinParents");
     console.log(`클라이언트가 방 ${roomId}에 참여했습니다.`);
   });
 
