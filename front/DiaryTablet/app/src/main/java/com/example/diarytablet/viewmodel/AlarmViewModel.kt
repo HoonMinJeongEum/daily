@@ -6,12 +6,11 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.diarytablet.datastore.UserStore
+import com.example.diarytablet.domain.dto.request.alarm.CheckAlarmRequestDto
+import com.example.diarytablet.domain.dto.request.alarm.SaveTokenRequestDto
 import com.example.diarytablet.domain.dto.response.alarm.AlarmResponseDto
-import com.google.android.gms.tasks.OnCompleteListener
+import com.example.diarytablet.domain.repository.AlarmRepository
 import com.google.firebase.messaging.FirebaseMessaging
-import com.ssafy.daily.alarm.dto.CheckAlarmRequestDto
-import com.ssafy.daily.alarm.dto.SaveTokenRequestDto
-import com.ssafy.daily.alarm.repository.AlarmRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject

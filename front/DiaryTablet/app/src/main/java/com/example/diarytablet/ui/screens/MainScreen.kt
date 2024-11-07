@@ -166,7 +166,7 @@ fun MainScreen(
                 isModalVisible = false
             },
             onDrawingQuizClick = {
-                navController.navigate("wordLearning") {
+                navController.navigate("quiz") {
                     popUpTo("main") { inclusive = true }
                 }
                 isModalVisible = false

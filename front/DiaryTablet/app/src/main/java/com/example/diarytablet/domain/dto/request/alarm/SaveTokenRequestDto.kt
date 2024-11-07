@@ -1,4 +1,4 @@
-package com.ssafy.daily.alarm.dto
+package com.example.diarytablet.domain.dto.request.alarm
 
 import com.google.gson.annotations.SerializedName
 
