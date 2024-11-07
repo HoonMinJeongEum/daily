@@ -15,6 +15,6 @@ data class MainScreenResponseDto (
     @SerializedName("wordStatus")
     val wordStatus : Boolean,
 
-    @SerializedName("diaryStatus")
+    @SerializedName("shellCount")
     val shellCount : Int
     )

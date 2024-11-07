@@ -12,3 +12,11 @@ data class WordResponseDto(
     @SerializedName("img")
     val imageUrl : String,
 )
+
+data class WordStatusDto(
+    @SerializedName("status")
+    val status : Int,
+
+    @SerializedName("msg")
+    val msg : String
+)

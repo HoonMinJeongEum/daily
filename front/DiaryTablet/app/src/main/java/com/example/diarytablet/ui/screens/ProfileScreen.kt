@@ -36,10 +36,13 @@ fun ProfileScreen (
     val profileList by viewModel.profileList
 
     fun chooseProfile(profile: Profile) {
-        val selectProfileRequestDto = SelectProfileRequestDto(memberId = profile.id) // memberId를 프로필의 id로 설정
-        viewModel.selectProfile(selectProfileRequestDto) // ViewModel에 전달
-        navController.navigate("main") {
-            popUpTo("profileList") { inclusive = true }
+        val selectProfileRequestDto = SelectProfileRequestDto(memberId = profile.id)
+        viewModel.selectProfile(selectProfileRequestDto) { isSuccess ->  // 콜백 추가
+            if (isSuccess) {
+                navController.navigate("main") {
+                    popUpTo("profileList") { inclusive = true }
+                }
+            }
         }
     }
 

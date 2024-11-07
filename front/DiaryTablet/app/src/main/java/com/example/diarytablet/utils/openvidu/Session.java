@@ -8,7 +8,6 @@ import android.widget.LinearLayout;
 import androidx.lifecycle.ViewModel;
 
 import com.example.diarytablet.MainActivity;
-import com.example.diarytablet.ui.components.VideoKt;
 import com.example.diarytablet.viewmodel.QuizViewModel;
 
 import org.webrtc.EglBase;
