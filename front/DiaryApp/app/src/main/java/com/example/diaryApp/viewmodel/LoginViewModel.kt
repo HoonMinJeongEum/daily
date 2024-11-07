@@ -7,8 +7,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.diaryApp.datastore.UserStore
 import com.example.diaryApp.domain.RetrofitClient
+import com.example.diaryApp.domain.dto.request.alarm.SaveTokenRequestDto
 import com.example.diaryApp.domain.dto.request.user.LoginRequestDto
+import com.example.diaryApp.domain.repository.alarm.AlarmRepository
 import com.example.diaryApp.domain.repository.user.UserRepository
+import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
@@ -18,7 +21,8 @@ import javax.inject.Inject
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     application: Application,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val alarmRepository: AlarmRepository,
 ) : ViewModel() {
     val username = mutableStateOf("")
     val password = mutableStateOf("")
@@ -51,7 +55,7 @@ class LoginViewModel @Inject constructor(
                         Log.d("LoginViewModel", "Access Token: $accessToken")
                         Log.d("LoginViewModel", "Refresh Token: $refreshToken")
                         saveUserInfo(accessToken, refreshToken)
-
+                        saveFcmToken()
                         onSuccess() // 로그인 성공 처리
                     } else {
                         Log.d("LoginViewModel", "Token not found in headers")
@@ -74,6 +78,27 @@ class LoginViewModel @Inject constructor(
             .setValue(UserStore.KEY_ACCESS_TOKEN, accessToken)
 
         Log.d("LoginViewModel", "User info saved: Username: ${username.value}, AccessToken: $accessToken")
+    }
+    // FCM 토큰을 가져와 저장하는 함수
+    private fun saveFcmToken() {
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (!task.isSuccessful) {
+                Log.w("LoginViewModel", "Fetching FCM registration token failed", task.exception)
+                return@addOnCompleteListener
+            }
+
+            val token = task.result
+            Log.d("LoginViewModel", "FCM 토큰: $token")
+
+            viewModelScope.launch {
+                val response = alarmRepository.saveToken(SaveTokenRequestDto(token))
+                if (response.isSuccessful) {
+                    Log.d("LoginViewModel", "알림 토큰이 정상적으로 등록되었습니다.")
+                } else {
+                    Log.e("LoginViewModel", "토큰 저장 실패: ${response.message()}")
+                }
+            }
+        }
     }
 }
 
@@ -106,3 +131,4 @@ private fun handleException(e: Exception, onErrorPassword: () -> Unit, onError: 
         }
     }
 }
+

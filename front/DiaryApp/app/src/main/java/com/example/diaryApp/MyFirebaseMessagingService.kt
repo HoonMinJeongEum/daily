@@ -38,12 +38,14 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         val channelId = "default_channel_id"
         val channelName = "Default Channel"
 
+        // 알림 채널 생성 (Android 8.0 이상)
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             val channel = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH)
             notificationManager.createNotificationChannel(channel)
         }
 
+        // 알림을 클릭했을 때 열릴 액티비티 설정
         val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
@@ -54,6 +56,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             return
         }
 
+        // 알림 빌더 설정
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.drawable.daily_logo)
             .setContentTitle(title)
@@ -62,6 +65,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
 
+        // 알림 표시
         with(NotificationManagerCompat.from(this)) {
             notify(0, notificationBuilder.build())
         }
