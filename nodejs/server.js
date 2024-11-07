@@ -26,7 +26,7 @@ io.on('connection', (socket) => {
 
       // 새로운 사용자가 접속하면 현재 그림 데이터 전송
       if (roomDrawings[roomId]) {
-        socket.emit('initDrawing', roomDrawings[roomId]); 
+        socket.emit('initDrawing', roomDrawings[roomId]); // 현재까지의 드로잉 데이터 전송
       }
       console.log(`클라이언트가 방 ${roomId}에 참여했습니다.`);
   });
@@ -38,6 +38,7 @@ io.on('connection', (socket) => {
     }
     roomDrawings[socket.roomId].push(draw);
 
+    // 다른 사용자에게 그려진 좌표 전송
     socket.to(socket.roomId).emit('draw', draw);
   });
 
@@ -56,9 +57,11 @@ io.on('connection', (socket) => {
     io.to(socket.roomId).emit('checkWord', isCorrect); 
   });
 
+
   // 그림 초기화
   socket.on('clear', () => {
     console.log(`Path 초기화 요청을 받았습니다.`);
+    
     roomDrawings[socket.roomId] = []; 
     io.to(socket.roomId).emit('clear'); 
   });
@@ -67,7 +70,7 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log(`클라이언트가 방에서 연결이 종료되었습니다.`);
     roomDrawings[socket.roomId] = [];
-    io.to(socket.roomId).emit('disconnect'); 
+    socket.to(socket.roomId).emit('userDisconnected');
   });
 });
 
