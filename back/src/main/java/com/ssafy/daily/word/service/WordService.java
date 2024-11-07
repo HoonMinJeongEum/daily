@@ -55,6 +55,7 @@ public class WordService {
                         word.getId(),
                         word.getWord().getWord(),
                         word.getImg(),
+                        word.getWord().getImg(),
                         word.getCreatedAt()))
                 .collect(Collectors.toList());
     }
