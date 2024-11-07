@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.Parent" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowNoTitle">true</item>
+        <item name="windowNoTitle">true</item>
+        <item name="windowActionBar">false</item>
+    </style>
+
+    <style name="AppTheme.Splash" parent="Theme.SplashScreen">
+        <item name="android:windowNoTitle">true</item>
+        <item name="windowNoTitle">true</item>
+        <item name="windowActionBar">false</item>
+        <!-- 배경색상 -->
+        <item name="windowSplashScreenBackground">#83B4FF</item>
+
+        <!-- 아이콘뒤 배경 색상 -->
+        <item name="windowSplashScreenIconBackgroundColor">#83B4FF</item>
+
+        <!-- 아이콘 -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/daily_logo</item>
+
+        <!-- 지속시간 1000 이하 권장 -->
+        <item name="windowSplashScreenAnimationDuration">500</item>
+
+        <!-- 아이콘 하단의 이미지 -->
+        <!--<item name="android:windowSplashScreenBrandingImage">@drawable/daily_splash</item>-->
+
+        <!-- 끝나고 보여줄 테마 -->
+        <item name="postSplashScreenTheme">@style/Theme.Parent</item>
+    </style>
+
+</resources>

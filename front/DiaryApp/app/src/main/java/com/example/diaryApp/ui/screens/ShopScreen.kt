@@ -1,0 +1,164 @@
+package com.example.diaryApp.ui.screens
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
+import com.example.diaryApp.ui.theme.BackgroundPlacement
+import com.example.diaryApp.ui.theme.BackgroundType
+import com.example.diaryApp.R
+import com.example.diaryApp.ui.components.BuyCoupon
+import com.example.diaryApp.ui.components.CouponListItem
+import com.example.diaryApp.ui.components.CreateCoupon
+import com.example.diaryApp.ui.components.DailyRegisterButton
+import com.example.diaryApp.ui.components.NavMenu
+import com.example.diaryApp.ui.components.TopBackImage
+import com.example.diaryApp.ui.components.UsageCouponListItem
+import com.example.diaryApp.viewmodel.CouponViewModel
+
+@Composable
+fun ShoppingScreen(
+    navController: NavController,
+    couponViewModel: CouponViewModel = hiltViewModel(),
+    backgroundType: BackgroundType = BackgroundType.ACTIVE
+) {
+    BackgroundPlacement(backgroundType = backgroundType)
+
+    var showDialog by remember { mutableStateOf(false) }
+    var showBuyDialog by remember { mutableStateOf(false) }
+    var selectedTab by remember { mutableStateOf("쿠폰 등록") }
+    val couponList by couponViewModel.couponList
+    val usageCouponList by couponViewModel.usageCouponList
+
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .align(Alignment.TopCenter)
+        ) {
+            TopBackImage(
+                logoText = "상점",
+                BackImage = R.drawable.navigate_back,
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize() // 전체 화면을 채우도록 설정
+                .align(Alignment.Center),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+
+            Box(
+                modifier = Modifier
+                    .background(
+                        Color.White,
+                        shape = RoundedCornerShape(topEnd = 50.dp, topStart = 50.dp)
+                    )
+                    .fillMaxWidth()
+                    .height(780.dp)
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Top
+                ) {
+                    Row(
+                        modifier = Modifier.padding(
+                            top = 16.dp,
+                            start = 16.dp,
+                            end = 16.dp
+                        )
+                    ) {
+                        DailyRegisterButton(
+                            text = "쿠폰 등록",
+                            fontSize = 26,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                            backgroundColor = Color.Transparent,
+                            width = 140,
+                            height = 60,
+                            isSelected = selectedTab == "쿠폰 등록",
+                            onClick = { selectedTab = "쿠폰 등록" },
+                        )
+                        DailyRegisterButton(
+                            text = "쿠폰 내역",
+                            fontSize = 26,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                            backgroundColor = Color.Transparent,
+                            width = 140,
+                            height = 60,
+                            isSelected = selectedTab == "쿠폰 내역",
+                            onClick = { selectedTab = "쿠폰 내역" },
+                        )
+                    }
+
+                    when (selectedTab) {
+                        "쿠폰 등록" -> {
+                            CouponListItem(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 50.dp),
+                                couponList,
+                                onShowDialogChange = { showDialog = it }
+                            )
+                        }
+                        "쿠폰 내역" -> {
+                            UsageCouponListItem(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 50.dp),
+                                usageCouponList,
+                                onShowBuyDialogChange = { showBuyDialog = it }
+                            )
+                        }
+                    }
+                }
+            }
+
+            if (showDialog) {
+                CreateCoupon(
+                    couponViewModel = couponViewModel,
+                    onCancel = { showDialog = false }
+                )
+            }
+
+            if (showBuyDialog) {
+                BuyCoupon(
+                    couponViewModel = couponViewModel,
+                    onCancel = { showBuyDialog = false }
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+            ) {
+                NavMenu(navController, "shop", "shop")
+            }
+        }
+    }
+}
+
