@@ -4,25 +4,20 @@ import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.diaryApp.datastore.UserStore
-import com.example.diaryApp.domain.repository.quiz.QuizRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.socket.client.Socket
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import android.util.Base64
 import org.json.JSONObject
 import androidx.compose.ui.graphics.Path
 import io.socket.client.IO
 import androidx.compose.runtime.State
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.example.diaryApp.domain.dto.request.quiz.CheckWordRequestDto
-import com.example.diaryApp.domain.dto.request.quiz.SessionRequestDto
-import com.example.diaryApp.domain.dto.request.quiz.SetWordRequestDto
-import com.example.diaryApp.domain.dto.response.quiz.RecommendWordResponseDto
-import com.example.diaryApp.domain.dto.response.quiz.SessionResponseDto
+import com.example.diaryApp.datastore.UserStore
+import com.example.diaryApp.domain.repository.quiz.QuizRepository
 import com.example.diaryApp.utils.openvidu.Session
+import org.json.JSONArray
 import org.webrtc.MediaStream
 
 @HiltViewModel
@@ -30,70 +25,51 @@ class QuizViewModel @Inject constructor(
     private val quizRepository: QuizRepository,
     private val userStore: UserStore
 ) : ViewModel() {
-//    val sessionId = mutableStateOf<String?>(null)
-//    val token = mutableStateOf<String?>(null)
-    lateinit var socket: Socket
-    val recommendWords = mutableStateOf<List<RecommendWordResponseDto>>(emptyList())
-    val setWordResponse = mutableStateOf<String?>(null)
-    val checkWordResponse = mutableStateOf<Boolean?>(null)
     val isLoading = mutableStateOf(false)
     val errorMessage = mutableStateOf<String?>(null)
-    private val _path = mutableStateOf(Path())
-    val path: State<Path> = _path
 
+    // 오픈 비두
     private val _token = MutableLiveData<String?>()
     val token: LiveData<String?> get() = _token
-    private val _sessionId = MutableLiveData<SessionResponseDto?>()
-    val sessionId: LiveData<SessionResponseDto?> get() = _sessionId
+    private val _sessionId = MutableLiveData<String?>()
+    val sessionId: LiveData<String?> get() = _sessionId
     lateinit var session: Session
     private val _remoteMediaStream = MutableLiveData<MediaStream?>()
     val remoteMediaStream: LiveData<MediaStream?> get() = _remoteMediaStream
     private val _leaveSessionTriggered = MutableLiveData<Boolean>()
     val leaveSessionTriggered: LiveData<Boolean> get() = _leaveSessionTriggered
 
-    init {
-        loadQuiz()
+    // Node.js
+    lateinit var socket: Socket
+    private val _path = mutableStateOf(Path())
+    val path: State<Path> = _path
+    private val _canvasWidth = MutableLiveData<Int>()
+    val canvasWidth: LiveData<Int> get() = _canvasWidth
+    private val _canvasHeight = MutableLiveData<Int>()
+    val canvasHeight: LiveData<Int> get() = _canvasHeight
+    private val _isCorrectAnswer = MutableLiveData<Boolean?>()
+    val isCorrectAnswer: LiveData<Boolean?> get() = _isCorrectAnswer
+    private val _userDisconnectedEvent = MutableLiveData<Boolean?>()
+    val userDisconnectedEvent: LiveData<Boolean?> get() = _userDisconnectedEvent
+
+    fun setCanvasSize(width: Int, height: Int) {
+        _canvasWidth.value = width
+        _canvasHeight.value = height
     }
 
-    // 세션 초기화 함수
-    private fun initializeSession() {
+    fun loadQuiz(sessionId : String) {
+        _sessionId.value = sessionId
+        createConnection(sessionId)
+    }
+
+    private fun createConnection(sessionId: String) {
         viewModelScope.launch {
             isLoading.value = true
             errorMessage.value = null
             try {
-//                val jwtToken = userStore.getValue(UserStore.KEY_ACCESS_TOKEN).firstOrNull()
-
-//                if (jwtToken != null) {
-//                    val (familyId, familyName) = extractFamilyFromJwt(jwtToken)
-
-//                    if (familyId != null && familyName != null) {
-//                        val sessionId = "Session$familyId"
-                        val sessionId = "Session1"
-                        val sessionRequestDto = SessionRequestDto(customSessionId = "Session1")
-                        val response = quizRepository.initializeSession(sessionRequestDto)
-                        _sessionId.value = response.body()
-                        _sessionId.value?.let { sessionId ->
-
-                            createConnection(sessionId.customSessionId, null)
-//                        }
-//                    }
-                }
-            } catch (e: Exception) {
-                errorMessage.value = e.message
-            } finally {
-                isLoading.value = false
-            }
-        }
-    }
-
-    // 커넥션 생성 함수
-    private fun createConnection(sessionId: String, params: Map<String, Any>?) {
-        viewModelScope.launch {
-            isLoading.value = true
-            errorMessage.value = null
-            try {
-                Log.e("QuizViewModel", "Session ID: ${sessionId}")
+                Log.e("QuizViewModel", "Session ID: $sessionId")
                 val response = quizRepository.createConnection(sessionId)
+                createSocket(sessionId)
                 _token.value = response.body()?.token
                 Log.d("QuizViewModel", "Token 얻음: ${_token.value}")
             } catch (e: Exception) {
@@ -104,81 +80,56 @@ class QuizViewModel @Inject constructor(
         }
     }
 
-    // 추천 단어 가져오기 함수
-    fun recommendWord() {
+    private fun createSocket(sessionId: String) {
         viewModelScope.launch {
-            isLoading.value = true
-            errorMessage.value = null
-            try {
-                val response = quizRepository.recommendWord()
-                recommendWords.value = response.body() ?: emptyList()
-            } catch (e: Exception) {
-                errorMessage.value = e.message
-            } finally {
-                isLoading.value = false
+            socket = IO.socket("http://10.0.2.2:6080")
+            socket.connect()
+
+            Log.e("QuizViewModel", "roomId : ${sessionId}")
+            socket.emit("joinParents", sessionId)
+
+            socket.on("initDrawing") { args ->
+                val drawingData = args[0] as JSONArray
+                for (i in 0 until drawingData.length()) {
+                    val draw = drawingData.getString(i)
+                    val jsonMessage = JSONObject(draw)
+                    val draws = jsonMessage.getString("draw").split(",")
+                    val action = draws[0]
+                    val x = draws[1].toFloat()
+                    val y = draws[2].toFloat()
+                    updatePath(action, x, y)
+                }
+            }
+
+            // 서버로부터 "draw" 이벤트 수신
+            socket.on("draw") { args ->
+                val responseData = args[0] as String
+                val jsonMessage = JSONObject(responseData)
+                val draws = jsonMessage.getString("draw").split(",")
+                val action = draws[0]
+                val x = draws[1].toFloat() * (canvasWidth.value?.toFloat() ?: 1f)
+                val y = draws[2].toFloat() * (canvasHeight.value?.toFloat() ?: 1f)
+
+                updatePath(action, x, y)
+            }
+
+            socket.on("checkWord") { args ->
+                val isCorrect = args[0] as Boolean
+                _isCorrectAnswer.postValue(isCorrect)
+            }
+
+            socket.on("clear") {
+                _path.value = Path()
+            }
+
+            socket.on("userDisconnected") {
+                _userDisconnectedEvent.postValue(true)
+                Log.d("QuizViewModel", "disconnect")
             }
         }
     }
 
-    // 단어 설정 함수
-    fun setWord(request: SetWordRequestDto) {
-        viewModelScope.launch {
-            isLoading.value = true
-            errorMessage.value = null
-            try {
-                val response = quizRepository.setWord(request)
-                setWordResponse.value = response.body()
-            } catch (e: Exception) {
-                errorMessage.value = e.message
-            } finally {
-                isLoading.value = false
-            }
-        }
-    }
-
-    // 단어 확인 함수
-    fun checkWord(request: CheckWordRequestDto) {
-        viewModelScope.launch {
-            isLoading.value = true
-            errorMessage.value = null
-            try {
-                val response = quizRepository.checkWord(request)
-                checkWordResponse.value = response.body()
-            } catch (e: Exception) {
-                errorMessage.value = e.message
-            } finally {
-                isLoading.value = false
-            }
-        }
-    }
-    private fun loadQuiz() {
-        socket = IO.socket("ws://10.0.2.2:6080")
-        socket.connect()
-        socket.emit("join", "room1") // 방 ID를 지정해 연결
-
-        // 서버로부터 "draw" 이벤트 수신
-        socket.on("draw") { args ->
-            val responseData = args[0] as String
-            val jsonMessage = JSONObject(responseData)
-            val draws = jsonMessage.getString("draw").split(",")
-            val action = draws[0]
-            val x = draws[1].toFloat()
-            val y = draws[2].toFloat()
-
-            // 수신된 좌표 업데이트
-            updatePath(action, x, y)
-        }
-//        recommendWord()
-        initializeSession()
-//        val setWordRequestDto = SetWordRequestDto(word="사과")
-//        setWord(setWordRequestDto)
-//         val checkWordRequestDto = CheckWordRequestDto(word="안녕ㅅ")
-//        checkWord(checkWordRequestDto)
-//        setWord(setWordRequestDto)
-//        createConnection("Session1", null)
-    }
-
-    // Path 업데이트 메서드
+    // 그림 업데이트
     private fun updatePath(action: String, x: Float, y: Float) {
         _path.value = Path().apply {
             addPath(_path.value) // 기존 Path 유지
@@ -189,36 +140,31 @@ class QuizViewModel @Inject constructor(
         }
     }
 
-    // 드로잉 시작, 진행, 종료에 따라 소켓 메시지 전송
-    fun sendDrawAction(action: String, x: Float, y: Float) {
-        val message = """{"draw":"$action,$x,$y"}"""
-        socket.emit("draw", message)
-
-        // 로컬에서도 Path 업데이트
-        updatePath(action, x, y)
+    // 그림 초기화
+    fun resetPath() {
+        socket.emit("clear" )
     }
 
-    // Fmaily 가져오는 메서드
-    private fun extractFamilyFromJwt(jwt: String): Pair<String?, String?> {
-        return try {
-            val payload = jwt.split(".")[1]
-            val decodedBytes = Base64.decode(payload, Base64.URL_SAFE)
-            val decodedString = String(decodedBytes)
-            val jsonObject = JSONObject(decodedString)
+    // 단어 확인
+    fun sendCheckWordAction(word: String) {
+        val message = """{"checkWord":"$word"}"""
 
-            val familyObject = jsonObject.getJSONObject("family")
-            val familyId = familyObject.getString("id")
-            val familyName = familyObject.getString("name")
+        socket.emit("checkWord", message)
+        Log.d("QuizViewModel", "CheckWord 전송: $word")
+    }
 
-            Pair(familyId, familyName)
-        } catch (e: Exception) {
-            Log.e("QuizViewModel", "Error decoding JWT", e)
-            Pair(null, null)
-        }
+    // 상태 초기화
+    fun resetIsCorrectAnswer() {
+        _isCorrectAnswer.value = null
     }
 
     fun leaveSession() {
-        session?.leaveSession()
+        socket.disconnect()
+        if (::session.isInitialized) {
+            session.leaveSession()
+        } else {
+            Log.e("QuizViewModel", "Session이 초기화되지 않았습니다.")
+        }
         _leaveSessionTriggered.value = true
     }
 

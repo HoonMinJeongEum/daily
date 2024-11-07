@@ -133,7 +133,12 @@ fun ProfileItem(
                     width = 110,
                     height = 42,
                     shadowElevation = 8.dp,
-                    onClick = {},
+                    onClick = {
+                        runBlocking {
+                            updateMemberInfoWord(profile, wordViewModel)
+                            navController.navigate("catchMind/${profile.name}")
+                        }
+                    },
                 )
             }
             Column(

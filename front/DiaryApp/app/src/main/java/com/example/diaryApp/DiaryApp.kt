@@ -47,8 +47,11 @@ fun DiaryMobileApp(
             composable("main" ) {
                 MainScreen(navController = navController, profileViewModel, diaryViewModel, wordViewModel)
             }
-            composable("catchMind") {
-                CatchMindScreen(navController = navController)
+            composable("catchMind/{sessionId}") { backStackEntry ->
+                val sessionId = backStackEntry.arguments?.getString("sessionId")
+                sessionId?.let {
+                    CatchMindScreen(navController = navController, sessionId = it)
+                }
             }
             composable("diary") {
                 DiaryScreen(navController = navController, diaryViewModel = diaryViewModel)
