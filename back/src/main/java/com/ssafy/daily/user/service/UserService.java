@@ -119,6 +119,15 @@ public class UserService {
         Family family = familyRepository.findById(familyId)
                 .orElseThrow(() -> new EmptyResultDataAccessException("해당 가족 계정을 찾을 수 없습니다.", 1));
 
+        boolean isDuplicate = memberRepository.existsByFamilyIdAndName(familyId, memberName);
+        if (isDuplicate) {
+            throw new AlreadyOwnedException("이미 존재하는 이름입니다. 다른 이름을 사용하세요.");
+        }
+
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("프로필 이미지 파일이 필요합니다.");
+        }
+
         String imageUrl = null;
         try {
             imageUrl = s3UploadService.saveFile(file);

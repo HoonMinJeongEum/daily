@@ -11,4 +11,6 @@ import java.util.Optional;
 public interface MemberRepository extends JpaRepository<Member, Integer> {
     List<Member> findByFamilyId(int id);
     Optional<Member> findByIdAndFamilyId(int memberId, int familyId);
+    boolean existsByFamilyIdAndName(int familyId, String name);
+
 }
