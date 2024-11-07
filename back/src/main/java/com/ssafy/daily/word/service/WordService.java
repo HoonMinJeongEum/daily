@@ -150,10 +150,11 @@ public class WordService {
             result.append(field.getInferText());
         }
 
-        // String orgImg = s3UploadService.getFileNameFromUrl(writeUrl);
-        // s3UploadService.deleteImage(orgImg);
+         String orgImg = s3UploadService.getFileNameFromUrl(writeUrl);
+         s3UploadService.deleteImage(orgImg);
 
-        String resultWord = result.toString().trim();
+        String resultWord = result.toString().trim().replaceAll("\\s+", "");
+
         if (resultWord.isEmpty()) {
             log.warn("OCR 결과가 비어 있습니다.");
             throw new EmptyOcrResultException("인식된 단어가 없습니다. 단어를 작성해주세요.");
