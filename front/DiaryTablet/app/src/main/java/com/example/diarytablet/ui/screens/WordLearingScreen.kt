@@ -91,7 +91,8 @@ fun WordLearningScreen(
                 onFinish = {
                     viewModel.finishWordLearning()
                 },
-                learnedWordList = learnedWordList
+                learnedWordList = learnedWordList,
+                navController = navController
             )
         }
     }

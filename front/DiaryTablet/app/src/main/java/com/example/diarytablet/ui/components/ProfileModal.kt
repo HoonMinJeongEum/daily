@@ -18,6 +18,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import coil3.compose.AsyncImage
 import com.example.diarytablet.R
 import com.example.diarytablet.ui.components.BasicButton
@@ -29,17 +31,14 @@ fun ProfileModal(
     profileImageUrl: String,
     userName: String,
     onEditNameClick: (String) -> Unit
-
 ) {
-
     var isEditing by remember { mutableStateOf(false) }
     var editedName by remember { mutableStateOf(userName) }
 
     if (isModalVisible) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xB3000000)) // 반투명 검정 배경
+        Dialog(
+            onDismissRequest = { onDismiss() },
+            properties = DialogProperties(dismissOnClickOutside = false)
         ) {
             Box(
                 modifier = Modifier
@@ -47,7 +46,6 @@ fun ProfileModal(
                     .padding(40.dp)
                     .background(Color.White, shape = RoundedCornerShape(30.dp))
                     .padding(24.dp)
-                    .align(Alignment.Center)
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -67,20 +65,14 @@ fun ProfileModal(
                         )
                     }
 
-                    // 프로필 이미지
-//                    AsyncImage(
-//                        model = profileImageUrl,
-//                        contentDescription = "Profile Image",
-//                        modifier = Modifier.size(120.dp),
-//                        contentScale = ContentScale.Crop
-//                    )
-                    Image(
-                        painter = painterResource(id = R.drawable.pencil),
-                        modifier = Modifier.size(120.dp),
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop
 
+                    AsyncImage(
+                        model = profileImageUrl,
+                        contentDescription = null,
+                        modifier = Modifier.size(120.dp),
+                        contentScale = ContentScale.Crop
                     )
+
                     Spacer(modifier = Modifier.height(20.dp))
 
                     // 닉네임과 수정 아이콘
@@ -115,7 +107,7 @@ fun ProfileModal(
                                 contentDescription = "Edit Name",
                                 modifier = Modifier
                                     .size(24.dp)
-                                    .clickable { isEditing = true}
+                                    .clickable { isEditing = true }
                             )
                         }
                     }
@@ -125,14 +117,3 @@ fun ProfileModal(
     }
 }
 
-@Preview
-@Composable
-fun preview(){
-    ProfileModal(
-        isModalVisible = true,
-        onDismiss = {},
-        onEditNameClick = {},
-        userName = "gd",
-        profileImageUrl = "da"
-    )
-}

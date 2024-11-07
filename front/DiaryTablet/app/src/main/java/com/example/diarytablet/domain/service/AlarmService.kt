@@ -15,7 +15,7 @@ interface AlarmService {
     suspend fun saveToken(
         @Body request: SaveTokenRequestDto
     ): Response<StatusResponseDto>
-    @GET("${Const.API_PATH}alarm/list/{userId}")
+    @GET("${Const.API_PATH}alarm/list")
     suspend fun getAlarms(): Response<AlarmListResponseDto>
     @POST("${Const.API_PATH}alarm/check")
     suspend fun checkAlarm(

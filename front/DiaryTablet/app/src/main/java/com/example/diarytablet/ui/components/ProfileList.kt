@@ -49,9 +49,7 @@ fun ProfileList(
     modifier: Modifier = Modifier,
     profileList: List<Profile>,
     onChooseProfile: (Profile) -> Unit,
-    onCreateProfile: (String, String) -> Unit
 ) {
-    var showDialog by remember { mutableStateOf(false) }
     Log.d("ProfileScreen","${profileList}")
     Row(
         modifier = modifier
@@ -69,39 +67,9 @@ fun ProfileList(
             }
             ProfileItem(profile = profileWithDefaultImg, onChooseProfile = onChooseProfile)
         }
-        Surface(
-            modifier = Modifier
-                .size(246.dp, 336.dp)
-                .padding(8.dp),
-            color = Color.Transparent,
 
-
-        ) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.fillMaxSize()
-                    .clickable {showDialog = true  }
-
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.profile_plus),
-                    contentDescription = null,
-                    modifier = Modifier.size(100.dp), // 아이콘 크기 설정
-                )
-            }
-        }
     }
-    if (showDialog) {
-        CreateProfileModal(
-            showDialog = showDialog,
-            onConfirm = { username, password ->
 
-                onCreateProfile(username, password)
-                showDialog = false // 모달 닫기
-            },
-            onCancel = { showDialog = false } // 취소 시 모달 닫기
-        )
-    }
 }
 
 @Composable
