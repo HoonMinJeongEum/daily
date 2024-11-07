@@ -33,7 +33,7 @@ class NavBarViewModel @Inject constructor(
     init {
         loadStatus()
         observeAlarmState()
-//        saveFcmToken() // 앱 초기화 시 FCM 토큰 저장
+        saveFcmToken() // 앱 초기화 시 FCM 토큰 저장
     }
 
     private val _shellCount = mutableIntStateOf(0)
@@ -69,7 +69,7 @@ class NavBarViewModel @Inject constructor(
                 userStore.getValue(UserStore.KEY_PROFILE_IMAGE).collect { url ->
                     _profileImageUrl.value = url
                 }
-                userStore.getValue(UserStore.KEY_USER_NAME).collect { name ->
+                userStore.getValue(UserStore.KEY_PROFILE_NAME).collect { name ->
                     _userName.value = name
                 }
                 userStore.setValue(KEY_PROFILE_IMAGE, response.image)
@@ -102,16 +102,18 @@ class NavBarViewModel @Inject constructor(
         }
     }
 
-    fun getAlarms() {
+    fun getAlarms(onAlarmsFetched: () -> Unit) {
         viewModelScope.launch {
             val response = alarmRepository.getAlarms()
             if (response.isSuccessful) {
-                _alarms.value = response.body() ?: emptyList()
+                _alarms.value = response.body()?.list ?: emptyList()
+                onAlarmsFetched() // Trigger modal visibility after fetching
             } else {
                 _alarms.value = emptyList()
             }
         }
     }
+
 
     fun checkAlarm(alarmId: Long) {
         viewModelScope.launch {

@@ -65,12 +65,15 @@ class ProfileViewModel @Inject constructor(
                     val headers = response.headers()
                     val accessToken = headers["Authorization"]?.removePrefix("Bearer ")?.trim()
                     val refreshToken = headers["Set-Cookie"]
+                    val selectedProfile = _profileList.value.find { it.id == profile.memberId }
+                    val profileName = selectedProfile?.name
 
-                    if (!accessToken.isNullOrEmpty() && !refreshToken.isNullOrEmpty()) {
+                    if (!profileName.isNullOrEmpty() && !accessToken.isNullOrEmpty() && !refreshToken.isNullOrEmpty()) {
                         RetrofitClient.login(accessToken, refreshToken)
                         userStore
                             .setValue(UserStore.KEY_REFRESH_TOKEN, refreshToken)
                             .setValue(UserStore.KEY_ACCESS_TOKEN, accessToken)
+                            .setValue(UserStore.KEY_PROFILE_NAME, profileName)
                         Log.d("ProfileList", "Tokens stored successfully")
                         saveFcmToken()
                         onComplete(true) // 성공 시 콜백 호출
@@ -89,12 +92,6 @@ class ProfileViewModel @Inject constructor(
 
 
 
-    fun addProfile(profile: CreateProfileRequestDto) {
-        viewModelScope.launch {
-            profileListRepository.createProfile(profile)
-            loadProfiles() // 새로운 프로필 추가 후 리스트 갱신
-        }
-    }
 
     // FCM 토큰을 가져와 저장하는 함수
     private fun saveFcmToken() {

@@ -65,17 +65,17 @@ fun DiaryTabletApp() {
 
 @HiltAndroidApp
 class DiaryTablet : Application() {
-//    @Inject
-//    lateinit var userStore: UserStore
-//
-//    companion object {
-//        lateinit var instance: DiaryTablet
-//            private set
-//    }
-//
-//    override fun onCreate() {
-//        super.onCreate()
-//        instance = this
-//    }
+    @Inject
+    lateinit var userStore: UserStore
+
+    companion object {
+        lateinit var instance: DiaryTablet
+            private set
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        instance = this
+    }
 
 }

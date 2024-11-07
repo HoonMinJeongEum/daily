@@ -9,6 +9,6 @@ import retrofit2.Response
 
 interface AlarmRepository {
     suspend fun saveToken(request: SaveTokenRequestDto): Response<StatusResponseDto>
-    suspend fun getAlarms(): Response<AlarmListResponseDto>
+    suspend fun getAlarms():Response<AlarmListResponseDto>
     suspend fun checkAlarm(request: CheckAlarmRequestDto): Response<StatusResponseDto>
 }

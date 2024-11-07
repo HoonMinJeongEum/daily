@@ -22,9 +22,9 @@ import javax.inject.Inject
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
 
-//    private val userStore: UserStore by lazy {
-//        DiaryTablet.instance.userStore
-//    }
+    private val userStore: UserStore by lazy {
+        DiaryTablet.instance.userStore
+    }
 
 
     override fun onNewToken(token: String) {

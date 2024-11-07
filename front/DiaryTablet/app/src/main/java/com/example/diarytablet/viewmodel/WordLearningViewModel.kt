@@ -79,7 +79,9 @@ class WordLearningViewModel @Inject constructor(
             try {
 
                 val mergedBitmap = mergeBitmapWithTemplate(context, writtenBitmap)
-                val writeFilePart  = bitmapToMultipart(context, mergedBitmap)
+                val fileName = "word_image_${word.id}.jpg"
+
+                val writeFilePart  = bitmapToMultipart(context, mergedBitmap,fileName)
 
                 val wordPart = word.word.toRequestBody("text/plain".toMediaTypeOrNull())
 
@@ -145,7 +147,7 @@ class WordLearningViewModel @Inject constructor(
     private suspend fun bitmapToMultipart(
         context: Context,
         bitmap: Bitmap,
-        fileName: String = "final_image.jpg"
+        fileName: String
     ): MultipartBody.Part = withContext(Dispatchers.IO) {
         val file = File(context.cacheDir, fileName)
         file.outputStream().use { out ->

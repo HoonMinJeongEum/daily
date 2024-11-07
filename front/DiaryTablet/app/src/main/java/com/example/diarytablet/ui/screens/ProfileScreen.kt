@@ -64,11 +64,7 @@ fun ProfileScreen (
                 .align(Alignment.Center)
                 .padding(top = 100.dp),
             onChooseProfile = {profile -> chooseProfile(profile)},
-            onCreateProfile = { name, img -> // name과 imgUrl을 인자로 받도록 수정
-                val defaultImgUrl = "https://example.com/default_profile_image.png"
-                val createProfileRequestDto = CreateProfileRequestDto(name = name, img = defaultImgUrl)
-                viewModel.addProfile(createProfileRequestDto) // ViewModel에 전달
-            }
+
         )
     }
 }

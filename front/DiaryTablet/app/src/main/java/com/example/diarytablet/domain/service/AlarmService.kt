@@ -15,9 +15,9 @@ interface AlarmService {
     @POST("${Const.API_PATH}alarm/save")
     suspend fun saveToken(
         @Body request: SaveTokenRequestDto
-    ): Response<String>
+    ): Response<StatusResponseDto>
     @GET("${Const.API_PATH}alarm/list")
-    suspend fun getAlarms(): Response<List<AlarmResponseDto>>
+    suspend fun getAlarms(): Response<AlarmListResponseDto>
     @POST("${Const.API_PATH}alarm/check")
     suspend fun checkAlarm(
         @Body request: CheckAlarmRequestDto
