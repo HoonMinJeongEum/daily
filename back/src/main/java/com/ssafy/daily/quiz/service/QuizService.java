@@ -65,8 +65,7 @@ public class QuizService {
 //
 //        // 알림
 //        alarmService.sendNotification(childName, sessionId, familyId, Role.PARENT, "그림 퀴즈", "요청");
-        SessionResponse sessionResponse = new SessionResponse(sessionId);
-        return sessionResponse;
+        return new SessionResponse(sessionId);
     }
 
     // 토큰 생성
