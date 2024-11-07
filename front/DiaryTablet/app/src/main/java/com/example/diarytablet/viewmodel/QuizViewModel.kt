@@ -16,8 +16,10 @@ import io.socket.client.IO
 import androidx.compose.runtime.State
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.example.diarytablet.domain.dto.request.quest.UpdateQuestRequestDto
 import com.example.diarytablet.domain.dto.request.quiz.SessionRequestDto
 import com.example.diarytablet.domain.dto.response.quiz.SessionResponseDto
+import com.example.diarytablet.domain.repository.QuestRepository
 import com.example.diarytablet.utils.openvidu.Session
 import org.json.JSONArray
 import org.webrtc.MediaStream
@@ -25,6 +27,7 @@ import org.webrtc.MediaStream
 @HiltViewModel
 class QuizViewModel @Inject constructor(
     private val quizRepository: QuizRepository,
+    private val questRepository: QuestRepository,
     private val userStore: UserStore
 ) : ViewModel() {
 
@@ -56,14 +59,21 @@ class QuizViewModel @Inject constructor(
 
     private val _userDisconnectedEvent = MutableLiveData<Boolean?>()
     val userDisconnectedEvent: LiveData<Boolean?> get() = _userDisconnectedEvent
+    private val _parentJoinedEvent = MutableLiveData<Boolean>()
+    val parentJoinedEvent: LiveData<Boolean> get() = _parentJoinedEvent
+
+    fun setCanvasSize(width: Int, height: Int) {
+        _canvasWidth.value = width
+        _canvasHeight.value = height
+    }
 
     init {
         loadQuiz()
     }
 
-    fun setCanvasSize(width: Int, height: Int) {
-        _canvasWidth.value = width
-        _canvasHeight.value = height
+    private fun loadQuiz() {
+        recommendWord()
+        initializeSession()
     }
 
     // 세션 초기화 함수
@@ -81,7 +91,8 @@ class QuizViewModel @Inject constructor(
                 val response = quizRepository.initializeSession(sessionRequestDto)
                 _sessionId.value = response.body()
                 _sessionId.value?.let { sessionId ->
-                    createConnection(sessionId.customSessionId, null)
+                    createSocket(sessionId.customSessionId)
+                    createConnection(sessionId.customSessionId)
                 }
             } catch (e: Exception) {
                 errorMessage.value = e.message
@@ -92,7 +103,7 @@ class QuizViewModel @Inject constructor(
     }
 
     // 커넥션 생성 함수
-    private fun createConnection(sessionId: String, params: Map<String, Any>?) {
+    private fun createConnection(sessionId: String) {
         viewModelScope.launch {
             isLoading.value = true
             errorMessage.value = null
@@ -109,27 +120,15 @@ class QuizViewModel @Inject constructor(
         }
     }
 
-    // 추천 단어 가져오기 함수
-    fun recommendWord() {
-        viewModelScope.launch {
-            isLoading.value = true
-            errorMessage.value = null
-            try {
-                val response = quizRepository.recommendWord()
-                recommendWords.value = response.body()?.map { it.word } ?: emptyList()
-            } catch (e: Exception) {
-                errorMessage.value = e.message
-            } finally {
-                isLoading.value = false
-            }
-        }
-    }
-
-    private fun loadQuiz() {
-        socket = IO.socket("ws://10.0.2.2:6080")
+    // 소켓 연결
+    private fun createSocket(sessionId: String) {
+        socket = IO.socket("ws://k11e204.p.ssafy.io:6080")
         socket.connect()
-        val roomId : String = "room1" // 임시 데이터
-        socket.emit("join", roomId)
+        socket.emit("join", sessionId)
+        Log.e("QuizViewModel", "roomId : ${sessionId}")
+        socket.on(Socket.EVENT_CONNECT_ERROR) { args ->
+            Log.e("QuizViewModel", "소켓 연결 오류 발생: ${args[0]}")
+        }
 
         socket.on("initDrawing") { args ->
             val drawingData = args[0] as JSONArray
@@ -169,9 +168,45 @@ class QuizViewModel @Inject constructor(
             _userDisconnectedEvent.postValue(true)
             Log.d("QuizViewModel", "disconnect")
         }
-        recommendWord()
-        initializeSession()
+
+        socket.on("joinParents") {
+            _parentJoinedEvent.postValue(true)
+            Log.d("QuizViewModel", "joinParents")
+        }
     }
+
+    // 추천 단어 가져오기 함수
+    private fun recommendWord() {
+        viewModelScope.launch {
+            isLoading.value = true
+            errorMessage.value = null
+            try {
+                val response = quizRepository.recommendWord()
+                recommendWords.value = response.body()?.map { it.word } ?: emptyList()
+            } catch (e: Exception) {
+                errorMessage.value = e.message
+            } finally {
+                isLoading.value = false
+            }
+        }
+    }
+
+    // 퀘스트 완료
+    fun updateQuest() {
+        viewModelScope.launch {
+            isLoading.value = true
+            errorMessage.value = null
+            try {
+                questRepository.updateQuest(UpdateQuestRequestDto("QUIZ"))
+
+            } catch (e: Exception) {
+                errorMessage.value = e.message
+            } finally {
+                isLoading.value = false
+            }
+        }
+    }
+
 
     // 그림 업데이트
     private fun updatePath(action: String, x: Float, y: Float) {
@@ -202,14 +237,6 @@ class QuizViewModel @Inject constructor(
         val message = """{"setWord":"$word"}"""
         socket.emit("setWord", message)
         Log.d("QuizViewModel", "SetWord 전송: $word")
-    }
-
-    // 단어 확인
-    fun sendCheckWordAction(word: String) {
-        val message = """{"checkWord":"$word"}"""
-
-        socket.emit("checkWord", message)
-        Log.d("QuizViewModel", "CheckWord 전송: $word")
     }
 
     // 상태 초기화

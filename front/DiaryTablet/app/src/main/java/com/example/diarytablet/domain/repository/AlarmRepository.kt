@@ -1,10 +1,9 @@
-package com.ssafy.daily.alarm.repository
+package com.example.diarytablet.domain.repository
 
+import com.example.diarytablet.domain.dto.request.alarm.CheckAlarmRequestDto
+import com.example.diarytablet.domain.dto.request.alarm.SaveTokenRequestDto
 import com.example.diarytablet.domain.dto.response.StatusResponseDto
 import com.example.diarytablet.domain.dto.response.alarm.AlarmListResponseDto
-import com.example.diarytablet.domain.dto.response.alarm.AlarmResponseDto
-import com.ssafy.daily.alarm.dto.CheckAlarmRequestDto
-import com.ssafy.daily.alarm.dto.SaveTokenRequestDto
 import retrofit2.Response
 
 interface AlarmRepository {

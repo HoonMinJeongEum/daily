@@ -9,16 +9,14 @@ import androidx.lifecycle.viewModelScope
 import com.example.diarytablet.datastore.UserStore
 import com.example.diarytablet.domain.RetrofitClient
 import com.example.diarytablet.domain.dto.request.CreateProfileRequestDto
-import com.example.diarytablet.domain.dto.request.LoginRequestDto
 import com.example.diarytablet.domain.dto.request.SelectProfileRequestDto
+import com.example.diarytablet.domain.dto.request.alarm.SaveTokenRequestDto
 import com.example.diarytablet.domain.dto.response.Profile
+import com.example.diarytablet.domain.repository.AlarmRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import com.example.diarytablet.domain.repository.ProfileListRepository
-import com.example.diarytablet.utils.Response
 import com.google.firebase.messaging.FirebaseMessaging
-import com.ssafy.daily.alarm.dto.SaveTokenRequestDto
-import com.ssafy.daily.alarm.repository.AlarmRepository
 import kotlinx.coroutines.launch
 
 @HiltViewModel
