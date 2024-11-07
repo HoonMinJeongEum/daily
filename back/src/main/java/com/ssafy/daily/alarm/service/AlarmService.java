@@ -11,6 +11,7 @@ import com.ssafy.daily.alarm.entity.FCMToken;
 import com.ssafy.daily.alarm.repository.AlarmRepository;
 import com.ssafy.daily.alarm.repository.FCMTokenRepository;
 import com.ssafy.daily.common.Role;
+import com.ssafy.daily.common.StatusResponse;
 import com.ssafy.daily.user.dto.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -26,7 +27,7 @@ public class AlarmService {
     private final AlarmRepository alarmRepository;
 
     // 토큰 저장
-    public void saveToken(CustomUserDetails userDetails, SaveTokenRequest request) {
+    public StatusResponse saveToken(CustomUserDetails userDetails, SaveTokenRequest request) {
 
         int id = userDetails.getMember() == null ? userDetails.getFamily().getId() : userDetails.getMember().getId();
         Role role = userDetails.getMember() == null ? Role.PARENT : Role.CHILD;
@@ -47,6 +48,7 @@ public class AlarmService {
                     .build();
             fcmTokenRepository.save(newToken);
         }
+        return new StatusResponse(200, "알림 토큰이 정상적으로 등록되었습니다.");
     }
 
     // 알림 전송
@@ -94,11 +96,13 @@ public class AlarmService {
     }
 
     // 알림 확인
-    public void checkAlarm(CheckAlarmRequest request) {
+    public StatusResponse checkAlarm(CheckAlarmRequest request) {
         Alarm alarm = alarmRepository.findById(request.getAlarmId())
                 .orElseThrow(() -> new EmptyResultDataAccessException("해당 알림을 찾을 수 없습니다.", 1));
         alarm.confirm();
         alarmRepository.save(alarm);
+
+        return new StatusResponse(200, "알림 정상적으로 확인되었습니다.");
     }
 
     // 토큰 조회
