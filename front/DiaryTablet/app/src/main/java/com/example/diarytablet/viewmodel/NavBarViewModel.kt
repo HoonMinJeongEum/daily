@@ -11,14 +11,14 @@ import com.example.diarytablet.datastore.UserStore
 import com.example.diarytablet.datastore.UserStore.Companion.KEY_PROFILE_IMAGE
 import com.example.diarytablet.datastore.UserStore.Companion.KEY_USER_NAME
 import com.example.diarytablet.domain.dto.request.UserNameUpdateRequestDto
+import com.example.diarytablet.domain.dto.request.alarm.CheckAlarmRequestDto
+import com.example.diarytablet.domain.dto.request.alarm.SaveTokenRequestDto
 import com.example.diarytablet.domain.dto.response.alarm.AlarmResponseDto
+import com.example.diarytablet.domain.repository.AlarmRepository
 import com.example.diarytablet.domain.repository.MainScreenRepository
 import com.example.diarytablet.domain.repository.UserRepository
 import com.example.diarytablet.ui.components.MissionItem
 import com.google.firebase.messaging.FirebaseMessaging
-import com.ssafy.daily.alarm.dto.CheckAlarmRequestDto
-import com.ssafy.daily.alarm.dto.SaveTokenRequestDto
-import com.ssafy.daily.alarm.repository.AlarmRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
