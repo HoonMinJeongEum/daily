@@ -88,6 +88,7 @@ object RetrofitClient {
                         when (json.asString.length) {
                             26 -> DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
                             25 -> DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSS")
+                            24 -> DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSS")
                             23 -> DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")
                             22 -> DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SS")
                             21 -> DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.S")
