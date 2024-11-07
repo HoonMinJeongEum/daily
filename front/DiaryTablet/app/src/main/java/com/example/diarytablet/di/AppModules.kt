@@ -5,8 +5,6 @@ import com.example.diarytablet.datastore.UserStore
 import com.example.diarytablet.domain.RetrofitClient
 import com.example.diarytablet.domain.repository.*
 import com.example.diarytablet.domain.service.*
-import com.ssafy.daily.alarm.repository.AlarmRepository
-import com.ssafy.daily.alarm.repository.AlarmRepositoryImpl
 import com.example.diarytablet.domain.repository.DiaryRepository
 import com.example.diarytablet.domain.repository.DiaryRepositoryImpl
 import com.example.diarytablet.domain.repository.MainScreenRepository
@@ -143,5 +141,18 @@ class AppModules {
     fun provideMainScreenService(
         retrofit: Retrofit
     ):MainScreenService = retrofit.create((MainScreenService::class.java))
+
+
+    @Provides
+    @Singleton
+    fun provideQuestService(retrofit: Retrofit): QuestService {
+        return retrofit.create(QuestService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideQuestRepository(
+        questService: QuestService
+    ): QuestRepository = QuestRepositoryImpl(questService)
 
 }

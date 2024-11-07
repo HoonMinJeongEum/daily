@@ -70,9 +70,17 @@ fun QuizScreen(
     val recommendWords by remember { viewModel.recommendWords }
     val isCorrectAnswer by viewModel.isCorrectAnswer.observeAsState()
     var selectedWord by remember { mutableStateOf<String?>(null) }
-    var inputWord by remember { mutableStateOf("") } // 부모
     val isUserDisconnected = viewModel.userDisconnectedEvent.observeAsState(false).value ?: false
     var isQuizDisconnected by remember { mutableStateOf(false) }
+
+    val isParentJoined by viewModel.parentJoinedEvent.observeAsState(false)
+    var isQuizStartEnabled by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isParentJoined) {
+        if (isParentJoined) {
+            isQuizStartEnabled = true
+        }
+    }
 
     LaunchedEffect(isCorrectAnswer) {
         isCorrectAnswer?.let { correct ->
@@ -222,30 +230,12 @@ fun QuizScreen(
                                     }
                                 },
                                 text = if (isQuizStarted) "종료" else "퀴즈 시작",
-                                imageResId = 11
+                                imageResId = 11,
+                                enabled = isQuizStartEnabled,
+                                ButtonColor = if (isQuizStartEnabled) Color(0xFF5A72A0) else Color.Gray
                             )
                         }
                     }
-                }
-            }
-            // 단어 입력칸과 보내기 버튼 (부모용)
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth().padding(16.dp)
-            ) {
-                TextField(
-                    value = inputWord,
-                    onValueChange = { inputWord = it },
-                    label = { Text("단어를 입력하세요") },
-                    modifier = Modifier.weight(1f)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Button(onClick = {
-                    viewModel.sendCheckWordAction(inputWord.trim()) // 단어 확인 요청
-                    inputWord = ""
-                }) {
-                    Text("보내기")
                 }
             }
         }
@@ -283,6 +273,7 @@ fun QuizScreen(
                         onDismiss = {
                             quizModalState = QuizModalState.NONE
                             selectedWord = null
+                            viewModel.updateQuest()
                             viewModel.resetIsCorrectAnswer()
                             viewModel.resetPath()
                         }
