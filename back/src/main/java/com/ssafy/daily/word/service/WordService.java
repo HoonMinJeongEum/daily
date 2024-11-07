@@ -2,6 +2,9 @@ package com.ssafy.daily.word.service;
 
 import com.ssafy.daily.diary.dto.FieldDto;
 import com.ssafy.daily.diary.service.DiaryService;
+import com.ssafy.daily.exception.EmptyOcrResultException;
+import com.ssafy.daily.exception.S3UploadException;
+import com.ssafy.daily.exception.WordMismatchException;
 import com.ssafy.daily.file.service.S3UploadService;
 import com.ssafy.daily.user.dto.CustomUserDetails;
 import com.ssafy.daily.word.dto.LearnedWordResponse;
@@ -15,6 +18,7 @@ import com.ssafy.daily.word.repository.WordRepository;
 import com.ssafy.daily.user.repository.MemberRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -122,7 +126,7 @@ public class WordService {
     public StatusResponse checkSimilarity(String word, MultipartFile writeFile) {
         if (writeFile == null || writeFile.isEmpty()) {
             log.error("유효하지 않은 파일입니다.");
-            return new StatusResponse(400, "인식된 단어가 없습니다. 단어를 작성해주세요.");
+            throw new IllegalArgumentException("파일이 유효하지 않습니다.");
         }
 
         String writeUrl = null;
@@ -130,7 +134,7 @@ public class WordService {
             writeUrl = s3UploadService.saveFile(writeFile);
         } catch (IOException e) {
             log.error("S3 업로드 실패", e);
-            return new StatusResponse(500, "S3 작성한 단어 이미지 업로드 실패");
+            throw new S3UploadException("S3 작성한 단어 이미지 업로드 실패");
         }
 
         List<FieldDto> fields = diaryService.processOcr(writeUrl);
@@ -142,19 +146,19 @@ public class WordService {
             result.append(field.getInferText());
         }
 
-         String orgImg = s3UploadService.getFileNameFromUrl(writeUrl);
-         s3UploadService.deleteImage(orgImg);
+        String orgImg = s3UploadService.getFileNameFromUrl(writeUrl);
+        s3UploadService.deleteImage(orgImg);
 
         String resultWord = result.toString().trim().replaceAll("\\s+", "");
 
         if (resultWord.isEmpty()) {
             log.warn("OCR 결과가 비어 있습니다.");
-            return new StatusResponse(400, "인식된 단어가 없습니다. 단어를 작성해주세요.");
+            throw new EmptyOcrResultException("인식된 단어가 없습니다. 단어를 작성해주세요.");
         }
 
         if (!resultWord.equals(word)) {
             log.info("단어 일치 실패: 입력한 단어 '{}'와 OCR 결과 '{}'가 일치하지 않습니다.", word, resultWord);
-            return new StatusResponse(422, "유사도가 낮습니다. 다시 시도해주세요!");
+            throw new WordMismatchException(resultWord + "의 유사도가 낮습니다. 다시 시도해주세요!");
         }
 
         log.info("단어가 성공적으로 일치합니다: '{}'", word);

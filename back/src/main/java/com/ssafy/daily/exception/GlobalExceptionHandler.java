@@ -1,5 +1,6 @@
 package com.ssafy.daily.exception;
 
+import com.ssafy.daily.common.StatusResponse;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,8 +31,9 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException e) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    public ResponseEntity<StatusResponse> handleIllegalArgumentException(IllegalArgumentException ex) {
+        StatusResponse response = new StatusResponse(400, ex.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(UsernameAlreadyExistsException.class)
@@ -53,18 +55,22 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleInvalidRefreshTokenException(InvalidRefreshTokenException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
-    @ExceptionHandler(S3UploadException.class)
-    public ResponseEntity<String> handleS3UploadException(S3UploadException e) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
-    }
-
     @ExceptionHandler(EmptyOcrResultException.class)
-    public ResponseEntity<String> handleEmptyOcrResultException(EmptyOcrResultException e) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    public ResponseEntity<StatusResponse> handleEmptyOcrResultException(EmptyOcrResultException ex) {
+        StatusResponse response = new StatusResponse(400, ex.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(WordMismatchException.class)
-    public ResponseEntity<String> handleWordMismatchException(WordMismatchException e) {
-        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(e.getMessage());
+    public ResponseEntity<StatusResponse> handleWordMismatchException(WordMismatchException ex) {
+        StatusResponse response = new StatusResponse(422, ex.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.UNPROCESSABLE_ENTITY);
     }
+
+    @ExceptionHandler(S3UploadException.class)
+    public ResponseEntity<StatusResponse> handleS3UploadException(S3UploadException ex) {
+        StatusResponse response = new StatusResponse(500, ex.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
 }
