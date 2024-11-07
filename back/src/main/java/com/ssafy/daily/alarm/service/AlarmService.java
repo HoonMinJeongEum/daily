@@ -3,6 +3,7 @@ package com.ssafy.daily.alarm.service;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.Notification;
+import com.ssafy.daily.alarm.dto.AlarmListResponse;
 import com.ssafy.daily.alarm.dto.AlarmResponse;
 import com.ssafy.daily.alarm.dto.CheckAlarmRequest;
 import com.ssafy.daily.alarm.dto.SaveTokenRequest;
@@ -82,7 +83,7 @@ public class AlarmService {
     }
 
     // 알림 조회
-    public List<AlarmResponse> getAlarms(CustomUserDetails userDetails) {
+    public AlarmListResponse getAlarms(CustomUserDetails userDetails) {
         int id = userDetails.getMember() == null ? userDetails.getFamily().getId() : userDetails.getMember().getId();
         Role role = userDetails.getMember() == null ? Role.PARENT : Role.CHILD;
         
@@ -90,9 +91,9 @@ public class AlarmService {
         FCMToken fcmToken = getToken(id, role);
         List<Alarm> list = alarmRepository.findByFcmTokenId(fcmToken.getId());
 
-        return list.stream()
+        return new AlarmListResponse(list.stream()
                 .map(AlarmResponse::new)
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()));
     }
 
     // 알림 확인
