@@ -26,8 +26,9 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(AlreadyOwnedException.class)
-    public ResponseEntity<String> handleAlreadyOwnedException(AlreadyOwnedException e) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+    public ResponseEntity<StatusResponse> handleAlreadyOwnedException(AlreadyOwnedException e) {
+        StatusResponse response = new StatusResponse(409, e.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
