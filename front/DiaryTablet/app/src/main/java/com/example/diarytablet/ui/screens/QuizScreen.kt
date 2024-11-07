@@ -71,6 +71,8 @@ fun QuizScreen(
     val isCorrectAnswer by viewModel.isCorrectAnswer.observeAsState()
     var selectedWord by remember { mutableStateOf<String?>(null) }
     var inputWord by remember { mutableStateOf("") } // 부모
+    val isUserDisconnected = viewModel.userDisconnectedEvent.observeAsState(false).value ?: false
+    var isQuizDisconnected by remember { mutableStateOf(false) }
 
     LaunchedEffect(isCorrectAnswer) {
         isCorrectAnswer?.let { correct ->
@@ -81,6 +83,13 @@ fun QuizScreen(
             }
         }
     }
+
+    LaunchedEffect(isUserDisconnected) {
+        if (isUserDisconnected) {
+            isQuizDisconnected = true
+        }
+    }
+
     val roundWords = when (currentRound) {
         1 -> recommendWords.take(3)
         2 -> recommendWords.drop(3).take(3)
@@ -240,6 +249,8 @@ fun QuizScreen(
                 }
             }
         }
+
+
         when (quizModalState) {
             QuizModalState.START_CONFIRM -> {
                 Alert(
@@ -302,6 +313,7 @@ fun QuizScreen(
                 isQuizEnded = false
             },
             onConfirm = {
+                viewModel.leaveSession()
                 navController.navigate("main") {
                     popUpTo("quiz") { inclusive = true }
                 }
@@ -309,6 +321,16 @@ fun QuizScreen(
             title = "퀴즈를 종료할까요?",
             confirmText = "종료"
         )
+        if(isQuizDisconnected) {
+            QuizAlert(
+                onDismiss = {
+                    navController.navigate("main") {
+                        popUpTo("quiz") { inclusive = true }
+                    }
+                },
+                title = "다른 사용자가 방을 나갔습니다."
+            )
+        }
     }
 }
 

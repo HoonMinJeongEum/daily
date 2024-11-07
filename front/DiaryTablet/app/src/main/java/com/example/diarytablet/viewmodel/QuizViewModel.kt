@@ -10,17 +10,13 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.socket.client.Socket
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import android.util.Base64
 import org.json.JSONObject
 import androidx.compose.ui.graphics.Path
 import io.socket.client.IO
 import androidx.compose.runtime.State
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.example.diarytablet.domain.dto.request.quiz.CheckWordRequestDto
 import com.example.diarytablet.domain.dto.request.quiz.SessionRequestDto
-import com.example.diarytablet.domain.dto.request.quiz.SetWordRequestDto
-import com.example.diarytablet.domain.dto.response.quiz.RecommendWordResponseDto
 import com.example.diarytablet.domain.dto.response.quiz.SessionResponseDto
 import com.example.diarytablet.utils.openvidu.Session
 import org.json.JSONArray
@@ -33,10 +29,7 @@ class QuizViewModel @Inject constructor(
 ) : ViewModel() {
 
     lateinit var socket: Socket
-//    val recommendWords = mutableStateOf<List<String>>(emptyList())
-    val recommendWords = mutableStateOf(
-        listOf("사과", "바나나", "포도", "오렌지", "수박", "딸기", "복숭아", "체리", "레몬")
-    ) // 임의 데이터
+    val recommendWords = mutableStateOf<List<String>>(emptyList())
     val isLoading = mutableStateOf(false)
     val errorMessage = mutableStateOf<String?>(null)
     private val _path = mutableStateOf(Path())
@@ -61,6 +54,8 @@ class QuizViewModel @Inject constructor(
     private val _canvasHeight = MutableLiveData<Int>()
     val canvasHeight: LiveData<Int> get() = _canvasHeight
 
+    private val _userDisconnectedEvent = MutableLiveData<Boolean?>()
+    val userDisconnectedEvent: LiveData<Boolean?> get() = _userDisconnectedEvent
 
     init {
         loadQuiz()
@@ -77,22 +72,16 @@ class QuizViewModel @Inject constructor(
             isLoading.value = true
             errorMessage.value = null
             try {
-//                val jwtToken = userStore.getValue(UserStore.KEY_ACCESS_TOKEN).firstOrNull()
-
-//                if (jwtToken != null) {
-//                    val (familyId, familyName) = extractFamilyFromJwt(jwtToken)
-
-//                    if (familyId != null && familyName != null) {
-//                        val sessionId = "Session$familyId"
-                        val sessionId = "Session1"
-                        val sessionRequestDto = SessionRequestDto(customSessionId = "Session1")
-                        val response = quizRepository.initializeSession(sessionRequestDto)
-                        _sessionId.value = response.body()
-                        _sessionId.value?.let { sessionId ->
-
-                            createConnection(sessionId.customSessionId, null)
-//                        }
-//                    }
+                var sessionId : String = ""
+                userStore.getValue(UserStore.KEY_USER_NAME).collect { name ->
+                    sessionId = name
+                }
+                Log.d("ViewModel", "Session ID: $sessionId")
+                val sessionRequestDto = SessionRequestDto(customSessionId = sessionId)
+                val response = quizRepository.initializeSession(sessionRequestDto)
+                _sessionId.value = response.body()
+                _sessionId.value?.let { sessionId ->
+                    createConnection(sessionId.customSessionId, null)
                 }
             } catch (e: Exception) {
                 errorMessage.value = e.message
@@ -176,9 +165,11 @@ class QuizViewModel @Inject constructor(
             _path.value = Path()
         }
 
-        socket.on("disconnect") {
+        socket.on("userDisconnected") {
+            _userDisconnectedEvent.postValue(true)
+            Log.d("QuizViewModel", "disconnect")
         }
-//        recommendWord()
+        recommendWord()
         initializeSession()
     }
 
@@ -226,28 +217,13 @@ class QuizViewModel @Inject constructor(
         _isCorrectAnswer.value = null
     }
 
-    // Fmaily 가져오는 메서드
-    private fun extractFamilyFromJwt(jwt: String): Pair<String?, String?> {
-        return try {
-            val payload = jwt.split(".")[1]
-            val decodedBytes = Base64.decode(payload, Base64.URL_SAFE)
-            val decodedString = String(decodedBytes)
-            val jsonObject = JSONObject(decodedString)
-
-            val familyObject = jsonObject.getJSONObject("family")
-            val familyId = familyObject.getString("id")
-            val familyName = familyObject.getString("name")
-
-            Pair(familyId, familyName)
-        } catch (e: Exception) {
-            Log.e("QuizViewModel", "Error decoding JWT", e)
-            Pair(null, null)
-        }
-    }
-
     fun leaveSession() {
         socket.disconnect()
-        session.leaveSession()
+        if (::session.isInitialized) {
+            session.leaveSession()
+        } else {
+            Log.e("QuizViewModel", "Session이 초기화되지 않았습니다.")
+        }
         _leaveSessionTriggered.value = true
     }
 

@@ -1,5 +1,7 @@
 package com.example.diarytablet.domain.service
 
+import com.example.diarytablet.domain.dto.response.StatusResponseDto
+import com.example.diarytablet.domain.dto.response.alarm.AlarmListResponseDto
 import com.example.diarytablet.domain.dto.response.alarm.AlarmResponseDto
 import com.example.diarytablet.utils.Const
 import com.ssafy.daily.alarm.dto.CheckAlarmRequestDto
@@ -13,11 +15,11 @@ interface AlarmService {
     @POST("${Const.API_PATH}alarm/save")
     suspend fun saveToken(
         @Body request: SaveTokenRequestDto
-    ): Response<String>
+    ): Response<StatusResponseDto>
     @GET("${Const.API_PATH}alarm/list/{userId}")
-    suspend fun getAlarms(): Response<List<AlarmResponseDto>>
+    suspend fun getAlarms(): Response<AlarmListResponseDto>
     @POST("${Const.API_PATH}alarm/check")
     suspend fun checkAlarm(
         @Body request: CheckAlarmRequestDto
-    ): Response<String>
+    ): Response<StatusResponseDto>
 }
