@@ -58,7 +58,7 @@ class AlarmViewModel @Inject constructor(
         viewModelScope.launch {
             val response = alarmRepository.getAlarms()
             if (response.isSuccessful) {
-                _alarms.value = response.body()
+                _alarms.value = response.body()?.list
             } else {
                 _alarms.value = emptyList()
             }
@@ -70,7 +70,7 @@ class AlarmViewModel @Inject constructor(
         viewModelScope.launch {
             val response = alarmRepository.checkAlarm(CheckAlarmRequestDto(alarmId))
             if (response.isSuccessful) {
-                _checkAlarmStatus.value = "알림이 정상적으로 확인되었습니다."
+                _checkAlarmStatus.value = response.body()?.msg
             } else {
                 _checkAlarmStatus.value = "알림 확인 실패: ${response.message()}"
             }

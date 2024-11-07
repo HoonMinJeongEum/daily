@@ -1,5 +1,7 @@
 package com.ssafy.daily.alarm.repository
 
+import com.example.diarytablet.domain.dto.response.StatusResponseDto
+import com.example.diarytablet.domain.dto.response.alarm.AlarmListResponseDto
 import com.example.diarytablet.domain.dto.response.alarm.AlarmResponseDto
 import com.example.diarytablet.domain.service.AlarmService
 import com.ssafy.daily.alarm.dto.CheckAlarmRequestDto
@@ -12,13 +14,13 @@ import javax.inject.Singleton
 class AlarmRepositoryImpl @Inject constructor(
     private val alarmService: AlarmService
 ) : AlarmRepository {
-    override suspend fun saveToken(request: SaveTokenRequestDto): Response<String> {
+    override suspend fun saveToken(request: SaveTokenRequestDto): Response<StatusResponseDto> {
         return alarmService.saveToken(request)
     }
-    override suspend fun getAlarms(): Response<List<AlarmResponseDto>> {
+    override suspend fun getAlarms(): Response<AlarmListResponseDto> {
         return alarmService.getAlarms()
     }
-    override suspend fun checkAlarm(request: CheckAlarmRequestDto): Response<String> {
+    override suspend fun checkAlarm(request: CheckAlarmRequestDto): Response<StatusResponseDto> {
         return alarmService.checkAlarm(request)
     }
 }

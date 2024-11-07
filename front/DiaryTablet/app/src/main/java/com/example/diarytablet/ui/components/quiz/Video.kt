@@ -69,6 +69,7 @@ fun Video(
     LaunchedEffect(token) {
         if (token != null && activity != null) {
             val session = Session(sessionId?.customSessionId ?: "", token!!, binding.viewsContainer, activity, viewModel, rootEglBase)
+            viewModel.session = session
             val localParticipant = LocalParticipant("participantName", session, activity, binding.localGlSurfaceView)
             localParticipant.startCamera()
 
