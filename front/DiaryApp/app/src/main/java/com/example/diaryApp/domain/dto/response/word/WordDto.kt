@@ -10,8 +10,11 @@ data class Word (
     @SerializedName("word")
     val word : String,
 
-    @SerializedName("url")
+    @SerializedName("img")
     val url : String,
+
+    @SerializedName("org")
+    val org : String,
 
     @SerializedName("createdAt")
     val createdAt : LocalDateTime,
