@@ -23,6 +23,7 @@ import com.example.diarytablet.domain.dto.request.quiz.SetWordRequestDto
 import com.example.diarytablet.domain.dto.response.quiz.RecommendWordResponseDto
 import com.example.diarytablet.domain.dto.response.quiz.SessionResponseDto
 import com.example.diarytablet.utils.openvidu.Session
+import org.json.JSONArray
 import org.webrtc.MediaStream
 
 @HiltViewModel
@@ -30,12 +31,12 @@ class QuizViewModel @Inject constructor(
     private val quizRepository: QuizRepository,
     private val userStore: UserStore
 ) : ViewModel() {
-//    val sessionId = mutableStateOf<String?>(null)
-//    val token = mutableStateOf<String?>(null)
+
     lateinit var socket: Socket
-    val recommendWords = mutableStateOf<List<RecommendWordResponseDto>>(emptyList())
-    val setWordResponse = mutableStateOf<String?>(null)
-    val checkWordResponse = mutableStateOf<Boolean?>(null)
+//    val recommendWords = mutableStateOf<List<String>>(emptyList())
+    val recommendWords = mutableStateOf(
+        listOf("사과", "바나나", "포도", "오렌지", "수박", "딸기", "복숭아", "체리", "레몬")
+    ) // 임의 데이터
     val isLoading = mutableStateOf(false)
     val errorMessage = mutableStateOf<String?>(null)
     private val _path = mutableStateOf(Path())
@@ -51,8 +52,23 @@ class QuizViewModel @Inject constructor(
     private val _leaveSessionTriggered = MutableLiveData<Boolean>()
     val leaveSessionTriggered: LiveData<Boolean> get() = _leaveSessionTriggered
 
+    private val _isCorrectAnswer = MutableLiveData<Boolean?>()
+    val isCorrectAnswer: LiveData<Boolean?> get() = _isCorrectAnswer
+
+    private val _canvasWidth = MutableLiveData<Int>()
+    val canvasWidth: LiveData<Int> get() = _canvasWidth
+
+    private val _canvasHeight = MutableLiveData<Int>()
+    val canvasHeight: LiveData<Int> get() = _canvasHeight
+
+
     init {
         loadQuiz()
+    }
+
+    fun setCanvasSize(width: Int, height: Int) {
+        _canvasWidth.value = width
+        _canvasHeight.value = height
     }
 
     // 세션 초기화 함수
@@ -111,7 +127,7 @@ class QuizViewModel @Inject constructor(
             errorMessage.value = null
             try {
                 val response = quizRepository.recommendWord()
-                recommendWords.value = response.body() ?: emptyList()
+                recommendWords.value = response.body()?.map { it.word } ?: emptyList()
             } catch (e: Exception) {
                 errorMessage.value = e.message
             } finally {
@@ -120,41 +136,24 @@ class QuizViewModel @Inject constructor(
         }
     }
 
-    // 단어 설정 함수
-    fun setWord(request: SetWordRequestDto) {
-        viewModelScope.launch {
-            isLoading.value = true
-            errorMessage.value = null
-            try {
-                val response = quizRepository.setWord(request)
-                setWordResponse.value = response.body()
-            } catch (e: Exception) {
-                errorMessage.value = e.message
-            } finally {
-                isLoading.value = false
-            }
-        }
-    }
-
-    // 단어 확인 함수
-    fun checkWord(request: CheckWordRequestDto) {
-        viewModelScope.launch {
-            isLoading.value = true
-            errorMessage.value = null
-            try {
-                val response = quizRepository.checkWord(request)
-                checkWordResponse.value = response.body()
-            } catch (e: Exception) {
-                errorMessage.value = e.message
-            } finally {
-                isLoading.value = false
-            }
-        }
-    }
     private fun loadQuiz() {
         socket = IO.socket("ws://10.0.2.2:6080")
         socket.connect()
-        socket.emit("join", "room1") // 방 ID를 지정해 연결
+        val roomId : String = "room1" // 임시 데이터
+        socket.emit("join", roomId)
+
+        socket.on("initDrawing") { args ->
+            val drawingData = args[0] as JSONArray
+            for (i in 0 until drawingData.length()) {
+                val draw = drawingData.getString(i)
+                val jsonMessage = JSONObject(draw)
+                val draws = jsonMessage.getString("draw").split(",")
+                val action = draws[0]
+                val x = draws[1].toFloat()
+                val y = draws[2].toFloat()
+                updatePath(action, x, y)
+            }
+        }
 
         // 서버로부터 "draw" 이벤트 수신
         socket.on("draw") { args ->
@@ -162,23 +161,28 @@ class QuizViewModel @Inject constructor(
             val jsonMessage = JSONObject(responseData)
             val draws = jsonMessage.getString("draw").split(",")
             val action = draws[0]
-            val x = draws[1].toFloat()
-            val y = draws[2].toFloat()
+            val x = draws[1].toFloat() * (canvasWidth.value?.toFloat() ?: 1f)
+            val y = draws[2].toFloat() * (canvasHeight.value?.toFloat() ?: 1f)
 
-            // 수신된 좌표 업데이트
             updatePath(action, x, y)
+        }
+
+        socket.on("checkWord") { args ->
+            val isCorrect = args[0] as Boolean
+            _isCorrectAnswer.postValue(isCorrect)
+        }
+
+        socket.on("clear") {
+            _path.value = Path()
+        }
+
+        socket.on("disconnect") {
         }
 //        recommendWord()
         initializeSession()
-//        val setWordRequestDto = SetWordRequestDto(word="사과")
-//        setWord(setWordRequestDto)
-//         val checkWordRequestDto = CheckWordRequestDto(word="안녕ㅅ")
-//        checkWord(checkWordRequestDto)
-//        setWord(setWordRequestDto)
-//        createConnection("Session1", null)
     }
 
-    // Path 업데이트 메서드
+    // 그림 업데이트
     private fun updatePath(action: String, x: Float, y: Float) {
         _path.value = Path().apply {
             addPath(_path.value) // 기존 Path 유지
@@ -188,14 +192,38 @@ class QuizViewModel @Inject constructor(
             }
         }
     }
-
+    
+    // 그림 초기화
+    fun resetPath() {
+        socket.emit("clear" )
+    }
+    
     // 드로잉 시작, 진행, 종료에 따라 소켓 메시지 전송
     fun sendDrawAction(action: String, x: Float, y: Float) {
-        val message = """{"draw":"$action,$x,$y"}"""
+        val message = """{"draw":"$action,${x/ (canvasWidth.value?.toFloat() ?: 1f)},${y/(canvasHeight.value?.toFloat() ?: 1f)}"}"""
         socket.emit("draw", message)
 
-        // 로컬에서도 Path 업데이트
         updatePath(action, x, y)
+    }
+
+    // 단어 설정
+    fun sendSetWordAction(word: String) {
+        val message = """{"setWord":"$word"}"""
+        socket.emit("setWord", message)
+        Log.d("QuizViewModel", "SetWord 전송: $word")
+    }
+
+    // 단어 확인
+    fun sendCheckWordAction(word: String) {
+        val message = """{"checkWord":"$word"}"""
+
+        socket.emit("checkWord", message)
+        Log.d("QuizViewModel", "CheckWord 전송: $word")
+    }
+
+    // 상태 초기화
+    fun resetIsCorrectAnswer() {
+        _isCorrectAnswer.value = null
     }
 
     // Fmaily 가져오는 메서드
@@ -218,7 +246,8 @@ class QuizViewModel @Inject constructor(
     }
 
     fun leaveSession() {
-        session?.leaveSession()
+        socket.disconnect()
+        session.leaveSession()
         _leaveSessionTriggered.value = true
     }
 
