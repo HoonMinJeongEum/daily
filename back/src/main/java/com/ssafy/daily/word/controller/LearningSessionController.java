@@ -31,7 +31,7 @@ public class LearningSessionController {
     public ResponseEntity<String> completeLearningSession(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestPart("ids") List<Integer> ids,
-            @RequestPart("files") List<MultipartFile> writeFile) {
+            @RequestPart("writeFile") List<MultipartFile> writeFile) {
 
         if (ids.size() != writeFile.size()) {
             return ResponseEntity.badRequest().body("ID 수와 파일 수가 일치하지 않습니다.");
