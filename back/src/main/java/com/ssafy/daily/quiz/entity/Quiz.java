@@ -35,4 +35,8 @@ public class Quiz {
         this.endAt = endAt;
     }
 
+    public void updateSessionId(String sessionId) {
+        this.sessionId = sessionId;
+    }
+
 }
