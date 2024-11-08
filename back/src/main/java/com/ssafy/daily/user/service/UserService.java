@@ -91,11 +91,6 @@ public class UserService {
                 .build();
         familyRepository.save(family);
 
-        Quiz quiz = Quiz.builder()
-                .family(family)
-                .build();
-        quizRepository.save(quiz);
-
     }
 
     public List<ProfilesResponse> getProfiles(CustomUserDetails userDetails) {
@@ -268,6 +263,7 @@ public class UserService {
         earnedCouponRepository.deleteByMemberId(memberId);
         shellRepository.deleteByMemberId(memberId);
         earnedStickerRepository.deleteByMemberId(memberId);
+        quizRepository.deleteByMemberId(memberId);
         memberRepository.deleteById(memberId);
     }
 

@@ -76,11 +76,6 @@ public class QuestService {
                 }
                 break;
             case QUIZ:
-                // 세션 아이디 null 처리
-                Quiz quiz = quizRepository.findByFamilyId(userDetails.getFamily().getId());
-                quiz.updateSessionId(null);
-                quizRepository.save(quiz);
-
                 if (!quest.isQuizStatus()) {
                     quest.setQuizStatus(true);
                     return true;
