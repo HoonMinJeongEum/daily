@@ -11,4 +11,6 @@ public interface EarnedCouponRepository extends JpaRepository<EarnedCoupon, Long
     List<EarnedCoupon> findByMemberId(int id);
 
     void deleteByMemberId(int memberId);
+
+    List<EarnedCoupon> findByMemberIdAndUsedAtIsNull(int memberId);
 }

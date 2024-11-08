@@ -1,11 +1,14 @@
 package com.ssafy.daily.quiz.entity;
 
 import com.ssafy.daily.user.entity.Family;
+import com.ssafy.daily.user.entity.Member;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -18,21 +21,18 @@ public class Quiz {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "family_id", nullable = false)
-    private Family family;
-
-    @Column
-    private String word;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id", nullable = false)
+    private Member member;
 
     @Column
     private String sessionId;
 
-    public void updateWord(String word) {
-        this.word = word;
+    @Column
+    private LocalDateTime endAt;
+
+    public void updateEndAt(LocalDateTime endAt) {
+        this.endAt = endAt;
     }
 
-    public void updateSessionId(String sessionId) {
-        this.sessionId = sessionId;
-    }
 }

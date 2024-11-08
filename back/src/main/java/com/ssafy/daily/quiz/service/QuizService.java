@@ -1,10 +1,14 @@
 package com.ssafy.daily.quiz.service;
 
+import com.ssafy.daily.alarm.entity.Alarm;
+import com.ssafy.daily.alarm.repository.AlarmRepository;
 import com.ssafy.daily.alarm.service.AlarmService;
+import com.ssafy.daily.common.Role;
 import com.ssafy.daily.quiz.dto.*;
 import com.ssafy.daily.quiz.entity.Quiz;
 import com.ssafy.daily.quiz.repository.QuizRepository;
 import com.ssafy.daily.user.dto.CustomUserDetails;
+import com.ssafy.daily.user.entity.Member;
 import com.ssafy.daily.word.entity.LearnedWord;
 import com.ssafy.daily.word.entity.Word;
 import com.ssafy.daily.word.repository.LearnedWordRepository;
@@ -17,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.annotation.PostConstruct;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @RequiredArgsConstructor
@@ -26,6 +31,7 @@ public class QuizService {
     private final LearnedWordRepository learnedWordRepository;
     private final QuizRepository quizRepository;
     private final AlarmService alarmService;
+    private final AlarmRepository alarmRepository;
 
     @Value("${openvidu.url}")
     private String OPENVIDU_URL;
@@ -42,29 +48,36 @@ public class QuizService {
 
     // 세션 아이디 생성
     public SessionResponse initializeSession(CustomUserDetails userDetails, SessionRequest request) throws Exception {
+
         // 세션 아이디 생성
+        Member member = userDetails.getMember();
+        String username = userDetails.getUsername();
+        String childName = userDetails.getMember().getName();
+        String customSessionId = childName + username;
+
+        Quiz quiz = quizRepository.findByMemberId(userDetails.getMember().getId());
+
+        // 세션 생성
         Map<String,Object> map = new HashMap<>();
-        map.put("customSessionId", request.getCustomSessionId());
+        map.put("customSessionId", customSessionId);
         SessionProperties properties = SessionProperties.fromJson(map).build();
         Session session = openvidu.createSession(properties);
         String sessionId = session.getSessionId();
 
-        // 사용자 정보 가져오기
-//        int familyId = userDetails.getFamily().getId();
-//        String childName = userDetails.getMember().getName();
-//        Quiz quiz = quizRepository.findByFamilyId(familyId);
-//
-//        // 부모님이 이미 그림 퀴즈를 이용 중인 경우
-//        if (quiz.getSessionId() != null) {
-//            return "다른 사용자와 그림 퀴즈를 이용하고 있습니다.";
-//        }
-//
-//        // 세션 아이디 업데이트
-//        quiz.updateSessionId(sessionId);
-//        quizRepository.save(quiz);
-//
-//        // 알림
-//        alarmService.sendNotification(childName, sessionId, familyId, Role.PARENT, "그림 퀴즈", "요청");
+        if (quiz == null) {
+            Quiz newQuiz = Quiz.builder()
+                    .sessionId(sessionId)
+                    .member(member)
+                    .build();
+            quizRepository.save(newQuiz);
+        }
+        else {
+            quiz.updateEndAt(null);
+            quizRepository.save(quiz);
+        }
+
+        // 알림
+        alarmService.sendNotification(childName, sessionId, userDetails.getFamily().getId(), Role.PARENT, "그림 퀴즈", "요청");
         return new SessionResponse(sessionId);
     }
 
@@ -105,19 +118,42 @@ public class QuizService {
         return recommendedWords;
     }
 
-    // 단어 설정
-    public void setWord(CustomUserDetails userDetails, SetWordRequest request) {
-        int familyId = userDetails.getFamily().getId();
-        Quiz quiz = quizRepository.findByFamilyId(familyId);
-        quiz.updateWord(request.getWord());
-        quizRepository.save(quiz);
-    }
-    
-    // 단어 정답 확인
-    public boolean checkWord(CustomUserDetails userDetails, CheckWordRequest request) {
-        int familyId = userDetails.getFamily().getId();
-        Quiz quiz = quizRepository.findByFamilyId(familyId);
-        return request.getWord().equals(quiz.getWord());
+    // 세션 체크
+    public CheckSessionResponse checkSession(CustomUserDetails userDetails, CheckSessionRequest request) {
+        String username = userDetails.getUsername();
+        String childName = request.getChildName();
+        String customSessionId = childName + username;
+
+        Quiz quiz = quizRepository.findBySessionId(customSessionId);
+        confirmAlarmsByTitleAndTitleId(" 그림 퀴즈", customSessionId);
+
+        if(quiz.getEndAt() != null) {
+            return new CheckSessionResponse(null);
+        }
+        else {
+            return new CheckSessionResponse(customSessionId);
+        }
     }
 
+    // 세션 종료
+    public void endSession(CustomUserDetails userDetails) {
+        // 알림 완료 처리
+        String username = userDetails.getUsername();
+        String childName = userDetails.getMember().getName();
+        String customSessionId = childName + username;
+        confirmAlarmsByTitleAndTitleId(" 그림 퀴즈", customSessionId);
+
+        // 세션 종료
+        Quiz quiz = quizRepository.findBySessionId(customSessionId);
+        quiz.updateEndAt(LocalDateTime.now());
+    }
+
+    // 알림 확인 처리
+    public void confirmAlarmsByTitleAndTitleId(String title, String titleId) {
+        List<Alarm> alarms = alarmRepository.findByTitleAndTitleIdAndConfirmedAtIsNull(title, titleId);
+
+        for (Alarm alarm : alarms) {
+            alarm.confirm();
+        }
+    }
 }

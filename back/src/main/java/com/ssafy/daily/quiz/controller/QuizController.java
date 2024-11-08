@@ -1,8 +1,6 @@
 package com.ssafy.daily.quiz.controller;
 
-import com.ssafy.daily.quiz.dto.CheckWordRequest;
-import com.ssafy.daily.quiz.dto.SessionRequest;
-import com.ssafy.daily.quiz.dto.SetWordRequest;
+import com.ssafy.daily.quiz.dto.*;
 import com.ssafy.daily.quiz.service.QuizService;
 import com.ssafy.daily.user.dto.CustomUserDetails;
 import io.openvidu.java.client.*;
@@ -33,23 +31,22 @@ public class QuizController {
         return ResponseEntity.ok(quizService.createConnection(sessionId));
     }
 
+    // 세션 아이디 체크
+    @PostMapping("/sessions/check")
+    public ResponseEntity<?> checkSession(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody CheckSessionRequest request) {
+        return ResponseEntity.ok(quizService.checkSession(userDetails, request));
+    }
+
+    // 세션 종료
+    @PostMapping("/sessions/end")
+    public ResponseEntity<?> endSession(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        quizService.endSession(userDetails);
+        return ResponseEntity.ok().build();
+    }
+
     // 단어 추천
     @GetMapping("/word/recommend")
     public ResponseEntity<?> recommendWord(@AuthenticationPrincipal CustomUserDetails userDetails) {
         return ResponseEntity.ok(quizService.recommendWord(userDetails));
-    }
-    
-    // 단어 설정
-    @PatchMapping("/word/set")
-    public ResponseEntity<?> setWord(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody SetWordRequest request) {
-        quizService.setWord(userDetails, request);
-        return ResponseEntity.ok("단어가 정상적으로 설정되었습니다.");
-    }
-
-    // 단어 정답 확인
-    @PostMapping("/word/check")
-    public ResponseEntity<?> checkWord(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody CheckWordRequest request) {
-        boolean check = quizService.checkWord(userDetails, request);
-        return ResponseEntity.ok(check);
     }
 }

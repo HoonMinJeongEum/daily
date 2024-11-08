@@ -3,6 +3,7 @@ package com.ssafy.daily.diary.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssafy.daily.alarm.service.AlarmService;
+import com.ssafy.daily.common.Role;
 import com.ssafy.daily.diary.dto.*;
 import com.ssafy.daily.diary.entity.Diary;
 import com.ssafy.daily.diary.entity.DiaryComment;
@@ -117,17 +118,17 @@ public class DiaryService {
         title : 알림 제목 (그림 일기 or 그림 퀴즈)
         body : 알림 내용 ex) 그림 퀴즈 요청
         */
-//        String name = userDetails.getMember().getName();
-//        String titleId = String.valueOf(diary.getId());
-//        int toId = userDetails.getFamilyId();
-//        Role role = Role.PARENT;
-//        String title = "그림 일기";
-//        String body = "그림 일기 업로드";
-//        try {
-//            alarmService.sendNotification(name, titleId, toId, role, title, body);
-//        } catch (Exception e) {
-//            throw new RuntimeException("그림일기 작성 알림 전송에 실패");
-//        }
+        String name = userDetails.getMember().getName();
+        String titleId = String.valueOf(diary.getId());
+        int toId = userDetails.getFamilyId();
+        Role role = Role.PARENT;
+        String title = "그림 일기";
+        String body = "업로드";
+        try {
+            alarmService.sendNotification(name, titleId, toId, role, title, body);
+        } catch (Exception e) {
+            throw new RuntimeException("그림일기 작성 알림 전송에 실패");
+        }
     }
 
     public List<FieldDto> processOcr(String imgUrl) {
@@ -214,5 +215,17 @@ public class DiaryService {
                 .comment(comment)
                 .build();
         diaryCommentRepository.save(diaryComment);
+
+        String name = "부모님";
+        String titleId = String.valueOf(diaryId);
+        int toId = diary.getMember().getId();
+        Role role = Role.CHILD;
+        String title = "그림 일기";
+        String body = "그림 일기에 답글이 왔어요!";
+        try {
+            alarmService.sendNotification(name, titleId, toId, role, title, body);
+        } catch (Exception e) {
+            throw new RuntimeException("그림일기 작성 알림 전송에 실패");
+        }
     }
 }
