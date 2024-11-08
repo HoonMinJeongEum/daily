@@ -183,9 +183,6 @@ object RetrofitClient {
                         DateTimeFormatter.ofPattern("HH:mm:ss")
                     )
                 })
-            .registerTypeAdapter(LocalDateTime::class.java,
-                JsonDeserializer { json, _, _ -> LocalDateTime.parse(json.asString, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")) }
-            )
             .registerTypeAdapter(LocalDate::class.java,
                 JsonDeserializer { json, _, _ -> LocalDate.parse(json.asString, DateTimeFormatter.ofPattern("yyyy-MM-dd")) }
             )
