@@ -10,6 +10,9 @@ import androidx.compose.material3.Divider
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -17,10 +20,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.diaryApp.domain.dto.response.alarm.AlarmResponseDto
+import com.example.diaryApp.viewmodel.QuizViewModel
+import kotlinx.coroutines.launch
 
 
 @Composable
-fun AlarmItem(alarm: AlarmResponseDto, navController: NavController) {
+fun AlarmItem(
+    alarm: AlarmResponseDto,
+    navController: NavController,
+    quizViewModel: QuizViewModel,
+    onShowQuizAlert: () -> Unit
+) {
+    val coroutineScope = rememberCoroutineScope()
+
     Row (
         modifier = Modifier
             .fillMaxSize()
@@ -53,7 +65,13 @@ fun AlarmItem(alarm: AlarmResponseDto, navController: NavController) {
                 .weight(3f),
             onClick = {
                 if(alarm.title == "그림 퀴즈") {
-                    navController.navigate("catchMind/${alarm.name}")
+                    coroutineScope.launch {
+                        quizViewModel.checkSession(alarm.name, onShowQuizAlert = {
+                            onShowQuizAlert()
+                        }, onNavigateToSession = { sessionId ->
+                            navController.navigate("catchMind/$sessionId")
+                        })
+                    }
                 }
                 else {
                     navController.navigate("diary")
@@ -61,12 +79,19 @@ fun AlarmItem(alarm: AlarmResponseDto, navController: NavController) {
 
             },
         ) {
-            if(alarm.title == "그림 퀴즈") {
-                Text(text = "수락", fontSize = 15.sp)
+            if (alarm.confirmedAt != null){
+                Text(text = "완료", fontSize = 15.sp)
             }
             else {
-                Text(text = "입장", fontSize = 15.sp)
+                if(alarm.title == "그림 퀴즈") {
+                    Text(text = "수락", fontSize = 15.sp)
+                }
+
+                else {
+                    Text(text = "입장", fontSize = 15.sp)
+                }
             }
+
         }
 
     }

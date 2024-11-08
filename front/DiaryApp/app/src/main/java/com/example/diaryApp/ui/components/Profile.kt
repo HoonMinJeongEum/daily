@@ -17,7 +17,9 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -45,11 +47,9 @@ import com.example.diaryApp.ui.theme.PastelSkyBlue
 import com.example.diaryApp.ui.theme.PastelYellow
 import com.example.diaryApp.ui.theme.White
 import com.example.diaryApp.viewmodel.ProfileViewModel
+import com.example.diaryApp.viewmodel.QuizViewModel
 import com.example.diaryApp.viewmodel.WordViewModel
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.time.delay
-import kotlin.time.toDuration
 import kotlinx.coroutines.*
 
 @Composable
@@ -57,8 +57,11 @@ fun ProfileItem(
     profile: Profile,
     navController: NavController,
     diaryViewModel: DiaryViewModel,
-    wordViewModel: WordViewModel
+    wordViewModel: WordViewModel,
+    quizViewModel: QuizViewModel,
+    onShowQuizAlert: () -> Unit
 ) {
+    val coroutineScope = rememberCoroutineScope()
 
     Box(
         modifier = Modifier
@@ -134,9 +137,12 @@ fun ProfileItem(
                     height = 42,
                     shadowElevation = 8.dp,
                     onClick = {
-                        runBlocking {
-                            updateMemberInfoWord(profile, wordViewModel)
-                            navController.navigate("catchMind/${profile.name}")
+                        coroutineScope.launch {
+                            quizViewModel.checkSession(profile.name, onShowQuizAlert = {
+                                onShowQuizAlert()
+                            }, onNavigateToSession = { sessionId ->
+                                navController.navigate("catchMind/$sessionId")
+                            })
                         }
                     },
                 )
@@ -178,6 +184,7 @@ fun ProfileItem(
                 )
             }
         }
+
     }
 }
 
@@ -267,6 +274,7 @@ fun DeleteProfileItem(profile: Profile) {
             }
         )
     }
+
 }
 
 

@@ -15,6 +15,7 @@ import androidx.compose.runtime.State
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.example.diaryApp.datastore.UserStore
+import com.example.diaryApp.domain.dto.request.quiz.CheckSessionRequestDto
 import com.example.diaryApp.domain.repository.quiz.QuizRepository
 import com.example.diaryApp.utils.openvidu.Session
 import org.json.JSONArray
@@ -82,7 +83,7 @@ class QuizViewModel @Inject constructor(
 
     private fun createSocket(sessionId: String) {
         viewModelScope.launch {
-            socket = IO.socket("http://10.0.2.2:6080")
+            socket = IO.socket("ws://k11e204.p.ssafy.io:6080")
             socket.connect()
 
             Log.e("QuizViewModel", "roomId : ${sessionId}")
@@ -125,6 +126,28 @@ class QuizViewModel @Inject constructor(
             socket.on("userDisconnected") {
                 _userDisconnectedEvent.postValue(true)
                 Log.d("QuizViewModel", "disconnect")
+            }
+        }
+    }
+
+    fun checkSession(childName: String, onShowQuizAlert: () -> Unit, onNavigateToSession: (String) -> Unit) {
+        viewModelScope.launch {
+            isLoading.value = true
+            errorMessage.value = null
+            try {
+                Log.e("QuizViewModel", "childName: $childName")
+                val response = quizRepository.checkSession(CheckSessionRequestDto(childName))
+                _sessionId.value = response.body()?.sessionId
+
+                if (_sessionId.value == null) {
+                    onShowQuizAlert()
+                } else {
+                    onNavigateToSession(_sessionId.value!!)
+                }
+            } catch (e: Exception) {
+                errorMessage.value = e.message
+            } finally {
+                isLoading.value = false
             }
         }
     }
