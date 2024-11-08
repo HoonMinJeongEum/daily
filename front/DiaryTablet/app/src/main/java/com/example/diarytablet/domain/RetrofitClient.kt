@@ -66,9 +66,7 @@ object RetrofitClient {
                 val request = requestBuilder.build()
                 var response = chain.proceed(request)
 
-                // 401 Unauthorized 시 토큰 갱신
                 if (response.code == 401) {
-                    response.close()
                     synchronized(this) {
                         val newTokens = refreshTokens()
                         if (newTokens != null) {
@@ -153,6 +151,35 @@ object RetrofitClient {
     private fun getGsonConverterFactory(): GsonConverterFactory {
         val gson = GsonBuilder()
             .setLenient()
+            .registerTypeAdapter(
+                LocalDateTime::class.java,
+                JsonDeserializer<Any?> { json, _, _ ->
+                    LocalDateTime.parse(
+                        json.asString,
+                        when (json.asString.length) {
+                            23 -> DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")
+                            22 -> DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SS")
+                            21 -> DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.S")
+                            else -> DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
+                        }
+                    )
+                })
+            .registerTypeAdapter(
+                LocalDate::class.java,
+                JsonDeserializer<Any?> { json, _, _ ->
+                    LocalDate.parse(
+                        json.asString,
+                        DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                    )
+                })
+            .registerTypeAdapter(
+                LocalTime::class.java,
+                JsonDeserializer<Any?> { json, _, _ ->
+                    LocalTime.parse(
+                        json.asString,
+                        DateTimeFormatter.ofPattern("HH:mm:ss")
+                    )
+                })
             .registerTypeAdapter(LocalDateTime::class.java,
                 JsonDeserializer { json, _, _ -> LocalDateTime.parse(json.asString, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")) }
             )
@@ -163,6 +190,9 @@ object RetrofitClient {
                 JsonDeserializer { json, _, _ -> LocalTime.parse(json.asString, DateTimeFormatter.ofPattern("HH:mm:ss")) }
             )
             .create()
+
+
         return GsonConverterFactory.create(gson)
     }
 }
+

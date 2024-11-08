@@ -269,8 +269,8 @@ fun WordTap(
                                             buttonText = "제출"
                                             buttonColor = Color.White
                                             initialized = false
-                                            if (finishedIndex == 1) {
-//                                                onFinish()
+                                            if (finishedIndex == 9) {
+                                                onFinish()
                                                 navController.navigate("main?origin=wordLearning&isFinished=true") {
                                                     popUpTo("wordLearning") { inclusive = true }
                                                 }
