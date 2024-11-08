@@ -71,6 +71,7 @@ public class QuizService {
             quizRepository.save(newQuiz);
         }
         else {
+            quiz.updateSessionId(sessionId);
             quiz.updateEndAt(null);
             quizRepository.save(quiz);
         }
@@ -140,6 +141,9 @@ public class QuizService {
         String username = userDetails.getUsername();
         String childName = userDetails.getMember().getName();
         String customSessionId = childName + username;
+        System.out.println("username: "  + username);
+        System.out.println("childName: "  + childName);
+        System.out.println("customSessionId: "  + customSessionId);
         confirmAlarmsByTitleAndTitleId(" 그림 퀴즈", customSessionId);
 
         // 세션 종료
