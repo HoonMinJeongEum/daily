@@ -1,6 +1,7 @@
 package com.ssafy.daily.reward.service;
 
 import com.ssafy.daily.common.Content;
+import com.ssafy.daily.common.StatusResponse;
 import com.ssafy.daily.quiz.entity.Quiz;
 import com.ssafy.daily.quiz.repository.QuizRepository;
 import com.ssafy.daily.quiz.service.QuizService;
@@ -26,7 +27,7 @@ public class QuestService {
     private final QuizRepository quizRepository;
 
     // 퀘스트 완료
-    public void updateQuest(CustomUserDetails userDetails, UpdateQuestRequest request) {
+    public StatusResponse updateQuest(CustomUserDetails userDetails, UpdateQuestRequest request) {
         int memberId = userDetails.getMember().getId();
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new RuntimeException("구성원을 찾을 수 없습니다."));
@@ -47,6 +48,8 @@ public class QuestService {
             // 퀘스트 업데이트 저장
             questRepository.save(quest);
         }
+
+        return new StatusResponse(200, "퀘스트가 성공적으로 완료되었습니다.");
     }
 
     // 매일 자정에 퀘스트 상태 초기화
@@ -73,11 +76,6 @@ public class QuestService {
                 }
                 break;
             case QUIZ:
-                // 세션 아이디 null 처리
-                Quiz quiz = quizRepository.findByFamilyId(userDetails.getFamily().getId());
-                quiz.updateSessionId(null);
-                quizRepository.save(quiz);
-
                 if (!quest.isQuizStatus()) {
                     quest.setQuizStatus(true);
                     return true;

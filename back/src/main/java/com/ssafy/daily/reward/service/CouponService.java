@@ -127,7 +127,7 @@ public class CouponService {
         int memberId = userDetails.getMember().getId();
 
         // memberId로 EarnedCoupon 리스트 조회
-        List<EarnedCoupon> list = earnedCouponRepository.findByMemberId(memberId);
+        List<EarnedCoupon> list = earnedCouponRepository.findByMemberIdAndUsedAtIsNull(memberId);
 
         // EarnedCoupon 리스트를 EarnedCouponResponse 리스트로 변환
         return list.stream()

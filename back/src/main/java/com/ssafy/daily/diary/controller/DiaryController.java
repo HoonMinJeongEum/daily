@@ -17,16 +17,17 @@ public class DiaryController {
 
     @PostMapping
     public ResponseEntity<?> writeDiary(@AuthenticationPrincipal CustomUserDetails userDetails
-            , @RequestParam("drawFile") MultipartFile drawFile
-            , @RequestParam("writeFile") MultipartFile writeFile){
+            , @RequestPart("drawFile") MultipartFile drawFile
+            , @RequestPart("writeFile") MultipartFile writeFile){
         diaryService.writeDiary(userDetails, drawFile, writeFile);
         return ResponseEntity.ok("그림일기가 정상적으로 저장되었습니다.");
     }
 
     @GetMapping
     public ResponseEntity<?> getDiaries(@AuthenticationPrincipal CustomUserDetails userDetails,
-                                        @RequestParam(required = false) Integer memberId){
-        return ResponseEntity.ok(diaryService.getDiaries(userDetails, memberId));
+                                        @RequestParam(required = false) Integer memberId,
+                                        @RequestParam int year, @RequestParam int month){
+        return ResponseEntity.ok(diaryService.getDiaries(userDetails, memberId, year, month));
     }
 
     @GetMapping("/{diaryId}")

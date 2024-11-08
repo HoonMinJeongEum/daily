@@ -1,11 +1,17 @@
 package com.ssafy.daily.user.service;
 
+import com.ssafy.daily.diary.entity.Diary;
+import com.ssafy.daily.diary.repository.DiaryCommentRepository;
+import com.ssafy.daily.diary.repository.DiaryRepository;
 import com.ssafy.daily.exception.*;
 import com.ssafy.daily.file.service.S3UploadService;
 import com.ssafy.daily.quiz.entity.Quiz;
 import com.ssafy.daily.quiz.repository.QuizRepository;
 import com.ssafy.daily.reward.entity.Quest;
+import com.ssafy.daily.reward.repository.EarnedCouponRepository;
+import com.ssafy.daily.reward.repository.EarnedStickerRepository;
 import com.ssafy.daily.reward.repository.QuestRepository;
+import com.ssafy.daily.reward.repository.ShellRepository;
 import com.ssafy.daily.reward.service.ShellService;
 import com.ssafy.daily.user.dto.*;
 import com.ssafy.daily.user.entity.Family;
@@ -15,15 +21,13 @@ import com.ssafy.daily.user.jwt.JWTUtil;
 import com.ssafy.daily.user.repository.FamilyRepository;
 import com.ssafy.daily.user.repository.MemberRepository;
 import com.ssafy.daily.user.repository.RefreshRepository;
-import com.sun.tools.javac.Main;
+import com.ssafy.daily.word.repository.LearnedWordRepository;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -31,6 +35,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -52,6 +57,12 @@ public class UserService {
     private final ShellService shellService;
     private final AuthenticationManager authenticationManager;
     private final S3UploadService s3UploadService;
+    private final DiaryRepository diaryRepository;
+    private final LearnedWordRepository learnedWordRepository;
+    private final EarnedCouponRepository earnedCouponRepository;
+    private final ShellRepository shellRepository;
+    private final EarnedStickerRepository earnedStickerRepository;
+    private final DiaryCommentRepository diaryCommentRepository;
 
     public void checkExist(String username){
         Boolean isExist = familyRepository.existsByUsername(username);
@@ -80,30 +91,37 @@ public class UserService {
                 .build();
         familyRepository.save(family);
 
-        Quiz quiz = Quiz.builder()
-                .family(family)
-                .build();
-        quizRepository.save(quiz);
-
     }
 
-    public List<ProfilesResponse> getProfiles(int familyId, int memberId) {
+    public List<ProfilesResponse> getProfiles(CustomUserDetails userDetails) {
+        int familyId = userDetails.getFamily().getId();
         List<Member> list = memberRepository.findByFamilyId(familyId);
 
         return list.stream()
                 .map(member -> {
-                    int shellCount = shellService.getUserShell(memberId);
+                    int shellCount = shellService.getUserShell(member.getId());
                     return new ProfilesResponse(member, shellCount);
                 })
                 .collect(Collectors.toList());
     }
 
-    public void addProfile(int familyId, MultipartFile file, String memberName) {
+    public void addProfile(CustomUserDetails userDetails, MultipartFile file, String memberName) {
         if (memberName.length() > 20 || memberName.isEmpty()){
             throw new IllegalArgumentException("이름은 20자 이내로 설정해야 합니다.");
         }
+
+        int familyId = userDetails.getFamily().getId();
         Family family = familyRepository.findById(familyId)
                 .orElseThrow(() -> new EmptyResultDataAccessException("해당 가족 계정을 찾을 수 없습니다.", 1));
+
+        boolean isDuplicate = memberRepository.existsByFamilyIdAndName(familyId, memberName);
+        if (isDuplicate) {
+            throw new AlreadyOwnedException("이미 존재하는 이름입니다. 다른 이름을 사용하세요.");
+        }
+
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("프로필 이미지 파일이 필요합니다.");
+        }
 
         String imageUrl = null;
         try {
@@ -127,6 +145,10 @@ public class UserService {
 
     public String choiceMember(CustomUserDetails userDetails, ChoiceMemberRequest request, HttpServletResponse response) {
         int memberId = request.getMemberId();
+        int familyId = userDetails.getFamilyId();
+
+        Member member = memberRepository.findByIdAndFamilyId(memberId, familyId)
+                .orElseThrow(() -> new IllegalArgumentException("현재 계정에 해당 프로필이 존재하지 않습니다.: " + memberId));
 
         String newAccess = jwtUtil.createJwt("access", userDetails.getUsername(), "ROLE", userDetails.getFamilyId(), memberId, 600000L);
         String newRefresh = jwtUtil.createJwt("refresh", userDetails.getUsername(), "ROLE", userDetails.getFamilyId(), memberId, 86400000L);
@@ -227,5 +249,55 @@ public class UserService {
         cookie.setMaxAge(0);
         cookie.setPath("/");
         response.addCookie(cookie);
+    }
+
+    @Transactional
+    public void deleteMember(int memberId) {
+        questRepository.deleteByMemberId(memberId);
+        List<Diary> diaries = diaryRepository.findByMemberId(memberId);
+        for (Diary diary : diaries) {
+            diaryCommentRepository.deleteByDiaryId(diary.getId());
+        }
+        diaryRepository.deleteByMemberId(memberId);
+        learnedWordRepository.deleteByMemberId(memberId);
+        earnedCouponRepository.deleteByMemberId(memberId);
+        shellRepository.deleteByMemberId(memberId);
+        earnedStickerRepository.deleteByMemberId(memberId);
+        quizRepository.deleteByMemberId(memberId);
+        memberRepository.deleteById(memberId);
+    }
+
+    @Transactional
+    public void modifyMemberName(ModifyNameRequest request, CustomUserDetails userDetails) {
+        String newName = request.getName();
+        if (newName.length() > 20 || newName.isEmpty()){
+            throw new IllegalArgumentException("이름은 20자 이내로 설정해야 합니다.");
+        }
+
+        int memberId = userDetails.getMemberId();
+        Member orgMember = memberRepository.findById(memberId)
+                .orElseThrow(() -> new EmptyResultDataAccessException("해당 프로필을 찾을 수 없습니다.", 1));
+
+        orgMember.updateName(newName);
+    }
+
+    @Transactional
+    public void modifyProfileImg(MultipartFile file, CustomUserDetails userDetails) {
+        int memberId = userDetails.getMemberId();
+
+        Member orgMember = memberRepository.findById(memberId)
+                .orElseThrow(() -> new EmptyResultDataAccessException("해당 프로필을 찾을 수 없습니다.", 1));
+
+        String orgImg = s3UploadService.getFileNameFromUrl(orgMember.getImg());
+        s3UploadService.deleteImage(orgImg);
+
+        String imageUrl = null;
+        try {
+            imageUrl = s3UploadService.saveFile(file);
+        } catch (IOException e) {
+            throw new S3UploadException("S3 프로필 이미지 업로드 실패");
+        }
+
+        orgMember.updateImg(imageUrl);
     }
 }
