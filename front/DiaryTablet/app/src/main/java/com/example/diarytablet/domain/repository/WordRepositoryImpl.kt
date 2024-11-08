@@ -19,7 +19,7 @@ class WordRepositoryImpl @Inject constructor(
         return wordService.getWordList()
     }
 
-    override suspend fun getLearnedWordList() : MutableList<WordLearnedResponseDto> {
+    override suspend fun getLearnedWordList() : Response<List<WordLearnedResponseDto>> {
         return wordService.getLearnedWordList()
     }
 

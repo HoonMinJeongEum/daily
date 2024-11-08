@@ -17,8 +17,8 @@ interface WordService {
     @GET("${Const.API_PATH}word/session")
     suspend fun getWordList(): MutableList<WordResponseDto>
 
-    @GET("${Const.API_PATH}word/learnd")
-    suspend fun getLearnedWordList(): MutableList<WordLearnedResponseDto>
+    @GET("${Const.API_PATH}word/learned")
+    suspend fun getLearnedWordList(): Response<List<WordLearnedResponseDto>>
 
     @Multipart
     @POST("${Const.API_PATH}word/session/validate")

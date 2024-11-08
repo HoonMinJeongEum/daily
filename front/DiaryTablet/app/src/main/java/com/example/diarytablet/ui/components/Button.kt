@@ -1,7 +1,12 @@
 package com.example.diarytablet.ui.components
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
@@ -10,11 +15,20 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.diarytablet.R
@@ -136,3 +150,72 @@ fun PreviewButtonWithoutImage() {
         // 이미지가 없을 경우 SEASHELL로 표시
     )
 }
+
+@Composable
+fun DynamicColorButton(
+    text: String,
+    fontSize: Int = 16,
+    fontWeight: androidx.compose.ui.text.font.FontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+    shadowColor: Color = Color.LightGray,
+    shadowElevation: Dp = 0.dp,
+    cornerRadius: Int = 8,
+    width: Int = 200,
+    height: Int = 50,
+    isSelected: Boolean = false,
+    onClick: () -> Unit
+) {
+    val isPressed = remember { mutableStateOf(false) }
+    val alpha by animateFloatAsState(
+        targetValue = if (isPressed.value) 0.8f else 1.0f,
+        label = "Button Press Alpha Animation"
+    )
+
+    // isSelected 상태에 따라 배경색을 변경합니다.
+    val backgroundColor = if (isSelected) Color(0xFF83B4FF) else Color(0xFFD1D1D1)
+    val textColor = Color.White
+
+    Box(
+        modifier = Modifier
+            .shadow(
+                elevation = shadowElevation,
+                shape = RoundedCornerShape(cornerRadius.dp),
+                ambientColor = shadowColor,
+                spotColor = shadowColor
+            )
+    ) {
+        Box(
+            modifier = Modifier
+                .size(width = width.dp, height = height.dp)
+                .background(color = backgroundColor, shape = RoundedCornerShape(cornerRadius.dp))
+                .alpha(alpha)
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onPress = {
+                            isPressed.value = true
+                            tryAwaitRelease()
+                            isPressed.value = false
+                        },
+                        onTap = { onClick() }
+                    )
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.align(Alignment.Center)
+            ) {
+
+                Text(
+                    text = text,
+                    style = TextStyle(
+                        fontSize = fontSize.sp,
+                        color = textColor,  // 글자색은 흰색으로 고정
+                        fontWeight = fontWeight
+                    )
+                )
+            }
+        }
+    }
+}
+
