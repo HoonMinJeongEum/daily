@@ -44,70 +44,82 @@ fun MainScreen(
 
     val missions = viewModel.missions
 
-
-    // 전체 화면을 채우는 Box
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(), // Row가 가로 전체를 차지하도록 설정
-            horizontalArrangement = Arrangement.SpaceBetween, // 양 끝에 배치
-            verticalAlignment = Alignment.Top // 수직 정렬
-        )  {
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Top
+        ) {
             MissionBar(
                 missions = missions,
                 modifier = Modifier
-                    .offset(x = 58.dp, y = 27.dp) // 위치 조정
+                    .offset(x = 58.dp, y = 27.dp)
             )
 
             Navbar(
-
-                modifier = Modifier
-                    .padding(end = 16.dp) // 오른쪽 여백 조정
+                modifier = Modifier.padding(end = 16.dp),
+                navController = navController
             )
-            // MissionRow 배치
-
         }
 
-        Box(
-            modifier = Modifier
-                .align(Alignment.Center)
-                .size(432.dp, 450.dp)
+        // 캐릭터 이미지와 텍스트 풍선을 나란히 배치
+        Row(
+            modifier = Modifier.align(Alignment.Center),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // 캐릭터 이미지 추가
             Image(
-                modifier = Modifier.fillMaxSize(),
-                painter = painterResource(id = R.drawable.text_balloon),
-                contentDescription = "Text Balloon"
+                painter = painterResource(id = R.drawable.main_char), // 캐릭터 이미지 리소스 ID로 교체
+                contentDescription = "Character",
+                modifier = Modifier.size(400.dp)
+                    .offset(x = -50.dp ,y = 50.dp)
             )
 
-            Column(
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+            Box(
+                modifier = Modifier.size(432.dp, 450.dp)
+                    .offset(x = -120.dp)
             ) {
-                Text(
-                    text = "다일리에 온 걸 환영해!",
-                    color = Color.Black,
-                    fontSize = 26.sp,
-                    lineHeight = 44.sp
+                Image(
+                    modifier = Modifier.fillMaxSize(),
+                    painter = painterResource(id = R.drawable.text_balloon),
+                    contentDescription = "Text Balloon"
                 )
-                Text(
-                    text = "나랑 그림일기도 쓰고",
-                    color = Color.Black,
-                    fontSize = 26.sp,
-                    lineHeight = 44.sp              )
-                Text(
-                    text = "단어도 학습해보자!",
-                    color = Color.Black,
-                    fontSize = 26.sp,
-                    lineHeight = 44.sp               )
-                Text(
-                    text = "그림퀴즈도 할 수 있어~",
-                    color = Color.Black,
-                    fontSize = 26.sp,
-                    lineHeight = 44.sp               )
+
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "다일리에 온 걸 환영해!",
+                        color = Color.Black,
+                        fontSize = 26.sp,
+                        lineHeight = 44.sp
+                    )
+                    Text(
+                        text = "나랑 그림일기도 쓰고",
+                        color = Color.Black,
+                        fontSize = 26.sp,
+                        lineHeight = 44.sp
+                    )
+                    Text(
+                        text = "단어도 학습해보자!",
+                        color = Color.Black,
+                        fontSize = 26.sp,
+                        lineHeight = 44.sp
+                    )
+                    Text(
+                        text = "그림퀴즈도 할 수 있어~",
+                        color = Color.Black,
+                        fontSize = 26.sp,
+                        lineHeight = 44.sp
+                    )
+                }
             }
         }
 
@@ -117,22 +129,22 @@ fun MainScreen(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .padding(16.dp) // 여백 설정
+                .padding(16.dp)
         ) {
             BasicButton(
                 onClick = { navController.navigate("shop") },
                 text = "상점",
-                imageResId = R.drawable.shop // 상점 이미지 리소스
+                imageResId = R.drawable.shop
             )
             BasicButton(
-                onClick = { navController.navigate("stock")},
+                onClick = { navController.navigate("stock") },
                 text = "보관함",
-                imageResId = R.drawable.stack_room // 보관함 이미지 리소스
+                imageResId = R.drawable.stack_room
             )
             BasicButton(
                 onClick = { navController.navigate("record") },
                 text = "기록",
-                imageResId = R.drawable.record // 기록 이미지 리소스
+                imageResId = R.drawable.record
             )
         }
 
@@ -146,9 +158,9 @@ fun MainScreen(
                 text = "시작하기",
                 imageResId = 11,
                 fontSize = 36f
-
             )
         }
+
         MainModal(
             isModalVisible = isModalVisible,
             onDismiss = { isModalVisible = false },
@@ -166,7 +178,7 @@ fun MainScreen(
                 isModalVisible = false
             },
             onDrawingQuizClick = {
-                navController.navigate("wordLearning") {
+                navController.navigate("quiz") {
                     popUpTo("main") { inclusive = true }
                 }
                 isModalVisible = false
@@ -174,6 +186,7 @@ fun MainScreen(
         )
     }
 }
+
 
 //@Preview(widthDp = 1280, heightDp = 800, showBackground = true)
 //@Composable

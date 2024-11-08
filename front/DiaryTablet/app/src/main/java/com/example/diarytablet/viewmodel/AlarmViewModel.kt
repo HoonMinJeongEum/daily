@@ -6,12 +6,11 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.diarytablet.datastore.UserStore
+import com.example.diarytablet.domain.dto.request.alarm.CheckAlarmRequestDto
+import com.example.diarytablet.domain.dto.request.alarm.SaveTokenRequestDto
 import com.example.diarytablet.domain.dto.response.alarm.AlarmResponseDto
-import com.google.android.gms.tasks.OnCompleteListener
+import com.example.diarytablet.domain.repository.AlarmRepository
 import com.google.firebase.messaging.FirebaseMessaging
-import com.ssafy.daily.alarm.dto.CheckAlarmRequestDto
-import com.ssafy.daily.alarm.dto.SaveTokenRequestDto
-import com.ssafy.daily.alarm.repository.AlarmRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -58,7 +57,7 @@ class AlarmViewModel @Inject constructor(
         viewModelScope.launch {
             val response = alarmRepository.getAlarms()
             if (response.isSuccessful) {
-                _alarms.value = response.body()
+                _alarms.value = response.body()?.list
             } else {
                 _alarms.value = emptyList()
             }
@@ -70,7 +69,7 @@ class AlarmViewModel @Inject constructor(
         viewModelScope.launch {
             val response = alarmRepository.checkAlarm(CheckAlarmRequestDto(alarmId))
             if (response.isSuccessful) {
-                _checkAlarmStatus.value = "알림이 정상적으로 확인되었습니다."
+                _checkAlarmStatus.value = response.body()?.msg
             } else {
                 _checkAlarmStatus.value = "알림 확인 실패: ${response.message()}"
             }

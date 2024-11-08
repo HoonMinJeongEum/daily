@@ -3,6 +3,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -16,13 +17,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.diarytablet.R
 import com.example.diarytablet.datastore.UserStore
 import com.example.diarytablet.ui.components.BasicButton
+import com.example.diarytablet.ui.components.MyTextField
 import com.example.diarytablet.ui.theme.BackgroundPlacement
 import com.example.diarytablet.ui.theme.BackgroundType
 import com.example.diarytablet.viewmodel.LoginViewModel
@@ -54,11 +58,10 @@ fun LoginScreen(
             modifier = Modifier
                 .align(Alignment.Center)
                 .width(560.dp)
-                .padding(20.dp),
+                .padding(top = 150.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Username Field with Background Image
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
@@ -69,8 +72,8 @@ fun LoginScreen(
             ) {
                 // Image behind TextField
                 Image(
-                    painter = painterResource(id = R.drawable.login),
-                    contentDescription = "아이디 아이콘",
+                    painter = painterResource(id = R.drawable.id_container),
+                    contentDescription = null,
                     modifier = Modifier
                         .fillMaxSize(),
                     contentScale = ContentScale.FillBounds
@@ -79,10 +82,17 @@ fun LoginScreen(
                 // TextField in front of the Image
                 TextField(
                     value = loginViewModel.username.value,
+                    placeholder = {
+                        Text(
+                            "아이디",
+                            fontSize = 30.sp,
+                            color = Color.Gray
+                        )
+                    },
                     onValueChange = { loginViewModel.username.value = it },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 130.dp), // Adjust padding for text alignment
+                        .padding(start = 60.dp), // Adjust padding for text alignment
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent,
@@ -91,7 +101,7 @@ fun LoginScreen(
                     )
                 )
             }
-
+            Spacer(modifier = Modifier.height(30.dp))
             // Password Field with Background Image
             Box(
                 contentAlignment = Alignment.Center,
@@ -102,8 +112,8 @@ fun LoginScreen(
             ) {
                 // Image behind TextField
                 Image(
-                    painter = painterResource(id = R.drawable.password),
-                    contentDescription = "비밀번호 아이콘",
+                    painter = painterResource(id = R.drawable.password_container),
+                    contentDescription = null,
                     modifier = Modifier
                         .fillMaxSize(),
                     contentScale = ContentScale.FillBounds
@@ -112,11 +122,18 @@ fun LoginScreen(
                 // TextField in front of the Image
                 TextField(
                     value = loginViewModel.password.value,
+                    placeholder = {
+                        Text(
+                            "비밀번호",
+                            fontSize = 30.sp,
+                            color = Color.Gray
+                        )
+                    },
                     onValueChange = { loginViewModel.password.value = it },
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 130.dp), // Adjust padding for text alignment
+                        .padding(start = 60.dp), // Adjust padding for text alignment
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent,
@@ -125,6 +142,10 @@ fun LoginScreen(
                     )
                 )
             }
+
+            Spacer(modifier = Modifier.height(30.dp))
+
+
 
             // Login Button
             BasicButton(
@@ -137,7 +158,7 @@ fun LoginScreen(
                                 popUpTo("login") { inclusive = true }
                             }
                     }, onErrorPassword = {
-                        // 비밀번호 오류 처리
+                        // 비밀번호 오류 처리ㅅ
                     }, onError = {
                         // 네트워크 오류 처리
                     })

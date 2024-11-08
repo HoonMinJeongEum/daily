@@ -12,30 +12,30 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.example.diarytablet.R
 import com.example.diarytablet.ui.components.MissionItem
 
+
 @Composable
-fun missionModal(
-    isModalVisible: Boolean,
+fun MissionModalDialog(
+    isDialogVisible: Boolean,
     onDismiss: () -> Unit,
     missionItems: List<MissionItem>
 ) {
-    if (isModalVisible) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xB3000000))
-                .clickable { onDismiss() }
+    if (isDialogVisible) {
+        Dialog(
+            onDismissRequest = { onDismiss() },
+            properties = DialogProperties(dismissOnClickOutside = true)
         ) {
             Box(
                 modifier = Modifier
                     .width(500.dp)
-                    .padding(40.dp)
-                    .background(Color(0xFFDEE5D4), shape = androidx.compose.foundation.shape.RoundedCornerShape(30.dp)) // 모달 배경색 및 모서리
+                    .background(Color(0xFFDEE5D4), shape = RoundedCornerShape(30.dp)) // 모달 배경색 및 모서리
                     .padding(24.dp)
-                    .align(Alignment.Center)
             ) {
+                // 닫기 버튼
                 Box(
                     modifier = Modifier
                         .align(alignment = Alignment.TopEnd)
@@ -45,27 +45,25 @@ fun missionModal(
                         painter = painterResource(id = R.drawable.mission_close),
                         contentDescription = null,
                         modifier = Modifier.size(40.dp)
-
                     )
                 }
+
                 Column(
-                    modifier = Modifier.padding(vertical = 40.dp)
-                        .fillMaxWidth()
-                    ,
+                    modifier = Modifier
+                        .padding(vertical = 40.dp)
+                        .fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(32.dp)
                 ) {
-
                     // "오늘의 미션" 제목
                     Text(
                         text = "오늘의 미션",
                         color = Color(0xFF49566F),
                         fontSize = 30.sp,
-                        modifier = Modifier
-                            .padding(bottom = 10.dp)
+                        modifier = Modifier.padding(bottom = 10.dp)
                     )
 
-//                    // 각 미션 항목을 반복하여 표시
+                    // 각 미션 항목을 반복하여 표시
                     missionItems.forEach { missionItem ->
                         MissionItemRow(missionItem = missionItem)
                     }
@@ -74,6 +72,7 @@ fun missionModal(
         }
     }
 }
+
 
 @Composable
 fun MissionItemRow(missionItem: MissionItem) {
@@ -132,18 +131,3 @@ fun MissionItemRow(missionItem: MissionItem) {
         }
     }
 
-
-
-@Preview(widthDp = 1280, heightDp = 800)
-@Composable
-fun previewModal(){
-    missionModal(
-        isModalVisible =  true,
-        onDismiss = {},
-        missionItems = listOf(
-            MissionItem(text = "그림일기", isSuccess = true),
-            MissionItem(text = "단어학습", isSuccess = false),
-            MissionItem(text = "그림퀴즈", isSuccess = false)
-        )
-    )
-}

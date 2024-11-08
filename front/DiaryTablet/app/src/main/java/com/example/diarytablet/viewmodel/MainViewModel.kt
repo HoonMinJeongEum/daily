@@ -52,7 +52,8 @@ class MainViewModel @Inject constructor(
 
                 _profileImageUrl.value = response.image
 
-                userStore.setValue(KEY_PROFILE_IMAGE, response.image)            } catch (e: Exception) {
+                userStore.setValue(KEY_PROFILE_IMAGE, response.image)
+            } catch (e: Exception) {
                 e.printStackTrace()
             }
         }

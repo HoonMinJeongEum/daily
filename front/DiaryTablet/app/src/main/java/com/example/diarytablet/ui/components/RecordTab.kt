@@ -1,6 +1,5 @@
 package com.example.diarytablet.ui.components
 
-import CouponShopList
 import StickerShopList
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

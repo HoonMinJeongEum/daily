@@ -13,8 +13,19 @@ import androidx.core.app.NotificationManagerCompat
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
+import com.example.diarytablet.datastore.UserStore
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
+
+    private val userStore: UserStore by lazy {
+        DiaryTablet.instance.userStore
+    }
+
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
@@ -31,6 +42,9 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             val title = remoteMessage.data["title"]
             val body = remoteMessage.data["body"]
             sendNotification(title, body)
+        }
+        CoroutineScope(Dispatchers.IO).launch {
+//            userStore.setAlarmState(true)
         }
     }
 

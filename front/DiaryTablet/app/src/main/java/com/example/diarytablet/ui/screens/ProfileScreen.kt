@@ -36,10 +36,13 @@ fun ProfileScreen (
     val profileList by viewModel.profileList
 
     fun chooseProfile(profile: Profile) {
-        val selectProfileRequestDto = SelectProfileRequestDto(memberId = profile.id) // memberId를 프로필의 id로 설정
-        viewModel.selectProfile(selectProfileRequestDto) // ViewModel에 전달
-        navController.navigate("main") {
-            popUpTo("profileList") { inclusive = true }
+        val selectProfileRequestDto = SelectProfileRequestDto(memberId = profile.id)
+        viewModel.selectProfile(selectProfileRequestDto) { isSuccess ->  // 콜백 추가
+            if (isSuccess) {
+                navController.navigate("main") {
+                    popUpTo("profileList") { inclusive = true }
+                }
+            }
         }
     }
 
@@ -61,11 +64,7 @@ fun ProfileScreen (
                 .align(Alignment.Center)
                 .padding(top = 100.dp),
             onChooseProfile = {profile -> chooseProfile(profile)},
-            onCreateProfile = { name, img -> // name과 imgUrl을 인자로 받도록 수정
-                val defaultImgUrl = "https://example.com/default_profile_image.png"
-                val createProfileRequestDto = CreateProfileRequestDto(name = name, img = defaultImgUrl)
-                viewModel.addProfile(createProfileRequestDto) // ViewModel에 전달
-            }
+
         )
     }
 }

@@ -40,7 +40,7 @@ fun WordLearningScreen(
 ) {
 
     val wordList by viewModel.wordList
-
+    val learnedWordList by viewModel.learnedWordList
     BackgroundPlacement(backgroundType = backgroundType)
 
     Box(
@@ -65,7 +65,9 @@ fun WordLearningScreen(
                     modifier = Modifier
                         .size(60.dp)
                         .clickable {
-                            navController.popBackStack()
+                            navController.navigate("main") {
+                                popUpTo("wordLearning") { inclusive = true }
+                            }
                         }
                 )
                 Spacer(modifier = Modifier.width(30.dp))
@@ -83,12 +85,14 @@ fun WordLearningScreen(
             WordTap(
                 wordList = wordList,
                 modifier = Modifier.align(Alignment.CenterHorizontally),
-                onValidate = { context, originalBitmap, writtenBitmap ->
-                    viewModel.checkWordValidate(context, originalBitmap, writtenBitmap)
+                onValidate = { context, word, writtenBitmap ->  // 이 부분에서 타입이 맞아야 합니다.
+                    viewModel.checkWordValidate(context, word, writtenBitmap) // String과 Bitmap 전달
                 },
-                onFinish = { words ->
-                    viewModel.finishWordLearning(words)
-                }
+                onFinish = {
+                    viewModel.finishWordLearning()
+                },
+                learnedWordList = learnedWordList,
+                navController = navController
             )
         }
     }

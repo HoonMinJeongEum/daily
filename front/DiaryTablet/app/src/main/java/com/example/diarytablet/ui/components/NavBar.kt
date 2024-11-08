@@ -1,5 +1,6 @@
 package com.example.diarytablet.ui.components
 
+
 import ProfileModal
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -15,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.example.diarytablet.ui.components.BasicButton
 import com.example.diarytablet.ui.components.Profile
 import com.example.diarytablet.ui.components.AlarmButton
@@ -24,12 +26,16 @@ import com.example.diarytablet.viewmodel.NavBarViewModel
 fun Navbar(
     viewModel: NavBarViewModel = hiltViewModel(),
     modifier: Modifier = Modifier,
+    navController: NavController
 ) {
     val shellCount by viewModel.shellCount
     val profileImageUrl by viewModel.profileImageUrl
     val isAlarmOn by viewModel.isAlarmOn
     val userName by viewModel.userName
-    var isModalVisible by remember { mutableStateOf(false) }
+    val alarms by viewModel.alarms
+    var isProfileModalVisible by remember { mutableStateOf(false) }
+    var isAlarmModalVisible by remember { mutableStateOf(false) }
+
 
 
     Row(
@@ -45,23 +51,39 @@ fun Navbar(
         )
         AlarmButton(
             isAlarmOn = isAlarmOn,
-            onClick = {}
+            onClick = {
+                viewModel.getAlarms {
+                    isAlarmModalVisible = true
+                }
+                viewModel.setAlarmState(false)
+            }
         )
         Profile(
-            onProfileClick = {isModalVisible = true},
+            onProfileClick = {isProfileModalVisible = true},
             imageUrl = profileImageUrl
         )
     }
 
-    if (isModalVisible) {
+
         ProfileModal(
-            isModalVisible = isModalVisible,
-            onDismiss = { isModalVisible = false },
+            isModalVisible = isProfileModalVisible,
+            onDismiss = { isProfileModalVisible = false },
             profileImageUrl = profileImageUrl,
             userName = userName,
             onEditNameClick = { newName -> viewModel.updateUserName(newName) }
         )
-    }
+
+
+
+        AlarmModal(
+            isModalVisible = isAlarmModalVisible,
+            onDismiss = { isAlarmModalVisible = false },
+            alarmItems = alarms,
+            onConfirmClick = {alarmId ->
+                    viewModel.checkAlarm(alarmId)},
+            navController = navController
+        )
+
 }
 
 

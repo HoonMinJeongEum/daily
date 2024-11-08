@@ -9,16 +9,14 @@ import androidx.lifecycle.viewModelScope
 import com.example.diarytablet.datastore.UserStore
 import com.example.diarytablet.domain.RetrofitClient
 import com.example.diarytablet.domain.dto.request.CreateProfileRequestDto
-import com.example.diarytablet.domain.dto.request.LoginRequestDto
 import com.example.diarytablet.domain.dto.request.SelectProfileRequestDto
+import com.example.diarytablet.domain.dto.request.alarm.SaveTokenRequestDto
 import com.example.diarytablet.domain.dto.response.Profile
+import com.example.diarytablet.domain.repository.AlarmRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import com.example.diarytablet.domain.repository.ProfileListRepository
-import com.example.diarytablet.utils.Response
 import com.google.firebase.messaging.FirebaseMessaging
-import com.ssafy.daily.alarm.dto.SaveTokenRequestDto
-import com.ssafy.daily.alarm.repository.AlarmRepository
 import kotlinx.coroutines.launch
 
 @HiltViewModel
@@ -56,40 +54,42 @@ class ProfileViewModel @Inject constructor(
     }
 
 
-    fun selectProfile(profile: SelectProfileRequestDto) {
+    fun selectProfile(profile: SelectProfileRequestDto, onComplete: (Boolean) -> Unit) {
         viewModelScope.launch {
             try {
-                    val response: retrofit2.Response<Void> = profileListRepository.selectProfile(profile)
+                val response: retrofit2.Response<Void> = profileListRepository.selectProfile(profile)
 
-                    if (response.isSuccessful) {
-                        // 헤더에서 토큰 가져오기
-                        val headers = response.headers()
-                        val accessToken = headers["Authorization"]?.removePrefix("Bearer ")?.trim()
-                        val refreshToken = headers["Set-Cookie"]
-                        if (!accessToken.isNullOrEmpty() && !refreshToken.isNullOrEmpty()) {
+                if (response.isSuccessful) {
+                    val headers = response.headers()
+                    val accessToken = headers["Authorization"]?.removePrefix("Bearer ")?.trim()
+                    val refreshToken = headers["Set-Cookie"]
+                    val selectedProfile = _profileList.value.find { it.id == profile.memberId }
+                    val profileName = selectedProfile?.name
 
-                            RetrofitClient.login(accessToken, refreshToken)
-                            userStore
-                                .setValue(UserStore.KEY_REFRESH_TOKEN, refreshToken)
-                                .setValue(UserStore.KEY_ACCESS_TOKEN, accessToken)
+                    if (!profileName.isNullOrEmpty() && !accessToken.isNullOrEmpty() && !refreshToken.isNullOrEmpty()) {
+                        RetrofitClient.login(accessToken, refreshToken)
+                        userStore
+                            .setValue(UserStore.KEY_REFRESH_TOKEN, refreshToken)
+                            .setValue(UserStore.KEY_ACCESS_TOKEN, accessToken)
+                            .setValue(UserStore.KEY_PROFILE_NAME, profileName)
+                        Log.d("ProfileList", "Tokens stored successfully")
+                        saveFcmToken()
+                        onComplete(true) // 성공 시 콜백 호출
 
-                        }
-                    } else {
-                        Log.d("ProfilePage","ProfileSelect Fail")
                     }
-                } catch (e: Exception) {
-                    Log.d("ProfilePage","ProfilePage RealFail")
+                } else {
+                    Log.d("ProfilePage", "ProfileSelect Fail")
+                    onComplete(false) // 실패 시 콜백 호출
                 }
+            } catch (e: Exception) {
+                Log.e("ProfilePage", "Profile selection error", e)
+                onComplete(false) // 실패 시 콜백 호출
             }
         }
-
-
-    fun addProfile(profile: CreateProfileRequestDto) {
-        viewModelScope.launch {
-            profileListRepository.createProfile(profile)
-            loadProfiles() // 새로운 프로필 추가 후 리스트 갱신
-        }
     }
+
+
+
 
     // FCM 토큰을 가져와 저장하는 함수
     private fun saveFcmToken() {

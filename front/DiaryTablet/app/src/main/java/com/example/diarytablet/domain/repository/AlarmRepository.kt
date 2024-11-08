@@ -1,12 +1,13 @@
-package com.ssafy.daily.alarm.repository
+package com.example.diarytablet.domain.repository
 
-import com.example.diarytablet.domain.dto.response.alarm.AlarmResponseDto
-import com.ssafy.daily.alarm.dto.CheckAlarmRequestDto
-import com.ssafy.daily.alarm.dto.SaveTokenRequestDto
+import com.example.diarytablet.domain.dto.request.alarm.CheckAlarmRequestDto
+import com.example.diarytablet.domain.dto.request.alarm.SaveTokenRequestDto
+import com.example.diarytablet.domain.dto.response.StatusResponseDto
+import com.example.diarytablet.domain.dto.response.alarm.AlarmListResponseDto
 import retrofit2.Response
 
 interface AlarmRepository {
-    suspend fun saveToken(request: SaveTokenRequestDto): Response<String>
-    suspend fun getAlarms(): Response<List<AlarmResponseDto>>
-    suspend fun checkAlarm(request: CheckAlarmRequestDto): Response<String>
+    suspend fun saveToken(request: SaveTokenRequestDto): Response<StatusResponseDto>
+    suspend fun getAlarms():Response<AlarmListResponseDto>
+    suspend fun checkAlarm(request: CheckAlarmRequestDto): Response<StatusResponseDto>
 }

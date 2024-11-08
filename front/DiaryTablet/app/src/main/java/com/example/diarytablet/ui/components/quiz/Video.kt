@@ -1,4 +1,4 @@
-package com.example.diarytablet.ui.components
+package com.example.diarytablet.ui.components.quiz
 
 import android.view.LayoutInflater
 import android.view.View
@@ -17,10 +17,11 @@ import com.example.diarytablet.utils.openvidu.LocalParticipant
 import com.example.diarytablet.utils.openvidu.Session
 import com.example.diarytablet.viewmodel.QuizViewModel
 import org.webrtc.EglBase
+import org.webrtc.RendererCommon
 
 @Composable
 fun Video(
-    modifier: Modifier = Modifier,
+    modifier: Modifier,
     viewModel: QuizViewModel
 ) {
     val context = LocalContext.current
@@ -37,7 +38,9 @@ fun Video(
             init(rootEglBase.eglBaseContext, null)
             setMirror(true)
             setEnableHardwareScaler(true)
+            setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FILL)
             setZOrderMediaOverlay(true)
+            visibility = View.INVISIBLE
         }
         binding.root
     })
@@ -66,6 +69,7 @@ fun Video(
     LaunchedEffect(token) {
         if (token != null && activity != null) {
             val session = Session(sessionId?.customSessionId ?: "", token!!, binding.viewsContainer, activity, viewModel, rootEglBase)
+            viewModel.session = session
             val localParticipant = LocalParticipant("participantName", session, activity, binding.localGlSurfaceView)
             localParticipant.startCamera()
 

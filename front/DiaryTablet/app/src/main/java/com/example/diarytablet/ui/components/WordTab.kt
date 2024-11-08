@@ -2,6 +2,7 @@ package com.example.diarytablet.ui.components
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.util.Log
 import android.widget.ProgressBar
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -25,7 +26,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -38,25 +38,29 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.asAndroidPath
-import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
 import com.example.diarytablet.R
 import com.example.diarytablet.domain.dto.request.WordRequestDto
 import com.example.diarytablet.domain.dto.response.WordResponseDto
@@ -71,20 +75,36 @@ import kotlinx.coroutines.launch
 fun WordTap(
     modifier: Modifier = Modifier,
     wordList: List<WordResponseDto>,
-    onValidate: (Context, Bitmap, Bitmap) -> Unit,
-    onFinish: (List<WordRequestDto>) -> Unit,
+    onValidate: suspend (Context, WordResponseDto, Bitmap) -> Int,
+    onFinish:suspend () -> Unit,
+    learnedWordList: List<WordRequestDto>,
+    navController: NavController
+
 ) {
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     var currentIndex by remember { mutableIntStateOf(0) }
     var finishedIndex by remember { mutableIntStateOf(-1) }
 
-    var originalBitmap by remember { mutableStateOf<Bitmap?>(null) }
-    var writtenBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var canvasWidth by remember { mutableStateOf(780) }
+    var canvasHeight by remember { mutableStateOf(510) }
+
+    // canvasWidth와 canvasHeight를 활용해 Bitmap을 생성
+    var writtenBitmap by remember {
+        mutableStateOf(
+            Bitmap.createBitmap(canvasWidth, canvasHeight, Bitmap.Config.ARGB_8888)
+        )
+    }
     val context = LocalContext.current
-    var textSize by remember { mutableStateOf(IntSize.Zero) }
-    var canvasSize by remember { mutableStateOf(IntSize.Zero) }
     val isDrawingMode by remember { mutableStateOf(true) }
+    var buttonText by remember { mutableStateOf("제출") }
+    var buttonColor by remember { mutableStateOf(Color.White) }
+    var initialized by remember { mutableStateOf(false) }
+
+    fun clearCanvas() {
+        writtenBitmap.eraseColor(android.graphics.Color.TRANSPARENT)
+
+    }
 
     Column(modifier = modifier.fillMaxSize()) {
 
@@ -97,11 +117,10 @@ fun WordTap(
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(60.dp),
         verticalAlignment = Alignment.CenterVertically,
-        contentPadding = PaddingValues(start = 210.dp, end = 210.dp)
-
+        contentPadding = PaddingValues(start = 210.dp, end = 210.dp),
+        userScrollEnabled = false
     ){
         itemsIndexed(wordList) { index, word ->
-            val currentBitmap = Bitmap.createBitmap(780, 510, Bitmap.Config.ARGB_8888) // 예시 크기
 
             Box(
         modifier = modifier
@@ -120,17 +139,8 @@ fun WordTap(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxSize()
         ) {
-//            AsyncImage(
-//                model = ImageRequest.Builder(LocalContext.current)
-//                    .data(word.imageUrl)
-//                    .build(),
-//                contentDescription = null,
-//                modifier = Modifier
-//                    .fillMaxWidth(0.5f)
-//                    .aspectRatio(1f)
-//                contentScale = ContentScale.Crop
-//            )
-            if (listState.firstVisibleItemIndex == index-1) {
+
+            if (listState.firstVisibleItemIndex == index-1 && currentIndex != finishedIndex+1) {
                 Image(
                     painter = painterResource(id = R.drawable.right_arrow),
                     contentDescription = null,
@@ -154,12 +164,22 @@ fun WordTap(
                     .fillMaxHeight(),
                 contentAlignment = Alignment.Center
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.big_jogae),
+//                Image(
+//                    painter = painterResource(id = R.drawable.big_jogae),
+//                    contentDescription = null,
+//                    modifier = Modifier
+//                        .fillMaxWidth(0.6f) // 크기 조정
+//                        .aspectRatio(1f)
+//                )
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(word.imageUrl)
+                        .crossfade(true)
+                        .build(),
                     contentDescription = null,
                     modifier = Modifier
-                        .fillMaxWidth(0.6f) // 크기 조정
-                        .aspectRatio(1f)
+                        .fillMaxSize(),
+                    contentScale = ContentScale.FillBounds
                 )
             }
             Box(
@@ -177,11 +197,27 @@ fun WordTap(
                 ) {
                     Box(
                         modifier = Modifier
-                            .wrapContentSize(),
+                            .wrapContentSize()
+                            .onSizeChanged { size ->
+                                Log.d("wordtest","$${index} ${word}")
+                                val characterCount = wordList[currentIndex].word.length
+                                val targetWidth = characterCount * 200
+                                val targetHeight = 200
+
+                                if (!initialized && ( canvasWidth != targetWidth || canvasHeight != targetHeight)) {
+                                    canvasWidth = targetWidth
+                                    canvasHeight = targetHeight
+                                    writtenBitmap = Bitmap.createBitmap(canvasWidth, canvasHeight, Bitmap.Config.ARGB_8888).apply {
+                                        eraseColor(android.graphics.Color.TRANSPARENT)
+                                    }
+                                    Log.d("sizeTest", "Updated Bitmap size: $canvasWidth x $canvasHeight")
+                                    initialized = true
+                                }
+                            },
                         contentAlignment = Alignment.Center
                     ) {
                         // 각 글자를 개별 박스로 나누어 배치
-                        val characters = word.word.chunked(1)
+                        val characters = wordList[currentIndex].word.chunked(1)
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(0.dp),
                             verticalAlignment = Alignment.CenterVertically,
@@ -207,9 +243,8 @@ fun WordTap(
                             modifier = Modifier
                                 .matchParentSize()
                                 .align(Alignment.Center),
-                            currentBitmap = currentBitmap,
-                            isDrawingMode = isDrawingMode
-//                            .captureToBitmap { bitmap -> writtenBitmap = bitmap }
+                            currentBitmap = writtenBitmap,
+                            isDrawingMode = isDrawingMode,
                         )
                     }
 
@@ -222,33 +257,52 @@ fun WordTap(
                     BasicButton(
                         onClick = {
                             if (currentIndex == finishedIndex + 1) {
-                                onValidate(context, originalBitmap!!, writtenBitmap!!)
+                                Log.d("gon", "Button clicked")
                                 coroutineScope.launch {
-                                    if (true/* validation success */) {
-                                        finishedIndex = currentIndex
-                                        if (finishedIndex == 10) {
-//                                            onFinish(wordList)
-                                        } else {
-                                            listState.animateScrollToItem(++currentIndex)
+                                    val statusCode = onValidate(context, wordList[currentIndex], writtenBitmap!!)
+                                    Log.d("wordTap","success ${statusCode}")
+
+                                    when (statusCode) {
+                                        200 -> {
+                                            // Success, proceed to the next item
+                                            finishedIndex = currentIndex
+                                            buttonText = "제출"
+                                            buttonColor = Color.White
+                                            initialized = false
+                                            if (finishedIndex == 9) {
+                                                onFinish()
+                                                navController.navigate("main") {
+                                                    popUpTo("wordLearning") { inclusive = true }
+                                                }
+
+                                            } else {
+                                                listState.animateScrollToItem(++currentIndex)
+                                            }
                                         }
-                                    } else {
-                                        // validation failure
-                                        // Update button text to "다시하기" and color to red
-                                        // Modify button color as per failure state
+                                        400, 422 -> {
+                                            // Change button to "다시제출" with the specified color
+                                            buttonText = "다시제출"
+                                            buttonColor = Color(0xFFD27979) // Hex color D27979
+                                        }
+                                        else -> {
+                                            // Handle other errors if needed
+                                        }
                                     }
+                                    clearCanvas()
                                 }
                             }
+                            Log.d("wordTap","f ${finishedIndex} , c ${currentIndex}")
                         },
-                        modifier = Modifier
-                            .clickable(enabled = currentIndex == finishedIndex + 1) {
-                                coroutineScope.launch {
-                                    listState.animateScrollToItem(currentIndex)
-                                }
-                            },
-                        text = if (currentIndex <= finishedIndex) "완료" else "제출",
-                        ButtonColor = if (currentIndex <= finishedIndex) Color.Gray else Color.White,
+                        modifier = Modifier.clickable(enabled = currentIndex == finishedIndex + 1) {
+                            coroutineScope.launch {
+                                listState.animateScrollToItem(currentIndex)
+                            }
+                        },
+                        text = if (currentIndex != finishedIndex + 1) "완료" else buttonText,
+                        ButtonColor = if (currentIndex != finishedIndex + 1) Color.Gray else buttonColor,
                         imageResId = 11
                     )
+
                 }
             }
             if (listState.firstVisibleItemIndex == index+1) {
@@ -288,6 +342,9 @@ fun DrawCanvas(
     var lastX by remember { mutableStateOf(0f) }
     var lastY by remember { mutableStateOf(0f) }
 
+    // Convert Bitmap to ImageBitmap to update UI
+    val imageBitmap by rememberUpdatedState(currentBitmap.asImageBitmap())
+
     Canvas(
         modifier = modifier
             .fillMaxSize()
@@ -304,11 +361,12 @@ fun DrawCanvas(
                         onDrag = { change, _ ->
                             path.lineTo(change.position.x, change.position.y)
 
+                            // Draw directly on the bitmap
                             val canvas = android.graphics.Canvas(currentBitmap)
                             val paint = createPaintForTool(
                                 ToolType.PENCIL,
                                 Color.Black,
-                                7f
+                                9f
                             )
                             canvas.drawPath(path.asAndroidPath(), paint)
                         },
@@ -320,11 +378,16 @@ fun DrawCanvas(
             }
     ) {
         drawIntoCanvas { canvas ->
-            // Display updated bitmap
-            canvas.nativeCanvas.drawBitmap(currentBitmap, 0f, 0f, null)
+            // Draw ImageBitmap converted from the updated Bitmap
+            canvas.drawImage(imageBitmap, Offset(0f, 0f), Paint())
         }
     }
 }
+
+
+
+
+
 
 
 
