@@ -48,13 +48,13 @@ fun CouponStockBox(coupon: CouponStock, index: Int, onClick: (Int) -> Unit) {
             .padding(0.dp)
             .fillMaxWidth(0.9f)
             .aspectRatio(6.8f / 1f)
-            .clickable(
-                indication = null, // 클릭 시 시각적 효과 제거
-                interactionSource = remember { MutableInteractionSource() }
-            ) {
-                isPressed = true
-                onClick(coupon.id)
-            }
+//            .clickable(
+//                indication = null, // 클릭 시 시각적 효과 제거
+//                interactionSource = remember { MutableInteractionSource() }
+//            ) {
+//                isPressed = true
+//                onClick(coupon.id)
+//            }
     ) {
         // 클릭 후 일정 시간 후에 상태를 원래대로 복귀
         LaunchedEffect(isPressed) {
