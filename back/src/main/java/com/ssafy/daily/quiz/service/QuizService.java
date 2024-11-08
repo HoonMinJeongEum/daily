@@ -54,8 +54,6 @@ public class QuizService {
         String username = userDetails.getUsername();
         String childName = userDetails.getMember().getName();
         String customSessionId = childName + username;
-        System.out.println("childName: " + childName);
-        System.out.println("username: " + username + " ,customSessionId: " + customSessionId);
         Quiz quiz = quizRepository.findByMemberId(userDetails.getMember().getId());
 
         // 세션 생성
@@ -64,7 +62,7 @@ public class QuizService {
         SessionProperties properties = SessionProperties.fromJson(map).build();
         Session session = openvidu.createSession(properties);
         String sessionId = session.getSessionId();
-        System.out.println("sessionId: " + sessionId);
+        
         if (quiz == null) {
             Quiz newQuiz = Quiz.builder()
                     .sessionId(sessionId)
