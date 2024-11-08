@@ -87,6 +87,13 @@ io.on("connection", (socket) => {
     io.to(socket.roomId).emit("clear");
   });
 
+  // 퀴즈 시작
+  socket.on("quizStart", () => {
+    console.log(`그림 퀴즈를 시작합니다.`);
+
+    socket.to(socket.roomId).emit("quizStart");
+  });
+
   // 연결 종료
   socket.on("disconnect", async() => {
     console.log(`클라이언트가 방에서 연결이 종료되었습니다.`);
