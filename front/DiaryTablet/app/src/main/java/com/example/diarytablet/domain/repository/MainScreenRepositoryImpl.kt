@@ -1,8 +1,11 @@
 package com.example.diarytablet.domain.repository
 
+import com.example.diarytablet.domain.dto.request.CompleteMissionItemRequestDto
 import com.example.diarytablet.domain.dto.request.UserNameUpdateRequestDto
+import com.example.diarytablet.domain.dto.response.CompleteMissionItemResponseDto
 import com.example.diarytablet.domain.dto.response.MainScreenResponseDto
 import com.example.diarytablet.domain.service.MainScreenService
+import retrofit2.Response
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -15,6 +18,10 @@ class MainScreenRepositoryImpl @Inject constructor (
     }
     override suspend fun updateUserName(userNameUpdateRequestDto : UserNameUpdateRequestDto) {
         return mainScreenService.updateUserName(userNameUpdateRequestDto)
+    }
+
+    override suspend fun completeMissionItem(completeMissionItemRequestDto : CompleteMissionItemRequestDto) : Response<CompleteMissionItemResponseDto> {
+        return mainScreenService.completeMissionItem(completeMissionItemRequestDto)
     }
 
 

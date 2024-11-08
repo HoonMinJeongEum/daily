@@ -23,11 +23,12 @@ class LoginViewModel @Inject constructor(
 ) : ViewModel() {
     val username = mutableStateOf("")
     val password = mutableStateOf("")
+    val errorMessage = mutableStateOf<String?>(null)  // 에러 메시지 상태 추가
 
     fun login(
         onSuccess: () -> Unit,
-        onErrorPassword: () -> Unit,
-        onError: () -> Unit
+        onErrorPassword: (String) -> Unit,  // 오류 메시지를 전달받을 수 있도록 변경
+        onError: (String) -> Unit
     ) {
         viewModelScope.launch {
             val loginRequestDto = LoginRequestDto(
@@ -53,8 +54,9 @@ class LoginViewModel @Inject constructor(
 
                         onSuccess() // 로그인 성공 처리
                     } else {
-                        Log.d("LoginViewModel", "Token not found in headers")
-                        onError() // 토큰이 없으면 에러 처리
+                        val errorMsg = "토큰이 헤더에서 찾을 수 없습니다."
+                        Log.d("LoginViewModel", errorMsg)
+                        onError(errorMsg) // 토큰이 없으면 에러 처리
                     }
                 } else {
                     handleErrorResponse(response.code(), onErrorPassword, onError)
@@ -75,32 +77,36 @@ class LoginViewModel @Inject constructor(
         Log.d("LoginViewModel", "User info saved: Username: ${username.value}, AccessToken: $accessToken")
     }
 
-    private fun handleErrorResponse(code: Int, onErrorPassword: () -> Unit, onError: () -> Unit) {
+    private fun handleErrorResponse(code: Int, onErrorPassword: (String) -> Unit, onError: (String) -> Unit) {
         when (code) {
             401 -> {
-                Log.d("LoginViewModel", "Unauthorized") // 비밀번호 오류
-                onErrorPassword()
+                val msg = "비밀번호가 올바르지 않습니다."
+                Log.d("LoginViewModel", msg)
+                onErrorPassword(msg) // 비밀번호 오류
             }
             else -> {
-                Log.d("LoginViewModel", "Error: $code") // 다른 오류
-                onError()
+                val msg = "알 수 없는 오류가 발생했습니다. 코드: $code"
+                Log.d("LoginViewModel", msg)
+                onError(msg) // 다른 오류
             }
         }
     }
 
-    private fun handleException(e: Exception, onErrorPassword: () -> Unit, onError: () -> Unit) {
+    private fun handleException(e: Exception, onErrorPassword: (String) -> Unit, onError: (String) -> Unit) {
         when (e) {
             is HttpException -> {
-                if (e.code() == 401) {
-                    onErrorPassword() // 비밀번호 오류 처리
+                val msg = if (e.code() == 401) {
+                    "비밀번호 오류"
                 } else {
-                    Log.e("LoginViewModel", "HTTP error: ${e.message}")
-                    onError() // 일반 오류 처리
+                    "HTTP 오류: ${e.message}"
                 }
+                Log.e("LoginViewModel", msg)
+                onError(msg) // HTTP 예외 처리
             }
             else -> {
-                Log.e("LoginViewModel", "Network error: ${e.message}")
-                onError() // 네트워크 오류 처리
+                val msg = "네트워크 오류: ${e.message}"
+                Log.e("LoginViewModel", msg)
+                onError(msg) // 네트워크 오류 처리
             }
         }
     }
