@@ -46,22 +46,27 @@ object RetrofitClient {
     private fun initInstance() {
         val client = OkHttpClient.Builder()
             .addInterceptor { chain ->
-                var requestBuilder = chain.request().newBuilder()
-                    .header("Content-Type", "application/json")
+                val originalRequest = chain.request()
+                val isLoginRequest = originalRequest.url.encodedPath.contains("/login")
+                val isTokenRefreshRequest = originalRequest.url.encodedPath.contains("/user/reissue")
 
-                // Access token이 null이 아닌 경우 Authorization 헤더 추가
-                accessToken?.let {
-                    requestBuilder = refreshToken?.let { it1 ->
-                        requestBuilder
-                            .header("Authorization", "Bearer $it")
-                            .header("Cookie", it1)
-                    }!!
+                // 로그인 및 토큰 갱신 요청은 Authorization 헤더를 추가하지 않음
+                val requestBuilder = if (isLoginRequest || isTokenRefreshRequest) {
+                    originalRequest.newBuilder()
+                        .header("Content-Type", "application/json")
+                } else {
+                    originalRequest.newBuilder()
+                        .header("Content-Type", "application/json")
+                        .apply {
+                            accessToken?.let { header("Authorization", "Bearer $it") }
+                            refreshToken?.let { header("Cookie", it) }
+                        }
                 }
 
                 val request = requestBuilder.build()
                 var response = chain.proceed(request)
 
-                // 401 Unauthorized 응답 시 refresh token으로 재발급 시도
+                // 401 Unauthorized 시 토큰 갱신
                 if (response.code == 401) {
                     response.close()
                     synchronized(this) {
@@ -69,18 +74,11 @@ object RetrofitClient {
                         if (newTokens != null) {
                             accessToken = newTokens.first
                             refreshToken = newTokens.second
-
-                            // 저장소에 갱신된 토큰을 저장
                             runBlocking {
-                                accessToken?.let { token ->
-                                    userStore.setValue(UserStore.KEY_ACCESS_TOKEN, token)
-                                }
-                                refreshToken?.let { token ->
-                                    userStore.setValue(UserStore.KEY_REFRESH_TOKEN, token)
-                                }
+                                accessToken?.let { userStore.setValue(UserStore.KEY_ACCESS_TOKEN, it) }
+                                refreshToken?.let { userStore.setValue(UserStore.KEY_REFRESH_TOKEN, it) }
                             }
 
-                            // 갱신된 accessToken으로 요청 재시도
                             val newRequest = requestBuilder
                                 .header("Authorization", "Bearer ${accessToken ?: ""}")
                                 .build()
@@ -100,28 +98,17 @@ object RetrofitClient {
             .build()
     }
 
-    // 토큰을 갱신하는 메서드
     private fun refreshTokens(): Pair<String, String>? {
-        val retrofit = Retrofit.Builder()
-            .baseUrl(Const.WEB_API)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-        val authService = retrofit.create(AuthService::class.java)
-
+        val authService = getInstance().create(AuthService::class.java)
         return try {
-            val response = runBlocking {
-                authService.reissueToken("Bearer ${refreshToken ?: ""}")
-            }
+            val response = runBlocking { authService.reissueToken("Bearer ${refreshToken ?: ""}") }
             if (response.isSuccessful) {
-                // 새로운 토큰을 응답 헤더에서 추출
                 response.headers()["Authorization"]?.removePrefix("Bearer ")?.trim()?.let { newAccessToken ->
                     response.headers()["Set-Cookie"]?.let { newRefreshToken ->
                         Pair(newAccessToken, newRefreshToken)
                     }
                 }
-            } else {
-                null
-            }
+            } else null
         } catch (e: HttpException) {
             null
         }
@@ -148,17 +135,11 @@ object RetrofitClient {
 
     fun logout() {
         runBlocking {
-            val retrofit = Retrofit.Builder()
-                .baseUrl(Const.WEB_API)
-                .addConverterFactory(GsonConverterFactory.create())
-                .client(OkHttpClient.Builder().build()) // 이미 기본 클라이언트 설정 사용
-                .build()
-            val authService = retrofit.create(AuthService::class.java)
-
+            val authService = getInstance().create(AuthService::class.java)
             try {
-                authService.logout() // 토큰은 인터셉터에 의해 자동으로 헤더에 포함됨
+                authService.logout()
             } catch (e: HttpException) {
-                // 로그아웃 API 호출 실패 시 예외 처리
+                // 로그아웃 실패 처리
             }
 
             // 로컬 토큰 삭제
@@ -167,9 +148,7 @@ object RetrofitClient {
             userStore.setValue(UserStore.KEY_ACCESS_TOKEN, "")
             userStore.setValue(UserStore.KEY_REFRESH_TOKEN, "")
         }
-        initInstance()
     }
-
 
     private fun getGsonConverterFactory(): GsonConverterFactory {
         val gson = GsonBuilder()
