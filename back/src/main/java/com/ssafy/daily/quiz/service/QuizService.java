@@ -156,5 +156,6 @@ public class QuizService {
         for (Alarm alarm : alarms) {
             alarm.confirm();
         }
+        alarmRepository.saveAll(alarms);
     }
 }
