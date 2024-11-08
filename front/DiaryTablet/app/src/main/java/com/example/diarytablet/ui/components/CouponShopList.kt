@@ -93,7 +93,7 @@ fun CouponBox(coupon: Coupon, index: Int, onClick: (Coupon) -> Unit) {
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(start = 5.dp),
+                    .padding(start = 5.dp, end = 15.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Image(
@@ -114,12 +114,27 @@ fun CouponBox(coupon: Coupon, index: Int, onClick: (Coupon) -> Unit) {
                         .padding(start = 10.dp)
                 )
 
-                Text(
-                    text = "${coupon.price} 조개",
-                    fontSize = 20.sp,
-                    color = Color.Gray,
-                    modifier = Modifier.weight(0.1f)
-                )
+                // 버튼을 추가하여 조개 아이콘과 가격 표시
+                Button(
+                    onClick = { onClick(coupon) }, // 구매 이벤트 전달
+                    modifier = Modifier
+                        .weight(0.15f)
+                        .height(64.dp),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(50.dp), // 둥근 테두리 설정
+                    contentPadding = PaddingValues(horizontal = 8.dp)
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.jogae), // 조개 아이콘
+                        contentDescription = null,
+                        modifier = Modifier.size(32.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "${coupon.price}",
+                        fontSize = 32.sp,
+                        color = Color.White
+                    )
+                }
             }
         }
     }
@@ -134,7 +149,7 @@ fun PurchaseConfirmationDialog(
     Dialog(onDismissRequest = onCancel) {
         Box(
             modifier = Modifier
-                .fillMaxHeight(0.3f)
+                .fillMaxWidth()
                 .clip(shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)) // 모서리를 둥글게 설정
                 .background(Color.White)
                 .padding(20.dp),
@@ -186,8 +201,7 @@ fun PurchaseConfirmationDialog(
                         onClick = onCancel,
                         modifier = Modifier
                             .weight(1f)
-                            .height(48.dp)
-                            .align(Alignment.Bottom),
+                            .height(48.dp),
                         shape = androidx.compose.foundation.shape.RoundedCornerShape(50.dp) // 둥근 테두리 설정
                     ) {
                         Text("취소", fontSize = 16.sp)
@@ -197,5 +211,6 @@ fun PurchaseConfirmationDialog(
         }
     }
 }
+
 
 

@@ -119,6 +119,7 @@ fun StickerCard(sticker: Sticker, index: Int, onStickerClick: () -> Unit, viewMo
             }
         }
 
+        // 배경 이미지
         Box(modifier = Modifier.fillMaxSize()) {
             Image(
                 painter = painterResource(id = backgroundImage),
@@ -126,12 +127,12 @@ fun StickerCard(sticker: Sticker, index: Int, onStickerClick: () -> Unit, viewMo
                 modifier = Modifier.fillMaxSize()
             )
 
+            // 상단에 스티커 이미지 배치
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                    .padding(top = 48.dp), // 위쪽에 여백 추가
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 val context = LocalContext.current
                 val imageLoader = newImageLoader(context)
@@ -148,20 +149,36 @@ fun StickerCard(sticker: Sticker, index: Int, onStickerClick: () -> Unit, viewMo
                     painter = painter,
                     contentDescription = "Sticker Image",
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(64.dp)
+                    modifier = Modifier.size(64.dp)
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "${sticker.price} 조개",
-                    fontSize = 16.sp,
-                    color = Color.Gray
-                )
+                Spacer(modifier = Modifier.weight(1f)) // 스티커 이미지와 하단 텍스트 사이에 공간 확보
+
+                // 하단에 조개 아이콘과 가격 텍스트 배치
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(bottom = 8.dp) // 아래쪽 여백
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.jogae), // 조개 아이콘
+                        contentDescription = null,
+                        modifier = Modifier.size(48.dp) // 아이콘 크기 확대
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "${sticker.price}",
+                        fontSize = 32.sp,
+                        color = Color.Gray
+                    )
+                }
             }
         }
     }
 }
+
 
 @Composable
 fun PurchaseConfirmationModal(sticker: Sticker, onConfirm: () -> Unit, onCancel: () -> Unit) {
@@ -196,15 +213,15 @@ fun PurchaseConfirmationModal(sticker: Sticker, onConfirm: () -> Unit, onCancel:
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     // 구매 버튼 안에 조개 이미지와 가격 텍스트 배치
                     Button(
                         onClick = onConfirm,
                         modifier = Modifier
-                            .height(48.dp)
-                            .padding(horizontal = 16.dp),
+                            .weight(1f)
+                            .height(48.dp),
                         shape = RoundedCornerShape(50.dp), // 둥근 테두리 설정
                         contentPadding = PaddingValues(horizontal = 16.dp)
                     ) {
@@ -220,19 +237,14 @@ fun PurchaseConfirmationModal(sticker: Sticker, onConfirm: () -> Unit, onCancel:
                             color = Color.White
                         )
                     }
-                }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
 
-                Row(
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
                     // 취소 버튼
                     Button(
                         onClick = onCancel,
                         modifier = Modifier
-                            .fillMaxWidth()
+                            .weight(1f)
                             .height(48.dp),
                         shape = RoundedCornerShape(50.dp) // 둥근 테두리 설정
                     ) {
@@ -243,3 +255,5 @@ fun PurchaseConfirmationModal(sticker: Sticker, onConfirm: () -> Unit, onCancel:
         }
     }
 }
+
+
