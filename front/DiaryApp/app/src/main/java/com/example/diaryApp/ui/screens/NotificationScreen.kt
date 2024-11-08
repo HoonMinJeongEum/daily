@@ -14,6 +14,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -28,15 +31,18 @@ import com.example.diaryApp.ui.theme.BackgroundType
 import com.example.diaryApp.R
 import com.example.diaryApp.ui.components.NavMenu
 import com.example.diaryApp.ui.components.alarm.AlarmItem
+import com.example.diaryApp.ui.components.quiz.QuizAlert
 import com.example.diaryApp.viewmodel.AlarmViewModel
+import com.example.diaryApp.viewmodel.QuizViewModel
 
 @Composable
 fun NotificationScreen(
     navController: NavController,
     viewModel: AlarmViewModel = hiltViewModel(),
+    quizViewModel: QuizViewModel = hiltViewModel(),
     backgroundType: BackgroundType = BackgroundType.ACTIVE
 ) {
-
+    var showQuizAlert by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         viewModel.getAlarms()
     }
@@ -79,7 +85,11 @@ fun NotificationScreen(
                 // 알림 목록을 리스트로 표시
                 LazyColumn(modifier = Modifier.fillMaxWidth()) {
                     items(alarms) { alarm ->
-                        AlarmItem(alarm, navController)
+                        AlarmItem(alarm,
+                            navController,
+                            quizViewModel,
+                            onShowQuizAlert = { showQuizAlert = true }
+                        )
                         HorizontalDivider(
                             modifier = Modifier.padding(vertical = 8.dp),
                             thickness = 1.dp,
@@ -89,14 +99,21 @@ fun NotificationScreen(
                 }
             }
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomCenter) // NavMenu를 화면 하단에 고정
-                ) {
-                    NavMenu(navController, "notification", "notification")
-                }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter) // NavMenu를 화면 하단에 고정
+            ) {
+                NavMenu(navController, "notification", "notification")
             }
         }
     }
+    if (showQuizAlert) {
+        QuizAlert(
+            title = "방이 생성되지 않았습니다.",
+            onDismiss = { showQuizAlert = false }
+        )
+    }
+}
+
 

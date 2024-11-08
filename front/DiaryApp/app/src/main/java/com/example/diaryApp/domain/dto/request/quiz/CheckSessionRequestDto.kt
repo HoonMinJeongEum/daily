@@ -2,7 +2,7 @@ package com.example.diaryApp.domain.dto.request.quiz
 
 import com.google.gson.annotations.SerializedName
 
-data class CheckWordRequestDto(
-    @SerializedName("word")
-    val word: String
+data class CheckSessionRequestDto(
+    @SerializedName("childName")
+    val childName: String
 )

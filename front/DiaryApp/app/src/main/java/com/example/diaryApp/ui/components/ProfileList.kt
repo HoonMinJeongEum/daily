@@ -20,6 +20,7 @@ import androidx.navigation.NavController
 import com.example.diaryApp.domain.dto.response.profile.Profile
 import com.example.diaryApp.presentation.viewmodel.DiaryViewModel
 import com.example.diaryApp.viewmodel.ProfileViewModel
+import com.example.diaryApp.viewmodel.QuizViewModel
 import com.example.diaryApp.viewmodel.WordViewModel
 
 @Composable
@@ -29,7 +30,9 @@ fun ProfileList(
     navController: NavController,
     profileViewModel: ProfileViewModel,
     diaryViewModel: DiaryViewModel,
-    wordViewModel: WordViewModel
+    wordViewModel: WordViewModel,
+    quizViewModel: QuizViewModel,
+    onShowQuizAlert: () -> Unit
 ) {
     var showDialog by remember { mutableStateOf(false) }
 
@@ -44,7 +47,12 @@ fun ProfileList(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         profileList.forEach { profile ->
-            ProfileItem(profile, navController = navController, diaryViewModel, wordViewModel)
+            ProfileItem(profile,
+                navController = navController,
+                diaryViewModel,
+                wordViewModel,
+                quizViewModel,
+                onShowQuizAlert = onShowQuizAlert)
         }
 
         Spacer(modifier = Modifier.height(16.dp))

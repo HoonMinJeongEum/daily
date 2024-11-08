@@ -1,9 +1,9 @@
 package com.example.diaryApp.domain.repository.quiz
 
 
-import com.example.diaryApp.domain.dto.request.quiz.CheckWordRequestDto
+import com.example.diaryApp.domain.dto.request.quiz.CheckSessionRequestDto
 import com.example.diaryApp.domain.dto.request.quiz.SessionRequestDto
-import com.example.diaryApp.domain.dto.request.quiz.SetWordRequestDto
+import com.example.diaryApp.domain.dto.response.quiz.CheckSessionResponseDto
 import com.example.diaryApp.domain.dto.response.quiz.RecommendWordResponseDto
 import com.example.diaryApp.domain.dto.response.quiz.SessionResponseDto
 import com.example.diaryApp.domain.dto.response.quiz.TokenResponseDto
@@ -29,11 +29,8 @@ class QuizRepositoryImpl @Inject constructor(
         return quizService.recommendWord()
     }
 
-    override suspend fun setWord(request: SetWordRequestDto): Response<String> {
-        return quizService.setWord(request)
+    override suspend fun checkSession(checkSessionRequestDto: CheckSessionRequestDto): Response<CheckSessionResponseDto> {
+        return quizService.checkSession(checkSessionRequestDto)
     }
 
-    override suspend fun checkWord(request: CheckWordRequestDto): Response<Boolean> {
-        return quizService.checkWord(request)
-    }
 }

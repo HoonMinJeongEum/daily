@@ -30,8 +30,8 @@ fun QuizAlert(
     ) {
         Box (
             modifier = Modifier
-                .fillMaxWidth(0.35f)
-                .fillMaxHeight(0.4f)
+                .fillMaxWidth(0.5f)
+                .fillMaxHeight(0.3f)
                 .align(Alignment.Center)
                 .clip(RoundedCornerShape(32.dp))
                 .background(Color.White),
@@ -39,8 +39,10 @@ fun QuizAlert(
             Text(
                 text = title,
                 textAlign = TextAlign.Center,
-                fontSize = 30.sp,
-                modifier = Modifier.fillMaxWidth()
+                fontSize = 15.sp,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.Center)
             )
         }
 
