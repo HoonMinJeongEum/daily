@@ -1,3 +1,5 @@
+package com.example.diarytablet.ui.components
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,7 +21,7 @@ import com.example.diarytablet.ui.components.MissionItem
 
 
 @Composable
-fun MissionModalDialog(
+fun MissionModal(
     isDialogVisible: Boolean,
     onDismiss: () -> Unit,
     missionItems: List<MissionItem>

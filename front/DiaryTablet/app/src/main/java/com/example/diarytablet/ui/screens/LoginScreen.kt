@@ -1,4 +1,5 @@
 import android.util.Log
+import android.util.MutableBoolean
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -39,6 +41,8 @@ fun LoginScreen(
     loginViewModel: LoginViewModel = hiltViewModel(),
     backgroundType: BackgroundType = BackgroundType.DEFAULT
 ) {
+    var isError by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
 
     BackgroundPlacement(backgroundType = backgroundType)
 
@@ -142,7 +146,18 @@ fun LoginScreen(
                     )
                 )
             }
+            if (isError) {
+                Text(
+                    modifier = Modifier
+                        .align(Alignment.Start)
+                        .offset(x = 20.dp),
+                    text = "아이디와 비밀번호를 정확히 입력해 주세요.",
+                    fontSize = 16.sp,
+                    color = Color.Red,
+                    fontWeight = FontWeight.Normal,
 
+                    )
+            }
             Spacer(modifier = Modifier.height(30.dp))
 
 
@@ -157,11 +172,15 @@ fun LoginScreen(
                             navController.navigate("profileList") {
                                 popUpTo("login") { inclusive = true }
                             }
-                    }, onErrorPassword = {
-                        // 비밀번호 오류 처리ㅅ
-                    }, onError = {
-                        // 네트워크 오류 처리
-                    })
+                    }, onErrorPassword = { message ->
+                            isError = true
+                            errorMessage = message
+                        },
+                        onError = { message ->
+                            isError = true
+                            errorMessage = message
+                        }
+                    )
                 },
                 imageResId = 11
             )
