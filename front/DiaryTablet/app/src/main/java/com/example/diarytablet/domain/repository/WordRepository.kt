@@ -18,7 +18,7 @@ import retrofit2.http.Part
 
 interface WordRepository {
     suspend fun getWordList(): MutableList<WordResponseDto>
-    suspend fun getLearnedWordList(): MutableList<WordLearnedResponseDto>
+    suspend fun getLearnedWordList(): Response<List<WordLearnedResponseDto>>
     suspend fun checkWordValidate(
         writeFile: MultipartBody.Part,
         word: RequestBody
