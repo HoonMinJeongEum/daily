@@ -1,6 +1,5 @@
 package com.example.diarytablet.ui.components
 
-import StickerShopList
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -30,13 +29,14 @@ import androidx.compose.ui.unit.sp
 import com.example.diarytablet.viewmodel.LogViewModel
 
 @Composable
-fun RecordTab(
+fun LogTab(
     modifier: Modifier = Modifier,
     viewModel: LogViewModel
-) {
+){
     var selectedTabIndex by remember { mutableStateOf(0) }
     val tabTitles = listOf("단어장", "일기장")
-    var isDiaryDetailVisible by remember { mutableStateOf(false) }
+    var isDiaryDetailVisible by remember { mutableStateOf(false) }  // LearnedWordTab 표시 상태
+
 
     // 전체 박스 (탭 + 내용물)
     Box(

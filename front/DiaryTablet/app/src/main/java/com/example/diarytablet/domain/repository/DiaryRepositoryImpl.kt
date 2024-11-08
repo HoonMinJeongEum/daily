@@ -1,5 +1,7 @@
 package com.example.diarytablet.domain.repository
 
+import com.example.diarytablet.domain.dto.response.diary.Diary
+import com.example.diarytablet.domain.dto.response.diary.DiaryForList
 import com.example.diarytablet.domain.service.DiaryService
 import okhttp3.MultipartBody
 import retrofit2.Response
@@ -14,4 +16,12 @@ class DiaryRepositoryImpl @Inject constructor(
     override suspend fun uploadDiary(drawFile: MultipartBody.Part, writeFile: MultipartBody.Part): Response<Void> {
         return diaryService.uploadDiary(drawFile, writeFile)
     }
+    override suspend fun getDiaryList(year: Int, month: Int): Response<List<DiaryForList>> {
+        return diaryService.getDiaryList(year, month)
+    }
+
+    override suspend fun getDiaryById(diaryId: Int): Diary {
+        return diaryService.getDiaryById(diaryId)
+    }
+
 }

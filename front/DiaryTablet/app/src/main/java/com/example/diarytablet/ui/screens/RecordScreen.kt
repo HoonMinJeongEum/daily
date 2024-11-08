@@ -18,11 +18,13 @@ import com.example.diarytablet.R
 import com.example.diarytablet.ui.components.RecordTab
 import com.example.diarytablet.ui.theme.BackgroundPlacement
 import com.example.diarytablet.ui.theme.BackgroundType
+import com.example.diarytablet.viewmodel.LogViewModel
 import com.example.diarytablet.viewmodel.ShopStockViewModel
 
 @Composable
 fun RecordScreen(
     navController: NavController,
+    viewModel: LogViewModel = hiltViewModel(),
     backgroundType: BackgroundType = BackgroundType.DEFAULT
 ) {
     BackgroundPlacement(backgroundType = backgroundType)
@@ -68,7 +70,8 @@ fun RecordScreen(
                 .padding(horizontal = 40.dp)
         ) {
             RecordTab(
-                modifier = Modifier.align(Alignment.Center)
+                modifier = Modifier.align(Alignment.Center),
+                viewModel = viewModel
             )
         }
     }
