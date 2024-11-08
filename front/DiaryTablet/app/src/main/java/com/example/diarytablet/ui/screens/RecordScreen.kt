@@ -6,39 +6,26 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.diarytablet.R
-import com.example.diarytablet.ui.components.StockTab
+import com.example.diarytablet.ui.components.RecordTab
 import com.example.diarytablet.ui.theme.BackgroundPlacement
 import com.example.diarytablet.ui.theme.BackgroundType
 import com.example.diarytablet.viewmodel.ShopStockViewModel
 
 @Composable
-fun StockScreen(
+fun RecordScreen(
     navController: NavController,
-    viewModel: ShopStockViewModel = hiltViewModel(),
     backgroundType: BackgroundType = BackgroundType.DEFAULT
 ) {
     BackgroundPlacement(backgroundType = backgroundType)
-
-    val userCoupons by viewModel.userCoupons.observeAsState(emptyList())
-    val userStickers by viewModel.userStickers.observeAsState(emptyList())
-
-    LaunchedEffect(Unit) {
-        viewModel.fetchUserCoupons()
-        viewModel.fetchUserStickers()
-    }
 
     Box(
         modifier = Modifier
@@ -46,11 +33,11 @@ fun StockScreen(
             .background(Color.Transparent)
             .padding(40.dp)
     ) {
-        // 뒤로 가기 버튼과 제목을 표시하는 상단 Row
+        // 상단에 뒤로 가기 버튼과 제목 배치
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 40.dp, bottom= 40.dp),
+                .padding(start = 40.dp, bottom = 40.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
@@ -60,20 +47,19 @@ fun StockScreen(
                     .size(60.dp)
                     .clickable {
                         navController.navigate("main") {
-                            popUpTo("stock") { inclusive = true }
+                            popUpTo("record") { inclusive = true }
                         }
                     }
             )
             Spacer(modifier = Modifier.width(30.dp))
             Text(
-                text = "보관함", // 제목 텍스트
+                text = "기록", // 제목 텍스트
                 fontSize = 40.sp,
-                color = Color.White,
-                textAlign = TextAlign.Start
+                color = Color.White
             )
         }
 
-        // StockTab 구성 요소를 하단에 배치
+        // RecordTab 구성 요소를 하단에 배치
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -81,11 +67,8 @@ fun StockScreen(
                 .align(Alignment.BottomCenter)
                 .padding(horizontal = 40.dp)
         ) {
-            StockTab(
-                coupons = userCoupons,
-                stickers = userStickers,
-                modifier = Modifier.align(Alignment.Center),
-                viewModel = viewModel
+            RecordTab(
+                modifier = Modifier.align(Alignment.Center)
             )
         }
     }

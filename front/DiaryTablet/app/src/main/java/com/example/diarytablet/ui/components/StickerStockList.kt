@@ -45,12 +45,12 @@ fun StickerStockCard(sticker: StickerStock, index: Int) {
             .padding(5.dp, bottom = 20.dp)
             .fillMaxWidth(0.9f)
             .aspectRatio(1f)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null
-            ) {
-                isPressed = true
-            }
+//            .clickable(
+//                interactionSource = remember { MutableInteractionSource() },
+//                indication = null
+//            ) {
+//                isPressed = true
+//            }
     ) {
         // 클릭 후 일정 시간 후에 상태를 원래대로 복귀
         LaunchedEffect(isPressed) {
@@ -76,9 +76,13 @@ fun StickerStockCard(sticker: StickerStock, index: Int) {
             verticalArrangement = Arrangement.Center
         ) {
             Image(
-                painter = rememberAsyncImagePainter(sticker.img),
+                painter = rememberAsyncImagePainter(
+                    model = sticker.img,
+                    placeholder = painterResource(R.drawable.loading),
+                    error = painterResource(R.drawable.loading)
+                ),
                 contentDescription = "스티커 이미지",
-                modifier = Modifier.size(100.dp)
+                modifier = Modifier.size(64.dp)
             )
         }
     }
