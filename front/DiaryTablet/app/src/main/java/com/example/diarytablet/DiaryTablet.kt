@@ -87,8 +87,10 @@ class DiaryTablet : Application() {
         super.onCreate()
         instance = this
 
-        RetrofitClient.init(userStore)
+        if (::userStore.isInitialized) {
+            RetrofitClient.init(userStore)
+        } else {
+            throw IllegalStateException("UserStore is not initialized.")
+        }
     }
-
-
 }
