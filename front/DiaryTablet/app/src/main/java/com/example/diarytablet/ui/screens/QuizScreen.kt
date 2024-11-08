@@ -273,7 +273,7 @@ fun QuizScreen(
                         onDismiss = {
                             quizModalState = QuizModalState.NONE
                             selectedWord = null
-                            viewModel.updateQuest()
+//                            viewModel.updateQuest()
                             viewModel.resetIsCorrectAnswer()
                             viewModel.resetPath()
                         }
@@ -305,9 +305,17 @@ fun QuizScreen(
             },
             onConfirm = {
                 viewModel.leaveSession()
-                navController.navigate("main") {
-                    popUpTo("quiz") { inclusive = true }
+                if (currentRound >= 3) {
+                    navController.navigate("main?origin=quiz&isFinished=true") {
+                        popUpTo("quiz") { inclusive = true }
                 }
+
+                } else {
+                    navController.navigate("main") {
+                        popUpTo("quiz") { inclusive = true }
+                    }
+                }
+
             },
             title = "퀴즈를 종료할까요?",
             confirmText = "종료"
