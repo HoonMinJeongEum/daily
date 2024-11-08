@@ -52,6 +52,8 @@ class QuizViewModel @Inject constructor(
     val isCorrectAnswer: LiveData<Boolean?> get() = _isCorrectAnswer
     private val _userDisconnectedEvent = MutableLiveData<Boolean?>()
     val userDisconnectedEvent: LiveData<Boolean?> get() = _userDisconnectedEvent
+    private val _isQuizStarted = MutableLiveData(false)
+    val isQuizStarted: LiveData<Boolean> get() = _isQuizStarted
 
     fun setCanvasSize(width: Int, height: Int) {
         _canvasWidth.value = width
@@ -126,6 +128,10 @@ class QuizViewModel @Inject constructor(
             socket.on("userDisconnected") {
                 _userDisconnectedEvent.postValue(true)
                 Log.d("QuizViewModel", "disconnect")
+            }
+
+            socket.on("quizStart") {
+                _isQuizStarted.postValue(true) // 퀴즈 시작을 알림
             }
         }
     }

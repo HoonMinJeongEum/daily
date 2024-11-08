@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -31,7 +32,6 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.diaryApp.R
-import com.example.diaryApp.ui.components.NavMenu
 import com.example.diaryApp.ui.components.TopLogoImg
 import com.example.diaryApp.ui.components.quiz.Draw
 import com.example.diaryApp.ui.components.quiz.QuizAlert
@@ -42,7 +42,7 @@ import com.example.diaryApp.viewmodel.QuizViewModel
 
 enum class QuizModalState {
     NONE,
-    WORD_SELECTION,
+    NOT_QUIZ_START,
     CORRECT_ANSWER,
     INCORRECT_ANSWER,
 }
@@ -57,12 +57,13 @@ fun CatchMindScreen(
     BackgroundPlacement(backgroundType = backgroundType)
 
     var quizModalState by remember { mutableStateOf(QuizModalState.NONE) }
-    var currentRound by remember { mutableStateOf(1) }
-    val isCorrectAnswer by viewModel.isCorrectAnswer.observeAsState()
+    var currentRound by remember { mutableIntStateOf(1) }
     var selectedWord by remember { mutableStateOf<String?>(null) }
-    var inputWord by remember { mutableStateOf("") } // 부모
+    var inputWord by remember { mutableStateOf("") }
+    val isCorrectAnswer by viewModel.isCorrectAnswer.observeAsState()
     val isUserDisconnected = viewModel.userDisconnectedEvent.observeAsState(false).value ?: false
     var isQuizDisconnected by remember { mutableStateOf(false) }
+    val isQuizStarted by viewModel.isQuizStarted.observeAsState(false)
 
     LaunchedEffect(Unit) {
         viewModel.loadQuiz(sessionId)
@@ -161,10 +162,16 @@ fun CatchMindScreen(
                             modifier = Modifier.weight(1f)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Button(onClick = {
-                            viewModel.sendCheckWordAction(inputWord.trim()) // 단어 확인 요청
-                            inputWord = ""
-                        }) {
+                        Button(
+                            onClick = {
+                                if (isQuizStarted) {
+                                    viewModel.sendCheckWordAction(inputWord.trim())
+                                    inputWord = ""
+                                } else {
+                                    quizModalState = QuizModalState.NOT_QUIZ_START
+                                }
+                             },
+                           ) {
                             Text("전송")
                         }
                     }
@@ -182,7 +189,7 @@ fun CatchMindScreen(
                 QuizAlert(
                     title = "정답입니다! 다음 퀴즈로 넘어갑니다",
                     onDismiss = {
-                        quizModalState = QuizModalState.WORD_SELECTION
+                        quizModalState = QuizModalState.NONE
                         viewModel.resetIsCorrectAnswer()
                         currentRound++
                         viewModel.resetPath()
@@ -196,8 +203,6 @@ fun CatchMindScreen(
                         selectedWord = null
                         viewModel.resetIsCorrectAnswer()
                         viewModel.resetPath()
-                        
-                        // 완료 api호출
                     }
                 )
             }
@@ -212,13 +217,17 @@ fun CatchMindScreen(
                 }
             )
         }
-
+        QuizModalState.NOT_QUIZ_START -> {
+            QuizAlert(
+                title = "아직 퀴즈를 시작하지 않았어요!",
+                onDismiss = {
+                    quizModalState = QuizModalState.NONE
+                }
+            )
+        }
         QuizModalState.NONE -> {
 
         }
-        else -> {
-        }
-
     }
 
     if(isQuizDisconnected) {
