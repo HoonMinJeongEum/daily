@@ -141,14 +141,12 @@ public class QuizService {
         String username = userDetails.getUsername();
         String childName = userDetails.getMember().getName();
         String customSessionId = childName + username;
-        System.out.println("username: "  + username);
-        System.out.println("childName: "  + childName);
-        System.out.println("customSessionId: "  + customSessionId);
         confirmAlarmsByTitleAndTitleId(" 그림 퀴즈", customSessionId);
 
         // 세션 종료
         Quiz quiz = quizRepository.findBySessionId(customSessionId);
         quiz.updateEndAt(LocalDateTime.now());
+        quizRepository.save(quiz);
     }
 
     // 알림 확인 처리
