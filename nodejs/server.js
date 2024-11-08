@@ -2,9 +2,11 @@ import express from "express";
 import http from "http";
 import { Server } from "socket.io";
 import dotenv from "dotenv";
+import axios from "axios";
 
 dotenv.config();
 
+const SPRING_SERVER_URL = process.env.SPRING_SERVER_URL;
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
@@ -25,6 +27,13 @@ io.on("connection", (socket) => {
     roomWords[roomId] = "";
     
     console.log(`클라이언트가 방 ${roomId}에 참여했습니다.`);
+  });
+
+  // jwt 토큰 저장
+  socket.on("authenticate", (jwtToken) => {
+    console.log("JWT 토큰을 수신하였습니다:", jwtToken);
+    socket.jwtToken = jwtToken; 
+    console.log("JWT 토큰을 수신하였습니다:", socket.jwtToken);
   });
 
   // 부모님 입장
@@ -79,10 +88,26 @@ io.on("connection", (socket) => {
   });
 
   // 연결 종료
-  socket.on("disconnect", () => {
+  socket.on("disconnect", async() => {
     console.log(`클라이언트가 방에서 연결이 종료되었습니다.`);
     roomDrawings[socket.roomId] = [];
     socket.to(socket.roomId).emit("userDisconnected");
+    console.log("JWT 토큰을 수신하였습니다:", socket.jwtToken);
+    try {
+      const response = await axios.post(
+          `${SPRING_SERVER_URL}/api/quiz/sessions/end`,
+          {},  
+          {
+              headers: {
+                  Authorization: `Bearer ${socket.jwtToken}`,  // 헤더에 JWT 토큰 포함
+              },
+          }
+      );
+
+      console.log("스프링 서버 응답:", response.data);
+    } catch (error) {
+      console.error("스프링 서버로 전송 중 오류 발생:", error);
+    }
   });
 });
 
