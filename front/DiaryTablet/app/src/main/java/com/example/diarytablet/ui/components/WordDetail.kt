@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import coil3.compose.rememberAsyncImagePainter
 import com.example.diarytablet.domain.dto.response.WordLearnedResponseDto
+import com.example.diarytablet.ui.theme.MyTypography
 
 @Composable
 fun WordDetail(word: WordLearnedResponseDto, onDismissRequest: () -> Unit) {
@@ -41,7 +42,7 @@ fun WordDetail(word: WordLearnedResponseDto, onDismissRequest: () -> Unit) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 16.dp, end = 16.dp),
+                        .padding(top = 24.dp, end = 24.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Spacer(modifier = Modifier.weight(1f)) // 타이틀 왼쪽에 빈 공간을 추가
@@ -64,6 +65,7 @@ fun WordDetail(word: WordLearnedResponseDto, onDismissRequest: () -> Unit) {
                         .fillMaxWidth()
                         .padding(top = 10.dp),
                     textAlign = TextAlign.Center,
+                    style = MyTypography.titleLarge,
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -79,7 +81,8 @@ fun WordDetail(word: WordLearnedResponseDto, onDismissRequest: () -> Unit) {
                         text = word.createdAt.toCalendarDateString(),
                         color = Color(0xFF49566F),
                         fontSize = 30.sp,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
+                        style = MyTypography.bodyMedium,
                     )
 
                     Image(
