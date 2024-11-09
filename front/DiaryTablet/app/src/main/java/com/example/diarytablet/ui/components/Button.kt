@@ -154,12 +154,11 @@ fun PreviewButtonWithoutImage() {
 @Composable
 fun DynamicColorButton(
     text: String,
-    fontSize: Int = 16,
-    fontWeight: androidx.compose.ui.text.font.FontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+    fontSize: Int = 28,
     shadowColor: Color = Color.LightGray,
     shadowElevation: Dp = 0.dp,
-    cornerRadius: Int = 8,
-    width: Int = 200,
+    cornerRadius: Int = 40,
+    width: Int = 180,
     height: Int = 50,
     isSelected: Boolean = false,
     onClick: () -> Unit
@@ -170,7 +169,6 @@ fun DynamicColorButton(
         label = "Button Press Alpha Animation"
     )
 
-    // isSelected 상태에 따라 배경색을 변경합니다.
     val backgroundColor = if (isSelected) Color(0xFF83B4FF) else Color(0xFFD1D1D1)
     val textColor = Color.White
 
@@ -210,8 +208,8 @@ fun DynamicColorButton(
                     text = text,
                     style = TextStyle(
                         fontSize = fontSize.sp,
-                        color = textColor,  // 글자색은 흰색으로 고정
-                        fontWeight = fontWeight
+                        color = textColor,
+                        fontWeight = FontWeight.Bold
                     )
                 )
             }

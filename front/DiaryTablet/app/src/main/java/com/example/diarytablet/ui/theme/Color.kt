@@ -11,3 +11,4 @@ val PastelYellow = Color(0xFFFEF9D9)    // 서피스 색상
 val LoginFont = Color(0xFF898989)
 val DeepPastelNavy = Color(0xFF49566F)
 val GrayText = Color(0xFF959595)
+val SkyBlue = Color(0xFF8EACCD)

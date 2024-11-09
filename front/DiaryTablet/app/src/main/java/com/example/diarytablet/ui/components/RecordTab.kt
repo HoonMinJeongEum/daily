@@ -37,6 +37,7 @@ fun RecordTab(
     var selectedTabIndex by remember { mutableStateOf(0) }
     val tabTitles = listOf("단어장", "일기장")
     var isDiaryDetailVisible by remember { mutableStateOf(false) }
+    var selectedDiaryId by remember { mutableStateOf<Int?>(null) }
 
     // 전체 박스 (탭 + 내용물)
     Box(
@@ -110,6 +111,7 @@ fun RecordTab(
             ) {
                 if (isDiaryDetailVisible) {
                     MyDiaryDetail(
+                        diaryId = selectedDiaryId!!,
                         onBackClick = {isDiaryDetailVisible = false},
                         viewModel = viewModel)
                 } else if (selectedTabIndex == 0) {
@@ -117,7 +119,10 @@ fun RecordTab(
                 } else {
                     DailyCalendar(
                         viewModel = viewModel,
-                        onDateCellClick = { isDiaryDetailVisible = true }
+                        onDateCellClick = { diaryId ->
+                            selectedDiaryId = diaryId
+                            isDiaryDetailVisible = true
+                        }
                     )
                 }
             }

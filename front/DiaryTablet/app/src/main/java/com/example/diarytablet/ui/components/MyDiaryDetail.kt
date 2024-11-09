@@ -17,6 +17,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,50 +25,54 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil3.compose.rememberAsyncImagePainter
+import com.example.diarytablet.domain.dto.response.diary.Diary
 import com.example.diarytablet.viewmodel.LogViewModel
 
 @Composable
 fun MyDiaryDetail(
+    diaryId: Int,
     onBackClick: () -> Unit, // 뒤로 가기 등의 동작을 위한 클릭 핸들러
     viewModel: LogViewModel
 ) {
+    LaunchedEffect(diaryId) {
+        viewModel.fetchDiaryById(diaryId)
+    }
+
+    val diaryDetail = viewModel.diaryDetail.observeAsState()
     Row(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(32.dp)
     ) {
-        // 왼쪽에 있는 버튼
         Box(
             modifier = Modifier
                 .fillMaxHeight()
                 .padding(end = 16.dp)
         ) {
             DynamicColorButton(
-                text = "< 날짜 선택",
+                text = "<  날짜 선택",
                 isSelected = true,
                 onClick = onBackClick
             )
         }
 
-
-        // 오른쪽에 있는 MyDiaryContent 컴포넌트
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.White, shape = RoundedCornerShape(16.dp))
                 .padding(16.dp)
         ) {
-            MyDiaryContent(viewModel = viewModel)
+            diaryDetail.value?.let { diary ->
+                MyDiaryContent(diary = diary)
+            } ?: CircularProgressIndicator() // 로딩 표시
         }
     }
 }
 
 @Composable
 fun MyDiaryContent(
-    viewModel: LogViewModel
+    diary: Diary
 ){
-    val diaryDetail = viewModel.diaryDetail.observeAsState()
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -75,26 +80,16 @@ fun MyDiaryContent(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // diaryDetail이 null인 경우 로딩 또는 기본 메시지 표시
-        if (diaryDetail.value == null) {
-            CircularProgressIndicator() // 로딩 표시
-        } else {
-            // diaryDetail 데이터가 있는 경우 drawImg와 writeImg 순서대로 표시
-            val diary = diaryDetail.value!!
+        Image(
+            painter = rememberAsyncImagePainter(diary.drawImg),
+            contentDescription = "Draw Image",
+            modifier = Modifier.padding(8.dp)
+        )
 
-            // drawImg 표시
-            Image(
-                painter = rememberAsyncImagePainter(diary.drawImg),
-                contentDescription = "Draw Image",
-                modifier = Modifier.padding(8.dp)
-            )
-
-            // writeImg 표시
-            Image(
-                painter = rememberAsyncImagePainter(diary.writeImg),
-                contentDescription = "Write Image",
-                modifier = Modifier.padding(8.dp)
-            )
-        }
+        Image(
+            painter = rememberAsyncImagePainter(diary.writeImg),
+            contentDescription = "Write Image",
+            modifier = Modifier.padding(8.dp)
+        )
     }
 }
