@@ -34,7 +34,7 @@ io.on("connection", (socket) => {
   // jwt 토큰 저장
   socket.on("authenticate", (jwtToken) => {
     console.log("JWT 토큰을 수신하였습니다:", jwtToken);
-    socket.jwtToken = jwtToken; 
+    roomData[socket.roomId].token = jwtToken;
   });
 
   // 부모님 입장
@@ -89,14 +89,14 @@ io.on("connection", (socket) => {
       delete roomData[socket.roomId];
     }
     socket.to(socket.roomId).emit("userDisconnected");
-    console.log("JWT 토큰을 수신하였습니다:", socket.jwtToken);
+    console.log("JWT 토큰을 수신하였습니다:", roomData[socket.roomId].token);
     try {
       const response = await axios.post(
           `${SPRING_SERVER_URL}/api/quiz/sessions/end`,
           {},  
           {
               headers: {
-                  Authorization: `Bearer ${socket.jwtToken}`,  // 헤더에 JWT 토큰 포함
+                  Authorization: `Bearer ${roomData[socket.roomId].token}`,  // 헤더에 JWT 토큰 포함
               },
           }
       );

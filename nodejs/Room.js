@@ -2,7 +2,8 @@
 class Room {
     constructor() {
       this.word = "";  
-      this.drawings = []; 
+      this.drawings = [];
+      this.token = null; 
     }
   }
   
