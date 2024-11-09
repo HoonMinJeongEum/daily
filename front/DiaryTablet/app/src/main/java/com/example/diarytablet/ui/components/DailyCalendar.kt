@@ -18,19 +18,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import com.example.diarytablet.R
-import com.example.diarytablet.ui.theme.DeepPastelNavy
 import com.example.diarytablet.ui.theme.GrayText
+import com.example.diarytablet.ui.theme.SkyBlue
 import com.example.diarytablet.viewmodel.LogViewModel
 import java.time.LocalDateTime
 import java.util.*
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun DailyCalendar(
     viewModel: LogViewModel,
-    onDateCellClick: () -> Unit
+    onDateCellClick: (Int) -> Unit
 ) {
 
     val year by viewModel.year.collectAsState()
@@ -64,7 +62,7 @@ fun DailyCalendar(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(36.dp)
+            .padding(24.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -86,7 +84,7 @@ fun DailyCalendar(
                 text = monthYearText,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                fontSize = 36.sp,
+                fontSize = 40.sp,
                 color = GrayText,
                 modifier = Modifier
                     .align(Alignment.CenterVertically)
@@ -115,12 +113,12 @@ fun DailyCalendar(
                     fontSize = 30.sp,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier.size(48.dp)
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         Column {
             for (i in 0 until rows) {
@@ -131,25 +129,23 @@ fun DailyCalendar(
                 ) {
                     for (j in 0..6) {
                         if (i == 0 && j < startDayOfWeek || day > daysInMonth) {
-                            Spacer(modifier = Modifier.size(36.dp))
+                            Spacer(modifier = Modifier.size(48.dp))
                         } else {
-                            val date = calendar.apply { set(Calendar.DAY_OF_MONTH, day) }.time
                             val localDate = LocalDateTime.of(year, month + 1, day, 0, 0).toLocalDate()
-                            val isDiaryDate = diaryDatesSet.contains(LocalDateTime.of(year, month + 1, day, 0, 0).toLocalDate())
-                            val diaryId = diaryList?.body()?.firstOrNull { it.createdAt.toLocalDate() == localDate }?.id.toString()
+                            val isDiaryDate = diaryDatesSet.contains(localDate)
+                            val diaryId = diaryList?.body()?.firstOrNull { it.createdAt.toLocalDate() == localDate }?.id
                             DateCell(
                                 date = day,
                                 isDiaryDate = isDiaryDate,
+                                diaryId = diaryId ?: -1, // diaryId가 null인 경우 빈 문자열을 전달
                                 onClick = {
-                                    if (isDiaryDate) {
-                                        onDateCellClick() // diaryId 전달
+                                    if (isDiaryDate && diaryId != null) {
+                                        onDateCellClick(diaryId) // 클릭 시 diaryId 전달
                                     }
-                                },
-                                diaryId = diaryId
+                                }
                             )
-                            if (day < daysInMonth) {
-                                day++
-                            }
+                            day++
+
                         }
                     }
                 }
@@ -162,14 +158,14 @@ fun DailyCalendar(
 fun DateCell(
     date: Int,
     isDiaryDate: Boolean,
-    diaryId: String,
+    diaryId: Int,
     onClick: () -> Unit,
 ) {
     Box(
         modifier = Modifier
-            .size(36.dp)
+            .size(48.dp)
             .background(
-                if (isDiaryDate) DeepPastelNavy else Color.Transparent,
+                if (isDiaryDate) SkyBlue else Color.Transparent,
                 shape = CircleShape
             )
             .clickable {
@@ -179,7 +175,7 @@ fun DateCell(
         Text(
             text = "$date",
             style = MaterialTheme.typography.bodySmall,
-            fontSize = 24.sp,
+            fontSize = 30.sp,
             fontWeight = if (isDiaryDate) FontWeight.Bold else FontWeight.Normal,
             color = if (isDiaryDate) Color.White else MaterialTheme.colorScheme.onSurface
         )

@@ -41,7 +41,7 @@ fun WordItem(word: WordLearnedResponseDto, onClick: () -> Unit) {
             .padding(horizontal = 50.dp, vertical = 2.dp)
     ) {
         Text(text = word.word,
-            fontSize = 20.sp,
+            fontSize = 28.sp,
             modifier = Modifier.run { padding(vertical = 4.dp) }) // 버튼 내부 여백)
     }
 }
@@ -83,10 +83,9 @@ fun getInitialConsonant(word: String): String {
 fun WordListItemByMember(wordList: List<WordLearnedResponseDto>,
                          selectedTab: String,
                          onWordClick: (WordLearnedResponseDto) -> Unit) {
-    // 선택된 탭에 따라 그룹화 방식을 다르게 설정
     val groupedWords = if (selectedTab == "날짜순") {
         // 날짜를 "yyyy-MM-dd" 형식의 문자열로 변환해 그룹화
-        wordList.groupBy { it.createdAt.toCalendarDateString() } // 날짜 변환 함수 사용
+        wordList.groupBy { it.createdAt.toCalendarDateString() }
     } else {
         wordList.groupBy { getInitialConsonant(it.word) }
     }
@@ -104,7 +103,7 @@ fun WordListItemByMember(wordList: List<WordLearnedResponseDto>,
                 Text(
                     text = "단어 목록이 없습니다.",
                     color = Color(0xFF6d6d6d),
-                    fontSize = 20.sp,
+                    fontSize = 30.sp,
                 )
             }
         } else {
@@ -113,10 +112,10 @@ fun WordListItemByMember(wordList: List<WordLearnedResponseDto>,
                     Text(
                         text = groupKey,
                         color = Color(0xFF6d6d6d),
-                        fontSize = 20.sp,
+                        fontSize = 30.sp,
                         modifier = Modifier
-                            .fillMaxWidth() // 전체 너비를 채워서 시작 위치로 정렬 가능
-                            .padding(start = 60.dp) // 왼쪽에 16dp 여백 추가
+                            .fillMaxWidth()
+                            .padding(start = 60.dp)
                     )
                 }
                 items(words) { word ->
