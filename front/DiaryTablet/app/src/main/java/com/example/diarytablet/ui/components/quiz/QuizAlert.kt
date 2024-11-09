@@ -1,18 +1,20 @@
 package com.example.diarytablet.ui.components.quiz
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.diarytablet.R
+import com.example.diarytablet.ui.theme.MyTypography
 import kotlinx.coroutines.delay
 
 @Composable
@@ -21,28 +23,39 @@ fun QuizAlert(
     onDismiss: () -> Unit
 ) {
     LaunchedEffect(Unit) {
-        delay(3000) // 3초 대기
-        onDismiss() // 3초 후 알림 닫기
+        delay(2000)
+        onDismiss()
     }
     Box(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxSize(),
+        contentAlignment = Alignment.Center
     ) {
-        Box (
+        BoxWithConstraints(
             modifier = Modifier
                 .fillMaxWidth(0.35f)
-                .fillMaxHeight(0.4f)
-                .align(Alignment.Center)
-                .clip(RoundedCornerShape(32.dp))
-                .background(Color.White),
-        ){
+                .fillMaxHeight(0.4f),
+            contentAlignment = Alignment.Center
+        ) {
+            val boxHeight = with(LocalDensity.current) { maxHeight.toPx() }
+            val imageHeight = boxHeight * 0.8f
+            val imageWidth = with(LocalDensity.current) { maxWidth.toPx() } * 0.8f
+            val lineHeight = boxHeight * 0.1f
+
+            Image(
+                painter = painterResource(id = R.drawable.quiz_pop_up),
+                contentDescription = "퀴즈 팝업 이미지",
+                modifier = Modifier
+                    .size(imageWidth.dp, imageHeight.dp),
+                contentScale = ContentScale.FillBounds
+            )
             Text(
                 text = title,
+                fontSize = (boxHeight * 0.06f).sp,
+                style = MyTypography.bodyLarge,
                 textAlign = TextAlign.Center,
-                fontSize = 30.sp,
-                modifier = Modifier.fillMaxWidth()
+                lineHeight = lineHeight.sp
             )
         }
-
     }
 }

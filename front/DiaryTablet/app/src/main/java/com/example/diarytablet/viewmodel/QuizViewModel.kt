@@ -20,6 +20,7 @@ import com.example.diarytablet.domain.dto.request.quest.UpdateQuestRequestDto
 import com.example.diarytablet.domain.dto.request.quiz.SessionRequestDto
 import com.example.diarytablet.domain.dto.response.quiz.SessionResponseDto
 import com.example.diarytablet.domain.repository.QuestRepository
+import com.example.diarytablet.utils.Const
 import com.example.diarytablet.utils.openvidu.Session
 import org.json.JSONArray
 import org.webrtc.MediaStream
@@ -122,12 +123,20 @@ class QuizViewModel @Inject constructor(
 
     // 소켓 연결
     private fun createSocket(sessionId: String) {
-        socket = IO.socket("ws://k11e204.p.ssafy.io:6080")
+        socket = IO.socket(Const.WS_API + Const.WS_PORT)
         socket.connect()
         socket.emit("join", sessionId)
         Log.e("QuizViewModel", "roomId : ${sessionId}")
+
         socket.on(Socket.EVENT_CONNECT_ERROR) { args ->
             Log.e("QuizViewModel", "소켓 연결 오류 발생: ${args[0]}")
+        }
+
+        viewModelScope.launch {
+            userStore.getValue(UserStore.KEY_ACCESS_TOKEN).collect { jwtToken ->
+                Log.d("QuizViewModel", "JWT 토큰 전송: $jwtToken")
+                socket.emit("authenticate", jwtToken) // 서버에 JWT 토큰 전송
+            }
         }
 
         socket.on("initDrawing") { args ->
@@ -239,11 +248,18 @@ class QuizViewModel @Inject constructor(
         Log.d("QuizViewModel", "SetWord 전송: $word")
     }
 
+    // 퀴즈 시작
+    fun sendQuizStart() {
+        socket.emit("quizStart")
+        Log.d("QuizViewModel", "퀴즈 시작을 알림")
+    }
+
     // 상태 초기화
     fun resetIsCorrectAnswer() {
         _isCorrectAnswer.value = null
     }
 
+    // 퀴즈 종료
     fun leaveSession() {
         socket.disconnect()
         if (::session.isInitialized) {
