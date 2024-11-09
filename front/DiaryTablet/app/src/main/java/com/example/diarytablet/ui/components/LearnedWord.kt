@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.diarytablet.domain.dto.response.WordLearnedResponseDto
+import com.example.diarytablet.ui.theme.MyTypography
 import com.example.diarytablet.viewmodel.LogViewModel
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
@@ -41,6 +42,7 @@ fun WordItem(word: WordLearnedResponseDto, onClick: () -> Unit) {
             .padding(horizontal = 50.dp, vertical = 2.dp)
     ) {
         Text(text = word.word,
+            style = MyTypography.bodyLarge,
             fontSize = 28.sp,
             modifier = Modifier.run { padding(vertical = 4.dp) }) // 버튼 내부 여백)
     }
@@ -104,6 +106,7 @@ fun WordListItemByMember(wordList: List<WordLearnedResponseDto>,
                     text = "단어 목록이 없습니다.",
                     color = Color(0xFF6d6d6d),
                     fontSize = 30.sp,
+                    style = MyTypography.bodyMedium,
                 )
             }
         } else {
@@ -111,8 +114,8 @@ fun WordListItemByMember(wordList: List<WordLearnedResponseDto>,
                 item {
                     Text(
                         text = groupKey,
+                        style = MyTypography.bodyMedium,
                         color = Color(0xFF6d6d6d),
-                        fontSize = 30.sp,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(start = 60.dp)

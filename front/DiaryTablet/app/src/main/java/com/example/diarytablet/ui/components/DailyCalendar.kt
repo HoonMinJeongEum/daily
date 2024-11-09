@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.diarytablet.R
 import com.example.diarytablet.ui.theme.GrayText
+import com.example.diarytablet.ui.theme.MyTypography
 import com.example.diarytablet.ui.theme.SkyBlue
 import com.example.diarytablet.viewmodel.LogViewModel
 import java.time.LocalDateTime
@@ -62,14 +63,13 @@ fun DailyCalendar(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(24.dp)
+            .padding(horizontal = 30.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceAround,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 24.dp)
         ) {
 
             IconButton(onClick = { navigateToPreviousMonth(year, month) { updatedYear, updatedMonth ->
@@ -82,7 +82,7 @@ fun DailyCalendar(
 
             Text(
                 text = monthYearText,
-                style = MaterialTheme.typography.titleLarge,
+                style = MyTypography.bodyLarge,
                 fontWeight = FontWeight.Bold,
                 fontSize = 40.sp,
                 color = GrayText,
@@ -99,9 +99,7 @@ fun DailyCalendar(
                     modifier = Modifier.size(60.dp, 60.dp))
             }
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
+        Spacer(modifier = Modifier.height(70.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceAround
@@ -109,11 +107,10 @@ fun DailyCalendar(
             daysOfWeek.forEach { day ->
                 Text(
                     text = day,
-                    style = MaterialTheme.typography.bodySmall,
                     fontSize = 30.sp,
-                    fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.size(48.dp)
+                    modifier = Modifier.size(48.dp),
+                   style = MyTypography.bodyLarge
                 )
             }
         }
@@ -174,10 +171,10 @@ fun DateCell(
     ) {
         Text(
             text = "$date",
-            style = MaterialTheme.typography.bodySmall,
+            style = MyTypography.bodySmall,
             fontSize = 30.sp,
             fontWeight = if (isDiaryDate) FontWeight.Bold else FontWeight.Normal,
-            color = if (isDiaryDate) Color.White else MaterialTheme.colorScheme.onSurface
+            color = if (isDiaryDate) Color.White else GrayText
         )
     }
 }
