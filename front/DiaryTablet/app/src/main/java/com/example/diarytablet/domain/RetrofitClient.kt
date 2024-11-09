@@ -38,7 +38,11 @@ object RetrofitClient {
 
     fun getInstance(): Retrofit {
         if (instance == null) {
-            initInstance()
+            synchronized(this) {
+                if (instance == null) {
+                    initInstance()
+                }
+            }
         }
         return instance!!
     }
@@ -50,7 +54,6 @@ object RetrofitClient {
                 val isLoginRequest = originalRequest.url.encodedPath.contains("/login")
                 val isTokenRefreshRequest = originalRequest.url.encodedPath.contains("/user/reissue")
 
-                // 로그인 및 토큰 갱신 요청은 Authorization 헤더를 추가하지 않음
                 val requestBuilder = if (isLoginRequest || isTokenRefreshRequest) {
                     originalRequest.newBuilder()
                         .header("Content-Type", "application/json")
@@ -58,8 +61,10 @@ object RetrofitClient {
                     originalRequest.newBuilder()
                         .header("Content-Type", "application/json")
                         .apply {
-                            accessToken?.let { header("Authorization", "Bearer $it") }
-                            refreshToken?.let { header("Cookie", it) }
+                            synchronized(this@RetrofitClient) {
+                                accessToken?.let { header("Authorization", "Bearer $it") }
+                                refreshToken?.let { header("Set-Cookie", it) }
+                            }
                         }
                 }
 
@@ -67,7 +72,7 @@ object RetrofitClient {
                 var response = chain.proceed(request)
 
                 if (response.code == 401) {
-                    synchronized(this) {
+                    synchronized(this@RetrofitClient) {
                         val newTokens = refreshTokens()
                         if (newTokens != null) {
                             accessToken = newTokens.first
@@ -101,11 +106,16 @@ object RetrofitClient {
         return try {
             val response = runBlocking { authService.reissueToken("Bearer ${refreshToken ?: ""}") }
             if (response.isSuccessful) {
-                response.headers()["Authorization"]?.removePrefix("Bearer ")?.trim()?.let { newAccessToken ->
-                    response.headers()["Set-Cookie"]?.let { newRefreshToken ->
-                        Pair(newAccessToken, newRefreshToken)
+                val newAccessToken = response.headers()["Authorization"]?.removePrefix("Bearer ")?.trim()
+                val newRefreshToken = response.headers()["Set-Cookie"]
+
+                if (newAccessToken != null && newRefreshToken != null) {
+                    synchronized(this) {
+                        accessToken = newAccessToken
+                        refreshToken = newRefreshToken
                     }
-                }
+                    Pair(newAccessToken, newRefreshToken)
+                } else null
             } else null
         } catch (e: HttpException) {
             null
