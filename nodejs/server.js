@@ -43,7 +43,6 @@ io.on("connection", (socket) => {
     socket.roomId = roomId;
     
     socket.emit("initDrawing", roomData[roomId].drawings);
-    socket.emit("wordSelectionState", roomData[roomId].quizState.isWordSelected);
     socket.to(socket.roomId).emit("joinParents");
     console.log(`클라이언트가 방 ${roomId}에 참여했습니다.`);
   });
