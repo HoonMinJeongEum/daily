@@ -23,6 +23,7 @@ class LoginViewModel @Inject constructor(
 ) : ViewModel() {
     val username = mutableStateOf("")
     val password = mutableStateOf("")
+    val autoLogin = mutableStateOf(false)
     val errorMessage = mutableStateOf<String?>(null)  // 에러 메시지 상태 추가
 
     fun login(
@@ -73,7 +74,7 @@ class LoginViewModel @Inject constructor(
             .setValue(UserStore.KEY_REFRESH_TOKEN, refreshToken)
             .setValue(UserStore.KEY_USER_NAME, username.value)
             .setValue(UserStore.KEY_ACCESS_TOKEN, accessToken)
-
+        userStore.setAutoLoginState(autoLogin.value)
         Log.d("LoginViewModel", "User info saved: Username: ${username.value}, AccessToken: $accessToken")
     }
 

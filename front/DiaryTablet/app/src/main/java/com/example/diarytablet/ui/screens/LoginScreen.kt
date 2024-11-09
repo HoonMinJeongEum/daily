@@ -3,6 +3,7 @@ import android.util.MutableBoolean
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -43,7 +44,7 @@ fun LoginScreen(
 ) {
     var isError by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
-
+    var isAutoLoginChecked by remember { mutableStateOf(false) }
     BackgroundPlacement(backgroundType = backgroundType)
 
     Box(
@@ -146,17 +147,36 @@ fun LoginScreen(
                     )
                 )
             }
-            if (isError) {
-                Text(
-                    modifier = Modifier
-                        .align(Alignment.Start)
-                        .offset(x = 20.dp),
-                    text = "아이디와 비밀번호를 정확히 입력해 주세요.",
-                    fontSize = 16.sp,
-                    color = Color.Red,
-                    fontWeight = FontWeight.Normal,
-
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (isError) {
+                    Text(
+                        text = "아이디와 비밀번호를 정확히 입력해 주세요.",
+                        fontSize = 16.sp,
+                        color = Color.Red,
+                        fontWeight = FontWeight.Normal,
+                        modifier = Modifier
+                            .align(Alignment.CenterVertically)
+                            .padding(start = 20.dp)
                     )
+                }
+                Spacer(modifier = Modifier.weight(1f)) // Space between error message and checkbox
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "자동 로그인",
+                        fontSize = 16.sp,
+                        color = Color.Gray,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Checkbox(
+                        checked = isAutoLoginChecked,
+                        onCheckedChange = { isChecked ->
+                            isAutoLoginChecked = isChecked
+                        }
+                    )
+                }
             }
             Spacer(modifier = Modifier.height(30.dp))
 

@@ -22,15 +22,16 @@ import com.example.diarytablet.ui.screens.WordLearningScreen
 import com.example.diarytablet.ui.theme.DiaryTabletTheme
 
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun DiaryTabletApp() {
+fun DiaryTabletApp(startDestination: String = "login") {
     val navController = rememberNavController()
 
     DiaryTabletTheme {
-        NavHost(navController, startDestination = "login") {
+        NavHost(navController, startDestination = startDestination) {
             composable("login") {
                 LoginScreen(
                     navController = navController)
@@ -94,3 +95,5 @@ class DiaryTablet : Application() {
         }
     }
 }
+
+

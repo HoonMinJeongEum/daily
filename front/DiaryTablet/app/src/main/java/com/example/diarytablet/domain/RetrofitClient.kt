@@ -59,7 +59,7 @@ object RetrofitClient {
                         .header("Content-Type", "application/json")
                         .apply {
                             accessToken?.let { header("Authorization", "Bearer $it") }
-                            refreshToken?.let { header("Cookie", it) }
+                            refreshToken?.let { header("Set-Cookie", it) }
                         }
                 }
 
