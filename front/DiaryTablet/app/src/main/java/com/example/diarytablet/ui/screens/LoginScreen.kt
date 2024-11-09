@@ -44,7 +44,6 @@ fun LoginScreen(
 ) {
     var isError by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
-    var isAutoLoginChecked by remember { mutableStateOf(false) }
     BackgroundPlacement(backgroundType = backgroundType)
 
     Box(
@@ -55,24 +54,27 @@ fun LoginScreen(
             painter = painterResource(id = R.drawable.logo),
             contentDescription = "Logo",
             modifier = Modifier
-                .size(254.dp, 153.dp)
-                .offset(x = 511.dp, y = 79.dp)
+                .fillMaxWidth(0.3f)
+                .aspectRatio(1.67f)
+                .align(Alignment.TopCenter)
+                .padding(top = 70.dp)
         )
 
         Column(
             modifier = Modifier
-                .align(Alignment.Center)
-                .width(560.dp)
-                .padding(top = 150.dp),
+                .align(Alignment.TopCenter)
+                .fillMaxWidth(0.5f)
+                .padding(top = 70.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(modifier = Modifier.height(170.dp))
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(120.dp)
-                    .padding(vertical = 5.dp)
+                    .aspectRatio(5f)
+                    .padding(vertical = 8.dp)
 
             ) {
                 // Image behind TextField
@@ -97,7 +99,7 @@ fun LoginScreen(
                     onValueChange = { loginViewModel.username.value = it },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 60.dp), // Adjust padding for text alignment
+                        .padding(start = 80.dp), // Adjust padding for text alignment
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent,
@@ -106,13 +108,13 @@ fun LoginScreen(
                     )
                 )
             }
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(20.dp))
             // Password Field with Background Image
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(120.dp)
+                    .aspectRatio(5f)
                     .padding(vertical = 5.dp)
             ) {
                 // Image behind TextField
@@ -138,7 +140,7 @@ fun LoginScreen(
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 60.dp), // Adjust padding for text alignment
+                        .padding(start = 80.dp), // Adjust padding for text alignment
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent,
@@ -154,7 +156,7 @@ fun LoginScreen(
                 if (isError) {
                     Text(
                         text = "아이디와 비밀번호를 정확히 입력해 주세요.",
-                        fontSize = 16.sp,
+                        fontSize = 20.sp,
                         color = Color.Red,
                         fontWeight = FontWeight.Normal,
                         modifier = Modifier
@@ -164,21 +166,22 @@ fun LoginScreen(
                 }
                 Spacer(modifier = Modifier.weight(1f)) // Space between error message and checkbox
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(
+                        checked = loginViewModel.autoLogin.value,
+                        onCheckedChange = { isChecked ->
+                            loginViewModel.autoLogin.value = isChecked                        }
+                    )
+
                     Text(
                         text = "자동 로그인",
-                        fontSize = 16.sp,
+                        fontSize = 20.sp,
                         color = Color.Gray,
                         modifier = Modifier.padding(end = 8.dp)
                     )
-                    Checkbox(
-                        checked = isAutoLoginChecked,
-                        onCheckedChange = { isChecked ->
-                            isAutoLoginChecked = isChecked
-                        }
-                    )
+
                 }
             }
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(5.dp))
 
 
 

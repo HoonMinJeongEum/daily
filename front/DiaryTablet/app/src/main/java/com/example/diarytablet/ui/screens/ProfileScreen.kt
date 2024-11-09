@@ -2,7 +2,9 @@ package com.example.diarytablet.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -55,14 +57,16 @@ fun ProfileScreen (
             painter = painterResource(id = R.drawable.logo),
             contentDescription = "Logo",
             modifier = Modifier
-                .size(254.dp, 153.dp)
-                .offset(x = 511.dp, y = 79.dp)
+                .fillMaxWidth(0.3f)
+                .aspectRatio(1.67f)
+                .align(Alignment.TopCenter)
+                .padding(top = 70.dp)
         )
         ProfileList(
             profileList = profileList,
             modifier = Modifier
                 .align(Alignment.Center)
-                .padding(top = 100.dp),
+                .padding(top = 70.dp),
             onChooseProfile = {profile -> chooseProfile(profile)},
 
         )
