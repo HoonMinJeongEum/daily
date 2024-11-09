@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -72,7 +73,6 @@ fun QuizScreen(
     var selectedWord by remember { mutableStateOf<String?>(null) }
     val isUserDisconnected = viewModel.userDisconnectedEvent.observeAsState(false).value ?: false
     var isQuizDisconnected by remember { mutableStateOf(false) }
-
     val isParentJoined by viewModel.parentJoinedEvent.observeAsState(false)
     var isQuizStartEnabled by remember { mutableStateOf(false) }
 
@@ -148,15 +148,22 @@ fun QuizScreen(
                     modifier = Modifier,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+
                     Box(
                         modifier = Modifier
                             .weight(4f)
-                            .clip(RoundedCornerShape(32.dp))
-                            .background(Color.White.copy(alpha = 0.9f))
-                            .clipToBounds()
                     ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.diary_box),
+                            contentDescription = "배경 이미지",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.FillBounds
+                        )
                         Draw(
-                            modifier = Modifier,
+                            modifier = Modifier
+                                .fillMaxSize(0.9f)
+                                .clipToBounds()
+                                .align(Alignment.Center),
                             viewModel = viewModel
                         )
                         selectedWord?.let { word ->
@@ -170,6 +177,15 @@ fun QuizScreen(
                                     .padding(top = 16.dp)
                             )
                         }
+                        Text(
+                            text = "사과",
+                            fontSize = 36.sp,
+                            color = Color.Black,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .align(Alignment.TopCenter)
+                                .padding(top = 16.dp)
+                        )
                         if (quizModalState == QuizModalState.WORD_SELECTION) {
                             RecommendWordModal(
                                 roundWords = roundWords,
@@ -240,7 +256,6 @@ fun QuizScreen(
             }
         }
 
-
         when (quizModalState) {
             QuizModalState.START_CONFIRM -> {
                 Alert(
@@ -250,6 +265,7 @@ fun QuizScreen(
                         quizModalState = QuizModalState.WORD_SELECTION
                         isQuizStarted = true
                         viewModel.resetPath()
+                        viewModel.sendQuizStart()
                     },
                     title = "그림퀴즈를 시작할까요?",
                     confirmText = "퀴즈시작"
@@ -259,7 +275,8 @@ fun QuizScreen(
             QuizModalState.CORRECT_ANSWER -> {
                 if (currentRound < 3) {
                     QuizAlert(
-                        title = "정답입니다! 다음 퀴즈로 넘어갑니다",
+                        title = "정답이에요!\n" +
+                                "다음 퀴즈로 넘어갑니다",
                         onDismiss = {
                             quizModalState = QuizModalState.WORD_SELECTION
                             viewModel.resetIsCorrectAnswer()
@@ -269,11 +286,11 @@ fun QuizScreen(
                     )
                 } else {
                     QuizAlert(
-                        title = "정답입니다! 퀴즈가 끝났습니다",
+                        title = "정답입니다!\n" +
+                                "퀴즈가 끝났습니다",
                         onDismiss = {
                             quizModalState = QuizModalState.NONE
                             selectedWord = null
-//                            viewModel.updateQuest()
                             viewModel.resetIsCorrectAnswer()
                             viewModel.resetPath()
                         }
@@ -283,7 +300,8 @@ fun QuizScreen(
 
             QuizModalState.INCORRECT_ANSWER -> {
                 QuizAlert(
-                    title = "틀렸습니다. 다시 시도해보세요!",
+                    title = "틀렸습니다.\n" +
+                            "다시 시도해보세요!",
                     onDismiss = {
                         quizModalState = QuizModalState.NONE
                         viewModel.resetIsCorrectAnswer()
@@ -308,7 +326,7 @@ fun QuizScreen(
                 if (currentRound >= 3) {
                     navController.navigate("main?origin=quiz&isFinished=true") {
                         popUpTo("quiz") { inclusive = true }
-                }
+                    }
 
                 } else {
                     navController.navigate("main") {
@@ -323,6 +341,7 @@ fun QuizScreen(
         if(isQuizDisconnected) {
             QuizAlert(
                 onDismiss = {
+                    viewModel.leaveSession()
                     navController.navigate("main") {
                         popUpTo("quiz") { inclusive = true }
                     }
