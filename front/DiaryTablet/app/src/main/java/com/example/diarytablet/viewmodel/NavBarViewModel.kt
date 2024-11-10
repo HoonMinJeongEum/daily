@@ -21,6 +21,11 @@ import com.example.diarytablet.ui.components.MissionItem
 import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import java.io.File
 import javax.inject.Inject
 
 @HiltViewModel
@@ -156,6 +161,28 @@ class NavBarViewModel @Inject constructor(
             }
         }
     }
+
+    fun updateProfileImage(imageFilePath: String) {
+        viewModelScope.launch {
+            try {
+                val file = File(imageFilePath)
+                val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
+                val body = MultipartBody.Part.createFormData("file", file.name, requestFile)
+                val response = mainScreenRepository.updateProfileImage(body)
+
+                if (response.isSuccessful) {
+                    loadStatus()
+                    Log.d("NavBarViewModel", "프로필 이미지 업데이트 성공")
+                } else {
+                    Log.e("NavBarViewModel", "프로필 이미지 업데이트 실패: ${response.message()}")
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Log.e("NavBarViewModel", "프로필 이미지 업데이트 중 오류 발생")
+            }
+        }
+    }
+
 }
 
 

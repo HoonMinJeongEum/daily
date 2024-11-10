@@ -84,7 +84,10 @@ fun Navbar(
         onDismiss = { isProfileModalVisible = false },
         profileImageUrl = profileImageUrl,
         userName = userName,
-        onEditNameClick = { newName -> viewModel.updateUserName(newName) }
+        onEditProfileClick = {file -> viewModel.updateUserName(file)} ,
+        onEditNameClick = { newName -> viewModel.updateUserName(newName) },
+        screenWidth = screenWidth,
+        screenHeight = screenHeight
     )
 
     AlarmModal(
