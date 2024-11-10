@@ -3,9 +3,12 @@ package com.example.diarytablet.viewmodel
 import android.content.Context
 import android.net.Uri
 import android.util.Log
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.diarytablet.domain.repository.DiaryRepository
+import com.example.diarytablet.model.StickerStock
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -19,6 +22,23 @@ class DiaryViewModel @Inject constructor(
     private val diaryRepository: DiaryRepository
 ) : ViewModel() {
 
+    private val _userStickers = MutableLiveData<List<StickerStock>>()
+    val userStickers: LiveData<List<StickerStock>> get() = _userStickers
+
+    fun fetchUserStickers() {
+        viewModelScope.launch {
+            try {
+                val response = diaryRepository.getUserStickers()
+                if (response.isSuccessful) {
+                    _userStickers.postValue(response.body())
+                } else {
+                    Log.e("DiaryViewModel", "스티커 불러오기 실패: ${response.errorBody()}")
+                }
+            } catch (e: Exception) {
+                Log.e("DiaryViewModel", "스티커 불러오는 중 오류 발생", e)
+            }
+        }
+    }
     /**
      * 두 개의 이미지 파일을 서버에 업로드하는 함수.
      *

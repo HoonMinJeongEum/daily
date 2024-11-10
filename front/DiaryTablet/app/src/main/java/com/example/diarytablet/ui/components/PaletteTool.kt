@@ -6,6 +6,7 @@ import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
 import android.graphics.Shader
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -22,7 +23,9 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import coil3.compose.rememberAsyncImagePainter
 import com.example.diarytablet.R
+import com.example.diarytablet.model.StickerStock
 import com.example.diarytablet.model.ToolType
 
 @Composable
@@ -31,7 +34,9 @@ fun PaletteTool(
     selectedColor: Color,
     onColorChange: (Color) -> Unit,
     onThicknessChange: (Float) -> Unit,
-    onToolSelect: (ToolType) -> Unit
+    onToolSelect: (ToolType) -> Unit,
+    stickerList: List<StickerStock>,
+    onStickerSelect: (StickerStock) -> Unit // 새로운 콜백 추가
 ) {
     Column(
         modifier = Modifier
@@ -79,6 +84,28 @@ fun PaletteTool(
                 },
                 valueRange = 1f..10f
             )
+        }
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // 스티커 목록 표시
+        Text(text = "보유 스티커")
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            stickerList.forEach { sticker ->
+                Image(
+                    painter = rememberAsyncImagePainter(
+                        model = sticker.img,
+                        placeholder = painterResource(R.drawable.loading),
+                        error = painterResource(R.drawable.loading)
+                    ),
+                    contentDescription = "스티커 이미지",
+                    modifier = Modifier
+                        .size(16.dp)
+                        .clickable { onStickerSelect(sticker) }
+                )
+            }
         }
     }
 }

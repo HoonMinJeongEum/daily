@@ -50,9 +50,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import android.graphics.Matrix
 import androidx.compose.foundation.clickable
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import coil3.compose.rememberAsyncImagePainter
+import java.net.URL
 import android.graphics.Path as AndroidPath
 
 
@@ -63,6 +67,16 @@ fun DiaryScreen(
     diaryViewModel: DiaryViewModel = hiltViewModel()
 ) {
     BackgroundPlacement(backgroundType = backgroundType)
+    val userStickers by diaryViewModel.userStickers.observeAsState(emptyList())
+    // 스티커 관련 상태
+    var selectedStickerImage by remember { mutableStateOf<Bitmap?>(null) }
+    var stickerPosition by remember { mutableStateOf(Offset.Zero) }
+
+
+    LaunchedEffect(Unit) {
+        diaryViewModel.fetchUserStickers()
+    }
+
 
     val context = LocalContext.current
     var isDrawingMode by remember { mutableStateOf(true) }
@@ -115,6 +129,11 @@ fun DiaryScreen(
         }
     }
 
+    // 스티커 중앙 위치 계산
+    val centerPosition = Offset(
+        x = with(density) { leftBoxWidth.toPx() / 2 },
+        y = with(density) { boxHeight.toPx() / 2 }
+    )
 
     Box(
         modifier = Modifier
@@ -135,7 +154,7 @@ fun DiaryScreen(
                     .size(48.dp)
                     .clickable {
                         navController.navigate("main") {
-                            popUpTo("duary") { inclusive = true }
+                            popUpTo("diary") { inclusive = true }
                         }
                     }
             )
@@ -163,6 +182,13 @@ fun DiaryScreen(
                     .fillMaxHeight()
                     .clip(RoundedCornerShape(50.dp))
                     .background(Color.White)
+                    .pointerInput(Unit) {
+                        detectDragGestures { change, dragAmount ->
+                            // 선택한 스티커 드래그 이동
+                            stickerPosition += dragAmount
+                            change.consume()
+                        }
+                    }
             ) {
                 VerticalPager(
                     state = pagerState,
@@ -232,6 +258,17 @@ fun DiaryScreen(
                                 color = selectedColor,
                                 style = Stroke(width = brushSize, cap = StrokeCap.Round)
                             )
+                            // 선택한 스티커 이미지를 Canvas에 그리기
+                            selectedStickerImage?.let { stickerBitmap ->
+                                drawIntoCanvas { canvas ->
+                                    canvas.nativeCanvas.drawBitmap(
+                                        stickerBitmap,
+                                        stickerPosition.x,
+                                        stickerPosition.y,
+                                        null
+                                    )
+                                }
+                            }
                         }
 
                         Image(
@@ -256,8 +293,16 @@ fun DiaryScreen(
                     selectedColor = selectedColor,
                     onColorChange = { selectedColor = it },
                     onThicknessChange = { brushSize = it },
-                    onToolSelect = { tool -> selectedTool = tool }
+                    onToolSelect = { selectedTool = it },
+                    stickerList = userStickers,
+                    onStickerSelect = { sticker ->
+                        CoroutineScope(Dispatchers.IO).launch {
+                            selectedStickerImage = loadBitmapFromUrl(sticker.img)
+                            stickerPosition = centerPosition // 그림판 중앙에 스티커 배치
+                        }
+                    }
                 )
+
                 Button(onClick = { isDrawingMode = !isDrawingMode }) {
                     Text(if (isDrawingMode) "스크롤 모드로 전환" else "그리기 모드로 전환")
                 }
@@ -326,6 +371,17 @@ fun DiaryScreen(
         }
     }
 }
+
+// URL에서 Bitmap 로드하는 함수
+suspend fun loadBitmapFromUrl(url: String): Bitmap? = withContext(Dispatchers.IO) {
+    try {
+        BitmapFactory.decodeStream(URL(url).openStream())
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    }
+}
+
 
 @Composable
 fun DrawingPlaybackView(
