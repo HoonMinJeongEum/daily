@@ -104,7 +104,8 @@ object RetrofitClient {
     private fun refreshTokens(): Pair<String, String>? {
         val authService = getInstance().create(AuthService::class.java)
         return try {
-            val response = runBlocking { authService.reissueToken("Bearer ${refreshToken ?: ""}") }
+            val cleanedRefreshToken = refreshToken?.substringBefore(";")
+            val response = runBlocking { authService.reissueToken(cleanedRefreshToken ?: "") }
             if (response.isSuccessful) {
                 val newAccessToken = response.headers()["Authorization"]?.removePrefix("Bearer ")?.trim()
                 val newRefreshToken = response.headers()["Set-Cookie"]
@@ -123,10 +124,10 @@ object RetrofitClient {
     }
 
     interface AuthService {
-        @POST("user/reissue")
+        @POST("${Const.API_PATH}user/reissue")
         suspend fun reissueToken(@Header("Cookie") refreshToken: String): Response<Void>
 
-        @POST("user/logout")
+        @POST("${Const.API_PATH}user/logout")
         suspend fun logout(): Response<Void>
     }
 
