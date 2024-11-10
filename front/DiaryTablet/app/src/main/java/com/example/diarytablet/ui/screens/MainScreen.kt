@@ -1,13 +1,11 @@
 package com.example.diarytablet.ui.screens
 
 
-import MainModal
-import android.util.Log
+import com.example.diarytablet.ui.components.modal.MainModal
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -17,23 +15,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.diarytablet.R
 import com.example.diarytablet.ui.components.BasicButton
-import com.example.diarytablet.ui.components.BlockButton
-import com.example.diarytablet.ui.components.ButtonType
 import com.example.diarytablet.ui.components.MissionBar
 import com.example.diarytablet.ui.components.MissionItem
 import com.example.diarytablet.ui.components.Navbar
 import com.example.diarytablet.ui.theme.BackgroundPlacement
 import com.example.diarytablet.ui.theme.BackgroundType
 import com.example.diarytablet.viewmodel.MainViewModel
-import com.example.diarytablet.ui.components.MissionModal
+import com.example.diarytablet.ui.components.modal.MissionModal
 
 
 @Composable
@@ -185,47 +178,48 @@ fun MainScreen(
                 )
             }
 
-            // MainModal
-            MainModal(
-                isModalVisible = isModalVisible,
-                onDismiss = { isModalVisible = false },
-                navController = navController,
-                onWordLearningClick = {
-                    navController.navigate("wordLearning") {
-                        popUpTo("main") { inclusive = true }
-                    }
-                    isModalVisible = false
-                },
-                onDrawingDiaryClick = {
-                    navController.navigate("diary") {
-                        popUpTo("main") { inclusive = true }
-                    }
-                    isModalVisible = false
-                },
-                onDrawingQuizClick = {
-                    navController.navigate("quiz") {
-                        popUpTo("main") { inclusive = true }
-                    }
-                    isModalVisible = false
-                }
-            )
 
-            // MissionModal
-            MissionModal(
-                isDialogVisible = isFinished,
-                onDismiss = {
-                    viewModel.setFinished(false)
-                    val completedMission = when (origin) {
-                        "wordLearning" -> MissionItem("단어 학습", isSuccess = true)
-                        "diary" -> MissionItem("그림 일기", isSuccess = true)
-                        "quiz" -> MissionItem("그림 퀴즈", isSuccess = true)
-                        else -> null
-                    }
-                    completedMission?.let { viewModel.completeMissionItem(it) }
-                },
-                missionItems = missionItems
-            )
         }
+        // MainModal
+        MainModal(
+            isModalVisible = isModalVisible,
+            onDismiss = { isModalVisible = false },
+            navController = navController,
+            onWordLearningClick = {
+                navController.navigate("wordLearning") {
+                    popUpTo("main") { inclusive = true }
+                }
+                isModalVisible = false
+            },
+            onDrawingDiaryClick = {
+                navController.navigate("diary") {
+                    popUpTo("main") { inclusive = true }
+                }
+                isModalVisible = false
+            },
+            onDrawingQuizClick = {
+                navController.navigate("quiz") {
+                    popUpTo("main") { inclusive = true }
+                }
+                isModalVisible = false
+            }
+        )
+
+        // MissionModal
+        MissionModal(
+            isDialogVisible = isFinished,
+            onDismiss = {
+                viewModel.setFinished(false)
+                val completedMission = when (origin) {
+                    "wordLearning" -> MissionItem("단어 학습", isSuccess = true)
+                    "diary" -> MissionItem("그림 일기", isSuccess = true)
+                    "quiz" -> MissionItem("그림 퀴즈", isSuccess = true)
+                    else -> null
+                }
+                completedMission?.let { viewModel.completeMissionItem(it) }
+            },
+            missionItems = missionItems
+        )
     }
 }
 
