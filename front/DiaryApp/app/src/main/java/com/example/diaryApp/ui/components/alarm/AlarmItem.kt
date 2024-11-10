@@ -68,8 +68,6 @@ fun AlarmItem(
                     coroutineScope.launch {
                         quizViewModel.checkSession(alarm.name, onShowQuizAlert = {
                             onShowQuizAlert()
-                        }, onNavigateToSession = { sessionId ->
-                            navController.navigate("catchMind/$sessionId")
                         })
                     }
                 }
