@@ -66,7 +66,7 @@ fun ProfileItem(
     diaryViewModel: DiaryViewModel,
     wordViewModel: WordViewModel,
     quizViewModel: QuizViewModel,
-    onShowQuizAlert: () -> Unit
+    onShowQuizAlert: (String) -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
 
@@ -145,11 +145,12 @@ fun ProfileItem(
                     shadowElevation = 8.dp,
                     onClick = {
                         coroutineScope.launch {
-                            quizViewModel.checkSession(profile.name, onShowQuizAlert = {
-                                onShowQuizAlert()
-                            }, onNavigateToSession = { sessionId ->
-                                navController.navigate("catchMind/$sessionId")
-                            })
+                            quizViewModel.checkSession(
+                                profile.name,
+                                onShowQuizAlert = { newSessionId ->
+                                    onShowQuizAlert(newSessionId)
+                                }
+                            )
                         }
                     },
                 )
