@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -53,6 +54,7 @@ fun QuizAlert(
                 text = title,
                 fontSize = (boxHeight * 0.06f).sp,
                 style = MyTypography.bodyLarge,
+                color = Color(0xFF49566F),
                 textAlign = TextAlign.Center,
                 lineHeight = lineHeight.sp
             )

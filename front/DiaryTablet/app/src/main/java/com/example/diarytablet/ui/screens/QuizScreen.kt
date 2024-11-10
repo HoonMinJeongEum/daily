@@ -5,19 +5,21 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -32,10 +34,12 @@ import com.example.diarytablet.ui.theme.BackgroundPlacement
 import com.example.diarytablet.ui.theme.BackgroundType
 import com.example.diarytablet.viewmodel.QuizViewModel
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -47,6 +51,7 @@ import com.example.diarytablet.ui.components.quiz.Draw
 import com.example.diarytablet.ui.components.quiz.QuizAlert
 import com.example.diarytablet.ui.components.quiz.RecommendWordModal
 import com.example.diarytablet.ui.components.quiz.Video
+import com.example.diarytablet.ui.theme.MyTypography
 
 enum class QuizModalState {
     NONE,
@@ -156,7 +161,7 @@ fun QuizScreen(
                         Image(
                             painter = painterResource(id = R.drawable.diary_box),
                             contentDescription = "배경 이미지",
-                            modifier = Modifier.fillMaxSize(),
+                            modifier = Modifier.fillMaxSize().alpha(0.8f),
                             contentScale = ContentScale.FillBounds
                         )
                         Draw(
@@ -167,25 +172,42 @@ fun QuizScreen(
                             viewModel = viewModel
                         )
                         selectedWord?.let { word ->
-                            Text(
-                                text = word,
-                                fontSize = 36.sp,
-                                color = Color.Black,
-                                textAlign = TextAlign.Center,
+                            BoxWithConstraints(
                                 modifier = Modifier
-                                    .align(Alignment.TopCenter)
-                                    .padding(top = 16.dp)
-                            )
+                                    .fillMaxWidth()
+                                    .fillMaxHeight(0.9f)
+                                    .align(Alignment.Center),
+                            ) {
+                                val textSize = with(LocalDensity.current) { (maxHeight * 0.1f).toSp() } // 높이의 5%를 폰트 크기로 설정 (조절 가능)
+                                Column(
+                                    modifier = Modifier.align(Alignment.TopCenter),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Box(
+                                        modifier = Modifier.width(IntrinsicSize.Max)
+                                    ) {
+                                        Text(
+                                            text = word,
+                                            fontSize = textSize,
+                                            color = Color(0xFF5A72A0),
+                                            textAlign = TextAlign.Center,
+                                            style = MyTypography.bodyLarge,
+                                            modifier = Modifier.align(Alignment.Center)
+                                        )
+                                        HorizontalDivider(
+                                            color = Color(0xFF5A72A0),
+                                            thickness = 3.dp,
+                                            modifier = Modifier
+                                                .align(Alignment.BottomCenter)
+                                                .padding(top = 4.dp)
+                                                .fillMaxWidth()
+                                        )
+                                    }
+                                }
+
+                            }
                         }
-                        Text(
-                            text = "사과",
-                            fontSize = 36.sp,
-                            color = Color.Black,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier
-                                .align(Alignment.TopCenter)
-                                .padding(top = 16.dp)
-                        )
+
                         if (quizModalState == QuizModalState.WORD_SELECTION) {
                             RecommendWordModal(
                                 roundWords = roundWords,
@@ -248,7 +270,10 @@ fun QuizScreen(
                                 text = if (isQuizStarted) "종료" else "퀴즈 시작",
                                 imageResId = 11,
                                 enabled = isQuizStartEnabled,
-                                ButtonColor = if (isQuizStartEnabled) Color(0xFF5A72A0) else Color.Gray
+                                ButtonColor = when {
+                                    isQuizStarted -> Color(0xFFD27979) // 종료일 때 빨간색
+                                    else -> Color(0xFF5A72A0) // 기본 색상
+                                }
                             )
                         }
                     }
@@ -276,7 +301,7 @@ fun QuizScreen(
                 if (currentRound < 3) {
                     QuizAlert(
                         title = "정답이에요!\n" +
-                                "다음 퀴즈로 넘어갑니다",
+                                "다음 퀴즈로 넘어갑니다.",
                         onDismiss = {
                             quizModalState = QuizModalState.WORD_SELECTION
                             viewModel.resetIsCorrectAnswer()
@@ -287,7 +312,7 @@ fun QuizScreen(
                 } else {
                     QuizAlert(
                         title = "정답입니다!\n" +
-                                "퀴즈가 끝났습니다",
+                                "퀴즈가 끝났습니다.",
                         onDismiss = {
                             quizModalState = QuizModalState.NONE
                             selectedWord = null
@@ -346,7 +371,7 @@ fun QuizScreen(
                         popUpTo("quiz") { inclusive = true }
                     }
                 },
-                title = "다른 사용자가 방을 나갔습니다."
+                title = "부모님이 방을 나갔어요."
             )
         }
     }
