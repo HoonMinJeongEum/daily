@@ -109,21 +109,23 @@ fun RecordTab(
                     .padding(start = 16.dp),
                 contentAlignment = Center // 오른쪽 박스의 중앙 정렬
             ) {
-                if (isDiaryDetailVisible) {
-                    MyDiaryDetail(
-                        diaryId = selectedDiaryId!!,
-                        onBackClick = {isDiaryDetailVisible = false},
-                        viewModel = viewModel)
-                } else if (selectedTabIndex == 0) {
-                    LearnedWordTab(viewModel = viewModel)  // DateCell 클릭 시 표시될 탭
+                if (selectedTabIndex == 0){
+                    LearnedWordTab(viewModel = viewModel)
                 } else {
-                    DailyCalendar(
-                        viewModel = viewModel,
-                        onDateCellClick = { diaryId ->
-                            selectedDiaryId = diaryId
-                            isDiaryDetailVisible = true
-                        }
-                    )
+                    if (isDiaryDetailVisible) {
+                        MyDiaryDetail(
+                            diaryId = selectedDiaryId!!,
+                            onBackClick = {isDiaryDetailVisible = false},
+                            viewModel = viewModel)
+                    } else {
+                        DailyCalendar(
+                            viewModel = viewModel,
+                            onDateCellClick = { diaryId ->
+                                selectedDiaryId = diaryId
+                                isDiaryDetailVisible = true
+                            }
+                        )
+                    }
                 }
             }
         }

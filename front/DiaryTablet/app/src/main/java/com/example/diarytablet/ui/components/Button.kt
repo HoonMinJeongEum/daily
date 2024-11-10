@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -150,16 +151,15 @@ fun PreviewButtonWithoutImage() {
         // 이미지가 없을 경우 SEASHELL로 표시
     )
 }
-
 @Composable
 fun DynamicColorButton(
     text: String,
     fontSize: Int = 28,
+    fontWeight: FontWeight = FontWeight.Bold,
+    textStyle: TextStyle = MyTypography.bodyMedium,
     shadowColor: Color = Color.LightGray,
     shadowElevation: Dp = 0.dp,
     cornerRadius: Int = 40,
-    width: Int = 180,
-    height: Int = 50,
     isSelected: Boolean = false,
     onClick: () -> Unit
 ) {
@@ -183,7 +183,7 @@ fun DynamicColorButton(
     ) {
         Box(
             modifier = Modifier
-                .size(width = width.dp, height = height.dp)
+                .wrapContentSize()
                 .background(color = backgroundColor, shape = RoundedCornerShape(cornerRadius.dp))
                 .alpha(alpha)
                 .pointerInput(Unit) {
@@ -195,24 +195,16 @@ fun DynamicColorButton(
                         },
                         onTap = { onClick() }
                     )
-                },
+                }
+                .padding(horizontal = 24.dp, vertical = 16.dp), // 버튼 내용과 맞게 패딩 설정
             contentAlignment = Alignment.Center
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.align(Alignment.Center)
-            ) {
-
-                Text(
-                    text = text,
-                    style = TextStyle(
-                        fontSize = fontSize.sp,
-                        color = textColor,
-                        fontWeight = FontWeight.Bold
-                    )
+            Text(
+                text = text,
+                style = textStyle.copy(
+                    color = textColor
                 )
-            }
+            )
         }
     }
 }

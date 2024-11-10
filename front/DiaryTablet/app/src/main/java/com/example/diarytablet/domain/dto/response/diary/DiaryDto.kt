@@ -1,6 +1,5 @@
 package com.example.diarytablet.domain.dto.response.diary
 
-import org.w3c.dom.Comment
 import java.time.LocalDateTime
 
 data class Diary(
@@ -9,7 +8,7 @@ data class Diary(
     val writeImg: String,
     val sound: String,
     val createdAt: LocalDateTime,
-    val comments: List<Comment>
+    val comments: List<CommentDto>
 )
 
 data class DiaryForList(

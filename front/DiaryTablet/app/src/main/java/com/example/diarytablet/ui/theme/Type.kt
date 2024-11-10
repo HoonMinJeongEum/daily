@@ -18,6 +18,21 @@ val MyTypography = Typography(
         fontFamily = myFontFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 40.sp
+    ),
+    bodyMedium = TextStyle(
+        fontFamily = myFontFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = 30.sp
+    ),
+    bodySmall = TextStyle(
+        fontFamily = myFontFamily,
+        fontWeight = FontWeight.Light,
+        fontSize = 24.sp
+    ),
+    titleLarge = TextStyle(
+        fontFamily = myFontFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize = 40.sp
     )
 )
     /* Other default text styles to override
