@@ -75,7 +75,8 @@ class LoginViewModel @Inject constructor(
             .setValue(UserStore.KEY_USER_NAME, username.value)
             .setValue(UserStore.KEY_ACCESS_TOKEN, accessToken)
         userStore.setAutoLoginState(autoLogin.value)
-        Log.d("LoginViewModel", "User info saved:${autoLogin.value}")
+
+        Log.d("LoginViewModel", "User info saved:${autoLogin.value} ${username.value}")
     }
 
     private fun handleErrorResponse(code: Int, onErrorPassword: (String) -> Unit, onError: (String) -> Unit) {

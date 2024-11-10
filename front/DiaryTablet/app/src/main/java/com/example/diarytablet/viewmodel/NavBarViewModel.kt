@@ -9,7 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.diarytablet.datastore.UserStore
 import com.example.diarytablet.datastore.UserStore.Companion.KEY_PROFILE_IMAGE
-import com.example.diarytablet.datastore.UserStore.Companion.KEY_USER_NAME
+import com.example.diarytablet.datastore.UserStore.Companion.KEY_PROFILE_NAME
 import com.example.diarytablet.domain.dto.request.UserNameUpdateRequestDto
 import com.example.diarytablet.domain.dto.request.alarm.CheckAlarmRequestDto
 import com.example.diarytablet.domain.dto.request.alarm.SaveTokenRequestDto
@@ -150,7 +150,7 @@ class NavBarViewModel @Inject constructor(
 
                 // Update the local state and save the new name to UserStore
                 _userName.value = newName
-                userStore.setValue(KEY_USER_NAME, newName)
+                userStore.setValue(KEY_PROFILE_NAME, newName)
             } catch (e: Exception) {
                 e.printStackTrace()
             }

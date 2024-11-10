@@ -43,6 +43,7 @@ class MainViewModel @Inject constructor(
     private fun loadStatus() {
         viewModelScope.launch {
             try {
+                Log.d("main","${userStore.getValue(UserStore.KEY_USER_NAME)}")
                 val response = mainScreenRepository.getMainScreenStatus()
 
                 // shellCount 업데이트

@@ -15,8 +15,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -40,204 +42,191 @@ fun MainScreen(
     viewModel: MainViewModel = hiltViewModel(),
     backgroundType: BackgroundType = BackgroundType.DEFAULT
 ) {
-
     BackgroundPlacement(backgroundType = backgroundType)
 
     var isModalVisible by remember { mutableStateOf(false) }
-
-    val isFinished by  viewModel.isFinished
+    val isFinished by viewModel.isFinished
     val origin = viewModel.origin
-
-
-    Log.d("main","${origin} ${isFinished}")
     val missions = viewModel.missions
 
     val missionItems = when (origin) {
         "wordLearning" -> listOf(
-            MissionItem(text = "단어 학습", isSuccess = true),
-            MissionItem(text = "그림 일기", isSuccess = false),
-            MissionItem(text = "그림 퀴즈", isSuccess = false)
+            MissionItem("단어 학습", isSuccess = true),
+            MissionItem("그림 일기", isSuccess = false),
+            MissionItem("그림 퀴즈", isSuccess = false)
         )
         "diary" -> listOf(
-            MissionItem(text = "단어 학습", isSuccess = false),
-            MissionItem(text = "그림 일기", isSuccess = true),
-            MissionItem(text = "그림 퀴즈", isSuccess = false)
+            MissionItem("단어 학습", isSuccess = false),
+            MissionItem("그림 일기", isSuccess = true),
+            MissionItem("그림 퀴즈", isSuccess = false)
         )
         "quiz" -> listOf(
-            MissionItem(text = "단어 학습", isSuccess = false),
-            MissionItem(text = "그림 일기", isSuccess = false),
-            MissionItem(text = "그림 퀴즈", isSuccess = true)
+            MissionItem("단어 학습", isSuccess = false),
+            MissionItem("그림 일기", isSuccess = false),
+            MissionItem("그림 퀴즈", isSuccess = true)
         )
         else -> listOf(
-            MissionItem(text = "단어 학습", isSuccess = false),
-            MissionItem(text = "그림 일기", isSuccess = false),
-            MissionItem(text = "그림 퀴즈", isSuccess = false)
+            MissionItem("단어 학습", isSuccess = false),
+            MissionItem("그림 일기", isSuccess = false),
+            MissionItem("그림 퀴즈", isSuccess = false)
         )
     }
 
-
-    Box(
+    BoxWithConstraints(
         modifier = Modifier.fillMaxSize()
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Top
-        ) {
-            MissionBar(
-                missions = missions,
-                modifier = Modifier
-                    .offset(x = 58.dp, y = 27.dp)
-            )
-
-            Navbar(
-                modifier = Modifier.padding(end = 16.dp),
-                navController = navController
-            )
-        }
-
-        // 캐릭터 이미지와 텍스트 풍선을 나란히 배치
-        Row(
-            modifier = Modifier.align(Alignment.Center),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // 캐릭터 이미지 추가
-            Image(
-                painter = painterResource(id = R.drawable.main_char), // 캐릭터 이미지 리소스 ID로 교체
-                contentDescription = "Character",
-                modifier = Modifier.size(400.dp)
-                    .offset(x = -50.dp ,y = 50.dp)
-            )
-
-            Box(
-                modifier = Modifier.size(432.dp, 450.dp)
-                    .offset(x = -120.dp)
-            ) {
-                Image(
-                    modifier = Modifier.fillMaxSize(),
-                    painter = painterResource(id = R.drawable.text_balloon),
-                    contentDescription = "Text Balloon"
-                )
-
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = "다일리에 온 걸 환영해!",
-                        color = Color.Black,
-                        fontSize = 26.sp,
-                        lineHeight = 44.sp
-                    )
-                    Text(
-                        text = "나랑 그림일기도 쓰고",
-                        color = Color.Black,
-                        fontSize = 26.sp,
-                        lineHeight = 44.sp
-                    )
-                    Text(
-                        text = "단어도 학습해보자!",
-                        color = Color.Black,
-                        fontSize = 26.sp,
-                        lineHeight = 44.sp
-                    )
-                    Text(
-                        text = "그림퀴즈도 할 수 있어~",
-                        color = Color.Black,
-                        fontSize = 26.sp,
-                        lineHeight = 44.sp
-                    )
-                }
-            }
-        }
-
-        // BasicButton 배치 (왼쪽 하단)
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(16.dp)
-        ) {
-            BasicButton(
-                onClick = { navController.navigate("shop") },
-                text = "상점",
-                imageResId = R.drawable.shop
-            )
-            BasicButton(
-                onClick = { navController.navigate("stock") },
-                text = "보관함",
-                imageResId = R.drawable.stack_room
-            )
-            BasicButton(
-                onClick = { navController.navigate("record") },
-                text = "기록",
-                imageResId = R.drawable.record
-            )
-        }
+        val screenWidth = maxWidth
+        val screenHeight = maxHeight
+        val blockWidth = screenWidth / 5
 
         Box(
             modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(30.dp)
+                .fillMaxSize()
+                .padding(screenWidth * 0.02f)
         ) {
-            BasicButton(
-                onClick = { isModalVisible = true },
-                text = "시작하기",
-                imageResId = 11,
-                fontSize = 36f
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                MissionBar(
+                    missions = missions,
+                    screenWidth = screenWidth,
+                    screenHeight = screenHeight
+                )
+                Navbar(
+                    navController = navController,
+                    screenWidth = screenWidth,
+                    screenHeight = screenHeight
+                )
+            }
+
+            Row(
+                modifier = Modifier.align(Alignment.Center),
+                verticalAlignment = Alignment.Bottom,
+            ) {
+                // 캐릭터는 2번째 블록에 위치
+                Spacer(modifier = Modifier.width(blockWidth)) // 첫 번째 블록
+                Image(
+                    painter = painterResource(id = R.drawable.main_char),
+                    contentDescription = "Character",
+                    modifier = Modifier
+                        .width(screenWidth * 0.5f) // 두 번째 블록
+                        .aspectRatio(1.67f)
+                        .offset(x = -blockWidth * 0.9f , y = screenHeight * 0.1f)
+                )
+
+                // 말풍선은 3번째 블록에 위치
+                Box(
+                    modifier = Modifier
+                        .width(screenWidth * 0.8f) // 세 번째 블록
+                        .aspectRatio(0.9f)
+                        .offset(x = -blockWidth * 1.5f)
+                ) {
+                    Image(
+                        modifier =
+                        Modifier.fillMaxSize(),
+                        contentScale = ContentScale.FillBounds,
+                        painter = painterResource(id = R.drawable.text_balloon),
+                        contentDescription = "Text Balloon"
+                    )
+
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .padding(blockWidth * 0.1f),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text("다일리에 온 걸 환영해!", color = Color.Black, fontSize = 24.sp, lineHeight = 26.sp)
+                        Text("나랑 그림일기도 쓰고", color = Color.Black, fontSize = 24.sp, lineHeight = 26.sp)
+                        Text("단어도 학습해보자!", color = Color.Black, fontSize = 24.sp, lineHeight = 26.sp)
+                        Text("그림퀴즈도 할 수 있어~", color = Color.Black, fontSize = 24.sp, lineHeight = 26.sp)
+                    }
+                }
+            }
+
+            // 하단 왼쪽 BasicButton
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(screenWidth * 0.02f),
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(screenWidth * 0.02f)
+            ) {
+                BasicButton(
+                    onClick = { navController.navigate("shop") },
+                    text = "상점",
+                    imageResId = R.drawable.shop
+                )
+                BasicButton(
+                    onClick = { navController.navigate("stock") },
+                    text = "보관함",
+                    imageResId = R.drawable.stack_room
+                )
+                BasicButton(
+                    onClick = { navController.navigate("record") },
+                    text = "기록",
+                    imageResId = R.drawable.record
+                )
+            }
+
+            // 하단 오른쪽 시작하기 버튼
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(screenWidth * 0.02f)
+            ) {
+                BasicButton(
+                    onClick = { isModalVisible = true },
+                    text = "시작하기",
+                    imageResId = 11,
+//                    fontSize = screenHeight * 0.045f // 버튼 글자 크기 비율로 조정
+                )
+            }
+
+            // MainModal
+            MainModal(
+                isModalVisible = isModalVisible,
+                onDismiss = { isModalVisible = false },
+                navController = navController,
+                onWordLearningClick = {
+                    navController.navigate("wordLearning") {
+                        popUpTo("main") { inclusive = true }
+                    }
+                    isModalVisible = false
+                },
+                onDrawingDiaryClick = {
+                    navController.navigate("diary") {
+                        popUpTo("main") { inclusive = true }
+                    }
+                    isModalVisible = false
+                },
+                onDrawingQuizClick = {
+                    navController.navigate("quiz") {
+                        popUpTo("main") { inclusive = true }
+                    }
+                    isModalVisible = false
+                }
+            )
+
+            // MissionModal
+            MissionModal(
+                isDialogVisible = isFinished,
+                onDismiss = {
+                    viewModel.setFinished(false)
+                    val completedMission = when (origin) {
+                        "wordLearning" -> MissionItem("단어 학습", isSuccess = true)
+                        "diary" -> MissionItem("그림 일기", isSuccess = true)
+                        "quiz" -> MissionItem("그림 퀴즈", isSuccess = true)
+                        else -> null
+                    }
+                    completedMission?.let { viewModel.completeMissionItem(it) }
+                },
+                missionItems = missionItems
             )
         }
-
-        MainModal(
-            isModalVisible = isModalVisible,
-            onDismiss = { isModalVisible = false },
-            navController = navController,
-            onWordLearningClick = {
-                navController.navigate("wordLearning") {
-                    popUpTo("main") { inclusive = true }
-                }
-                isModalVisible = false
-            },
-            onDrawingDiaryClick = {
-                navController.navigate("diary") {
-                    popUpTo("main") { inclusive = true }
-                }
-                isModalVisible = false
-            },
-            onDrawingQuizClick = {
-                navController.navigate("quiz") {
-                    popUpTo("main") { inclusive = true }
-                }
-                isModalVisible = false
-            }
-        )
-        MissionModal(
-            isDialogVisible = isFinished,
-            onDismiss = {
-                viewModel.setFinished(false)
-                val completedMission = when (origin) {
-                    "wordLearning" -> MissionItem(text = "단어 학습", isSuccess = true)
-                    "diary" -> MissionItem(text = "그림 일기", isSuccess = true)
-                    "quiz" -> MissionItem(text = "그림 퀴즈", isSuccess = true)
-                    else -> null
-                }
-                completedMission?.let { viewModel.completeMissionItem(it) }
-                        },
-            missionItems = missionItems
-        )
-
     }
 }
 
 
-//@Preview(widthDp = 1280, heightDp = 800, showBackground = true)
-//@Composable
-//fun previewMain() {
-//    MainScreen(viewModel = MainViewModel(),    navController= NavController,
-//        backgroundType = BackgroundType.DEFAULT)
-//}
