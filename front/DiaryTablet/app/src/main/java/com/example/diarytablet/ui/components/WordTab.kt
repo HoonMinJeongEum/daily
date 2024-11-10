@@ -30,9 +30,11 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -57,6 +59,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Popup
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
@@ -69,6 +72,7 @@ import com.example.diarytablet.ui.theme.DeepPastelBlue
 import com.example.diarytablet.ui.theme.PastelNavy
 import com.example.diarytablet.ui.theme.PastelSkyBlue
 import createPaintForTool
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
@@ -88,6 +92,7 @@ fun WordTap(
 
     var canvasWidth by remember { mutableStateOf(780) }
     var canvasHeight by remember { mutableStateOf(510) }
+    var showPopup by remember { mutableStateOf(false) }
 
     // canvasWidth와 canvasHeight를 활용해 Bitmap을 생성
     var writtenBitmap by remember {
@@ -106,9 +111,36 @@ fun WordTap(
 
     }
 
+    if (showPopup) {
+        LaunchedEffect(showPopup) {
+            delay(3000)
+            showPopup = false
+        }
+    }
+
     Column(modifier = modifier.fillMaxSize()) {
 
-
+        // 3초 동안 보여주는 팝업 메시지
+        if (showPopup) {
+            Popup(
+                alignment = Alignment.Center,
+                onDismissRequest = { showPopup = false }
+            ) {
+                Box(
+                    modifier = Modifier
+                        .wrapContentSize()
+                        .background(Color.Black.copy(alpha = 0.7f), shape = RoundedCornerShape(8.dp))
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = "Next word loaded!",
+                        color = Color.White,
+                        fontSize = 18.sp,
+                        modifier = Modifier.padding(8.dp)
+                    )
+                }
+            }
+        }
 
     LazyRow (
         state = listState,
@@ -164,13 +196,7 @@ fun WordTap(
                     .fillMaxHeight(),
                 contentAlignment = Alignment.Center
             ) {
-//                Image(
-//                    painter = painterResource(id = R.drawable.big_jogae),
-//                    contentDescription = null,
-//                    modifier = Modifier
-//                        .fillMaxWidth(0.6f) // 크기 조정
-//                        .aspectRatio(1f)
-//                )
+
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
                         .data(word.imageUrl)
@@ -269,14 +295,14 @@ fun WordTap(
                                             buttonText = "제출"
                                             buttonColor = Color.White
                                             initialized = false
-                                            if (finishedIndex == 9) {
+                                            if (finishedIndex == 4) {
                                                 onFinish()
                                                 navController.navigate("main?origin=wordLearning&isFinished=true") {
                                                     popUpTo("wordLearning") { inclusive = true }
                                                 }
-
                                             } else {
                                                 listState.animateScrollToItem(++currentIndex)
+                                                showPopup = true // Show popup on transition
                                             }
                                         }
                                         400, 422 -> {
