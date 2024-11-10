@@ -428,7 +428,7 @@ fun DrawingPlaybackView(
             drawToBitmap(canvas, currentPath, templateWidth, templateHeight, context)
             saveBitmapToFile(bitmap, File(outputDir, "frame_$currentStepIndex.png"))
 
-            currentStepIndex++
+            currentStepIndex += 2
         }
 
         // FFmpeg로 프레임을 동영상으로 결합
