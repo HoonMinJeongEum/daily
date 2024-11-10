@@ -2,7 +2,6 @@ package com.example.diarytablet.ui.components.quiz
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
@@ -10,13 +9,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,7 +53,7 @@ fun RecommendWordModal(
                             shape = RoundedCornerShape(17.dp)
                         ),
                     onClick = {
-//                        onWordSelected(word)
+                        onWordSelected(word)
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (isPressed) Color(0xFF5A72A0) else Color(0xFF83B4FF)
@@ -78,7 +75,7 @@ fun RecommendWordModal(
                     }
                 }
                 if (index < roundWords.size - 1) {
-                    Spacer(modifier = Modifier.weight(0.3f)) // 버튼 사이의 간격을 비율로 설정
+                    Spacer(modifier = Modifier.weight(0.3f))
                 }
             }
         }
