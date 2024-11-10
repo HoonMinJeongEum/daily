@@ -101,7 +101,7 @@ public class QuizService {
 
         // 학습한 단어에서 랜덤으로 9개 추출
         if (learnedWords.size() >= 9) {
-            Collections.shuffle(learnedWords); // 랜덤으로 섞기
+            Collections.shuffle(learnedWords);
             for (int i = 0; i < 9; i++) {
                 LearnedWord learnedWord = learnedWords.get(i);
                 recommendedWords.add(new RecommendWordResponse(learnedWord.getWord().getId(), learnedWord.getWord().getWord()));
@@ -109,7 +109,7 @@ public class QuizService {
         }
         else {  // 만약 9개가 되지 않으면 Word에서 랜덤으로 9개 추출
             List<Word> allWords = wordRepository.findAll();
-            Collections.shuffle(allWords); // 랜덤으로 섞기
+            Collections.shuffle(allWords);
             for (int i = 0; i < 9; i++) {
                 Word word = allWords.get(i);
                 recommendedWords.add(new RecommendWordResponse(word.getId(), word.getWord()));
@@ -125,7 +125,7 @@ public class QuizService {
         String customSessionId = childName + username;
 
         Quiz quiz = quizRepository.findBySessionId(customSessionId);
-        confirmAlarmsByTitleAndTitleId(" 그림 퀴즈", customSessionId);
+        confirmAlarmsByTitleAndTitleId("그림 퀴즈", customSessionId);
 
         if(quiz.getEndAt() != null) {
             return new CheckSessionResponse(null);
@@ -141,7 +141,7 @@ public class QuizService {
         String username = userDetails.getUsername();
         String childName = userDetails.getMember().getName();
         String customSessionId = childName + username;
-        confirmAlarmsByTitleAndTitleId(" 그림 퀴즈", customSessionId);
+        confirmAlarmsByTitleAndTitleId("그림 퀴즈", customSessionId);
 
         // 세션 종료
         Quiz quiz = quizRepository.findBySessionId(customSessionId);
