@@ -17,7 +17,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -31,11 +36,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import com.example.diaryApp.R
 import com.example.diaryApp.ui.theme.DeepPastelNavy
 import com.example.diaryApp.ui.theme.Gray
+import com.example.diaryApp.ui.theme.MyTypography
 import com.example.diaryApp.ui.theme.PastelNavy
 import com.example.diaryApp.ui.theme.PastelSkyBlue
 import com.example.diaryApp.ui.theme.White
@@ -46,109 +54,128 @@ fun CreateCoupon(
     couponViewModel: CouponViewModel,
     onCancel: () -> Unit
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.5f)),
-        contentAlignment = Alignment.Center
-    ) {
-        Box(
-            modifier = Modifier
-                .size(350.dp, 400.dp)
-                .background(PastelSkyBlue, RoundedCornerShape(35))
-                .padding(16.dp),
-            contentAlignment = Alignment.Center
+    Dialog(onDismissRequest = onCancel) {
+        Surface(
+            shape = RoundedCornerShape(30.dp),
+            color = Color.White,
+            modifier = Modifier.padding(20.dp)
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.profile_cancel),
-                contentDescription = "Background",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(35.dp)
-                    .offset(x = 110.dp, y = (-150).dp)
-                    .clickable(onClick = { onCancel() })
-            )
-
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp)
+                    .background(Color.White),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                MyTextField(
-                    value = couponViewModel.couponDescription.value,
-                    placeholder = "소원명",
-                    onValueChange = { couponViewModel.couponDescription.value = it },
-                    height = 80
-                )
-                MyTextField(
-                    value = couponViewModel.couponPrice.value.toString(),
-                    placeholder = "가격",
-                    onValueChange = {
-                        if (it.all { char -> char.isDigit() } || it.isEmpty()) {
-                            couponViewModel.couponPrice.value = it.toIntOrNull() ?: 0
-                        }
-                    }
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
                 Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    DailyButton(
-                        text = "쿠폰 생성",
-                        fontSize = 20,
-                        textColor = White,
-                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                        backgroundColor = PastelNavy,
-                        cornerRadius = 35,
-                        width = 120,
-                        height = 50,
-                        onClick = {
-                            couponViewModel.createCoupon(
-                                onSuccess = {
-                                    Log.d("CouponScreen", "Coupon Success called")
-                                    onCancel()
-                                },
-                                onError = {
-                                    Log.d("CouponScreen", "Coupon Success failed")
-                                }
-                            )
-                            onCancel()
-                        },
-                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    IconButton(onClick = onCancel) {
+                        Icon(
+                            imageVector = Icons.Filled.Close,
+                            contentDescription = "Close",
+                            tint = Color.Gray,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
                 }
+
+                Text(
+                    text = "쿠폰 생성",
+                    color = Color(0xFF5A72A0),
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                    style = MyTypography.bodyMedium
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    MyTextField(
+                        value = couponViewModel.couponDescription.value,
+                        placeholder = "소원명",
+                        onValueChange = { couponViewModel.couponDescription.value = it },
+                        width = 280,
+                        height = 50
+                    )
+                    MyTextField(
+                        value = if (couponViewModel.couponPrice.value == 0) "" else couponViewModel.couponPrice.value.toString(),
+                        placeholder = "가격",
+                        width = 280,
+                        height = 50,
+                        onValueChange = {
+                            if (it.all { char -> char.isDigit() } || it.isEmpty()) {
+                                couponViewModel.couponPrice.value = it.toIntOrNull() ?: 0
+                            }
+                        }
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Row {
+                        DailyButton(
+                            text = "쿠폰 생성",
+                            fontSize = 20,
+                            textColor = White,
+                            fontWeight = FontWeight.Bold,
+                            backgroundColor = PastelNavy,
+                            cornerRadius = 35,
+                            width = 120,
+                            height = 50,
+                            onClick = {
+                                couponViewModel.createCoupon(
+                                    onSuccess = {
+                                        Log.d("CouponScreen", "Coupon Success called")
+                                        onCancel()
+                                    },
+                                    onError = {
+                                        Log.d("CouponScreen", "Coupon creation failed")
+                                    }
+                                )
+                                onCancel()
+                            },
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }
 }
-
 @Composable
 fun BuyCoupon(
     couponViewModel: CouponViewModel,
     onCancel: () -> Unit
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.5f)),
-        contentAlignment = Alignment.Center
-    ) {
-        Box(
-            modifier = Modifier
-                .size(300.dp, 200.dp)
-                .background(White, RoundedCornerShape(25))
-                .padding(12.dp),
-            contentAlignment = Alignment.Center
+    Dialog(onDismissRequest = onCancel) {
+        Surface(
+            shape = RoundedCornerShape(25.dp),
+            color = Color.White,
+            modifier = Modifier.padding(20.dp)
         ) {
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 36.dp,
+                        bottom = 24.dp,
+                        start = 18.dp,
+                        end = 18.dp)
+                    .background(Color.White),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     text = "쿠폰을 사용할까요?",
-                    fontSize = 25.sp,
                     color = DeepPastelNavy,
-                    fontWeight = FontWeight.Normal,
-                    modifier = Modifier.padding(bottom = 16.dp)
+                    style = MyTypography.bodySmall,
+                    modifier = Modifier.padding(bottom = 24.dp)
                 )
 
                 Row(
@@ -156,25 +183,25 @@ fun BuyCoupon(
                 ) {
                     DailyButton(
                         text = "아니오",
-                        fontSize = 19,
+                        fontSize = 18,
                         textColor = White,
-                        fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                        fontWeight = FontWeight.SemiBold,
                         backgroundColor = Gray,
                         cornerRadius = 35,
-                        width = 85,
-                        height = 60,
+                        width = 80,
+                        height = 50,
                         onClick = { onCancel() },
                     )
 
                     DailyButton(
                         text = "네",
-                        fontSize = 19,
+                        fontSize = 18,
                         textColor = White,
-                        fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                        fontWeight = FontWeight.SemiBold,
                         backgroundColor = DeepPastelNavy,
                         cornerRadius = 35,
-                        width = 85,
-                        height = 60,
+                        width = 80,
+                        height = 50,
                         onClick = {
                             couponViewModel.buyCoupon(
                                 onSuccess = {
@@ -182,7 +209,7 @@ fun BuyCoupon(
                                     onCancel()
                                 },
                                 onError = {
-                                    Log.d("CouponScreen", "Coupon Success failed")
+                                    Log.d("CouponScreen", "Coupon creation failed")
                                 }
                             )
                             onCancel()

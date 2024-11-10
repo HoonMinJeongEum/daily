@@ -138,6 +138,10 @@ class QuizViewModel @Inject constructor(
                 _userDisconnectedEvent.postValue(true)
                 Log.d("QuizViewModel", "disconnect")
             }
+
+            socket.on("quizStart") {
+                _isQuizStarted.postValue(true) // 퀴즈 시작을 알림
+            }
         }
     }
 

@@ -9,7 +9,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -28,45 +30,58 @@ import com.example.diaryApp.R
 import com.example.diaryApp.domain.dto.response.coupon.Coupon
 import com.example.diaryApp.domain.dto.response.coupon.UsageCoupon
 import com.example.diaryApp.ui.theme.DeepPastelNavy
+import com.example.diaryApp.ui.theme.GrayDetail
+import com.example.diaryApp.ui.theme.LightGray
+import com.example.diaryApp.ui.theme.LightSkyBlue
+import com.example.diaryApp.ui.theme.MyTypography
 import com.example.diaryApp.ui.theme.PastelSkyBlue
+import java.text.SimpleDateFormat
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @Composable
 fun CouponItem(
     coupon: Coupon
 ) {
+    val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+    val displayDate = coupon.createdAt.format(dateTimeFormatter)
+
     Box(modifier = Modifier
         .size(356.dp, 94.dp)
-        .background(PastelSkyBlue, RoundedCornerShape(30)),
+        .background(LightSkyBlue, RoundedCornerShape(30)),
         contentAlignment = Alignment.Center
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceAround
+            horizontalArrangement = Arrangement.SpaceAround,
+            modifier = Modifier.fillMaxWidth()
         ) {
             Column(
-                horizontalAlignment = Alignment.Start
+                horizontalAlignment = Alignment.Start,
+                modifier = Modifier.weight(0.7f)
+                    .padding(start = 20.dp)
             ) {
                 Text(
                     text = coupon.description,
-                    fontSize = 25.sp,
-                    fontWeight = FontWeight.Normal,
+                    style = MyTypography.bodySmall,
                     color = DeepPastelNavy
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 Text(
-                    text = "등록시간 ${coupon.createdAt}",
-                    fontSize = 10.sp,
+                    text = "등록일시 $displayDate",
+                    fontSize = 12.sp,
                     fontWeight = FontWeight.Thin,
-                    color = Color.LightGray
+                    color = GrayDetail
                 )
             }
 
-            Spacer(modifier = Modifier.width(16.dp))
-
             Row(
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.End,
+                modifier = Modifier.weight(0.3f)
+                    .padding(end = 20.dp)
             ) {
                 Image(
                     painter = painterResource(R.drawable.shell),
@@ -75,11 +90,11 @@ fun CouponItem(
                         .size(25.dp, 25.dp)
                 )
 
-                Spacer(modifier = Modifier.width(4.dp))
+                Spacer(modifier = Modifier.width(6.dp))
 
                 Text(
                     text = coupon.price,
-                    fontSize = 25.sp,
+                    fontSize = 24.sp,
                     fontWeight = FontWeight.Thin,
                     color = DeepPastelNavy
                 )
@@ -93,8 +108,14 @@ fun UsageCouponItem(
     usageCoupon: UsageCoupon,
     onClick: () -> Unit
 ) {
-    val boxColor = if (usageCoupon.usedAt != null) Color.Gray else PastelSkyBlue
+    val boxColor = if (usageCoupon.usedAt != null) LightGray else LightSkyBlue
+    val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
 
+    val displayDate = if (usageCoupon.usedAt != null) {
+        usageCoupon.usedAt.format(dateTimeFormatter)
+    } else {
+        usageCoupon.createdAt.format(dateTimeFormatter)
+    }
     Box(
         modifier = Modifier
             .size(356.dp, 94.dp)
@@ -113,45 +134,46 @@ fun UsageCouponItem(
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceAround
+                horizontalArrangement = Arrangement.SpaceAround,
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
-                    horizontalAlignment = Alignment.Start
+                    horizontalAlignment = Alignment.Start,
+                    modifier = Modifier
+                        .weight(0.7f)
+                        .padding(start = 20.dp)
                 ) {
                     Text(
                         text = usageCoupon.description,
-                        fontSize = 25.sp,
-                        fontWeight = FontWeight.Normal,
+                        style = MyTypography.bodySmall,
                         color = DeepPastelNavy
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    if (usageCoupon.usedAt != null) {
-                        Text(
-                            text = "사용 일시 ${usageCoupon.usedAt}",
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Thin,
-                            color = Color.LightGray
-                        )
-                    } else {
-                        Text(
-                            text = "등록 일시 ${usageCoupon.createdAt}",
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Thin,
-                            color = Color.LightGray
-                        )
-                    }
+                    Text(
+                        text = if (usageCoupon.usedAt != null) "사용 일시 $displayDate" else "등록 일시 $displayDate",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Thin,
+                        color = GrayDetail
+                    )
                 }
 
                 Spacer(modifier = Modifier.width(16.dp))
 
-                Text(
-                    text = usageCoupon.name,
-                    fontSize = 25.sp,
-                    fontWeight = FontWeight.Thin,
-                    color = DeepPastelNavy
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.End,
+                    modifier = Modifier
+                        .weight(0.3f)
+                        .padding(end = 20.dp)
+                ) {
+                    Text(
+                        text = usageCoupon.name,
+                        style = MyTypography.bodySmall,
+                        color = DeepPastelNavy
+                    )
+                }
             }
         }
     }

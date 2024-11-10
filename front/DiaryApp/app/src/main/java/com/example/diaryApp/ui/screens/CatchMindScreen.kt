@@ -26,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -55,7 +56,7 @@ import com.example.diaryApp.ui.components.quiz.Alert
 
 enum class QuizModalState {
     NONE,
-    WORD_SELECTION,
+    NOT_QUIZ_START,
     CORRECT_ANSWER,
     INCORRECT_ANSWER,
 }
@@ -70,8 +71,7 @@ fun CatchMindScreen(
     BackgroundPlacement(backgroundType = backgroundType)
 
     var quizModalState by remember { mutableStateOf(QuizModalState.NONE) }
-    var currentRound by remember { mutableStateOf(1) }
-    val isCorrectAnswer by viewModel.isCorrectAnswer.observeAsState()
+    var currentRound by remember { mutableIntStateOf(1) }
     var selectedWord by remember { mutableStateOf<String?>(null) }
     var inputWord by remember { mutableStateOf("") }
     val isUserDisconnected = viewModel.userDisconnectedEvent.observeAsState(false).value ?: false
@@ -341,7 +341,7 @@ fun CatchMindScreen(
                 QuizAlert(
                     title = "정답입니다!\n다음 퀴즈로 넘어갑니다.",
                     onDismiss = {
-                        quizModalState = QuizModalState.WORD_SELECTION
+                        quizModalState = QuizModalState.NONE
                         viewModel.resetIsCorrectAnswer()
                         currentRound++
                         viewModel.resetPath()
@@ -369,13 +369,17 @@ fun CatchMindScreen(
                 }
             )
         }
-
+        QuizModalState.NOT_QUIZ_START -> {
+            QuizAlert(
+                title = "아직 퀴즈를 시작하지 않았어요!",
+                onDismiss = {
+                    quizModalState = QuizModalState.NONE
+                }
+            )
+        }
         QuizModalState.NONE -> {
 
         }
-        else -> {
-        }
-
     }
 
     if (isQuizNotStartedAlert) {
