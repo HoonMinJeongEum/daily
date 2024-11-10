@@ -49,9 +49,7 @@ import com.example.diarytablet.viewmodel.DiaryViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import android.graphics.Matrix
-import androidx.compose.foundation.clickable
 import androidx.compose.ui.graphics.asComposePath
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import android.graphics.Path as AndroidPath
 
@@ -71,7 +69,7 @@ fun DiaryScreen(
     var selectedTool by remember { mutableStateOf(ToolType.PENCIL) }
     var isPreviewDialogVisible by remember { mutableStateOf(false) } // 모달 표시 여부
 
-    // 화면 크기 및 레이아웃 설정
+    // 현재 기기의 화면 크기 가져오기
     val configuration = LocalConfiguration.current
     val screenWidthDp = configuration.screenWidthDp.dp
     val screenHeightDp = configuration.screenHeightDp.dp
@@ -86,6 +84,7 @@ fun DiaryScreen(
     val bitmapWidthPx = with(density) { leftBoxWidth.roundToPx() }
     val bitmapHeightPx = with(density) { boxHeight.roundToPx() }
 
+    // 비트맵 생성 (Canvas와 동일한 크기)
     val bitmapsList = remember {
         mutableStateListOf(
             Bitmap.createBitmap(bitmapWidthPx, bitmapHeightPx, Bitmap.Config.ARGB_8888),
@@ -94,8 +93,7 @@ fun DiaryScreen(
     }
 
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { 2 })
-    val firstPageDrawingSteps =
-        remember { mutableStateListOf<DrawingStep>() } // 첫 번째 페이지의 DrawingSteps 저장
+    val firstPageDrawingSteps = remember { mutableStateListOf<DrawingStep>() }
 
     // 이미지 저장 및 업로드 트리거 함수
     suspend fun saveAndUploadImages() {
@@ -109,46 +107,17 @@ fun DiaryScreen(
         }
     }
 
-
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(padding)
+            .padding(padding),
+        contentAlignment = Alignment.BottomCenter
     ) {
-        // 상단에 제목과 뒤로 가기 버튼 배치
         Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 16.dp, top = 16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.cute_back),
-                contentDescription = "뒤로 가기 버튼",
-                modifier = Modifier
-                    .size(48.dp)
-                    .clickable {
-                        navController.navigate("main") {
-                            popUpTo("duary") { inclusive = true }
-                        }
-                    }
-            )
-            Spacer(modifier = Modifier.width(30.dp))
-            Text(
-                text = "다이어리",
-                fontSize = 32.sp,
-                color = Color.White,
-                textAlign = TextAlign.Start
-            )
-        }
-
-        // 메인 콘텐츠 영역
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 72.dp),
-            horizontalArrangement = Arrangement.spacedBy(padding),
-            verticalAlignment = Alignment.CenterVertically
+                .width(contentWidth)
+                .height(boxHeight),
+            horizontalArrangement = Arrangement.spacedBy(padding)
         ) {
             // 좌측 박스 (그림판)
             Box(
