@@ -27,13 +27,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.diarytablet.viewmodel.LogViewModel
 
 @Composable
 fun RecordTab(
     modifier: Modifier = Modifier,
+    viewModel: LogViewModel
 ) {
     var selectedTabIndex by remember { mutableStateOf(0) }
     val tabTitles = listOf("단어장", "일기장")
+    var isDiaryDetailVisible by remember { mutableStateOf(false) }
+    var selectedDiaryId by remember { mutableStateOf<Int?>(null) }
 
     // 전체 박스 (탭 + 내용물)
     Box(
@@ -105,10 +109,23 @@ fun RecordTab(
                     .padding(start = 16.dp),
                 contentAlignment = Center // 오른쪽 박스의 중앙 정렬
             ) {
-                if (selectedTabIndex == 0) {
-                    WordRecord()
+                if (selectedTabIndex == 0){
+                    LearnedWordTab(viewModel = viewModel)
                 } else {
-                    DiaryRecord()
+                    if (isDiaryDetailVisible) {
+                        MyDiaryDetail(
+                            diaryId = selectedDiaryId!!,
+                            onBackClick = {isDiaryDetailVisible = false},
+                            viewModel = viewModel)
+                    } else {
+                        DailyCalendar(
+                            viewModel = viewModel,
+                            onDateCellClick = { diaryId ->
+                                selectedDiaryId = diaryId
+                                isDiaryDetailVisible = true
+                            }
+                        )
+                    }
                 }
             }
         }

@@ -13,6 +13,9 @@ data class WordLearnedResponseDto(
     @SerializedName("img")
     val imageUrl : String,
 
+    @SerializedName("org")
+    val orgUrl : String,
+
     @SerializedName("createdAt")
     val createdAt : LocalDateTime
 

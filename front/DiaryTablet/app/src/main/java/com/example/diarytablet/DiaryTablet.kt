@@ -5,10 +5,13 @@ import LoginScreen
 import android.app.Application
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.runtime.Composable
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.diarytablet.datastore.UserStore
+import com.example.diarytablet.domain.RetrofitClient
 import com.example.diarytablet.ui.screens.MainScreen
 import com.example.diarytablet.ui.screens.ProfileScreen
 import com.example.diarytablet.ui.screens.RecordScreen
@@ -19,15 +22,16 @@ import com.example.diarytablet.ui.screens.WordLearningScreen
 import com.example.diarytablet.ui.theme.DiaryTabletTheme
 
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun DiaryTabletApp() {
+fun DiaryTabletApp(startDestination: String = "login") {
     val navController = rememberNavController()
 
     DiaryTabletTheme {
-        NavHost(navController, startDestination = "login") {
+        NavHost(navController, startDestination = startDestination) {
             composable("login") {
                 LoginScreen(
                     navController = navController)
@@ -37,7 +41,13 @@ fun DiaryTabletApp() {
                     navController = navController
                 )
             }
-            composable("main") {
+            composable(
+                "main?origin={origin}&isFinished={isFinished}",
+                arguments = listOf(
+                    navArgument("origin") { type = NavType.StringType; defaultValue = "Unknown" },
+                    navArgument("isFinished") { type = NavType.BoolType; defaultValue = false }
+                )
+            ) {
                 MainScreen(navController = navController)
             }
             composable("shop"){
@@ -77,6 +87,13 @@ class DiaryTablet : Application() {
     override fun onCreate() {
         super.onCreate()
         instance = this
-    }
 
+        if (::userStore.isInitialized) {
+            RetrofitClient.init(userStore)
+        } else {
+            throw IllegalStateException("UserStore is not initialized.")
+        }
+    }
 }
+
+

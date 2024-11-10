@@ -1,11 +1,13 @@
 package com.example.diarytablet.ui.screens
 
+
 import MainModal
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,6 +31,7 @@ import com.example.diarytablet.ui.components.Navbar
 import com.example.diarytablet.ui.theme.BackgroundPlacement
 import com.example.diarytablet.ui.theme.BackgroundType
 import com.example.diarytablet.viewmodel.MainViewModel
+import com.example.diarytablet.ui.components.MissionModal
 
 
 @Composable
@@ -42,7 +45,36 @@ fun MainScreen(
 
     var isModalVisible by remember { mutableStateOf(false) }
 
+    val isFinished by  viewModel.isFinished
+    val origin = viewModel.origin
+
+
+    Log.d("main","${origin} ${isFinished}")
     val missions = viewModel.missions
+
+    val missionItems = when (origin) {
+        "wordLearning" -> listOf(
+            MissionItem(text = "단어 학습", isSuccess = true),
+            MissionItem(text = "그림 일기", isSuccess = false),
+            MissionItem(text = "그림 퀴즈", isSuccess = false)
+        )
+        "diary" -> listOf(
+            MissionItem(text = "단어 학습", isSuccess = false),
+            MissionItem(text = "그림 일기", isSuccess = true),
+            MissionItem(text = "그림 퀴즈", isSuccess = false)
+        )
+        "quiz" -> listOf(
+            MissionItem(text = "단어 학습", isSuccess = false),
+            MissionItem(text = "그림 일기", isSuccess = false),
+            MissionItem(text = "그림 퀴즈", isSuccess = true)
+        )
+        else -> listOf(
+            MissionItem(text = "단어 학습", isSuccess = false),
+            MissionItem(text = "그림 일기", isSuccess = false),
+            MissionItem(text = "그림 퀴즈", isSuccess = false)
+        )
+    }
+
 
     Box(
         modifier = Modifier.fillMaxSize()
@@ -184,6 +216,21 @@ fun MainScreen(
                 isModalVisible = false
             }
         )
+        MissionModal(
+            isDialogVisible = isFinished,
+            onDismiss = {
+                viewModel.setFinished(false)
+                val completedMission = when (origin) {
+                    "wordLearning" -> MissionItem(text = "단어 학습", isSuccess = true)
+                    "diary" -> MissionItem(text = "그림 일기", isSuccess = true)
+                    "quiz" -> MissionItem(text = "그림 퀴즈", isSuccess = true)
+                    else -> null
+                }
+                completedMission?.let { viewModel.completeMissionItem(it) }
+                        },
+            missionItems = missionItems
+        )
+
     }
 }
 

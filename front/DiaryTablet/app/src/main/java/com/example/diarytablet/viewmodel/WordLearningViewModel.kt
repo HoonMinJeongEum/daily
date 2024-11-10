@@ -50,16 +50,7 @@ class WordLearningViewModel @Inject constructor(
         viewModelScope.launch {
             try {
 
-//                val mockWords = listOf(
-//                    WordResponseDto(id = 1, word = "하이", imageUrl = "https://example.com/hello.png"),
-//                    WordResponseDto(id = 2, word = "세상", imageUrl = "https://example.com/world.png"),
-//                    WordResponseDto(id = 3, word = "쌉틀린", imageUrl = "https://example.com/kotlin.png"),
-//                    WordResponseDto(id = 4, word = "아니", imageUrl = "https://example.com/kotlin.png"),
-//                    WordResponseDto(id = 5, word = "왜이러는데", imageUrl = "https://example.com/kotlin.png"),
-//                    WordResponseDto(id = 6, word = "씨발", imageUrl = "https://example.com/kotlin.png")
-//                )
-//                // Mock 데이터를 _wordList에 설정
-//                _wordList.value = mockWords
+
                 val words = wordRepository.getWordList()
                 _wordList.value = words
             } catch (e: Exception) {

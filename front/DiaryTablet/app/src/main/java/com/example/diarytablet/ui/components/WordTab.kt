@@ -271,7 +271,7 @@ fun WordTap(
                                             initialized = false
                                             if (finishedIndex == 9) {
                                                 onFinish()
-                                                navController.navigate("main") {
+                                                navController.navigate("main?origin=wordLearning&isFinished=true") {
                                                     popUpTo("wordLearning") { inclusive = true }
                                                 }
 

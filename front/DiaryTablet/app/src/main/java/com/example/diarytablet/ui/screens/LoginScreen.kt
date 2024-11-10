@@ -1,7 +1,9 @@
 import android.util.Log
+import android.util.MutableBoolean
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -16,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -39,7 +42,8 @@ fun LoginScreen(
     loginViewModel: LoginViewModel = hiltViewModel(),
     backgroundType: BackgroundType = BackgroundType.DEFAULT
 ) {
-
+    var isError by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
     BackgroundPlacement(backgroundType = backgroundType)
 
     Box(
@@ -50,24 +54,27 @@ fun LoginScreen(
             painter = painterResource(id = R.drawable.logo),
             contentDescription = "Logo",
             modifier = Modifier
-                .size(254.dp, 153.dp)
-                .offset(x = 511.dp, y = 79.dp)
+                .fillMaxWidth(0.3f)
+                .aspectRatio(1.67f)
+                .align(Alignment.TopCenter)
+                .padding(top = 70.dp)
         )
 
         Column(
             modifier = Modifier
-                .align(Alignment.Center)
-                .width(560.dp)
-                .padding(top = 150.dp),
+                .align(Alignment.TopCenter)
+                .fillMaxWidth(0.5f)
+                .padding(top = 70.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(modifier = Modifier.height(170.dp))
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(120.dp)
-                    .padding(vertical = 5.dp)
+                    .aspectRatio(5f)
+                    .padding(vertical = 8.dp)
 
             ) {
                 // Image behind TextField
@@ -92,7 +99,7 @@ fun LoginScreen(
                     onValueChange = { loginViewModel.username.value = it },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 60.dp), // Adjust padding for text alignment
+                        .padding(start = 80.dp), // Adjust padding for text alignment
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent,
@@ -101,13 +108,13 @@ fun LoginScreen(
                     )
                 )
             }
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(20.dp))
             // Password Field with Background Image
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(120.dp)
+                    .aspectRatio(5f)
                     .padding(vertical = 5.dp)
             ) {
                 // Image behind TextField
@@ -133,7 +140,7 @@ fun LoginScreen(
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 60.dp), // Adjust padding for text alignment
+                        .padding(start = 80.dp), // Adjust padding for text alignment
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent,
@@ -142,8 +149,39 @@ fun LoginScreen(
                     )
                 )
             }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (isError) {
+                    Text(
+                        text = "아이디와 비밀번호를 정확히 입력해 주세요.",
+                        fontSize = 20.sp,
+                        color = Color.Red,
+                        fontWeight = FontWeight.Normal,
+                        modifier = Modifier
+                            .align(Alignment.CenterVertically)
+                            .padding(start = 20.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.weight(1f)) // Space between error message and checkbox
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(
+                        checked = loginViewModel.autoLogin.value,
+                        onCheckedChange = { isChecked ->
+                            loginViewModel.autoLogin.value = isChecked                        }
+                    )
 
-            Spacer(modifier = Modifier.height(30.dp))
+                    Text(
+                        text = "자동 로그인",
+                        fontSize = 20.sp,
+                        color = Color.Gray,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+
+                }
+            }
+            Spacer(modifier = Modifier.height(5.dp))
 
 
 
@@ -157,11 +195,15 @@ fun LoginScreen(
                             navController.navigate("profileList") {
                                 popUpTo("login") { inclusive = true }
                             }
-                    }, onErrorPassword = {
-                        // 비밀번호 오류 처리ㅅ
-                    }, onError = {
-                        // 네트워크 오류 처리
-                    })
+                    }, onErrorPassword = { message ->
+                            isError = true
+                            errorMessage = message
+                        },
+                        onError = { message ->
+                            isError = true
+                            errorMessage = message
+                        }
+                    )
                 },
                 imageResId = 11
             )
