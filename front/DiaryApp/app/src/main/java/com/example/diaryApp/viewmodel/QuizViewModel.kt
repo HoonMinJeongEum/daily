@@ -131,7 +131,7 @@ class QuizViewModel @Inject constructor(
             }
 
             socket.on("setWord") {
-                _isWordSelected.value = true
+                _isWordSelected.postValue(true)
             }
 
             socket.on("userDisconnected") {
