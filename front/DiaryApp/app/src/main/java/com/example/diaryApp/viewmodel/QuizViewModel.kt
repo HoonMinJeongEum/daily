@@ -17,6 +17,7 @@ import androidx.lifecycle.MutableLiveData
 import com.example.diaryApp.datastore.UserStore
 import com.example.diaryApp.domain.dto.request.quiz.CheckSessionRequestDto
 import com.example.diaryApp.domain.repository.quiz.QuizRepository
+import com.example.diaryApp.utils.Const
 import com.example.diaryApp.utils.openvidu.Session
 import org.json.JSONArray
 import org.webrtc.MediaStream
@@ -52,6 +53,8 @@ class QuizViewModel @Inject constructor(
     val isCorrectAnswer: LiveData<Boolean?> get() = _isCorrectAnswer
     private val _userDisconnectedEvent = MutableLiveData<Boolean?>()
     val userDisconnectedEvent: LiveData<Boolean?> get() = _userDisconnectedEvent
+    private val _isWordSelected = MutableLiveData(false)
+    val isWordSelected: LiveData<Boolean> get() = _isWordSelected
 
     fun setCanvasSize(width: Int, height: Int) {
         _canvasWidth.value = width
@@ -83,7 +86,7 @@ class QuizViewModel @Inject constructor(
 
     private fun createSocket(sessionId: String) {
         viewModelScope.launch {
-            socket = IO.socket("ws://k11e204.p.ssafy.io:6080")
+            socket = IO.socket(Const.WS_API + Const.WS_PORT)
             socket.connect()
 
             Log.e("QuizViewModel", "roomId : ${sessionId}")
@@ -117,10 +120,18 @@ class QuizViewModel @Inject constructor(
             socket.on("checkWord") { args ->
                 val isCorrect = args[0] as Boolean
                 _isCorrectAnswer.postValue(isCorrect)
+
+                if (isCorrect) {
+                    _isWordSelected.postValue(false)
+                }
             }
 
             socket.on("clear") {
                 _path.value = Path()
+            }
+
+            socket.on("setWord") {
+                _isWordSelected.value = true
             }
 
             socket.on("userDisconnected") {
@@ -130,20 +141,16 @@ class QuizViewModel @Inject constructor(
         }
     }
 
-    fun checkSession(childName: String, onShowQuizAlert: () -> Unit, onNavigateToSession: (String) -> Unit) {
+    fun checkSession(childName: String, onShowQuizAlert: (String) -> Unit) {
         viewModelScope.launch {
             isLoading.value = true
             errorMessage.value = null
             try {
                 Log.e("QuizViewModel", "childName: $childName")
                 val response = quizRepository.checkSession(CheckSessionRequestDto(childName))
-                _sessionId.value = response.body()?.sessionId
+                val sessionId = response.body()?.sessionId ?: ""  // sessionId가 없으면 빈 문자열 할당
 
-                if (_sessionId.value == null) {
-                    onShowQuizAlert()
-                } else {
-                    onNavigateToSession(_sessionId.value!!)
-                }
+                onShowQuizAlert(sessionId)
             } catch (e: Exception) {
                 errorMessage.value = e.message
             } finally {

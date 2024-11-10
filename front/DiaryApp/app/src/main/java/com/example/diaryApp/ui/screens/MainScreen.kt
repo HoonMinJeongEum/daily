@@ -5,6 +5,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -22,6 +25,7 @@ import com.example.diaryApp.R
 import com.example.diaryApp.presentation.viewmodel.DiaryViewModel
 import com.example.diaryApp.ui.components.NavMenu
 import com.example.diaryApp.ui.components.ProfileList
+import com.example.diaryApp.ui.components.quiz.Alert
 import com.example.diaryApp.ui.components.quiz.QuizAlert
 import com.example.diaryApp.viewmodel.ProfileViewModel
 import com.example.diaryApp.viewmodel.QuizViewModel
@@ -39,6 +43,8 @@ fun MainScreen(
     BackgroundPlacement(backgroundType = backgroundType)
     val profileList by profileViewModel.profileList
     var showQuizAlert by remember { mutableStateOf(false) }
+    var showQuizConfirmDialog by remember { mutableStateOf(false) }
+    var sessionId by remember { mutableStateOf<String?>(null) }
 
     Box(
         modifier = Modifier.fillMaxSize()
@@ -68,7 +74,14 @@ fun MainScreen(
                 diaryViewModel = diaryViewModel,
                 wordViewModel = wordViewModel,
                 quizViewModel = quizViewModel,
-                onShowQuizAlert = { showQuizAlert = true }
+                onShowQuizAlert = { newSessionId ->
+                    if (newSessionId.isNotEmpty()) {
+                        sessionId = newSessionId
+                        showQuizConfirmDialog = true
+                    } else {
+                        showQuizAlert = true
+                    }
+                }
             )
         }
 
@@ -80,9 +93,24 @@ fun MainScreen(
             NavMenu(navController, "main", "main")
         }
     }
+
+    if (showQuizConfirmDialog && sessionId != null) {
+        Alert(
+            isVisible = true,
+            onDismiss = {
+                showQuizConfirmDialog = false
+            },
+            onConfirm = {
+                showQuizConfirmDialog = false
+                navController.navigate("catchMind/$sessionId")
+            },
+            title = "그림 퀴즈에 입장할까요?",
+        )
+    }
+
     if (showQuizAlert) {
         QuizAlert(
-            title = "방이 생성되지 않았습니다.",
+            title = "아직 퀴즈가 준비되지 않았어요.",
             onDismiss = { showQuizAlert = false }
         )
     }
