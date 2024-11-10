@@ -149,10 +149,14 @@ fun DiaryScreen(
                                     if (isDrawingMode) {
                                         detectDragGestures(
                                             onDragStart = { offset ->
-                                                path.value = Path().apply { moveTo(offset.x, offset.y) }
+                                                path.value =
+                                                    Path().apply { moveTo(offset.x, offset.y) }
                                             },
                                             onDrag = { change, _ ->
-                                                path.value.lineTo(change.position.x, change.position.y)
+                                                path.value.lineTo(
+                                                    change.position.x,
+                                                    change.position.y
+                                                )
 
                                                 // 비트맵에 즉시 그리기 반영
                                                 val canvas = AndroidCanvas(currentBitmap)
@@ -227,40 +231,58 @@ fun DiaryScreen(
         }
     }
 
-    // 미리보기 모달 창
+    // 모달 대신 전체 화면 Box로 미리보기 보여주기
     if (isPreviewDialogVisible) {
-        Dialog(onDismissRequest = { isPreviewDialogVisible = false }) {
-            Box(
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.7f)),
+            contentAlignment = Alignment.Center // 화면의 중앙에 박스를 위치
+        ) {
+            Row(
                 modifier = Modifier
-                    .size(leftBoxWidth, boxHeight) // 좌측 박스와 동일한 크기로 설정
-                    .background(Color.White, shape = RoundedCornerShape(16.dp))
-                    .padding(16.dp)
+                    .fillMaxSize(0.9f) // 화면의 90% 크기로 설정
+                    .background(Color.White, shape = RoundedCornerShape(16.dp)) // 흰색 배경 및 둥근 모서리 설정
+                    .padding(16.dp), // 내부 여백 설정
+                horizontalArrangement = Arrangement.SpaceBetween, // 좌우 여백 분리
+                verticalAlignment = Alignment.CenterVertically // 세로 중앙 정렬
             ) {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                // 템플릿과 경로 표시하는 부분
+                Box(
+                    modifier = Modifier
+                        .weight(0.8f) // 왼쪽 공간을 크게 설정
+                        .fillMaxHeight()
+                        .padding(end = 8.dp), // 오른쪽에 여백 추가
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text("그리기 과정 미리보기", fontSize = 20.sp)
-                    Spacer(modifier = Modifier.height(16.dp))
                     DrawingPlaybackView(
                         drawingSteps = firstPageDrawingSteps,
                         context = context,
-                        width = leftBoxWidth,
-                        height = boxHeight,
-                        originalWidthPx = bitmapWidthPx.toFloat(),
-                        originalHeightPx = bitmapHeightPx.toFloat()
+                        templateWidth = with(LocalDensity.current) { (leftBoxWidth - padding * 2).toPx().toInt() },
+                        templateHeight = with(LocalDensity.current) { (boxHeight - padding * 2).toPx().toInt() }
                     )
+                }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                // 오른쪽에 취소 및 보내기 버튼
+                Column(
+                    modifier = Modifier
+                        .weight(0.2f) // 오른쪽 공간을 작게 설정
+                        .fillMaxHeight(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.SpaceEvenly // 세로로 균등 배치
+                ) {
+                    Button(onClick = { isPreviewDialogVisible = false }) {
+                        Text("취소")
+                    }
                     Button(
                         onClick = {
-                            isPreviewDialogVisible = false
                             CoroutineScope(Dispatchers.IO).launch {
-                                saveAndUploadImages()
+                                saveAndUploadImages() // API 호출
                             }
+                            isPreviewDialogVisible = false
                         }
                     ) {
-                        Text("이미지 업로드")
+                        Text("보내기")
                     }
                 }
             }
@@ -268,67 +290,58 @@ fun DiaryScreen(
     }
 }
 
-
 @Composable
 fun DrawingPlaybackView(
     drawingSteps: List<DrawingStep>,
     context: Context,
-    width: Dp,
-    height: Dp,
-    originalWidthPx: Float,
-    originalHeightPx: Float
+    templateWidth: Int,
+    templateHeight: Int
 ) {
     val currentPath = remember { Path() }
     var currentStepIndex by remember { mutableIntStateOf(0) }
 
-    // Density로 DP에서 Pixel 단위로 변환
-    val density = LocalDensity.current
-    val playbackWidthPx = with(density) { width.roundToPx().toFloat() }
-    val playbackHeightPx = with(density) { height.roundToPx().toFloat() }
-
-    // 원래 크기와 미리보기 창의 크기 비율 계산
-    val scaleX = playbackWidthPx / originalWidthPx
-    val scaleY = playbackHeightPx / originalHeightPx
-
+    // 애니메이션 효과로 경로를 재생
     LaunchedEffect(drawingSteps) {
         currentStepIndex = 0
         while (currentStepIndex < drawingSteps.size) {
-            delay(50)
+            delay(10)
             currentPath.addPath(drawingSteps[currentStepIndex].path)
             currentStepIndex++
         }
     }
 
-    Canvas(modifier = Modifier.size(width, height)) {
-        drawIntoCanvas { canvas ->
-            val templateBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.draw_template)
-            val templateScaleX = size.width / templateBitmap.width
-            val templateScaleY = size.height / templateBitmap.height
-            canvas.save()
-            canvas.scale(templateScaleX, templateScaleY)
-            canvas.nativeCanvas.drawBitmap(templateBitmap, 0f, 0f, null)
-            canvas.restore()
-        }
-
-        // Path를 Matrix로 스케일링
-        val matrix = Matrix().apply {
-            setScale(scaleX, scaleY)
-        }
-
-        drawingSteps.take(currentStepIndex).forEach { step ->
-            val androidPath = step.path.asAndroidPath()
-            val scaledAndroidPath = AndroidPath(androidPath).apply {
-                transform(matrix)
+    Box(
+        modifier = Modifier
+            .width(templateWidth.dp)
+            .height(templateHeight.dp)
+            .background(Color.White, shape = RoundedCornerShape(16.dp)),
+        contentAlignment = Alignment.TopStart // 좌상단을 기준으로 경로 시작점 설정
+    ) {
+        Canvas(
+            modifier = Modifier
+                .fillMaxSize()
+        ) {
+            // 템플릿 이미지를 좌상단에 위치시켜 그리기
+            drawIntoCanvas { canvas ->
+                val templateBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.draw_template)
+                val resizedTemplateBitmap = Bitmap.createScaledBitmap(templateBitmap, templateWidth, templateHeight, true)
+                canvas.nativeCanvas.drawBitmap(resizedTemplateBitmap, 0f, 0f, null)
             }
 
-            drawPath(
-                path = scaledAndroidPath.asComposePath(),
-                color = step.color,
-                style = Stroke(width = step.thickness * scaleX, cap = StrokeCap.Round)
-            )
+            // 경로를 템플릿 좌상단에 맞게 그리기
+            drawingSteps.take(currentStepIndex).forEach { step ->
+                drawPath(
+                    path = step.path,
+                    color = step.color,
+                    style = Stroke(width = step.thickness, cap = StrokeCap.Round)
+                )
+            }
         }
     }
 }
+
+
+
 
 // Path의 bounds를 가져와 문자열로 변환하여 로그로 출력
 //fun pathBoundsToString(path: AndroidPath): String {
