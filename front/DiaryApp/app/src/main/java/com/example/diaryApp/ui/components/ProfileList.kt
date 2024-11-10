@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -74,18 +76,21 @@ fun ProfileList(
 fun DeleteProfileList(
     modifier: Modifier = Modifier,
     profileList : List<Profile>,
+    viewModel: ProfileViewModel
 ) {
-    val profileViewModel: ProfileViewModel = hiltViewModel()
-    var showDialog by remember { mutableStateOf(false) }
     Log.d("ProfileScreen", "${profileList}")
 
-    Column (
+    LaunchedEffect(Unit) {
+        viewModel.loadProfiles()
+    }
+
+    LazyColumn (
         modifier = modifier
             .fillMaxHeight()
             .wrapContentWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        profileList.forEach { profile ->
+        items(profileList) { profile ->
             DeleteProfileItem(profile)
         }
     }
