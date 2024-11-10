@@ -8,8 +8,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -18,7 +20,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.diaryApp.ui.theme.BackgroundPlacement
@@ -30,7 +35,9 @@ import com.example.diaryApp.ui.components.CreateCoupon
 import com.example.diaryApp.ui.components.DailyRegisterButton
 import com.example.diaryApp.ui.components.NavMenu
 import com.example.diaryApp.ui.components.TopBackImage
+import com.example.diaryApp.ui.components.TopLogoImg
 import com.example.diaryApp.ui.components.UsageCouponListItem
+import com.example.diaryApp.ui.theme.MyTypography
 import com.example.diaryApp.viewmodel.CouponViewModel
 
 @Composable
@@ -39,6 +46,7 @@ fun ShoppingScreen(
     couponViewModel: CouponViewModel = hiltViewModel(),
     backgroundType: BackgroundType = BackgroundType.ACTIVE
 ) {
+
     BackgroundPlacement(backgroundType = backgroundType)
 
     var showDialog by remember { mutableStateOf(false) }
@@ -55,18 +63,32 @@ fun ShoppingScreen(
                 .fillMaxSize()
                 .align(Alignment.TopCenter)
         ) {
-            TopBackImage(
-                logoText = "상점",
-                BackImage = R.drawable.navigate_back,
-                onBackClick = {
-                    navController.popBackStack()
-                }
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TopLogoImg(
+                    characterImg = R.drawable.daily_character,
+                    modifier = Modifier.weight(1f)
+                )
+
+                Text(
+                    text = "상점",
+                    color = Color.White,
+                    fontSize = 30.sp,
+                    style = MyTypography.bodyMedium,
+                    modifier = Modifier
+                        .weight(2f)
+                        .padding(start = 40.dp)
+                )
+            }
         }
 
         Box(
             modifier = Modifier
-                .fillMaxSize() // 전체 화면을 채우도록 설정
+                .fillMaxSize()
                 .align(Alignment.Center),
             contentAlignment = Alignment.BottomCenter
         ) {
@@ -78,7 +100,8 @@ fun ShoppingScreen(
                         shape = RoundedCornerShape(topEnd = 50.dp, topStart = 50.dp)
                     )
                     .fillMaxWidth()
-                    .height(780.dp)
+                    .height(780.dp),
+               contentAlignment = Alignment.Center
             ) {
                 Column(
                     modifier = Modifier.fillMaxSize(),
@@ -94,8 +117,6 @@ fun ShoppingScreen(
                     ) {
                         DailyRegisterButton(
                             text = "쿠폰 등록",
-                            fontSize = 26,
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
                             backgroundColor = Color.Transparent,
                             width = 140,
                             height = 60,
@@ -104,8 +125,6 @@ fun ShoppingScreen(
                         )
                         DailyRegisterButton(
                             text = "쿠폰 내역",
-                            fontSize = 26,
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
                             backgroundColor = Color.Transparent,
                             width = 140,
                             height = 60,
@@ -119,7 +138,7 @@ fun ShoppingScreen(
                             CouponListItem(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(top = 50.dp),
+                                    .padding(top = 24.dp),
                                 couponList,
                                 onShowDialogChange = { showDialog = it }
                             )
@@ -128,7 +147,7 @@ fun ShoppingScreen(
                             UsageCouponListItem(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(top = 50.dp),
+                                    .padding(top = 24.dp),
                                 usageCouponList,
                                 onShowBuyDialogChange = { showBuyDialog = it }
                             )

@@ -46,7 +46,7 @@ fun DiaryScreen(
                 .align(Alignment.TopCenter)
         ) {
             TopBackImage(
-                logoText = "${diaryViewModel.memberName.value}의 그림 일기!",
+                logoText = "${diaryViewModel.memberName.value}의 그림 일기",
                 BackImage = R.drawable.navigate_back,
                 onBackClick = {
                     navController.popBackStack()
