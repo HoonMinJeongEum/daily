@@ -77,7 +77,8 @@ fun CatchMindScreen(
     val isUserDisconnected = viewModel.userDisconnectedEvent.observeAsState(false).value ?: false
     var isQuizDisconnected by remember { mutableStateOf(false) }
     var showQuizEnd by remember { mutableStateOf(false) }
-
+    val isCorrectAnswer by viewModel.isCorrectAnswer.observeAsState()
+    
     // 단어 선택 확인 변수
     val isWordSelected by viewModel.isWordSelected.observeAsState(false)
     var isQuizNotStartedAlert by remember { mutableStateOf(false) }
