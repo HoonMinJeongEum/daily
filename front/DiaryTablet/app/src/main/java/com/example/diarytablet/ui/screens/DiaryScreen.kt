@@ -99,7 +99,13 @@ fun DiaryScreen(
 
     // 이미지 저장 및 업로드 트리거 함수
     suspend fun saveAndUploadImages() {
-        val imageFiles = savePageImagesWithTemplate(bitmapsList, context)
+        // leftBoxWidth와 boxHeight 값을 전달
+        val imageFiles = savePageImagesWithTemplate(
+            bitmapsList,
+            context,
+            leftBoxWidth = leftBoxWidth,
+            boxHeight = boxHeight
+        )
         if (imageFiles.size >= 2) {
             val drawUri = Uri.fromFile(imageFiles[0])
             val writeUri = Uri.fromFile(imageFiles[1])
@@ -370,63 +376,30 @@ fun DrawingPlaybackView(
         }
     }
 }
+data class DrawingStep(val path: Path, val color: Color, val thickness: Float)
 
+suspend fun savePageImagesWithTemplate(
+    bitmapsList: List<Bitmap>,
+    context: Context,
+    leftBoxWidth: Dp,
+    boxHeight: Dp,
+    padding: Int = 16 // 바깥 박스를 위한 추가 패딩
+): List<File> {
+    // Dp를 픽셀로 변환
+    val density = context.resources.displayMetrics.density
+    val outerBoxWidthPx = (leftBoxWidth.toPx(density) + padding * 2).toInt()
+    val outerBoxHeightPx = (boxHeight.toPx(density) + padding * 2).toInt()
 
-
-
-// Path의 bounds를 가져와 문자열로 변환하여 로그로 출력
-//fun pathBoundsToString(path: AndroidPath): String {
-//    val bounds = android.graphics.RectF()
-//    path.computeBounds(bounds, true)
-//    return "Left: ${bounds.left}, Top: ${bounds.top}, Right: ${bounds.right}, Bottom: ${bounds.bottom}"
-//}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        data class DrawingStep(val path: Path, val color: Color, val thickness: Float)
-
-
-
-suspend fun savePageImagesWithTemplate(bitmapsList: List<Bitmap>, context: Context): List<File> {
     return withContext(Dispatchers.IO) {
         bitmapsList.mapIndexed { index, drawingBitmap ->
-            // 박스 배경, 템플릿, 그림판의 크기를 동일하게 설정
-            val targetWidth = 2000
-            val targetHeight = 1500
+            val targetWidth = outerBoxWidthPx - padding * 2
+            val targetHeight = outerBoxHeightPx - padding * 2
 
-            // 박스 배경 이미지 불러와서 크기 조정
-            val boxBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.diary_box)
-            val resizedBoxBitmap = Bitmap.createScaledBitmap(boxBitmap, targetWidth, targetHeight, true)
+            // 바깥 박스 배경용 흰색 Bitmap 생성
+            val outerBoxBackground = Bitmap.createBitmap(outerBoxWidthPx, outerBoxHeightPx, Bitmap.Config.ARGB_8888)
+            val outerCanvas = AndroidCanvas(outerBoxBackground)
+            val paint = android.graphics.Paint().apply { color = android.graphics.Color.WHITE }
+            outerCanvas.drawRect(0f, 0f, outerBoxWidthPx.toFloat(), outerBoxHeightPx.toFloat(), paint) // 흰색으로 칠하기
 
             // 템플릿 이미지 불러와서 크기 조정
             val templateBitmap = if (index == 0) {
@@ -434,26 +407,21 @@ suspend fun savePageImagesWithTemplate(bitmapsList: List<Bitmap>, context: Conte
             } else {
                 BitmapFactory.decodeResource(context.resources, R.drawable.write_template)
             }
-            val resizedTemplateBitmap = Bitmap.createScaledBitmap(templateBitmap, targetWidth, targetHeight, true)
+            val resizedTemplateBitmap = Bitmap.createScaledBitmap(templateBitmap, targetWidth - padding * 4, targetHeight - padding * 4, true)
 
             // 그림판 이미지 크기 조정
             val resizedDrawingBitmap = Bitmap.createScaledBitmap(drawingBitmap, targetWidth, targetHeight, true)
 
-            // 같은 크기의 새로운 비트맵 생성
-            val combinedBitmap = Bitmap.createBitmap(targetWidth, targetHeight, Bitmap.Config.ARGB_8888)
-            val canvas = AndroidCanvas(combinedBitmap)
+            // 중앙 위치 계산
+            val centerX = (outerBoxWidthPx - targetWidth + padding*4) / 2f
+            val centerY = (outerBoxHeightPx - targetHeight + padding*4) / 2f
 
-            // 박스 이미지 그리기
-            canvas.drawBitmap(resizedBoxBitmap, 0f, 0f, null)
-
-            // 그림판 그리기
-            canvas.drawBitmap(resizedDrawingBitmap, 0f, 0f, null)
-
-            // 템플릿 그리기
-            canvas.drawBitmap(resizedTemplateBitmap, 0f, 0f, null)
+            // 바깥 박스의 중앙에 템플릿 및 비트맵을 그리기
+            outerCanvas.drawBitmap(resizedTemplateBitmap, centerX, centerY, null)
+            outerCanvas.drawBitmap(resizedDrawingBitmap, centerX, centerY, null)
 
             // 이미지 크기 줄이기
-            val finalBitmap = resizeBitmap(combinedBitmap, 1000, 750)
+            val finalBitmap = resizeBitmap(outerBoxBackground, 1450, 1000) // 저장 크기 설정 (필요시 조정 가능)
 
             // 압축하여 파일로 저장
             val file = File(context.filesDir, "drawing_combined_$index.jpg")
@@ -470,6 +438,9 @@ suspend fun savePageImagesWithTemplate(bitmapsList: List<Bitmap>, context: Conte
     }
 }
 
+// Dp를 픽셀로 변환하는 확장 함수
+fun Dp.toPx(density: Float): Float = this.value * density
+
 // 해상도를 조절하는 함수
 fun resizeBitmap(bitmap: Bitmap, width: Int, height: Int): Bitmap {
     return Bitmap.createScaledBitmap(bitmap, width, height, true)
@@ -481,4 +452,3 @@ fun compressBitmap(bitmap: Bitmap, outputFile: File, quality: Int = 30) {
         bitmap.compress(Bitmap.CompressFormat.JPEG, quality, out)
     }
 }
-
