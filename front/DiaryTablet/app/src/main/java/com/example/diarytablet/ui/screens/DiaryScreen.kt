@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -49,13 +51,23 @@ import com.example.diarytablet.viewmodel.DiaryViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import android.graphics.Matrix
+import android.media.MediaRecorder
+import android.media.MediaScannerConnection
+import android.media.MediaScannerConnection.scanFile
+import android.os.Environment
+import android.view.Surface
+import android.view.SurfaceHolder
+import android.view.SurfaceView
 import androidx.compose.foundation.clickable
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.viewinterop.AndroidView
 import coil3.compose.rememberAsyncImagePainter
+import com.arthenica.ffmpegkit.FFmpegKit
+import java.io.IOException
 import java.net.URL
 import android.graphics.Path as AndroidPath
 
@@ -109,6 +121,7 @@ fun DiaryScreen(
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { 2 })
     val firstPageDrawingSteps =
         remember { mutableStateListOf<DrawingStep>() } // 첫 번째 페이지의 DrawingSteps 저장
+
 
     // 이미지 저장 및 업로드 트리거 함수
     suspend fun saveAndUploadImages() {
@@ -400,36 +413,49 @@ fun DrawingPlaybackView(
 ) {
     val currentPath = remember { Path() }
     var currentStepIndex by remember { mutableIntStateOf(0) }
+    val outputDir = File(context.filesDir, "frames").apply { mkdirs() } // 프레임 저장 디렉토리
+    val videoFile = File(context.getExternalFilesDir(Environment.DIRECTORY_MOVIES), "drawing_playback.mp4")
 
-    // 애니메이션 효과로 경로를 재생
     LaunchedEffect(drawingSteps) {
         currentStepIndex = 0
         while (currentStepIndex < drawingSteps.size) {
-            delay(10)
+            delay(10) // 여기서 속도
             currentPath.addPath(drawingSteps[currentStepIndex].path)
+
+            // 각 프레임을 Bitmap으로 저장
+            val bitmap = Bitmap.createBitmap(templateWidth, templateHeight, Bitmap.Config.ARGB_8888)
+            val canvas = AndroidCanvas(bitmap)
+            drawToBitmap(canvas, currentPath, templateWidth, templateHeight, context)
+            saveBitmapToFile(bitmap, File(outputDir, "frame_$currentStepIndex.png"))
+
             currentStepIndex++
         }
+
+        // FFmpeg로 프레임을 동영상으로 결합
+        createVideoFromFrames(context, outputDir, videoFile)
+
+        // 동영상 파일을 갤러리에 추가
+        scanFile(context, videoFile)
     }
 
+    // UI 구성 (프레임을 캡처하면서 실시간으로 보여줌)
     Box(
         modifier = Modifier
             .width(templateWidth.dp)
             .height(templateHeight.dp)
             .background(Color.White, shape = RoundedCornerShape(16.dp)),
-        contentAlignment = Alignment.TopStart // 좌상단을 기준으로 경로 시작점 설정
+        contentAlignment = Alignment.TopStart
     ) {
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
         ) {
-            // 템플릿 이미지를 좌상단에 위치시켜 그리기
             drawIntoCanvas { canvas ->
                 val templateBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.draw_template)
                 val resizedTemplateBitmap = Bitmap.createScaledBitmap(templateBitmap, templateWidth, templateHeight, true)
                 canvas.nativeCanvas.drawBitmap(resizedTemplateBitmap, 0f, 0f, null)
             }
 
-            // 경로를 템플릿 좌상단에 맞게 그리기
             drawingSteps.take(currentStepIndex).forEach { step ->
                 drawPath(
                     path = step.path,
@@ -440,6 +466,68 @@ fun DrawingPlaybackView(
         }
     }
 }
+
+// 경로를 Bitmap에 그리는 함수
+fun drawToBitmap(
+    canvas: AndroidCanvas,
+    path: Path,
+    width: Int,
+    height: Int,
+    context: Context
+) {
+    // 배경을 흰색으로 설정
+    val backgroundPaint = android.graphics.Paint().apply {
+        color = android.graphics.Color.WHITE
+        style = android.graphics.Paint.Style.FILL
+    }
+    canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), backgroundPaint)
+
+
+    // 템플릿 이미지 그리기
+    val templateBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.draw_template)
+    val resizedTemplateBitmap = Bitmap.createScaledBitmap(templateBitmap, width, height, true)
+    canvas.drawBitmap(resizedTemplateBitmap, 0f, 0f, null)
+
+
+    val paint = android.graphics.Paint().apply {
+        style = android.graphics.Paint.Style.STROKE
+        strokeWidth = 5f
+        color = android.graphics.Color.BLACK
+    }
+
+    // 경로 그리기
+    canvas.drawPath(path.asAndroidPath(), paint)
+}
+
+// Bitmap을 파일로 저장하는 함수
+fun saveBitmapToFile(bitmap: Bitmap, file: File) {
+    FileOutputStream(file).use { out ->
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+    }
+}
+
+// 동영상 생성 함수
+fun createVideoFromFrames(context: Context, framesDir: File, outputFile: File) {
+    val command = "-y -framerate 10 -i ${framesDir.absolutePath}/frame_%d.png -c:v mpeg4 -qscale:v 2 -pix_fmt yuv420p ${outputFile.absolutePath}"
+
+    FFmpegKit.executeAsync(command) { session ->
+        if (session.returnCode.isValueSuccess) {
+            Log.d("DrawingPlaybackView", "Video created successfully at: ${outputFile.absolutePath}")
+        } else {
+            Log.e("DrawingPlaybackView", "Failed to create video: ${session.output}")
+        }
+    }
+}
+
+// 미디어 스캔을 수행하여 갤러리에 파일 추가
+fun scanFile(context: Context, videoFile: File) {
+    MediaScannerConnection.scanFile(context, arrayOf(videoFile.absolutePath), null) { path, uri ->
+        Log.d("DrawingPlaybackView", "Scanned $path:")
+        Log.d("DrawingPlaybackView", "-> uri=$uri")
+    }
+}
+
+
 data class DrawingStep(val path: Path, val color: Color, val thickness: Float)
 
 suspend fun savePageImagesWithTemplate(
