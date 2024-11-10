@@ -59,6 +59,10 @@ import coil3.compose.rememberAsyncImagePainter
 import java.net.URL
 import android.graphics.Path as AndroidPath
 
+data class StickerItem(
+    val bitmap: Bitmap,
+    var position: MutableState<Offset> // MutableState로 변경
+)
 
 @Composable
 fun DiaryScreen(
@@ -68,10 +72,7 @@ fun DiaryScreen(
 ) {
     BackgroundPlacement(backgroundType = backgroundType)
     val userStickers by diaryViewModel.userStickers.observeAsState(emptyList())
-    // 스티커 관련 상태
-    var selectedStickerImage by remember { mutableStateOf<Bitmap?>(null) }
-    var stickerPosition by remember { mutableStateOf(Offset.Zero) }
-
+    val firstPageStickers = remember { mutableStateListOf<StickerItem>() }
 
     LaunchedEffect(Unit) {
         diaryViewModel.fetchUserStickers()
@@ -85,7 +86,6 @@ fun DiaryScreen(
     var selectedTool by remember { mutableStateOf(ToolType.PENCIL) }
     var isPreviewDialogVisible by remember { mutableStateOf(false) } // 모달 표시 여부
 
-    // 화면 크기 및 레이아웃 설정
     val configuration = LocalConfiguration.current
     val screenWidthDp = configuration.screenWidthDp.dp
     val screenHeightDp = configuration.screenHeightDp.dp
@@ -95,7 +95,6 @@ fun DiaryScreen(
     val leftBoxWidth = contentWidth * 0.75f
     val boxHeight = contentHeight * 0.88f
 
-    // Dp 단위를 픽셀로 변환
     val density = LocalDensity.current
     val bitmapWidthPx = with(density) { leftBoxWidth.roundToPx() }
     val bitmapHeightPx = with(density) { boxHeight.roundToPx() }
@@ -129,7 +128,6 @@ fun DiaryScreen(
         }
     }
 
-    // 스티커 중앙 위치 계산
     val centerPosition = Offset(
         x = with(density) { leftBoxWidth.toPx() / 2 },
         y = with(density) { boxHeight.toPx() / 2 }
@@ -175,7 +173,6 @@ fun DiaryScreen(
             horizontalArrangement = Arrangement.spacedBy(padding),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 좌측 박스 (그림판)
             Box(
                 modifier = Modifier
                     .width(leftBoxWidth)
@@ -183,11 +180,18 @@ fun DiaryScreen(
                     .clip(RoundedCornerShape(50.dp))
                     .background(Color.White)
                     .pointerInput(Unit) {
-                        detectDragGestures { change, dragAmount ->
-                            // 선택한 스티커 드래그 이동
-                            stickerPosition += dragAmount
-                            change.consume()
-                        }
+                        detectDragGestures(
+                            onDragStart = {
+                            },
+                            onDrag = { change, dragAmount ->
+                                if (pagerState.currentPage == 0) {
+                                    firstPageStickers.lastOrNull()?.let { lastSticker ->
+                                        lastSticker.position.value += dragAmount
+                                        change.consume()
+                                    }
+                                }
+                            }
+                        )
                     }
             ) {
                 VerticalPager(
@@ -258,18 +262,20 @@ fun DiaryScreen(
                                 color = selectedColor,
                                 style = Stroke(width = brushSize, cap = StrokeCap.Round)
                             )
-                            // 선택한 스티커 이미지를 Canvas에 그리기
-                            selectedStickerImage?.let { stickerBitmap ->
-                                drawIntoCanvas { canvas ->
-                                    canvas.nativeCanvas.drawBitmap(
-                                        stickerBitmap,
-                                        stickerPosition.x,
-                                        stickerPosition.y,
-                                        null
-                                    )
+                            if (pagerState.currentPage == 0) {
+                                firstPageStickers.forEach { stickerItem ->
+                                    drawIntoCanvas { canvas ->
+                                        canvas.nativeCanvas.drawBitmap(
+                                            stickerItem.bitmap,
+                                            stickerItem.position.value.x,
+                                            stickerItem.position.value.y,
+                                            null
+                                        )
+                                    }
                                 }
                             }
                         }
+
 
                         Image(
                             painter = painterResource(if (page == 0) R.drawable.draw_template else R.drawable.write_template),
@@ -297,8 +303,10 @@ fun DiaryScreen(
                     stickerList = userStickers,
                     onStickerSelect = { sticker ->
                         CoroutineScope(Dispatchers.IO).launch {
-                            selectedStickerImage = loadBitmapFromUrl(sticker.img)
-                            stickerPosition = centerPosition // 그림판 중앙에 스티커 배치
+                            val bitmap = loadBitmapFromUrl(sticker.img)
+                            if (bitmap != null) {
+                                firstPageStickers.add(StickerItem(bitmap, mutableStateOf(centerPosition)))
+                            }
                         }
                     }
                 )
