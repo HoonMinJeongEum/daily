@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.sp
 import com.example.diaryApp.R
 import com.example.diaryApp.ui.theme.DeepPastelBlue
 import com.example.diaryApp.ui.theme.GrayText
+import com.example.diaryApp.ui.theme.MyTypography
 
 @Composable
 fun DailyButton(
@@ -114,8 +115,7 @@ fun DailyButton(
 @Composable
 fun DailyRegisterButton(
     text: String,
-    fontSize: Int = 16,
-    fontWeight: androidx.compose.ui.text.font.FontWeight = androidx.compose.ui.text.font.FontWeight.Normal,
+    textStyle: TextStyle = MyTypography.bodyMedium,
     backgroundColor: Color = Color.Blue,
     shadowColor: Color = Color.LightGray,
     shadowElevation: Dp = 0.dp,
@@ -185,10 +185,8 @@ fun DailyRegisterButton(
                 }
                 Text(
                     text = text,
-                    style = TextStyle(
-                        fontSize = fontSize.sp,
-                        color = selectedFontColor,
-                        fontWeight = fontWeight
+                    style = textStyle.copy(
+                        color = selectedFontColor
                     )
                 )
             }

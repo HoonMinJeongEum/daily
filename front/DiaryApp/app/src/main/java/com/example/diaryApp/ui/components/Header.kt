@@ -22,14 +22,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.diaryApp.R
+import com.example.diaryApp.ui.theme.MyTypography
 
 @Composable
 fun TopLogoImg(
+    modifier: Modifier = Modifier,
     logoImg: Int? = null,
-    characterImg: Int? = null,
+    characterImg: Int? = null
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.Top
     ) {
         characterImg?.let {
@@ -70,8 +72,8 @@ fun TopBackImage(
     onBackClick: (() -> Unit)? = null
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically // 수직 정렬을 중앙으로 설정
+        modifier = Modifier.fillMaxWidth().padding(top = 16.dp, start = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
         BackImage?.let {
             Box(
@@ -101,7 +103,8 @@ fun TopBackImage(
                     text = logoText,
                     color = Color.White, // 텍스트 색상 흰색으로 설정
                     fontSize = 24.sp, // 텍스트 크기 설정
-                    style = TextStyle.Default.copy(textAlign = TextAlign.Center) // 텍스트 중앙 정렬
+                    style = MyTypography.bodyMedium,
+                    textAlign = TextAlign.Center
                 )
             }
         }

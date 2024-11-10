@@ -68,7 +68,7 @@ fun WordScreen(
                     .align(Alignment.TopCenter)
             ) {
                 TopBackImage(
-                    logoText = "${wordViewModel.memberName.value} 의 단어장!",
+                    logoText = "${wordViewModel.memberName.value} 의 단어장",
                     BackImage = R.drawable.navigate_back,
                     onBackClick = {
                         navController.popBackStack()
@@ -106,8 +106,6 @@ fun WordScreen(
                         ) {
                             DailyRegisterButton(
                                 text = "가나다순",
-                                fontSize = 26,
-                                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
                                 backgroundColor = Color.Transparent,
                                 width = 140,
                                 height = 60,
@@ -116,8 +114,6 @@ fun WordScreen(
                             )
                             DailyRegisterButton(
                                 text = "날짜순",
-                                fontSize = 26,
-                                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
                                 backgroundColor = Color.Transparent,
                                 width = 140,
                                 height = 60,

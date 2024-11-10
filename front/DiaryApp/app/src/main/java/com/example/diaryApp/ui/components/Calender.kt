@@ -23,6 +23,8 @@ import com.example.diaryApp.domain.dto.response.diary.DiaryForList
 import com.example.diaryApp.presentation.viewmodel.DiaryViewModel
 import com.example.diaryApp.ui.theme.DeepPastelNavy
 import com.example.diaryApp.ui.theme.GrayText
+import com.example.diaryApp.ui.theme.MyTypography
+import com.example.diaryApp.ui.theme.SkyBlue
 import java.time.LocalDateTime
 import java.util.*
 
@@ -64,7 +66,7 @@ fun DailyCalendar(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(36.dp)
+            .padding(30.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -84,8 +86,7 @@ fun DailyCalendar(
 
             Text(
                 text = monthYearText,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
+                style = MyTypography.bodyMedium,
                 color = GrayText,
                 modifier = Modifier
                     .align(Alignment.CenterVertically)
@@ -101,7 +102,7 @@ fun DailyCalendar(
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -110,9 +111,7 @@ fun DailyCalendar(
             daysOfWeek.forEach { day ->
                 Text(
                     text = day,
-                    style = MaterialTheme.typography.bodySmall,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
+                    style = MyTypography.bodySmall,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.size(36.dp)
                 )
@@ -147,9 +146,7 @@ fun DailyCalendar(
                                 diaryId = diaryId,
                                 navController = navController
                             )
-                            if (day < daysInMonth) {
-                                day++
-                            }
+                            day++
                         }
                     }
                 }
@@ -170,7 +167,7 @@ fun DateCell(
         modifier = Modifier
             .size(36.dp)
             .background(
-                if (isDiaryDate) DeepPastelNavy else Color.Transparent,
+                if (isDiaryDate) SkyBlue else Color.Transparent,
                 shape = CircleShape
             )
             .clickable {
