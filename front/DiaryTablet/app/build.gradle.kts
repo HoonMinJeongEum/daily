@@ -58,6 +58,7 @@ android {
 }
 
 dependencies {
+    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
     implementation("com.vanniktech:android-image-cropper:4.6.0")
     implementation ("io.reactivex.rxjava2:rxjava:2.2.21")
     implementation ("com.squareup.retrofit2:adapter-rxjava2:2.9.0")
@@ -80,7 +81,7 @@ dependencies {
     implementation(libs.androidx.appcompat)
     kapt("com.google.dagger:hilt-compiler:2.51.1")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
-    implementation("androidx.compose.runtime:runtime-livedata:1.5.1") // Compose LiveData 연동
+    implementation("androidx.compose.runtime:runtime-livedata:1.5.1")
     implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
     implementation("com.neovisionaries:nv-websocket-client:2.9")
     implementation("com.github.webrtc-sdk:android:104.+")
@@ -102,6 +103,7 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }
+
 
 kapt {
     correctErrorTypes = true

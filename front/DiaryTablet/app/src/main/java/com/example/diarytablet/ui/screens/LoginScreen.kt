@@ -1,5 +1,6 @@
 import android.util.Log
 import android.util.MutableBoolean
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -9,6 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -17,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -34,6 +37,8 @@ import com.example.diarytablet.ui.theme.BackgroundPlacement
 import com.example.diarytablet.ui.theme.BackgroundType
 import com.example.diarytablet.ui.theme.MyTypography
 import com.example.diarytablet.viewmodel.LoginViewModel
+import com.samsung.android.sdk.penremote.SpenRemote
+import com.samsung.android.sdk.penremote.SpenUnitManager
 
 // 로그인 텍스트 필드 쪽 수정 필요
 @OptIn(ExperimentalMaterial3Api::class)
@@ -46,6 +51,47 @@ fun LoginScreen(
     var isError by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
     BackgroundPlacement(backgroundType = backgroundType)
+
+    val context = LocalContext.current
+
+    // S Pen Remote 연동 확인
+    LaunchedEffect(Unit) {
+        try {
+            // SpenRemote 인스턴스를 가져옵니다.
+            val spenRemote = SpenRemote.getInstance()
+            val isFeatureAvailable = spenRemote.isFeatureEnabled(SpenRemote.FEATURE_TYPE_BUTTON)
+
+            if (isFeatureAvailable) {
+                Log.d("LoginScreen", "S Pen Button feature is available.")
+
+                if (!spenRemote.isConnected) {
+                    spenRemote.connect(context, object : SpenRemote.ConnectionResultCallback {
+                        override fun onSuccess(manager: SpenUnitManager?) {
+                            Log.d("LoginScreen", "S Pen connected successfully.")
+                            Toast.makeText(context, "S Pen connected.", Toast.LENGTH_SHORT).show()
+                        }
+
+                        override fun onFailure(error: Int) {
+                            Log.e("LoginScreen", "S Pen connection failed with error code: $error")
+                            val errorMsg = when (error) {
+//                                SpenRemote.CONNECTION_FAILED -> "S Pen connection failed."
+//                                SpenRemote.UNSUPPORTED_DEVICE -> "Device does not support S Pen."
+                                else -> "Unknown error."
+                            }
+                            Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
+                        }
+                    })
+                }
+            } else {
+                Log.d("LoginScreen", "S Pen Button feature is not available.")
+                Toast.makeText(context, "S Pen feature not available on this device.", Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: NoClassDefFoundError) {
+            Log.e("LoginScreen", "S Pen feature not supported on this device/emulator", e)
+            Toast.makeText(context, "S Pen feature not supported on this device/emulator.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
 
     BoxWithConstraints(
         modifier = Modifier.fillMaxSize()

@@ -12,9 +12,9 @@ import com.example.diarytablet.R
 
 @Composable
 fun AlarmButton(
-    isAlarmOn: Boolean, // 알람 상태에 따른 이미지 전환
+    isAlarmOn: Boolean,
     modifier: Modifier = Modifier,
-    onClick: () -> Unit, // 모달 생성시 onClick에 모달 오픈 함수 작성 후 매개변수에서 삭제.
+    onClick: () -> Unit,
 ) {
     val alarmIcon = if (isAlarmOn) R.drawable.alarm_on else R.drawable.alarm_off
 
@@ -22,8 +22,8 @@ fun AlarmButton(
         painter = painterResource(id = alarmIcon),
         contentDescription = "Alarm Button",
         modifier = modifier
-            .size(75.dp) // 아이콘 크기
-            .clickable(onClick = onClick) // 클릭 이벤트
+            .size(75.dp)
+            .clickable(onClick = onClick)
     )
 }
 

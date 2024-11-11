@@ -98,7 +98,6 @@ fun MainScreen(
                 modifier = Modifier.align(Alignment.Center),
                 verticalAlignment = Alignment.Bottom,
             ) {
-                // 캐릭터는 2번째 블록에 위치
                 Spacer(modifier = Modifier.width(blockWidth)) // 첫 번째 블록
                 Image(
                     painter = painterResource(id = R.drawable.main_char),
@@ -109,7 +108,6 @@ fun MainScreen(
                         .offset(x = -blockWidth * 0.9f , y = screenHeight * 0.1f)
                 )
 
-                // 말풍선은 3번째 블록에 위치
                 Box(
                     modifier = Modifier
                         .width(screenWidth * 0.8f) // 세 번째 블록

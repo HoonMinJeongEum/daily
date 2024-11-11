@@ -133,6 +133,7 @@ class NavBarViewModel @Inject constructor(
         }
     }
 
+
     private fun observeAlarmState() {
         viewModelScope.launch {
             userStore.getAlarmState().collect { isOn ->

@@ -108,7 +108,7 @@ fun Navbar(
             onDismissRequest = { isProfileMenuVisible = false }
 
         ) {
-            Box(
+             Box(
                 modifier = Modifier
                     .wrapContentSize()
                     .background(Color.White, shape = RoundedCornerShape(16.dp))

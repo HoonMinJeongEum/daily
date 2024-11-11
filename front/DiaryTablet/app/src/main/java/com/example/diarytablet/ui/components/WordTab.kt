@@ -4,6 +4,12 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
 import android.widget.ProgressBar
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -12,6 +18,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -21,6 +28,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -51,15 +59,19 @@ import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.asAndroidPath
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
@@ -69,6 +81,7 @@ import com.example.diarytablet.domain.dto.request.WordRequestDto
 import com.example.diarytablet.domain.dto.response.WordResponseDto
 import com.example.diarytablet.model.ToolType
 import com.example.diarytablet.ui.theme.DeepPastelBlue
+import com.example.diarytablet.ui.theme.MyTypography
 import com.example.diarytablet.ui.theme.PastelNavy
 import com.example.diarytablet.ui.theme.PastelSkyBlue
 import createPaintForTool
@@ -85,276 +98,330 @@ fun WordTap(
     navController: NavController
 
 ) {
-    val listState = rememberLazyListState()
-    val coroutineScope = rememberCoroutineScope()
-    var currentIndex by remember { mutableIntStateOf(0) }
-    var finishedIndex by remember { mutableIntStateOf(-1) }
-
-    var canvasWidth by remember { mutableStateOf(780) }
-    var canvasHeight by remember { mutableStateOf(510) }
-    var showPopup by remember { mutableStateOf(false) }
-
-    // canvasWidth와 canvasHeight를 활용해 Bitmap을 생성
-    var writtenBitmap by remember {
-        mutableStateOf(
-            Bitmap.createBitmap(canvasWidth, canvasHeight, Bitmap.Config.ARGB_8888)
-        )
-    }
-    val context = LocalContext.current
-    val isDrawingMode by remember { mutableStateOf(true) }
-    var buttonText by remember { mutableStateOf("제출") }
-    var buttonColor by remember { mutableStateOf(Color.White) }
-    var initialized by remember { mutableStateOf(false) }
-
-    fun clearCanvas() {
-        writtenBitmap.eraseColor(android.graphics.Color.TRANSPARENT)
-
-    }
-
-    if (showPopup) {
-        LaunchedEffect(showPopup) {
-            delay(3000)
-            showPopup = false
-        }
-    }
-
-    Column(modifier = modifier.fillMaxSize()) {
-
-        // 3초 동안 보여주는 팝업 메시지
-        if (showPopup) {
-            Popup(
-                alignment = Alignment.Center,
-                onDismissRequest = { showPopup = false }
-            ) {
-                Box(
-                    modifier = Modifier
-                        .wrapContentSize()
-                        .background(Color.Black.copy(alpha = 0.7f), shape = RoundedCornerShape(8.dp))
-                        .padding(16.dp)
-                ) {
-                    Text(
-                        text = "Next word loaded!",
-                        color = Color.White,
-                        fontSize = 18.sp,
-                        modifier = Modifier.padding(8.dp)
-                    )
-                }
-            }
-        }
-
-    LazyRow (
-        state = listState,
-        modifier = Modifier
-            .wrapContentHeight()
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(60.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        contentPadding = PaddingValues(start = 210.dp, end = 210.dp),
-        userScrollEnabled = false
-    ){
-        itemsIndexed(wordList) { index, word ->
-
-            Box(
-        modifier = modifier
-            .width(860.dp)
-            .height(510.dp)
+    BoxWithConstraints(
+        modifier = Modifier.fillMaxSize()
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.word_container),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.FillBounds
-        )
+        val screenWidth = maxWidth
+        val screenHeight = maxHeight
 
-        Row(
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxSize()
-        ) {
+        val listState = rememberLazyListState()
+        val coroutineScope = rememberCoroutineScope()
+        var currentIndex by remember { mutableIntStateOf(0) }
+        var finishedIndex by remember { mutableIntStateOf(-1) }
+        var canvasWidth by remember { mutableStateOf(780) }
+        var canvasHeight by remember { mutableStateOf(510) }
+        var showPopup by remember { mutableStateOf(false) }
 
-            if (listState.firstVisibleItemIndex == index-1 && currentIndex != finishedIndex+1) {
-                Image(
-                    painter = painterResource(id = R.drawable.right_arrow),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(90.dp)
-                        .padding(start = 50.dp)
-                        .clickable{
-                            coroutineScope.launch {
-                                listState.animateScrollToItem(++currentIndex)
-                                if (currentIndex > finishedIndex) {
-                                    finishedIndex = currentIndex - 1
-                                }
-                            }
-                        }
+        // Bitmap 생성
+        var writtenBitmap by remember {
+            mutableStateOf(
+                Bitmap.createBitmap(canvasWidth, canvasHeight, Bitmap.Config.ARGB_8888)
+            )
+        }
+
+        val context = LocalContext.current
+        val isDrawingMode by remember { mutableStateOf(true) }
+        var buttonText by remember { mutableStateOf("제출") }
+        var buttonColor by remember { mutableStateOf(Color.White) }
+        var initialized by remember { mutableStateOf(false) }
+        var popupAlpha by remember { mutableStateOf(1f) }
+
+        fun clearCanvas() {
+            writtenBitmap.eraseColor(android.graphics.Color.TRANSPARENT)
+        }
+
+
+
+        Column(modifier = modifier.fillMaxSize()) {
+
+            if (showPopup) {
+                // alpha 애니메이션 추가
+                val alpha by animateFloatAsState(
+                    targetValue = popupAlpha,
+                    animationSpec = tween(durationMillis = 1000, easing = LinearEasing) // 페이드 인/아웃 애니메이션 시간
                 )
-            }
 
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight(),
-                contentAlignment = Alignment.Center
-            ) {
-
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(word.imageUrl)
-                        .crossfade(true)
-                        .build(),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    contentScale = ContentScale.FillBounds
-                )
-            }
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 40.dp)
-                    .fillMaxHeight(),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
-                    modifier = Modifier
-                        .fillMaxSize() // 크기 조정
+                Popup(
+                    alignment = Alignment.BottomStart,
+                    onDismissRequest = {},
+                    properties = PopupProperties(
+                        focusable = false,
+                        dismissOnBackPress = false
+                    )
                 ) {
-                    Box(
+                    Row(
                         modifier = Modifier
                             .wrapContentSize()
-                            .onSizeChanged { size ->
-                                Log.d("wordtest","$${index} ${word}")
-                                val characterCount = wordList[currentIndex].word.length
-                                val targetWidth = characterCount * 200
-                                val targetHeight = 200
-
-                                if (!initialized && ( canvasWidth != targetWidth || canvasHeight != targetHeight)) {
-                                    canvasWidth = targetWidth
-                                    canvasHeight = targetHeight
-                                    writtenBitmap = Bitmap.createBitmap(canvasWidth, canvasHeight, Bitmap.Config.ARGB_8888).apply {
-                                        eraseColor(android.graphics.Color.TRANSPARENT)
-                                    }
-                                    Log.d("sizeTest", "Updated Bitmap size: $canvasWidth x $canvasHeight")
-                                    initialized = true
-                                }
-                            },
-                        contentAlignment = Alignment.Center
+                            .offset(x = -screenWidth * 0.05f)
+                            .padding(bottom = screenHeight * 0.05f)
+                            .graphicsLayer(alpha = alpha)
                     ) {
-                        // 각 글자를 개별 박스로 나누어 배치
-                        val characters = wordList[currentIndex].word.chunked(1)
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(0.dp),
-                            verticalAlignment = Alignment.CenterVertically,
+                        Image(
+                            painter = painterResource(id = R.drawable.main_char),
+                            contentDescription = "Character",
                             modifier = Modifier
-                                .wrapContentSize()
+                                .width(screenWidth * 0.3f)
+                                .aspectRatio(1.67f)
+                        )
+
+                        Box(
+                            modifier = Modifier
+                                .width(screenWidth * 0.3f)
+                                .aspectRatio(2.5f)
+                                .offset(x = -screenWidth * 0.08f)
+                                .padding(bottom = screenHeight * 0.05f)
                         ) {
-                            characters.forEach { character ->
-                                Box(
-                                    contentAlignment = Alignment.Center,
-                                    modifier = Modifier
-                                        .size(100.dp)
-                                        .border(4.dp, Color.LightGray)
-                                ) {
-                                    Text(
-                                        text = character,
-                                        fontSize = 70.sp,
-                                        style = MaterialTheme.typography.bodyLarge, color = Color.LightGray
-                                    )
-                                }
+                            Image(
+                                painter = painterResource(id = R.drawable.popup_balloon),
+                                contentDescription = "Text Balloon",
+                                contentScale = ContentScale.FillBounds,
+                                modifier = Modifier.fillMaxSize()
+                            )
+
+                            Column(
+                                modifier = Modifier
+                                    .align(Alignment.Center)
+                                    .padding(horizontal = screenWidth * 0.05f, vertical = screenHeight * 0.02f),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = "너 잘하고 있어!",
+                                    color = Color.Black,
+                                    fontSize = 24.sp,
+                                    lineHeight = 26.sp
+                                )
                             }
                         }
-                        DrawCanvas(
-                            modifier = Modifier
-                                .matchParentSize()
-                                .align(Alignment.Center),
-                            currentBitmap = writtenBitmap,
-                            isDrawingMode = isDrawingMode,
-                        )
                     }
+                }
 
-
-
-                    Spacer(
-                        modifier = Modifier
-                            .height(50.dp)
-                    )
-                    BasicButton(
-                        onClick = {
-                            if (currentIndex == finishedIndex + 1) {
-                                Log.d("gon", "Button clicked")
-                                coroutineScope.launch {
-                                    val statusCode = onValidate(context, wordList[currentIndex], writtenBitmap!!)
-                                    Log.d("wordTap","success ${statusCode}")
-
-                                    when (statusCode) {
-                                        200 -> {
-                                            // Success, proceed to the next item
-                                            finishedIndex = currentIndex
-                                            buttonText = "제출"
-                                            buttonColor = Color.White
-                                            initialized = false
-                                            if (finishedIndex == 4) {
-                                                onFinish()
-                                                navController.navigate("main?origin=wordLearning&isFinished=true") {
-                                                    popUpTo("wordLearning") { inclusive = true }
-                                                }
-                                            } else {
-                                                listState.animateScrollToItem(++currentIndex)
-                                                showPopup = true // Show popup on transition
-                                            }
-                                        }
-                                        400, 422 -> {
-                                            // Change button to "다시제출" with the specified color
-                                            buttonText = "다시제출"
-                                            buttonColor = Color(0xFFD27979) // Hex color D27979
-                                        }
-                                        else -> {
-                                            // Handle other errors if needed
-                                        }
-                                    }
-                                    clearCanvas()
-                                }
-                            }
-                            Log.d("wordTap","f ${finishedIndex} , c ${currentIndex}")
-                        },
-                        modifier = Modifier.clickable(enabled = currentIndex == finishedIndex + 1) {
-                            coroutineScope.launch {
-                                listState.animateScrollToItem(currentIndex)
-                            }
-                        },
-                        text = if (currentIndex != finishedIndex + 1) "완료" else buttonText,
-                        ButtonColor = if (currentIndex != finishedIndex + 1) Color.Gray else buttonColor,
-                        imageResId = 11
-                    )
-
+                // 2초 후 showPopup을 false로 설정
+                LaunchedEffect(showPopup) {
+                    delay(1500)  // 1.2초 동안 유지
+                    popupAlpha = 0f  // 투명도 점진적 감소 시작
+                    delay(1000)  // 페이드 아웃 애니메이션 지속 시간
+                    showPopup = false  // 완료 후 팝업 종료
+                    popupAlpha = 1f
                 }
             }
-            if (listState.firstVisibleItemIndex == index+1) {
-                Image(
-                    painter = painterResource(id = R.drawable.left_arrow),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(90.dp)
-                        .padding(end = 50.dp)
-                        .clickable{
-                            coroutineScope.launch {
-                                listState.animateScrollToItem(--currentIndex)
+
+
+            LazyRow (
+                state = listState,
+                modifier = Modifier
+                    .wrapContentHeight()
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(screenWidth * 0.09f),
+                verticalAlignment = Alignment.CenterVertically,
+                contentPadding = PaddingValues(start = screenWidth * 0.18f, end = screenWidth * 0.18f),
+                userScrollEnabled = false
+            ){
+                itemsIndexed(wordList) { index, word ->
+
+                    Box(
+                        modifier = modifier
+                            .width(screenWidth * 0.64f)
+                            .height(screenHeight * 0.8f)
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.word_container),
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.FillBounds
+                        )
+
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+
+                            if (listState.firstVisibleItemIndex == index-1 && currentIndex != finishedIndex+1) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.right_arrow),
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .size(screenHeight * 0.13f)
+                                        .padding(start = screenWidth * 0.03f)
+                                        .clickable{
+                                            coroutineScope.launch {
+                                                listState.animateScrollToItem(++currentIndex)
+                                                if (currentIndex > finishedIndex) {
+                                                    finishedIndex = currentIndex - 1
+                                                }
+                                            }
+                                        }
+                                )
+                            }
+
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+
+                                AsyncImage(
+                                    model = ImageRequest.Builder(LocalContext.current)
+                                        .data(word.imageUrl)
+                                        .crossfade(true)
+                                        .build(),
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .fillMaxSize(),
+                                    contentScale = ContentScale.FillBounds                                 )
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(end = screenWidth * 0.05f)
+                                    .fillMaxHeight(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center,
+                                    modifier = Modifier
+                                        .fillMaxSize() // 크기 조정
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .wrapContentSize()
+                                            .onSizeChanged { size ->
+                                                Log.d("wordtest","$${index} ${word}")
+                                                val characterCount = wordList[currentIndex].word.length
+                                                val targetWidth = characterCount * 200
+                                                val targetHeight = 200
+
+                                                if (!initialized && ( canvasWidth != targetWidth || canvasHeight != targetHeight)) {
+                                                    canvasWidth = targetWidth
+                                                    canvasHeight = targetHeight
+                                                    writtenBitmap = Bitmap.createBitmap(canvasWidth, canvasHeight, Bitmap.Config.ARGB_8888).apply {
+                                                        eraseColor(android.graphics.Color.TRANSPARENT)
+                                                    }
+                                                    Log.d("sizeTest", "Updated Bitmap size: $canvasWidth x $canvasHeight")
+                                                    initialized = true
+                                                }
+                                            },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        // 각 글자를 개별 박스로 나누어 배치
+                                        val characters = wordList[currentIndex].word.chunked(1)
+                                        Row(
+                                            horizontalArrangement = Arrangement.spacedBy(0.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier
+                                                .wrapContentSize()
+                                        ) {
+                                            characters.forEach { character ->
+                                                Box(
+                                                    contentAlignment = Alignment.Center,
+                                                    modifier = Modifier
+                                                        .size(screenHeight * 0.15f)
+                                                        .border(screenHeight * 0.01f, Color.LightGray)
+                                                ) {
+                                                    Text(
+                                                        text = character,
+                                                        fontSize = (screenHeight.value * 0.1f).sp,
+                                                        style = MyTypography.bodyLarge, color = Color.LightGray
+                                                    )
+                                                }
+                                            }
+                                        }
+                                        DrawCanvas(
+                                            modifier = Modifier
+                                                .matchParentSize()
+                                                .align(Alignment.Center),
+                                            currentBitmap = writtenBitmap,
+                                            isDrawingMode = isDrawingMode,
+                                        )
+                                    }
+
+
+
+                                    Spacer(
+                                        modifier = Modifier
+                                            .height(screenHeight * 0.1f)
+                                    )
+                                    BasicButton(
+                                        onClick = {
+                                            if (currentIndex == finishedIndex + 1) {
+                                                Log.d("gon", "Button clicked")
+                                                coroutineScope.launch {
+                                                    val statusCode = onValidate(context, wordList[currentIndex], writtenBitmap!!)
+                                                    Log.d("wordTap","success ${statusCode}")
+
+                                                    when (statusCode) {
+                                                        200 -> {
+                                                            // Success, proceed to the next item
+                                                            finishedIndex = currentIndex
+                                                            buttonText = "제출"
+                                                            buttonColor = Color.White
+                                                            initialized = false
+                                                            if (finishedIndex == 4) {
+                                                                onFinish()
+                                                                navController.navigate("main?origin=wordLearning&isFinished=true") {
+                                                                    popUpTo("wordLearning") { inclusive = true }
+                                                                }
+                                                            } else {
+                                                                listState.animateScrollToItem(++currentIndex)
+                                                                showPopup = true // Show popup on transition
+                                                            }
+                                                        }
+                                                        400, 422 -> {
+                                                            // Change button to "다시제출" with the specified color
+                                                            buttonText = "다시제출"
+                                                            buttonColor = Color(0xFFD27979) // Hex color D27979
+                                                        }
+                                                        else -> {
+                                                            // Handle other errors if needed
+                                                        }
+                                                    }
+                                                    clearCanvas()
+                                                }
+                                            }
+                                            Log.d("wordTap","f ${finishedIndex} , c ${currentIndex}")
+                                        },
+                                        modifier = Modifier.clickable(enabled = currentIndex == finishedIndex + 1) {
+                                            coroutineScope.launch {
+                                                listState.animateScrollToItem(currentIndex)
+                                            }
+                                        },
+                                        text = if (currentIndex != finishedIndex + 1) "완료" else buttonText,
+                                        ButtonColor = if (currentIndex != finishedIndex + 1) Color.Gray else buttonColor,
+                                        imageResId = 11
+                                    )
+
+                                }
+                            }
+                            if (listState.firstVisibleItemIndex == index+1) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.left_arrow),
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .size(screenHeight * 0.13f)
+                                        .padding(end = screenWidth * 0.03f)
+                                        .clickable{
+                                            coroutineScope.launch {
+                                                listState.animateScrollToItem(--currentIndex)
+                                            }
+                                        }
+                                )
                             }
                         }
-                )
+                    }
+                }
             }
-        }
-    }
-        }
-    }
 
-        ProgressBar(
-            currentIndex = currentIndex,
-            total = wordList.size,
-            finishedIndex = finishedIndex
-        )
+            ProgressBar(
+                currentIndex = currentIndex,
+                total = wordList.size,
+                finishedIndex = finishedIndex,
+                screenWidth = screenWidth,
+                screenHeight = screenHeight
+            )
+        }
     }
 }
 
@@ -383,6 +450,15 @@ fun DrawCanvas(
                             path.moveTo(offset.x, offset.y)
                             lastX = offset.x
                             lastY = offset.y
+
+                            val canvas = android.graphics.Canvas(currentBitmap)
+                            val paint = createPaintForTool(
+                                ToolType.PENCIL,
+                                Color.Black,
+                                9f
+                            )
+                            // 첫 위치에 바로 선을 그리도록 시작점을 추가
+                            canvas.drawPath(path.asAndroidPath(), paint)
                         },
                         onDrag = { change, _ ->
                             path.lineTo(change.position.x, change.position.y)
@@ -418,11 +494,11 @@ fun DrawCanvas(
 
 
 @Composable
-fun ProgressBar(finishedIndex: Int,currentIndex:Int, total: Int) {
+fun ProgressBar(finishedIndex: Int, currentIndex:Int, total: Int, screenWidth : Dp, screenHeight : Dp) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 16.dp),
+            .padding(vertical = screenHeight * 0.01f),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -432,8 +508,8 @@ fun ProgressBar(finishedIndex: Int,currentIndex:Int, total: Int) {
             if (index != 0) {
                 Spacer(
                     modifier = Modifier
-                        .width(40.dp)
-                        .height(4.dp)
+                        .width(screenWidth * 0.07f)
+                        .height(screenHeight * 0.01f)
                         .background(barColor)
                 )
             }
@@ -441,7 +517,7 @@ fun ProgressBar(finishedIndex: Int,currentIndex:Int, total: Int) {
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(screenHeight * 0.08f)
                     .background(color, shape = CircleShape)
             ) {
                 if (index <= finishedIndex) {
@@ -449,7 +525,7 @@ fun ProgressBar(finishedIndex: Int,currentIndex:Int, total: Int) {
                         painter = painterResource(id = R.drawable.check_mark),
                         contentDescription = null,
                         modifier = Modifier
-                            .size(24.dp)
+                            .size(screenHeight * 0.06f)
                     )
                 }
             }

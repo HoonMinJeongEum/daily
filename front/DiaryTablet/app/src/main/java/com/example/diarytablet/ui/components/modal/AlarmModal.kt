@@ -123,8 +123,8 @@ fun AlarmItem(
         BasicButton(
             onClick = {
                 onConfirmClick(alarmItem.id)
-                navController.navigate("") {
-                    popUpTo("main") { inclusive = true }
+                navController.navigate("record?titleId=${alarmItem.titleId}") {
+                    popUpTo("main") { inclusive = false }
                 }
             },
             imageResId = 11,
