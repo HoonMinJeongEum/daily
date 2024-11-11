@@ -9,7 +9,7 @@ data class Diary(
     val writeImg: String,
     val sound: String,
     val createdAt: LocalDateTime,
-    val comments: List<Comment>
+    val comments: List<CommentDto>
 )
 
 data class DiaryForList(
