@@ -17,12 +17,13 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun LandingScreen(
+    startDestination: String = "login",
     navController: NavController,
     backgroundType: BackgroundType = BackgroundType.DEFAULT
 ) {
     LaunchedEffect(Unit) {
         delay(1000) // 3초 동안 대기
-        navController.navigate("login") {
+        navController.navigate(startDestination) {
             popUpTo("landing") { inclusive = true }
         }
     }
