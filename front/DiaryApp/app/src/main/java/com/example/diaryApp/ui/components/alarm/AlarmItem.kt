@@ -46,7 +46,7 @@ fun AlarmItem(
     alarm: AlarmResponseDto,
     navController: NavController,
     quizViewModel: QuizViewModel,
-    onShowQuizAlert: () -> Unit
+    onShowQuizAlert: (String) -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
     val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
@@ -106,10 +106,10 @@ fun AlarmItem(
                     onClick = {
                         if (alarm.title == "그림 퀴즈") {
                             coroutineScope.launch {
-                                quizViewModel.checkSession(alarm.name, onShowQuizAlert = {
-                                    onShowQuizAlert()
-                                }, onNavigateToSession = { sessionId ->
-                                    navController.navigate("catchMind/$sessionId")
+                                quizViewModel.checkSession(
+                                    alarm.name,
+                                    onShowQuizAlert = { newSessionId ->
+                                    onShowQuizAlert(newSessionId)
                                 })
                             }
                         } else {
