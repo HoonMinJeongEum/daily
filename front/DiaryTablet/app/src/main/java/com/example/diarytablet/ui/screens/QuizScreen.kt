@@ -161,7 +161,7 @@ fun QuizScreen(
                         Image(
                             painter = painterResource(id = R.drawable.diary_box),
                             contentDescription = "배경 이미지",
-                            modifier = Modifier.fillMaxSize().alpha(0.8f),
+                            modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.FillBounds
                         )
                         Draw(
@@ -169,7 +169,7 @@ fun QuizScreen(
                                 .fillMaxSize(0.9f)
                                 .clipToBounds()
                                 .align(Alignment.Center),
-                            viewModel = viewModel
+                            viewModel = viewModel,
                         )
                         selectedWord?.let { word ->
                             BoxWithConstraints(
@@ -255,6 +255,10 @@ fun QuizScreen(
                                     contentDescription = "팔레트",
                                     modifier = Modifier
                                 )
+
+
+
+
                             }
                             Spacer(modifier = Modifier.weight(0.5f))
                             BasicButton(

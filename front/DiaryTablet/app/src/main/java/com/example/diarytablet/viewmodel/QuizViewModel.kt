@@ -14,6 +14,13 @@ import org.json.JSONObject
 import androidx.compose.ui.graphics.Path
 import io.socket.client.IO
 import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asAndroidPath
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.example.diarytablet.domain.dto.request.quest.UpdateQuestRequestDto
@@ -31,14 +38,10 @@ class QuizViewModel @Inject constructor(
     private val questRepository: QuestRepository,
     private val userStore: UserStore
 ) : ViewModel() {
-
-    lateinit var socket: Socket
-    val recommendWords = mutableStateOf<List<String>>(emptyList())
     val isLoading = mutableStateOf(false)
     val errorMessage = mutableStateOf<String?>(null)
-    private val _path = mutableStateOf(Path())
-    val path: State<Path> = _path
 
+    // 비디오
     private val _token = MutableLiveData<String?>()
     val token: LiveData<String?> get() = _token
     private val _sessionId = MutableLiveData<SessionResponseDto?>()
@@ -49,20 +52,33 @@ class QuizViewModel @Inject constructor(
     private val _leaveSessionTriggered = MutableLiveData<Boolean>()
     val leaveSessionTriggered: LiveData<Boolean> get() = _leaveSessionTriggered
 
+    // 단어
+    lateinit var socket: Socket
+    val recommendWords = mutableStateOf<List<String>>(emptyList())
     private val _isCorrectAnswer = MutableLiveData<Boolean?>()
     val isCorrectAnswer: LiveData<Boolean?> get() = _isCorrectAnswer
-
-    private val _canvasWidth = MutableLiveData<Int>()
-    val canvasWidth: LiveData<Int> get() = _canvasWidth
-
-    private val _canvasHeight = MutableLiveData<Int>()
-    val canvasHeight: LiveData<Int> get() = _canvasHeight
-
     private val _userDisconnectedEvent = MutableLiveData<Boolean?>()
     val userDisconnectedEvent: LiveData<Boolean?> get() = _userDisconnectedEvent
     private val _parentJoinedEvent = MutableLiveData<Boolean>()
     val parentJoinedEvent: LiveData<Boolean> get() = _parentJoinedEvent
 
+    // 그림
+    private val _canvasWidth = MutableLiveData<Int>()
+    val canvasWidth: LiveData<Int> get() = _canvasWidth
+    private val _canvasHeight = MutableLiveData<Int>()
+    val canvasHeight: LiveData<Int> get() = _canvasHeight
+    private val _paths = NonNullLiveData<MutableList<Pair<Path, PathStyle>>>(
+        mutableListOf()
+    )
+    private val _pathStyle = NonNullLiveData(
+        PathStyle()
+    )
+    private val removedPaths = mutableListOf<Pair<Path, PathStyle>>()
+    val paths: LiveData<MutableList<Pair<Path, PathStyle>>>
+        get() = _paths
+    val pathStyle: LiveData<PathStyle>
+        get() = _pathStyle
+    
     fun setCanvasSize(width: Int, height: Int) {
         _canvasWidth.value = width
         _canvasHeight.value = height
@@ -147,38 +163,14 @@ class QuizViewModel @Inject constructor(
             }
         }
 
-        socket.on("initDrawing") { args ->
-            val drawingData = args[0] as JSONArray
-            for (i in 0 until drawingData.length()) {
-                val draw = drawingData.getString(i)
-                val jsonMessage = JSONObject(draw)
-                val draws = jsonMessage.getString("draw").split(",")
-                val action = draws[0]
-                val x = draws[1].toFloat()
-                val y = draws[2].toFloat()
-                updatePath(action, x, y)
-            }
-        }
-
-        // 서버로부터 "draw" 이벤트 수신
-        socket.on("draw") { args ->
-            val responseData = args[0] as String
-            val jsonMessage = JSONObject(responseData)
-            val draws = jsonMessage.getString("draw").split(",")
-            val action = draws[0]
-            val x = draws[1].toFloat() * (canvasWidth.value?.toFloat() ?: 1f)
-            val y = draws[2].toFloat() * (canvasHeight.value?.toFloat() ?: 1f)
-
-            updatePath(action, x, y)
-        }
-
         socket.on("checkWord") { args ->
             val isCorrect = args[0] as Boolean
             _isCorrectAnswer.postValue(isCorrect)
         }
 
         socket.on("clear") {
-            _path.value = Path()
+            _paths.postValue(mutableListOf())
+            removedPaths.clear()
         }
 
         socket.on("userDisconnected") {
@@ -189,6 +181,10 @@ class QuizViewModel @Inject constructor(
         socket.on("joinParents") {
             _parentJoinedEvent.postValue(true)
             Log.d("QuizViewModel", "joinParents")
+            resetPath()
+            updateWidth(_pathStyle.value.width)
+            updateColor(_pathStyle.value.color)
+            updateAlpha(_pathStyle.value.alpha)
         }
     }
 
@@ -206,47 +202,6 @@ class QuizViewModel @Inject constructor(
                 isLoading.value = false
             }
         }
-    }
-
-    // 퀘스트 완료
-    fun updateQuest() {
-        viewModelScope.launch {
-            isLoading.value = true
-            errorMessage.value = null
-            try {
-                questRepository.updateQuest(UpdateQuestRequestDto("QUIZ"))
-
-            } catch (e: Exception) {
-                errorMessage.value = e.message
-            } finally {
-                isLoading.value = false
-            }
-        }
-    }
-
-
-    // 그림 업데이트
-    private fun updatePath(action: String, x: Float, y: Float) {
-        _path.value = Path().apply {
-            addPath(_path.value) // 기존 Path 유지
-            when (action) {
-                "DOWN" -> moveTo(x, y)
-                "MOVE" -> lineTo(x, y)
-            }
-        }
-    }
-    
-    // 그림 초기화
-    fun resetPath() {
-        socket.emit("clear" )
-    }
-    
-    // 드로잉 시작, 진행, 종료에 따라 소켓 메시지 전송
-    fun sendDrawAction(action: String, x: Float, y: Float) {
-        val message = """{"draw":"$action,${x/ (canvasWidth.value?.toFloat() ?: 1f)},${y/(canvasHeight.value?.toFloat() ?: 1f)}"}"""
-        socket.emit("draw", message)
-
-        updatePath(action, x, y)
     }
 
     // 단어 설정
@@ -288,4 +243,94 @@ class QuizViewModel @Inject constructor(
         }
         _remoteMediaStream.postValue(stream)
     }
+
+    // 그림 초기화
+    fun resetPath() {
+        socket.emit("clear" )
+    }
+
+    // 드로잉 시작, 진행, 종료에 따라 소켓 메시지 전송
+    fun sendDrawAction(action: String, x: Float, y: Float) {
+        val message = """{"draw":"$action,${x/ (canvasWidth.value?.toFloat() ?: 1f)},${y/(canvasHeight.value?.toFloat() ?: 1f)}"}"""
+        socket.emit("draw", message)
+    }
+
+    fun updateWidth(width: Float) {
+        val style = _pathStyle.value
+        style.width = width
+
+        _pathStyle.postValue(style)
+
+        val widthData = JSONObject().apply {
+            put("width", width)
+        }
+        socket.emit("width", widthData.toString())
+    }
+
+    fun updateColor(color: Color) {
+        val style = _pathStyle.value
+        style.color = color
+
+        _pathStyle.postValue(style)
+
+        val colorData = JSONObject().apply {
+            put("color", color.toArgb())
+        }
+        socket.emit("color", colorData.toString())
+    }
+
+    fun updateAlpha(alpha: Float) {
+        val style = _pathStyle.value
+        style.alpha = alpha
+
+        _pathStyle.postValue(style)
+
+        val alphaData = JSONObject().apply {
+            put("alpha", alpha)
+        }
+        socket.emit("alpha", alphaData.toString())
+    }
+
+    fun addPath(pair: Pair<Path, PathStyle>) {
+        val list = _paths.value
+        list.add(pair)
+        _paths.postValue(list)
+        socket.emit("addPath")
+    }
+
+    fun undoPath() {
+        val pathList = _paths.value
+        if (pathList.isEmpty())
+            return
+        val last = pathList.last()
+        val size = pathList.size
+
+        removedPaths.add(last)
+        _paths.postValue(pathList.subList(0, size-1))
+
+        socket.emit("undoPath")
+    }
+
+    fun redoPath() {
+        if (removedPaths.isEmpty())
+            return
+        _paths.postValue((_paths.value + removedPaths.removeLast()) as MutableList<Pair<Path, PathStyle>>)
+
+        socket.emit("redoPath")
+    }
 }
+
+class NonNullLiveData<T: Any>(defaultValue: T) : MutableLiveData<T>(defaultValue) {
+
+    init {
+        value = defaultValue
+    }
+
+    override fun getValue() = super.getValue()!!
+}
+
+data class PathStyle(
+    var color: Color = Color.Black,
+    var alpha: Float = 1.0f,
+    var width: Float = 10.0f
+)
