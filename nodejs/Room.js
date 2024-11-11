@@ -3,7 +3,8 @@ class Room {
     constructor() {
       this.word = "";  
       this.drawings = [];
-      this.token = null; 
+      this.jwtToken = null; 
+      this.refreshToken = null;
     }
   }
   

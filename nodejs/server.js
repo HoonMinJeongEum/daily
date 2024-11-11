@@ -31,10 +31,18 @@ io.on("connection", (socket) => {
     console.log(`클라이언트가 방 ${roomId}에 참여했습니다.`);
   });
 
-  // jwt 토큰 저장
-  socket.on("authenticate", (jwtToken) => {
+  // jwt와 refresh 토큰 저장
+  socket.on("authenticate", (authData) => {
+    const { jwtToken, refreshToken } = JSON.parse(authData); // JWT와 리프레시 토큰을 분리하여 추출
     console.log("JWT 토큰을 수신하였습니다:", jwtToken);
-    roomData[socket.roomId].token = jwtToken;
+    console.log("리프레시 토큰을 수신하였습니다:", refreshToken);
+    const parsedRefreshToken = refreshToken.split(";")[0];
+
+    // 방 데이터에 토큰 저장
+    roomData[socket.roomId].jwtToken = jwtToken;
+    roomData[socket.roomId].refreshToken = parsedRefreshToken;
+
+    console.log("저장된 리프레시 토큰:", parsedRefreshToken);
   });
 
   // 부모님 입장
@@ -83,26 +91,30 @@ io.on("connection", (socket) => {
   });
 
   // 연결 종료
-  socket.on("disconnect", async() => {
+  socket.on("disconnect", async () => {
     console.log(`클라이언트가 방에서 연결이 종료되었습니다.`);
     if (io.sockets.adapter.rooms.get(socket.roomId)?.size === 0) {
       delete roomData[socket.roomId];
     }
     socket.to(socket.roomId).emit("userDisconnected");
-    console.log("JWT 토큰을 수신하였습니다:", roomData[socket.roomId].token);
+
+    console.log("JWT 토큰을 수신하였습니다:", roomData[socket.roomId].jwtToken);
+
     try {
-      const response = await axios.post(
-          `${SPRING_SERVER_URL}/api/quiz/sessions/end`,
-          {},  
-          {
-              headers: {
-                  Authorization: `Bearer ${roomData[socket.roomId].token}`,  // 헤더에 JWT 토큰 포함
-              },
-          }
-      );
-      console.log("스프링 서버 응답:", response.data);
+      await sendEndSessionRequest(roomData[socket.roomId].jwtToken); // 기존 JWT 토큰으로 요청 시도
     } catch (error) {
-      console.error("스프링 서버로 전송 중 오류 발생:", error);
+      if (error.response && error.response.status === 401) {
+        console.log("401 오류 발생 - 리프레시 토큰으로 재발급 요청을 시작합니다.");
+        const newTokens = await requestNewToken(); // 새로운 토큰 요청
+        if (newTokens) {
+          roomData[socket.roomId].jwtToken = newTokens.jwtToken;
+          roomData[socket.roomId].refreshToken = newTokens.refreshToken;
+          console.log("새로운 JWT 및 리프레시 토큰을 저장했습니다.");
+          await retryWithNewToken(roomData[socket.roomId].jwtToken); // 새 토큰으로 재시도
+        }
+      } else {
+        console.error("스프링 서버로 전송 중 오류 발생:", error);
+      }
     }
   });
 });
@@ -110,3 +122,45 @@ io.on("connection", (socket) => {
 server.listen(SERVER_PORT, () => {
   console.log("Server started on port:", SERVER_PORT);
 });
+
+async function sendEndSessionRequest(token) {
+  const response = await axios.post(
+    `${SPRING_SERVER_URL}/api/quiz/sessions/end`,
+    {},
+    {
+      headers: {
+        Authorization: `Bearer ${token}`, // 토큰을 사용하여 요청
+      },
+    }
+  );
+  console.log("스프링 서버 응답:", response.data);
+}
+
+async function requestNewToken() {
+  try {
+    const reissueResponse = await axios.post(
+      `${SPRING_SERVER_URL}/api/user/reissue`,
+      {},
+      {
+        headers: {
+          Cookie: `refreshToken=${roomData[socket.roomId].refreshToken};`, // 리프레시 토큰을 쿠키로 설정
+        },
+      }
+    );
+
+    if (reissueResponse.status === 200) {
+      const reissueData = reissueResponse.data;
+      const parsedRefreshToken = reissueData.refreshToken.split(";")[0];
+      return {
+        jwtToken: reissueData.jwtToken,
+        refreshToken: parsedRefreshToken,
+      };
+    } else {
+      console.error("JWT 재발급에 실패했습니다.");
+      return null;
+    }
+  } catch (reissueError) {
+    console.error("리프레시 토큰으로 JWT 재발급 중 오류 발생:", reissueError);
+    return null;
+  }
+}
