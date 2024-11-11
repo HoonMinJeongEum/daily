@@ -50,7 +50,9 @@ io.on("connection", (socket) => {
     socket.roomId = roomId;
     
     socket.to(socket.roomId).emit("joinParents");
-    socket.emit("initDrawing", roomData[roomId].drawings);
+    console.log("그림 데이터1", JSON.stringify(roomData[roomId].drawings));
+    console.log("그림 데이터2", roomData[roomId].drawings);
+    socket.emit("initDrawing", JSON.stringify(roomData[roomId].drawings));
     console.log(`클라이언트가 방 ${roomId}에 참여했습니다.`);
   });
 
