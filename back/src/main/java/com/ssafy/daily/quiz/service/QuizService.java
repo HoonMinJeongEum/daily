@@ -127,7 +127,7 @@ public class QuizService {
         Quiz quiz = quizRepository.findBySessionId(customSessionId);
         confirmAlarmsByTitleAndTitleId("그림 퀴즈", customSessionId);
 
-        if(quiz.getEndAt() != null) {
+        if(quiz == null || quiz.getEndAt() != null) {
             return new CheckSessionResponse(null);
         }
         else {
