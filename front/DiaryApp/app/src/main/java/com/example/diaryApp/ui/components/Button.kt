@@ -38,6 +38,7 @@ import com.example.diaryApp.R
 import com.example.diaryApp.ui.theme.DeepPastelBlue
 import com.example.diaryApp.ui.theme.GrayText
 import com.example.diaryApp.ui.theme.MyTypography
+import com.example.diaryApp.ui.theme.myFontFamily
 
 @Composable
 fun DailyButton(
@@ -104,7 +105,8 @@ fun DailyButton(
                     style = TextStyle(
                         fontSize = fontSize.sp,
                         color = textColor,
-                        fontWeight = fontWeight
+                        fontWeight = fontWeight,
+                        fontFamily = myFontFamily
                     )
                 )
             }

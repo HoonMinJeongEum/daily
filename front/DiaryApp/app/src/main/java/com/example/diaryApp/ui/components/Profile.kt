@@ -43,6 +43,7 @@ import com.example.diaryApp.R
 import com.example.diaryApp.domain.dto.response.profile.Profile
 import com.example.diaryApp.presentation.viewmodel.DiaryViewModel
 import com.example.diaryApp.ui.theme.Black
+import com.example.diaryApp.ui.theme.DarkGray
 import com.example.diaryApp.ui.theme.DeepPastelNavy
 import com.example.diaryApp.ui.theme.Gray
 import com.example.diaryApp.ui.theme.MyTypography
@@ -99,14 +100,14 @@ fun ProfileItem(
                     modifier = Modifier
                         .size(80.dp)
                         .clip(RoundedCornerShape(50.dp))
-                        .border(2.dp, Color.LightGray, RoundedCornerShape(50.dp))
+                        .border(1.dp, Color.LightGray, RoundedCornerShape(50.dp))
                 )
 
                 Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
                     text = profile.name,
-                    fontSize = 24.sp,
+                    fontSize = 16.sp,
                     color = PastelGreen
                 )
             }
@@ -116,8 +117,8 @@ fun ProfileItem(
                 DailyButton(
                     text = "그림 일기",
                     fontSize = 17,
-                    textColor = Black,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                    textColor = DarkGray,
+                    fontWeight = FontWeight.Normal,
                     backgroundColor = PastelYellow,
                     cornerRadius = 30,
                     width = 110,
@@ -136,8 +137,8 @@ fun ProfileItem(
                 DailyButton(
                     text = "그림 퀴즈",
                     fontSize = 17,
-                    textColor = Black,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                    textColor = DarkGray,
+                    fontWeight = FontWeight.Normal,
                     backgroundColor = PastelPink,
                     cornerRadius = 30,
                     width = 110,
@@ -161,8 +162,8 @@ fun ProfileItem(
                 DailyButton(
                     text = "단어장",
                     fontSize = 17,
-                    textColor = Black,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                    textColor = DarkGray,
+                    fontWeight = FontWeight.Normal,
                     backgroundColor = PastelSkyBlue,
                     cornerRadius = 30,
                     width = 110,
@@ -180,8 +181,8 @@ fun ProfileItem(
                 DailyButton(
                     text = profile.shellCount.toString(),
                     fontSize = 17,
-                    textColor = Black,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                    textColor = DarkGray,
+                    fontWeight = FontWeight.Normal,
                     backgroundColor = PastelLightGreen,
                     cornerRadius = 30,
                     width = 110,
