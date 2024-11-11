@@ -139,12 +139,13 @@ fun CouponBox(coupon: Coupon, index: Int, onClick: (Coupon) -> Unit) {
                         contentDescription = null,
                         modifier = Modifier.size(32.dp)
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = "${coupon.price}",
                         fontSize = 28.sp,
                         fontFamily = myFontFamily,
-                        color = Color.White
+                        color = Color.White,
+                        modifier = Modifier.offset(y = (2).dp)
                     )
                 }
             }
