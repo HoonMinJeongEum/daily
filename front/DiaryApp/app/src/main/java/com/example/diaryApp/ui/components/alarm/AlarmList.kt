@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.diaryApp.domain.dto.response.alarm.AlarmResponseDto
 import com.example.diaryApp.ui.components.DeleteProfileItem
+import com.example.diaryApp.ui.components.quiz.Alert
 import com.example.diaryApp.ui.components.quiz.QuizAlert
 import com.example.diaryApp.ui.theme.DarkGray
 import com.example.diaryApp.ui.theme.GrayDetail
@@ -37,6 +38,8 @@ fun AlarmList(
 ){
     var showQuizAlert by remember { mutableStateOf(false) }
     Log.d("AlarmList", "${alarmList}")
+    var showQuizConfirmDialog by remember { mutableStateOf(false) }
+    var sessionId by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
         alarmViewModel.getAlarms()
@@ -52,7 +55,13 @@ fun AlarmList(
             AlarmItem(alarm,
                 navController,
                 quizViewModel,
-                onShowQuizAlert = { showQuizAlert = true })
+                onShowQuizAlert = { newSessionId ->
+                    if (newSessionId.isNotEmpty()) {
+                        sessionId = newSessionId
+                        showQuizConfirmDialog = true
+                    } else {
+                        showQuizAlert = true
+                    }})
             if (index < alarmList.size - 1) {
                 HorizontalDivider(
                     modifier = Modifier.padding(horizontal = 32.dp),
@@ -62,9 +71,23 @@ fun AlarmList(
             }
         }
     }
+    if (showQuizConfirmDialog && sessionId != null) {
+        Alert(
+            isVisible = true,
+            onDismiss = {
+                showQuizConfirmDialog = false
+            },
+            onConfirm = {
+                showQuizConfirmDialog = false
+                navController.navigate("catchMind/$sessionId")
+            },
+            title = "그림 퀴즈에 입장할까요?",
+        )
+    }
+
     if (showQuizAlert) {
         QuizAlert(
-            title = "방이 생성되지 않았습니다.",
+            title = "아직 퀴즈가 준비되지 않았어요.",
             onDismiss = { showQuizAlert = false }
         )
     }

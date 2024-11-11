@@ -49,7 +49,6 @@ fun Alert(
                         .fillMaxWidth(0.95f)
                         .fillMaxHeight(0.65f)
                         .align(Alignment.Center),
-                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     BoxWithConstraints(
                         modifier = Modifier.fillMaxSize()
