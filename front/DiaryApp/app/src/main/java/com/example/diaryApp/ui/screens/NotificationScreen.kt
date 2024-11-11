@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -35,6 +36,7 @@ import com.example.diaryApp.ui.theme.BackgroundType
 import com.example.diaryApp.R
 import com.example.diaryApp.ui.components.DeleteProfileList
 import com.example.diaryApp.ui.components.NavMenu
+import com.example.diaryApp.ui.components.TabletHeader
 import com.example.diaryApp.ui.components.alarm.AlarmItem
 import com.example.diaryApp.ui.components.alarm.AlarmList
 import com.example.diaryApp.ui.components.quiz.QuizAlert
@@ -63,26 +65,13 @@ fun NotificationScreen(
                 .fillMaxSize(),
             verticalArrangement = Arrangement.Top
         ) {
-            Row(
+            TabletHeader(
+                pageName = "alarm",
+                navController = navController,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                TopLogoImg(
-                    characterImg = R.drawable.daily_character,
-                    modifier = Modifier.weight(1f)
-                )
-
-                Text(
-                    text = "알림",
-                    color = Color.White,
-                    style = MyTypography.bodyMedium,
-                    modifier = Modifier
-                        .weight(2f)
-                        .padding(start = 40.dp)
-                )
-            }
+                    .wrapContentHeight()
+            )
             Box(
                 modifier = Modifier
                     .background(Color.White, shape = RoundedCornerShape(topEnd = 50.dp, topStart = 50.dp))

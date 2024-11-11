@@ -8,7 +8,11 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -56,7 +60,7 @@ fun NavMenu(
                 color = NavWhite,
                 shape = RoundedCornerShape(topStart = 54.dp, topEnd = 54.dp)
             )
-            .size(80.dp),
+            .aspectRatio(4.5f),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceEvenly,
     ) {
@@ -74,12 +78,12 @@ fun NavMenu(
             R.drawable.nav_after_notification_icon,
             R.drawable.nav_after_setting_icon,
         )
-
         menuItems.forEachIndexed { index, menuItem ->
             val isSelected = selectedMenu.value == menuItem
             Box(
                 modifier = Modifier
-                    .padding(8.dp)
+                    .fillMaxHeight(0.7f)
+                    .aspectRatio(1f)
                     .clickable(
                         onClick = {
                             selectedMenu.value = menuItem
@@ -96,14 +100,13 @@ fun NavMenu(
                     .background(
                         if (isSelected) DeepPastelNavy else Color.Transparent,
                         shape = androidx.compose.foundation.shape.CircleShape
-                    )
-                    .size(60.dp),
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Image(
                     painter = painterResource(id = if (isSelected) afterImages[index] else beforeImages[index]),
                     contentDescription = "$menuItem icon",
-                    modifier = Modifier.size(30.dp)
+                    modifier = Modifier.fillMaxSize(0.5f)
                 )
             }
         }
