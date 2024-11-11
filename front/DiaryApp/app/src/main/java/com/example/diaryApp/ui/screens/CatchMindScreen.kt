@@ -65,7 +65,7 @@ enum class QuizModalState {
 fun CatchMindScreen(
     navController: NavController,
     viewModel: QuizViewModel = hiltViewModel(),
-    backgroundType: BackgroundType = BackgroundType.FUN,
+    backgroundType: BackgroundType = BackgroundType.NORMAL,
     sessionId: String
 ) {
     BackgroundPlacement(backgroundType = backgroundType)

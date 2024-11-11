@@ -50,13 +50,13 @@ fun DiaryDetailScreen(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        Box(
+        Column(
             modifier = Modifier
-                .fillMaxSize()
-                .align(Alignment.TopCenter)
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.Top
         ) {
             TopBackImage(
-                logoText = "${diaryViewModel.memberName.value}의 그림 일기!",
+                logoText = "${diaryViewModel.memberName.value}의 그림 일기",
                 BackImage = R.drawable.navigate_back,
                 onBackClick = {
                     navController.popBackStack()
@@ -64,27 +64,15 @@ fun DiaryDetailScreen(
                 }
             )
         }
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .align(Alignment.Center),
-            contentAlignment = Alignment.BottomCenter
-        ) {
-
             Box(
                 modifier = Modifier
-                    .background(
-                        Color.White,
-                        shape = RoundedCornerShape(topEnd = 50.dp, topStart = 50.dp)
-                    )
+                    .background(Color.White, shape = RoundedCornerShape(topEnd = 50.dp, topStart = 50.dp))
                     .fillMaxWidth()
-                    .height(780.dp),
-                contentAlignment = Alignment.Center
+                    .height(780.dp)
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(0.dp),
-                    modifier = Modifier.fillMaxSize()
+                    verticalArrangement = Arrangement.Top
                 ) {
                     val painterDraw = rememberAsyncImagePainter(diaryViewModel.diaryDetail.value?.drawImg)
                     val painterWrite = rememberAsyncImagePainter(diaryViewModel.diaryDetail.value?.writeImg)
@@ -118,6 +106,6 @@ fun DiaryDetailScreen(
                     }
                 }
             }
-        }
+
     }
 }
