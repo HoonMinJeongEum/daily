@@ -36,7 +36,7 @@ io.on("connection", (socket) => {
     const { jwtToken, refreshToken } = JSON.parse(authData); // JWT와 리프레시 토큰을 분리하여 추출
     console.log("JWT 토큰을 수신하였습니다:", jwtToken);
     console.log("리프레시 토큰을 수신하였습니다:", refreshToken);
-    const parsedRefreshToken = refreshToken.split(";")[0];
+    const parsedRefreshToken = refreshToken.split("refresh=")[1].split(";")[0];
 
     // 방 데이터에 토큰 저장
     roomData[socket.roomId].jwtToken = jwtToken;
@@ -148,7 +148,7 @@ io.on("connection", (socket) => {
         const reissueData = reissueResponse.data;
         console.log("토큰", reissueData.jwtToken)
         console.log("리프레시토큰", reissueData.refreshToken)
-        const parsedRefreshToken = reissueData.refreshToken.split(";")[0];
+        const parsedRefreshToken = refreshToken.split("refresh=")[1].split(";")[0];
         return {
           jwtToken: reissueData.jwtToken,
           refreshToken: parsedRefreshToken,
