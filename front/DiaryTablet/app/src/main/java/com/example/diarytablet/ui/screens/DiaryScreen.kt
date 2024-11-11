@@ -424,14 +424,44 @@ fun DrawingPlaybackView(
     }
     val overlayCanvas = remember { AndroidCanvas(overlayBitmap) }
 
+    // 누적 경로를 관리하는 Path
+    val currentPath = remember { Path() }
+
+    // 비디오 생성에 필요한 파일 디렉토리 및 파일 설정
+    val outputDir = File(context.filesDir, "frames").apply { mkdirs() }
+    val videoFile = File(context.getExternalFilesDir(Environment.DIRECTORY_MOVIES), "drawing_playback.mp4")
 
     LaunchedEffect(drawingSteps) {
         currentStepIndex = 0
         val totalSteps = drawingSteps.size
+        overlayCanvas.drawColor(android.graphics.Color.TRANSPARENT, PorterDuff.Mode.CLEAR) // 비트맵 초기화
+
         while (currentStepIndex < totalSteps) {
-            delay(2L)
-            currentStepIndex += 5
+            delay(5)  // 재생 속도 조정
+
+            // 현재 Step 추가 및 최적화 적용
+            val step = drawingSteps[currentStepIndex]
+            val paint = createPaintForTool(step.toolType, step.color, step.thickness)
+            if (step.toolType == ToolType.ERASER) {
+                paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR)
+            }
+
+            // currentPath에 새로운 path를 추가하고 overlayCanvas에 그리기
+            currentPath.addPath(step.path)
+            overlayCanvas.drawPath(step.path.asAndroidPath(), paint)
+
+            // 각 프레임을 Bitmap으로 저장
+            val frameFile = File(outputDir, "frame_$currentStepIndex.png")
+            saveBitmapToFile(overlayBitmap, frameFile)
+
+            currentStepIndex ++
         }
+
+        // 모든 프레임을 비디오로 결합
+        createVideoFromFrames(context, outputDir, videoFile)
+
+        // 동영상 파일을 갤러리에 추가
+        scanFile(context, videoFile)
     }
 
     Box(
@@ -451,19 +481,6 @@ fun DrawingPlaybackView(
                 canvas.nativeCanvas.drawBitmap(resizedTemplateBitmap, 0f, 0f, null)
             }
 
-            // Path를 Overlay Canvas에 그림
-            drawingSteps.take(currentStepIndex).forEach { step ->
-                val paint = createPaintForTool(step.toolType, step.color, step.thickness)
-
-                // 지우개일 경우 투명한 효과 적용
-                if (step.toolType == ToolType.ERASER) {
-                    paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR)
-                }
-
-                // overlayCanvas에 Path 그리기
-                overlayCanvas.drawPath(step.path.asAndroidPath(), paint)
-            }
-
             // 최종적으로 Overlay Bitmap을 그리기
             drawIntoCanvas { canvas ->
                 canvas.nativeCanvas.drawBitmap(overlayBitmap, 0f, 0f, null)
@@ -471,6 +488,23 @@ fun DrawingPlaybackView(
         }
     }
 }
+// drawToBitmap 함수: overlayBitmap을 포함하여 캔버스에 최종 이미지를 그리기
+fun drawToBitmap(
+    canvas: AndroidCanvas,
+    overlayBitmap: Bitmap,
+    width: Int,
+    height: Int,
+    context: Context
+) {
+    // 템플릿을 배경에 그리기
+    val templateBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.draw_template)
+    val resizedTemplateBitmap = Bitmap.createScaledBitmap(templateBitmap, width, height, true)
+    canvas.drawBitmap(resizedTemplateBitmap, 0f, 0f, null)
+
+    // overlayBitmap을 그리기 (경로와 지우개 효과 포함)
+    canvas.drawBitmap(overlayBitmap, 0f, 0f, null)
+}
+
 
 
 
@@ -529,31 +563,13 @@ fun saveBitmapToFile(bitmap: Bitmap, file: File): Boolean {
 }
 
 
+// 동영상 생성 함수
 fun createVideoFromFrames(context: Context, framesDir: File, outputFile: File) {
-    // 파일 목록을 가져와 누락된 파일이 있는지 확인
-    val frameFiles = framesDir.listFiles()?.filter { it.extension == "png" }
-    if (frameFiles.isNullOrEmpty()) {
-        Log.e("DrawingPlaybackView", "No frame files found, video creation aborted.")
-        return
-    }
+    val command = "-y -framerate 10 -i ${framesDir.absolutePath}/frame_%d.png -c:v mpeg4 -qscale:v 2 -pix_fmt yuv420p ${outputFile.absolutePath}"
 
-    // 프레임 순서대로 파일이 있는지 확인
-    val totalFrames = frameFiles.size
-    for (i in 0 until totalFrames) {
-        val frameFile = File(framesDir, "frame_$i.png")
-        if (!frameFile.exists()) {
-            Log.e("DrawingPlaybackView", "Missing frame file: ${frameFile.absolutePath}")
-            return // 누락된 파일이 있으면 중단
-        }
-    }
-
-    // 모든 프레임이 존재하면 FFmpeg 실행
-    // framerate를 조절해보세요
-    val command = "-y -framerate 30 -i ${framesDir.absolutePath}/frame_%d.png -c:v mpeg4 -qscale:v 2 -pix_fmt yuv420p ${outputFile.absolutePath}"
     FFmpegKit.executeAsync(command) { session ->
         if (session.returnCode.isValueSuccess) {
             Log.d("DrawingPlaybackView", "Video created successfully at: ${outputFile.absolutePath}")
-            scanFile(context, outputFile)
         } else {
             Log.e("DrawingPlaybackView", "Failed to create video: ${session.output}")
         }
