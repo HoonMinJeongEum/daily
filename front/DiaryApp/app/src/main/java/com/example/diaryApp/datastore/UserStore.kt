@@ -4,6 +4,7 @@ package com.example.diaryApp.datastore
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -23,6 +24,9 @@ class UserStore @Inject constructor(private val context: Context) {
         val KEY_REFRESH_TOKEN = stringPreferencesKey("refresh_token")
         val KEY_USER_NAME = stringPreferencesKey("user_name")
         val KEY_PASSWORD = stringPreferencesKey("password")
+        val KEY_AUTO_LOGIN_STATE = booleanPreferencesKey("auto_login")
+
+
 
     }
 
@@ -43,6 +47,17 @@ class UserStore @Inject constructor(private val context: Context) {
             }
         }
         return this
+    }
+    fun getAutoLoginState(): Flow<Boolean> {
+        return context.dataStore.data.map {
+            it[KEY_AUTO_LOGIN_STATE] ?: false
+        }
+    }
+
+    suspend fun setAutoLoginState(value: Boolean) {
+        context.dataStore.edit {
+            it[KEY_AUTO_LOGIN_STATE] = value
+        }
     }
 
     suspend fun clearValue(key: Preferences.Key<String>): UserStore {

@@ -3,8 +3,10 @@ package com.example.diaryApp.ui.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -35,6 +38,7 @@ import com.example.diaryApp.R
 import com.example.diaryApp.presentation.viewmodel.DiaryViewModel
 import com.example.diaryApp.ui.components.NavMenu
 import com.example.diaryApp.ui.components.ProfileList
+import com.example.diaryApp.ui.components.TabletHeader
 import com.example.diaryApp.ui.components.quiz.Alert
 import com.example.diaryApp.ui.components.quiz.QuizAlert
 import com.example.diaryApp.ui.theme.MyTypography
@@ -57,25 +61,26 @@ fun MainScreen(
     var showQuizConfirmDialog by remember { mutableStateOf(false) }
     var sessionId by remember { mutableStateOf<String?>(null) }
 
-    Box(
-        modifier = Modifier.fillMaxSize()
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxSize()
     ) {
+        val screenWidth = maxWidth
+        val screenHeight = maxHeight
         Column(
             modifier = Modifier
-                .fillMaxWidth(),
-            verticalArrangement = Arrangement.Top
+                .fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Row(
+            TabletHeader(
+                pageName = "main",
+                navController = navController,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                TopLogoImg(
-                    characterImg = R.drawable.daily_character,
-                    modifier = Modifier.weight(1f)
-                )
-            }
+                    .wrapContentHeight()
+            )
+            Spacer(modifier = Modifier.height(screenHeight*0.06f))
+
             ProfileList(
                 profileList = profileList,
                 modifier = Modifier
@@ -94,7 +99,7 @@ fun MainScreen(
                     }
                 }
             )
-        }
+
 //
 //        Column(
 //            modifier = Modifier.fillMaxWidth(),
@@ -121,6 +126,8 @@ fun MainScreen(
 //            )
 //        }
 
+
+        }
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -128,26 +135,25 @@ fun MainScreen(
         ) {
             NavMenu(navController, "main", "main")
         }
-    }
+        if (showQuizConfirmDialog && sessionId != null) {
+            Alert(
+                isVisible = true,
+                onDismiss = {
+                    showQuizConfirmDialog = false
+                },
+                onConfirm = {
+                    showQuizConfirmDialog = false
+                    navController.navigate("catchMind/$sessionId")
+                },
+                title = "그림 퀴즈에 입장할까요?",
+            )
+        }
 
-    if (showQuizConfirmDialog && sessionId != null) {
-        Alert(
-            isVisible = true,
-            onDismiss = {
-                showQuizConfirmDialog = false
-            },
-            onConfirm = {
-                showQuizConfirmDialog = false
-                navController.navigate("catchMind/$sessionId")
-            },
-            title = "그림 퀴즈에 입장할까요?",
-        )
-    }
-
-    if (showQuizAlert) {
-        QuizAlert(
-            title = "아직 퀴즈가 준비되지 않았어요.",
-            onDismiss = { showQuizAlert = false }
-        )
+        if (showQuizAlert) {
+            QuizAlert(
+                title = "아직 퀴즈가 준비되지 않았어요.",
+                onDismiss = { showQuizAlert = false }
+            )
+        }
     }
 }

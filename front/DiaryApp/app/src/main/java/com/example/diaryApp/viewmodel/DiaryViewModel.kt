@@ -9,6 +9,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.liveData
+import com.example.diaryApp.domain.dto.request.diary.DiaryCommentRequestDto
 import com.example.diaryApp.domain.dto.response.diary.Diary
 import com.example.diaryApp.domain.dto.response.diary.DiaryForList
 import com.example.diaryApp.domain.repository.diary.DiaryRepository
@@ -70,4 +71,34 @@ class DiaryViewModel @Inject constructor(
     fun clearDiaryDetail() {
         _diaryDetail.value = null
     }
+
+    fun fetchComment(comment: String) {
+        val diaryId = _diaryDetail.value?.id
+
+        if (diaryId != null) {
+            // 요청에 사용할 DTO 생성
+            val diaryCommentRequestDto = DiaryCommentRequestDto(
+                diaryId = diaryId,
+                comment = comment
+            )
+
+            viewModelScope.launch {
+                try {
+                    // Repository를 통해 API 호출
+                    val response = diaryRepository.fetchComment(diaryCommentRequestDto)
+                    if (response.isSuccessful) {
+                        Log.d("DiaryViewModel", "Comment posted successfully: ${response.body()}")
+                        // 댓글이 성공적으로 등록된 후 필요한 추가 동작이 있다면 여기에 작성
+                    } else {
+                        Log.e("DiaryViewModel", "Failed to post comment: ${response.errorBody()?.string()}")
+                    }
+                } catch (e: Exception) {
+                    Log.e("DiaryViewModel", "Error posting comment", e)
+                }
+            }
+        } else {
+            Log.e("DiaryViewModel", "Cannot post comment: diaryId is null")
+        }
+    }
+
 }

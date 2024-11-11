@@ -28,7 +28,6 @@ import com.example.diaryApp.ui.components.NavMenu
 import com.example.diaryApp.ui.components.TopBackImage
 import com.example.diaryApp.viewmodel.ProfileViewModel
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun DiaryScreen(
     navController: NavController,

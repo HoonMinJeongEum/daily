@@ -26,6 +26,8 @@ class LoginViewModel @Inject constructor(
 ) : ViewModel() {
     val username = mutableStateOf("")
     val password = mutableStateOf("")
+    val autoLogin = mutableStateOf(false)
+
 
     private val userStore: UserStore = UserStore(application)
 
@@ -76,6 +78,8 @@ class LoginViewModel @Inject constructor(
             .setValue(UserStore.KEY_REFRESH_TOKEN, refreshToken)
             .setValue(UserStore.KEY_USER_NAME, username.value)
             .setValue(UserStore.KEY_ACCESS_TOKEN, accessToken)
+        userStore.setAutoLoginState(autoLogin.value)
+
 
         Log.d("LoginViewModel", "User info saved: Username: ${username.value}, AccessToken: $accessToken")
     }
