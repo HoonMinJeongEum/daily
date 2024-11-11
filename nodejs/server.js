@@ -54,10 +54,27 @@ io.on("connection", (socket) => {
     console.log(`클라이언트가 방 ${roomId}에 참여했습니다.`);
   });
 
+  // 실시간 그림
   // 좌표 통신
   socket.on("draw", (draw) => {
     roomData[socket.roomId].drawings.push(draw);
     socket.to(socket.roomId).emit("draw", draw);
+  });
+  
+  socket.on("addPath", () => {
+    socket.to(socket.roomId).emit("addPath");
+  });
+
+  socket.on("color", (colorData) => {
+    socket.to(socket.roomId).emit("color", colorData);
+  });
+
+  socket.on("width", (widthData) => {
+    socket.to(socket.roomId).emit("width", widthData);
+  });
+
+  socket.on("alpha", (alphaData) => {
+    socket.to(socket.roomId).emit("alpha", alphaData);
   });
 
   // 단어 설정
