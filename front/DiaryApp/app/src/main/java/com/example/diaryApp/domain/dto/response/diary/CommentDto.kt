@@ -1,6 +1,5 @@
 package com.example.diaryApp.domain.dto.response.diary
 
-import org.w3c.dom.Comment
 
 data class CommentDto(
     val comment: String,
@@ -8,5 +7,5 @@ data class CommentDto(
 )
 
 data class CommentList(
-    val commentList : List<Comment>
+    val commentList : List<CommentDto>
 )

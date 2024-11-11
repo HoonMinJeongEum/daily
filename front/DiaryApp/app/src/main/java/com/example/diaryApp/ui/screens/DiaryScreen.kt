@@ -40,10 +40,10 @@ fun DiaryScreen(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        Box(
+        Column(
             modifier = Modifier
-                .fillMaxSize()
-                .align(Alignment.TopCenter)
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.Top
         ) {
             TopBackImage(
                 logoText = "${diaryViewModel.memberName.value}의 그림 일기",
@@ -54,27 +54,15 @@ fun DiaryScreen(
                     diaryViewModel.memberId.intValue = 0
                 }
             )
-        }
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .align(Alignment.Center),
-            contentAlignment = Alignment.BottomCenter
-        ) {
-
             Box(
                 modifier = Modifier
-                    .background(
-                        Color.White,
-                        shape = RoundedCornerShape(topEnd = 50.dp, topStart = 50.dp)
-                    )
+                    .background(Color.White, shape = RoundedCornerShape(topEnd = 50.dp, topStart = 50.dp))
                     .fillMaxWidth()
-                    .height(780.dp),
-                contentAlignment = Alignment.Center
+                    .height(780.dp)
             ) {
                 DailyCalendar(viewModel = diaryViewModel, navController = navController)
             }
-
+        }
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -84,4 +72,4 @@ fun DiaryScreen(
             }
         }
     }
-}
+
