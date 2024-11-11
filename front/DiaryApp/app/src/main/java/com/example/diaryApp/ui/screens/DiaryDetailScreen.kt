@@ -24,6 +24,7 @@ import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import com.example.diaryApp.R
 import com.example.diaryApp.presentation.viewmodel.DiaryViewModel
+import com.example.diaryApp.ui.components.NavMenu
 import com.example.diaryApp.ui.components.TopBackImage
 import com.example.diaryApp.ui.theme.BackgroundPlacement
 import com.example.diaryApp.ui.theme.BackgroundType
@@ -63,7 +64,6 @@ fun DiaryDetailScreen(
                     diaryViewModel.clearDiaryDetail()
                 }
             )
-        }
             Box(
                 modifier = Modifier
                     .background(Color.White, shape = RoundedCornerShape(topEnd = 50.dp, topStart = 50.dp))
@@ -78,7 +78,7 @@ fun DiaryDetailScreen(
                     val painterWrite = rememberAsyncImagePainter(diaryViewModel.diaryDetail.value?.writeImg)
 
                     if ( painterDraw.state is AsyncImagePainter.State.Loading ||
-                         painterWrite.state is AsyncImagePainter.State.Loading ) {
+                        painterWrite.state is AsyncImagePainter.State.Loading ) {
                         CircularProgressIndicator()
                     } else {
                         Box(
@@ -106,6 +106,13 @@ fun DiaryDetailScreen(
                     }
                 }
             }
-
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
+        ) {
+            NavMenu(navController, "main", "diary")
+        }
     }
 }

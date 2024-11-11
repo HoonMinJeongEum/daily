@@ -54,7 +54,6 @@ fun DiaryScreen(
                     diaryViewModel.memberId.intValue = 0
                 }
             )
-        }
             Box(
                 modifier = Modifier
                     .background(Color.White, shape = RoundedCornerShape(topEnd = 50.dp, topStart = 50.dp))
@@ -63,7 +62,7 @@ fun DiaryScreen(
             ) {
                 DailyCalendar(viewModel = diaryViewModel, navController = navController)
             }
-
+        }
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
