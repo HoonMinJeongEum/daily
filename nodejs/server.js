@@ -49,20 +49,31 @@ io.on("connection", (socket) => {
     socket.join(roomId);
     socket.roomId = roomId;
     
-    socket.emit("initDrawing", roomData[roomId].drawings);
     socket.to(socket.roomId).emit("joinParents");
+    console.log(`클라이언트가 방 ${roomId}에 참여했습니다.`);
+  });
+
+  socket.on("initDrawing", (initDraw) => {
+    socket.to(socket.roomId).emit("initDrawing", initDraw);
     console.log(`클라이언트가 방 ${roomId}에 참여했습니다.`);
   });
 
   // 실시간 그림
   // 좌표 통신
   socket.on("draw", (draw) => {
-    roomData[socket.roomId].drawings.push(draw);
     socket.to(socket.roomId).emit("draw", draw);
   });
   
   socket.on("addPath", () => {
     socket.to(socket.roomId).emit("addPath");
+  });
+
+  socket.on("undoPath", () => {
+    socket.to(socket.roomId).emit("undoPath");
+  });
+
+  socket.on("redoPath", () => {
+    socket.to(socket.roomId).emit("redoPath");
   });
 
   socket.on("color", (colorData) => {
@@ -96,7 +107,6 @@ io.on("connection", (socket) => {
   // 그림 초기화
   socket.on("clear", () => {
     console.log(`Path 초기화 요청을 받았습니다.`);
-    roomData[socket.roomId].drawings = []; 
     io.to(socket.roomId).emit("clear");
   });
 
