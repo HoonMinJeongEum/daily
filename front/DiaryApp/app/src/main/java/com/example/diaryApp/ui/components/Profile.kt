@@ -1,6 +1,7 @@
 package com.example.diaryApp.ui.components
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -30,15 +32,20 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
 import androidx.navigation.NavController
 import com.example.diaryApp.R
 import com.example.diaryApp.domain.dto.response.profile.Profile
 import com.example.diaryApp.presentation.viewmodel.DiaryViewModel
- import com.example.diaryApp.ui.theme.Black
+import com.example.diaryApp.ui.theme.Black
+import com.example.diaryApp.ui.theme.DeepPastelNavy
+import com.example.diaryApp.ui.theme.Gray
+import com.example.diaryApp.ui.theme.MyTypography
 import com.example.diaryApp.ui.theme.PastelGreen
 import com.example.diaryApp.ui.theme.PastelLightGreen
 import com.example.diaryApp.ui.theme.PastelPink
@@ -197,8 +204,9 @@ fun DeleteProfileItem(profile: Profile) {
 
     Box(
         modifier = Modifier
-            .size(394.dp, 165.dp)
-            .padding(12.dp),
+            .fillMaxWidth()  // 화면 너비에 맞춰 확장
+            .padding(horizontal = 18.dp, vertical = 10.dp)  // 양옆과 위아래에 여백 설정
+            .height(120.dp),
         contentAlignment = Alignment.Center
     ) {
         Image(
@@ -211,7 +219,7 @@ fun DeleteProfileItem(profile: Profile) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(8.dp),
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -222,7 +230,7 @@ fun DeleteProfileItem(profile: Profile) {
                 modifier = Modifier
                     .size(80.dp)
                     .clip(RoundedCornerShape(50.dp))
-                    .border(2.dp, Color.LightGray, RoundedCornerShape(50.dp))
+                    .border(1.dp, Color.LightGray, RoundedCornerShape(50.dp))
             )
 
             Text(
@@ -231,7 +239,6 @@ fun DeleteProfileItem(profile: Profile) {
                 color = PastelGreen
             )
 
-            Spacer(modifier = Modifier.height(6.dp))
 
             DailyButton(
                 text = "삭제",
@@ -240,8 +247,8 @@ fun DeleteProfileItem(profile: Profile) {
                 fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
                 backgroundColor = PastelRed,
                 cornerRadius = 30,
-                width = 80,
-                height = 52,
+                width = 60,
+                height = 44,
                 shadowElevation = 8.dp,
                 onClick = {
                     showDialog = true
@@ -251,31 +258,62 @@ fun DeleteProfileItem(profile: Profile) {
     }
 
     if (showDialog) {
-        AlertDialog(
-            onDismissRequest = { showDialog = false },
-            title = { Text("삭제 확인") },
-            text = { Text("정말 삭제하시겠습니까?") },
-            confirmButton = {
-                TextButton(onClick = {
-                    showDialog = false
-                    coroutineScope.launch { // 코루틴을 시작합니다.
-                        profileViewModel.deleteProfile(profile.id)
-                        showDialog = false // 다이얼로그 닫기
+        Dialog(onDismissRequest = { showDialog = false }) {
+            Surface(
+                shape = RoundedCornerShape(25.dp),
+                color = Color.White,
+                modifier = Modifier.padding(20.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 36.dp, bottom = 24.dp, start = 18.dp, end = 18.dp)
+                        .background(Color.White),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "정말 삭제하시겠습니까?",
+                        color = DeepPastelNavy,
+                        style = MyTypography.bodySmall,
+                        modifier = Modifier.padding(bottom = 24.dp)
+                    )
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        DailyButton(
+                            text = "취소",
+                            fontSize = 18,
+                            textColor = Color.White,
+                            fontWeight = FontWeight.SemiBold,
+                            backgroundColor = Gray,
+                            cornerRadius = 35,
+                            width = 80,
+                            height = 50,
+                            onClick = { showDialog = false }
+                        )
+
+                        DailyButton(
+                            text = "삭제",
+                            fontSize = 18,
+                            textColor = Color.White,
+                            fontWeight = FontWeight.SemiBold,
+                            backgroundColor = PastelRed,
+                            cornerRadius = 35,
+                            width = 80,
+                            height = 50,
+                            onClick = {
+                                coroutineScope.launch {
+                                    profileViewModel.deleteProfile(profile.id)
+                                    showDialog = false
+                                }
+                            }
+                        )
                     }
-                }) {
-                    Text("확인")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = {
-                    showDialog = false
-                }) {
-                    Text("취소")
                 }
             }
-        )
+        }
     }
-
 }
 
 

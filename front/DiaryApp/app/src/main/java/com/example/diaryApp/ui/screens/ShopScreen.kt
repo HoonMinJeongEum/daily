@@ -44,7 +44,7 @@ import com.example.diaryApp.viewmodel.CouponViewModel
 fun ShoppingScreen(
     navController: NavController,
     couponViewModel: CouponViewModel = hiltViewModel(),
-    backgroundType: BackgroundType = BackgroundType.ACTIVE
+    backgroundType: BackgroundType = BackgroundType.NORMAL
 ) {
 
     BackgroundPlacement(backgroundType = backgroundType)
@@ -58,10 +58,10 @@ fun ShoppingScreen(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        Box(
+        Column(
             modifier = Modifier
-                .fillMaxSize()
-                .align(Alignment.TopCenter)
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.Top
         ) {
             Row(
                 modifier = Modifier
@@ -77,36 +77,22 @@ fun ShoppingScreen(
                 Text(
                     text = "상점",
                     color = Color.White,
-                    fontSize = 30.sp,
                     style = MyTypography.bodyMedium,
                     modifier = Modifier
                         .weight(2f)
                         .padding(start = 40.dp)
                 )
             }
-        }
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .align(Alignment.Center),
-            contentAlignment = Alignment.BottomCenter
-        ) {
-
             Box(
                 modifier = Modifier
-                    .background(
-                        Color.White,
-                        shape = RoundedCornerShape(topEnd = 50.dp, topStart = 50.dp)
-                    )
+                    .background(Color.White, shape = RoundedCornerShape(topEnd = 50.dp, topStart = 50.dp))
                     .fillMaxWidth()
-                    .height(780.dp),
-               contentAlignment = Alignment.Center
-            ) {
+                    .height(780.dp)
+            ){
                 Column(
-                    modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Top
+                    verticalArrangement = Arrangement.Top,
+
                 ) {
                     Row(
                         modifier = Modifier.padding(
@@ -153,30 +139,27 @@ fun ShoppingScreen(
                             )
                         }
                     }
+                    if (showDialog) {
+                        CreateCoupon(
+                            couponViewModel = couponViewModel,
+                            onCancel = { showDialog = false }
+                        )
+                    }
+                    if (showBuyDialog) {
+                        BuyCoupon(
+                            couponViewModel = couponViewModel,
+                            onCancel = { showBuyDialog = false }
+                        )
+                    }
                 }
             }
-
-            if (showDialog) {
-                CreateCoupon(
-                    couponViewModel = couponViewModel,
-                    onCancel = { showDialog = false }
-                )
-            }
-
-            if (showBuyDialog) {
-                BuyCoupon(
-                    couponViewModel = couponViewModel,
-                    onCancel = { showBuyDialog = false }
-                )
-            }
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.BottomCenter)
-            ) {
-                NavMenu(navController, "shop", "shop")
-            }
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
+        ) {
+            NavMenu(navController, "shop", "shop")
         }
     }
 }
