@@ -70,7 +70,7 @@ fun Video(
         if (token != null && activity != null) {
             val session = Session(sessionId ?: "", token!!, binding.viewsContainer, activity, viewModel, rootEglBase)
             viewModel.session = session
-            val localParticipant = LocalParticipant("participantName", session, activity, binding.localGlSurfaceView)
+            val localParticipant = LocalParticipant("participantName", session, activity.applicationContext, binding.localGlSurfaceView)
             localParticipant.startCamera()
 
             // WebSocket 초기화

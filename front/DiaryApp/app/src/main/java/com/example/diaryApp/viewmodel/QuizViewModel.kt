@@ -204,6 +204,9 @@ class QuizViewModel @Inject constructor(
     }
 
     fun setRemoteMediaStream(stream: MediaStream) {
+        if (stream.audioTracks.isNotEmpty()) {
+            stream.audioTracks[0].setEnabled(true) // 오디오 트랙 활성화
+        }
         _remoteMediaStream.postValue(stream)
     }
 }
