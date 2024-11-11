@@ -117,50 +117,51 @@ io.on("connection", (socket) => {
       }
     }
   });
+  
+  async function sendEndSessionRequest(token) {
+    const response = await axios.post(
+      `${SPRING_SERVER_URL}/api/quiz/sessions/end`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // 토큰을 사용하여 요청
+        },
+      }
+    );
+    console.log("스프링 서버 응답:", response.data);
+  }
+  
+  async function requestNewToken() {
+    try {
+      const reissueResponse = await axios.post(
+        `${SPRING_SERVER_URL}/api/user/reissue`,
+        {},
+        {
+          headers: {
+            Cookie: `refreshToken=${roomData[socket.roomId].refreshToken};`, // 리프레시 토큰을 쿠키로 설정
+          },
+        }
+      );
+  
+      if (reissueResponse.status === 200) {
+        const reissueData = reissueResponse.data;
+        const parsedRefreshToken = reissueData.refreshToken.split(";")[0];
+        return {
+          jwtToken: reissueData.jwtToken,
+          refreshToken: parsedRefreshToken,
+        };
+      } else {
+        console.error("JWT 재발급에 실패했습니다.");
+        return null;
+      }
+    } catch (reissueError) {
+      console.error("리프레시 토큰으로 JWT 재발급 중 오류 발생:", reissueError);
+      return null;
+    }
+  }
 });
 
 server.listen(SERVER_PORT, () => {
   console.log("Server started on port:", SERVER_PORT);
 });
 
-async function sendEndSessionRequest(token) {
-  const response = await axios.post(
-    `${SPRING_SERVER_URL}/api/quiz/sessions/end`,
-    {},
-    {
-      headers: {
-        Authorization: `Bearer ${token}`, // 토큰을 사용하여 요청
-      },
-    }
-  );
-  console.log("스프링 서버 응답:", response.data);
-}
-
-async function requestNewToken() {
-  try {
-    const reissueResponse = await axios.post(
-      `${SPRING_SERVER_URL}/api/user/reissue`,
-      {},
-      {
-        headers: {
-          Cookie: `refreshToken=${roomData[socket.roomId].refreshToken};`, // 리프레시 토큰을 쿠키로 설정
-        },
-      }
-    );
-
-    if (reissueResponse.status === 200) {
-      const reissueData = reissueResponse.data;
-      const parsedRefreshToken = reissueData.refreshToken.split(";")[0];
-      return {
-        jwtToken: reissueData.jwtToken,
-        refreshToken: parsedRefreshToken,
-      };
-    } else {
-      console.error("JWT 재발급에 실패했습니다.");
-      return null;
-    }
-  } catch (reissueError) {
-    console.error("리프레시 토큰으로 JWT 재발급 중 오류 발생:", reissueError);
-    return null;
-  }
-}
