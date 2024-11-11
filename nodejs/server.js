@@ -50,16 +50,11 @@ io.on("connection", (socket) => {
     socket.roomId = roomId;
     
     socket.to(socket.roomId).emit("joinParents");
-    console.log("그림 데이터1", JSON.stringify(roomData[roomId].drawings));
-    console.log("그림 데이터2", roomData[roomId].drawings);
-    socket.emit("initDrawing", roomData[roomId].drawings);
     console.log(`클라이언트가 방 ${roomId}에 참여했습니다.`);
   });
 
   // 실시간 그림
-  // 좌표 통신
   socket.on("draw", (draw) => {
-    roomData[socket.roomId].drawings.push(draw);
     socket.to(socket.roomId).emit("draw", draw);
   });
   
@@ -105,7 +100,6 @@ io.on("connection", (socket) => {
 
   // 그림 초기화
   socket.on("clear", () => {
-    roomData[socket.roomId].drawings = []
     console.log(`Path 초기화 요청을 받았습니다.`);
     io.to(socket.roomId).emit("clear");
   });
