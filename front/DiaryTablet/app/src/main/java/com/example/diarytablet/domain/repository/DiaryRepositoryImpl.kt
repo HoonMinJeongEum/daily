@@ -3,6 +3,7 @@ package com.example.diarytablet.domain.repository
 import com.example.diarytablet.domain.dto.response.diary.Diary
 import com.example.diarytablet.domain.dto.response.diary.DiaryForList
 import com.example.diarytablet.domain.service.DiaryService
+import com.example.diarytablet.model.StickerStock
 import okhttp3.MultipartBody
 import retrofit2.Response
 import javax.inject.Inject
@@ -24,4 +25,7 @@ class DiaryRepositoryImpl @Inject constructor(
         return diaryService.getDiaryById(diaryId)
     }
 
+    override suspend fun getUserStickers(): Response<List<StickerStock>> {
+        return diaryService.getUserStickers()
+    }
 }
