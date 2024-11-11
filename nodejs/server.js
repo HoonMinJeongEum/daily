@@ -41,7 +41,6 @@ io.on("connection", (socket) => {
     // 방 데이터에 토큰 저장
     roomData[socket.roomId].jwtToken = jwtToken;
     roomData[socket.roomId].refreshToken = parsedRefreshToken;
-    requestNewToken()
     console.log("저장된 리프레시 토큰:", parsedRefreshToken);
   });
 
@@ -146,8 +145,6 @@ io.on("connection", (socket) => {
         const jwtToken = reissueResponse.headers['authorization'].replace("Bearer ", "");
         const setCookieHeader = reissueResponse.headers['set-cookie'][0];
         const refreshToken = setCookieHeader.split(";")[0];
-        console.log("응답 데이터", refreshToken)
-        console.log("토큰", jwtToken)
         return {
           jwtToken: jwtToken,
           refreshToken: refreshToken,
