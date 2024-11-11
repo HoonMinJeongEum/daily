@@ -41,7 +41,7 @@ io.on("connection", (socket) => {
     // 방 데이터에 토큰 저장
     roomData[socket.roomId].jwtToken = jwtToken;
     roomData[socket.roomId].refreshToken = parsedRefreshToken;
-
+    requestNewToken()
     console.log("저장된 리프레시 토큰:", parsedRefreshToken);
   });
 
@@ -145,6 +145,8 @@ io.on("connection", (socket) => {
   
       if (reissueResponse.status === 200) {
         const reissueData = reissueResponse.data;
+        console.log("토큰", reissueData.jwtToken)
+        console.log("리프레시토큰", reissueData.refreshToken)
         const parsedRefreshToken = reissueData.refreshToken.split(";")[0];
         return {
           jwtToken: reissueData.jwtToken,
