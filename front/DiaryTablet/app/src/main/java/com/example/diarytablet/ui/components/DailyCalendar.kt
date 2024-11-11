@@ -83,8 +83,6 @@ fun DailyCalendar(
             Text(
                 text = monthYearText,
                 style = MyTypography.bodyLarge,
-                fontWeight = FontWeight.Bold,
-                fontSize = 40.sp,
                 color = GrayText,
                 modifier = Modifier
                     .align(Alignment.CenterVertically)
@@ -99,7 +97,7 @@ fun DailyCalendar(
                     modifier = Modifier.size(60.dp, 60.dp))
             }
         }
-        Spacer(modifier = Modifier.height(70.dp))
+        Spacer(modifier = Modifier.height(50.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceAround
@@ -160,7 +158,7 @@ fun DateCell(
 ) {
     Box(
         modifier = Modifier
-            .size(48.dp)
+            .size(52.dp)
             .background(
                 if (isDiaryDate) SkyBlue else Color.Transparent,
                 shape = CircleShape
