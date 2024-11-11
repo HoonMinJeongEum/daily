@@ -142,17 +142,15 @@ io.on("connection", (socket) => {
           },
         }
       );
-      console.log("요청 토큰", roomData[socket.roomId].refreshToken)
-      console.log("응답 데이터", reissueResponse)
       if (reissueResponse.status === 200) {
-        console.log("응답 데이터", reissueResponse)
-        const reissueData = reissueResponse.data;
-        console.log("토큰", reissueData.jwtToken)
-        console.log("리프레시토큰", reissueData.refreshToken)
-        const parsedRefreshToken = reissueData.refreshToken.split(";")[0];
+        const jwtToken = reissueResponse.headers['authorization'].replace("Bearer ", "");
+        const setCookieHeader = reissueResponse.headers['set-cookie'][0];
+        const refreshToken = setCookieHeader.split(";")[0];
+        console.log("응답 데이터", refreshToken)
+        console.log("토큰", jwtToken)
         return {
-          jwtToken: reissueData.jwtToken,
-          refreshToken: parsedRefreshToken,
+          jwtToken: jwtToken,
+          refreshToken: refreshToken,
         };
       } else {
         console.error("JWT 재발급에 실패했습니다.");
