@@ -121,12 +121,17 @@ fun StickerCard(sticker: Sticker, index: Int, onStickerClick: () -> Unit, viewMo
         }
 
         // 배경 이미지
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .border(1.dp, Color.White.copy(alpha = 0.8f), RoundedCornerShape(16.dp)) // 얇은 테두리로 광택 효과 추가
+        ) {
             Image(
                 painter = painterResource(id = backgroundImage),
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize()
             )
+
 
             // 상단에 스티커 이미지 배치
             Column(
@@ -150,7 +155,7 @@ fun StickerCard(sticker: Sticker, index: Int, onStickerClick: () -> Unit, viewMo
                     painter = painter,
                     contentDescription = "Sticker Image",
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.size(64.dp)
+                    modifier = Modifier.size(80.dp)
                 )
 
                 Spacer(modifier = Modifier.weight(1f)) // 스티커 이미지와 하단 텍스트 사이에 공간 확보
@@ -161,14 +166,16 @@ fun StickerCard(sticker: Sticker, index: Int, onStickerClick: () -> Unit, viewMo
                     horizontalArrangement = Arrangement.Center,
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
-                        .padding(bottom = 12.dp) // 아래쪽 여백
+                        .padding(bottom = 15.dp) // 아래쪽 여백
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.jogae), // 조개 아이콘
                         contentDescription = null,
-                        modifier = Modifier.size(42.dp) // 아이콘 크기 확대
+                        modifier = Modifier
+                            .size(37.dp) // 아이콘 크기 확대
+                            .offset(y = (-3).dp) // 아이콘을 위로 살짝 이동시킵니다.
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Spacer(modifier = Modifier.width(7.dp))
                     Text(
                         text = "${sticker.price}",
                         fontSize = 30.sp,
