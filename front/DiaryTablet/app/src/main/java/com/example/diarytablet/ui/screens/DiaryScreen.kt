@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -49,12 +51,30 @@ import com.example.diarytablet.viewmodel.DiaryViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import android.graphics.Matrix
+import android.media.MediaRecorder
+import android.media.MediaScannerConnection
+import android.media.MediaScannerConnection.scanFile
+import android.os.Environment
+import android.view.Surface
+import android.view.SurfaceHolder
+import android.view.SurfaceView
 import androidx.compose.foundation.clickable
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.viewinterop.AndroidView
+import coil3.compose.rememberAsyncImagePainter
+import com.arthenica.ffmpegkit.FFmpegKit
+import java.io.IOException
+import java.net.URL
 import android.graphics.Path as AndroidPath
 
+data class StickerItem(
+    val bitmap: Bitmap,
+    var position: MutableState<Offset> // MutableState로 변경
+)
 
 @Composable
 fun DiaryScreen(
@@ -63,6 +83,13 @@ fun DiaryScreen(
     diaryViewModel: DiaryViewModel = hiltViewModel()
 ) {
     BackgroundPlacement(backgroundType = backgroundType)
+    val userStickers by diaryViewModel.userStickers.observeAsState(emptyList())
+    val firstPageStickers = remember { mutableStateListOf<StickerItem>() }
+
+    LaunchedEffect(Unit) {
+        diaryViewModel.fetchUserStickers()
+    }
+
 
     val context = LocalContext.current
     var isDrawingMode by remember { mutableStateOf(true) }
@@ -71,7 +98,6 @@ fun DiaryScreen(
     var selectedTool by remember { mutableStateOf(ToolType.PENCIL) }
     var isPreviewDialogVisible by remember { mutableStateOf(false) } // 모달 표시 여부
 
-    // 화면 크기 및 레이아웃 설정
     val configuration = LocalConfiguration.current
     val screenWidthDp = configuration.screenWidthDp.dp
     val screenHeightDp = configuration.screenHeightDp.dp
@@ -81,7 +107,6 @@ fun DiaryScreen(
     val leftBoxWidth = contentWidth * 0.75f
     val boxHeight = contentHeight * 0.88f
 
-    // Dp 단위를 픽셀로 변환
     val density = LocalDensity.current
     val bitmapWidthPx = with(density) { leftBoxWidth.roundToPx() }
     val bitmapHeightPx = with(density) { boxHeight.roundToPx() }
@@ -97,9 +122,16 @@ fun DiaryScreen(
     val firstPageDrawingSteps =
         remember { mutableStateListOf<DrawingStep>() } // 첫 번째 페이지의 DrawingSteps 저장
 
+
     // 이미지 저장 및 업로드 트리거 함수
     suspend fun saveAndUploadImages() {
-        val imageFiles = savePageImagesWithTemplate(bitmapsList, context)
+        // leftBoxWidth와 boxHeight 값을 전달
+        val imageFiles = savePageImagesWithTemplate(
+            bitmapsList,
+            context,
+            leftBoxWidth = leftBoxWidth,
+            boxHeight = boxHeight
+        )
         if (imageFiles.size >= 2) {
             val drawUri = Uri.fromFile(imageFiles[0])
             val writeUri = Uri.fromFile(imageFiles[1])
@@ -109,6 +141,10 @@ fun DiaryScreen(
         }
     }
 
+    val centerPosition = Offset(
+        x = with(density) { leftBoxWidth.toPx() / 2 },
+        y = with(density) { boxHeight.toPx() / 2 }
+    )
 
     Box(
         modifier = Modifier
@@ -129,7 +165,7 @@ fun DiaryScreen(
                     .size(48.dp)
                     .clickable {
                         navController.navigate("main") {
-                            popUpTo("duary") { inclusive = true }
+                            popUpTo("diary") { inclusive = true }
                         }
                     }
             )
@@ -150,13 +186,26 @@ fun DiaryScreen(
             horizontalArrangement = Arrangement.spacedBy(padding),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 좌측 박스 (그림판)
             Box(
                 modifier = Modifier
                     .width(leftBoxWidth)
                     .fillMaxHeight()
                     .clip(RoundedCornerShape(50.dp))
                     .background(Color.White)
+                    .pointerInput(Unit) {
+                        detectDragGestures(
+                            onDragStart = {
+                            },
+                            onDrag = { change, dragAmount ->
+                                if (pagerState.currentPage == 0) {
+                                    firstPageStickers.lastOrNull()?.let { lastSticker ->
+                                        lastSticker.position.value += dragAmount
+                                        change.consume()
+                                    }
+                                }
+                            }
+                        )
+                    }
             ) {
                 VerticalPager(
                     state = pagerState,
@@ -180,10 +229,14 @@ fun DiaryScreen(
                                     if (isDrawingMode) {
                                         detectDragGestures(
                                             onDragStart = { offset ->
-                                                path.value = Path().apply { moveTo(offset.x, offset.y) }
+                                                path.value =
+                                                    Path().apply { moveTo(offset.x, offset.y) }
                                             },
                                             onDrag = { change, _ ->
-                                                path.value.lineTo(change.position.x, change.position.y)
+                                                path.value.lineTo(
+                                                    change.position.x,
+                                                    change.position.y
+                                                )
 
                                                 // 비트맵에 즉시 그리기 반영
                                                 val canvas = AndroidCanvas(currentBitmap)
@@ -222,7 +275,20 @@ fun DiaryScreen(
                                 color = selectedColor,
                                 style = Stroke(width = brushSize, cap = StrokeCap.Round)
                             )
+                            if (pagerState.currentPage == 0) {
+                                firstPageStickers.forEach { stickerItem ->
+                                    drawIntoCanvas { canvas ->
+                                        canvas.nativeCanvas.drawBitmap(
+                                            stickerItem.bitmap,
+                                            stickerItem.position.value.x,
+                                            stickerItem.position.value.y,
+                                            null
+                                        )
+                                    }
+                                }
+                            }
                         }
+
 
                         Image(
                             painter = painterResource(if (page == 0) R.drawable.draw_template else R.drawable.write_template),
@@ -246,8 +312,18 @@ fun DiaryScreen(
                     selectedColor = selectedColor,
                     onColorChange = { selectedColor = it },
                     onThicknessChange = { brushSize = it },
-                    onToolSelect = { tool -> selectedTool = tool }
+                    onToolSelect = { selectedTool = it },
+                    stickerList = userStickers,
+                    onStickerSelect = { sticker ->
+                        CoroutineScope(Dispatchers.IO).launch {
+                            val bitmap = loadBitmapFromUrl(sticker.img)
+                            if (bitmap != null) {
+                                firstPageStickers.add(StickerItem(bitmap, mutableStateOf(centerPosition)))
+                            }
+                        }
+                    }
                 )
+
                 Button(onClick = { isDrawingMode = !isDrawingMode }) {
                     Text(if (isDrawingMode) "스크롤 모드로 전환" else "그리기 모드로 전환")
                 }
@@ -258,44 +334,72 @@ fun DiaryScreen(
         }
     }
 
-    // 미리보기 모달 창
+    // 모달 대신 전체 화면 Box로 미리보기 보여주기
     if (isPreviewDialogVisible) {
-        Dialog(onDismissRequest = { isPreviewDialogVisible = false }) {
-            Box(
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.7f)),
+            contentAlignment = Alignment.Center // 화면의 중앙에 박스를 위치
+        ) {
+            Row(
                 modifier = Modifier
-                    .size(leftBoxWidth, boxHeight) // 좌측 박스와 동일한 크기로 설정
-                    .background(Color.White, shape = RoundedCornerShape(16.dp))
-                    .padding(16.dp)
+                    .fillMaxSize(0.9f) // 화면의 90% 크기로 설정
+                    .background(Color.White, shape = RoundedCornerShape(16.dp)) // 흰색 배경 및 둥근 모서리 설정
+                    .padding(16.dp), // 내부 여백 설정
+                horizontalArrangement = Arrangement.SpaceBetween, // 좌우 여백 분리
+                verticalAlignment = Alignment.CenterVertically // 세로 중앙 정렬
             ) {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                // 템플릿과 경로 표시하는 부분
+                Box(
+                    modifier = Modifier
+                        .weight(0.8f) // 왼쪽 공간을 크게 설정
+                        .fillMaxHeight()
+                        .padding(end = 8.dp), // 오른쪽에 여백 추가
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text("그리기 과정 미리보기", fontSize = 20.sp)
-                    Spacer(modifier = Modifier.height(16.dp))
                     DrawingPlaybackView(
                         drawingSteps = firstPageDrawingSteps,
                         context = context,
-                        width = leftBoxWidth,
-                        height = boxHeight,
-                        originalWidthPx = bitmapWidthPx.toFloat(),
-                        originalHeightPx = bitmapHeightPx.toFloat()
+                        templateWidth = with(LocalDensity.current) { (leftBoxWidth - padding * 2).toPx().toInt() },
+                        templateHeight = with(LocalDensity.current) { (boxHeight - padding * 2).toPx().toInt() }
                     )
+                }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                // 오른쪽에 취소 및 보내기 버튼
+                Column(
+                    modifier = Modifier
+                        .weight(0.2f) // 오른쪽 공간을 작게 설정
+                        .fillMaxHeight(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.SpaceEvenly // 세로로 균등 배치
+                ) {
+                    Button(onClick = { isPreviewDialogVisible = false }) {
+                        Text("취소")
+                    }
                     Button(
                         onClick = {
-                            isPreviewDialogVisible = false
                             CoroutineScope(Dispatchers.IO).launch {
-                                saveAndUploadImages()
+                                saveAndUploadImages() // API 호출
                             }
+                            isPreviewDialogVisible = false
                         }
                     ) {
-                        Text("이미지 업로드")
+                        Text("보내기")
                     }
                 }
             }
         }
+    }
+}
+
+// URL에서 Bitmap 로드하는 함수
+suspend fun loadBitmapFromUrl(url: String): Bitmap? = withContext(Dispatchers.IO) {
+    try {
+        BitmapFactory.decodeStream(URL(url).openStream())
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
     }
 }
 
@@ -304,116 +408,150 @@ fun DiaryScreen(
 fun DrawingPlaybackView(
     drawingSteps: List<DrawingStep>,
     context: Context,
-    width: Dp,
-    height: Dp,
-    originalWidthPx: Float,
-    originalHeightPx: Float
+    templateWidth: Int,
+    templateHeight: Int
 ) {
     val currentPath = remember { Path() }
     var currentStepIndex by remember { mutableIntStateOf(0) }
-
-    // Density로 DP에서 Pixel 단위로 변환
-    val density = LocalDensity.current
-    val playbackWidthPx = with(density) { width.roundToPx().toFloat() }
-    val playbackHeightPx = with(density) { height.roundToPx().toFloat() }
-
-    // 원래 크기와 미리보기 창의 크기 비율 계산
-    val scaleX = playbackWidthPx / originalWidthPx
-    val scaleY = playbackHeightPx / originalHeightPx
+    val outputDir = File(context.filesDir, "frames").apply { mkdirs() } // 프레임 저장 디렉토리
+    val videoFile = File(context.getExternalFilesDir(Environment.DIRECTORY_MOVIES), "drawing_playback.mp4")
 
     LaunchedEffect(drawingSteps) {
         currentStepIndex = 0
         while (currentStepIndex < drawingSteps.size) {
-            delay(50)
+            delay(10) // 여기서 속도
             currentPath.addPath(drawingSteps[currentStepIndex].path)
-            currentStepIndex++
+
+            // 각 프레임을 Bitmap으로 저장
+            val bitmap = Bitmap.createBitmap(templateWidth, templateHeight, Bitmap.Config.ARGB_8888)
+            val canvas = AndroidCanvas(bitmap)
+            drawToBitmap(canvas, currentPath, templateWidth, templateHeight, context)
+            saveBitmapToFile(bitmap, File(outputDir, "frame_$currentStepIndex.png"))
+
+            currentStepIndex += 2
         }
+
+        // FFmpeg로 프레임을 동영상으로 결합
+        createVideoFromFrames(context, outputDir, videoFile)
+
+        // 동영상 파일을 갤러리에 추가
+        scanFile(context, videoFile)
     }
 
-    Canvas(modifier = Modifier.size(width, height)) {
-        drawIntoCanvas { canvas ->
-            val templateBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.draw_template)
-            val templateScaleX = size.width / templateBitmap.width
-            val templateScaleY = size.height / templateBitmap.height
-            canvas.save()
-            canvas.scale(templateScaleX, templateScaleY)
-            canvas.nativeCanvas.drawBitmap(templateBitmap, 0f, 0f, null)
-            canvas.restore()
-        }
-
-        // Path를 Matrix로 스케일링
-        val matrix = Matrix().apply {
-            setScale(scaleX, scaleY)
-        }
-
-        drawingSteps.take(currentStepIndex).forEach { step ->
-            val androidPath = step.path.asAndroidPath()
-            val scaledAndroidPath = AndroidPath(androidPath).apply {
-                transform(matrix)
+    // UI 구성 (프레임을 캡처하면서 실시간으로 보여줌)
+    Box(
+        modifier = Modifier
+            .width(templateWidth.dp)
+            .height(templateHeight.dp)
+            .background(Color.White, shape = RoundedCornerShape(16.dp)),
+        contentAlignment = Alignment.TopStart
+    ) {
+        Canvas(
+            modifier = Modifier
+                .fillMaxSize()
+        ) {
+            drawIntoCanvas { canvas ->
+                val templateBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.draw_template)
+                val resizedTemplateBitmap = Bitmap.createScaledBitmap(templateBitmap, templateWidth, templateHeight, true)
+                canvas.nativeCanvas.drawBitmap(resizedTemplateBitmap, 0f, 0f, null)
             }
 
-            drawPath(
-                path = scaledAndroidPath.asComposePath(),
-                color = step.color,
-                style = Stroke(width = step.thickness * scaleX, cap = StrokeCap.Round)
-            )
+            drawingSteps.take(currentStepIndex).forEach { step ->
+                drawPath(
+                    path = step.path,
+                    color = step.color,
+                    style = Stroke(width = step.thickness, cap = StrokeCap.Round)
+                )
+            }
         }
     }
 }
 
-// Path의 bounds를 가져와 문자열로 변환하여 로그로 출력
-//fun pathBoundsToString(path: AndroidPath): String {
-//    val bounds = android.graphics.RectF()
-//    path.computeBounds(bounds, true)
-//    return "Left: ${bounds.left}, Top: ${bounds.top}, Right: ${bounds.right}, Bottom: ${bounds.bottom}"
-//}
+// 경로를 Bitmap에 그리는 함수
+fun drawToBitmap(
+    canvas: AndroidCanvas,
+    path: Path,
+    width: Int,
+    height: Int,
+    context: Context
+) {
+    // 배경을 흰색으로 설정
+    val backgroundPaint = android.graphics.Paint().apply {
+        color = android.graphics.Color.WHITE
+        style = android.graphics.Paint.Style.FILL
+    }
+    canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), backgroundPaint)
 
 
+    // 템플릿 이미지 그리기
+    val templateBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.draw_template)
+    val resizedTemplateBitmap = Bitmap.createScaledBitmap(templateBitmap, width, height, true)
+    canvas.drawBitmap(resizedTemplateBitmap, 0f, 0f, null)
 
 
+    val paint = android.graphics.Paint().apply {
+        style = android.graphics.Paint.Style.STROKE
+        strokeWidth = 5f
+        color = android.graphics.Color.BLACK
+    }
+
+    // 경로 그리기
+    canvas.drawPath(path.asAndroidPath(), paint)
+}
+
+// Bitmap을 파일로 저장하는 함수
+fun saveBitmapToFile(bitmap: Bitmap, file: File) {
+    FileOutputStream(file).use { out ->
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+    }
+}
+
+// 동영상 생성 함수
+fun createVideoFromFrames(context: Context, framesDir: File, outputFile: File) {
+    val command = "-y -framerate 10 -i ${framesDir.absolutePath}/frame_%d.png -c:v mpeg4 -qscale:v 2 -pix_fmt yuv420p ${outputFile.absolutePath}"
+
+    FFmpegKit.executeAsync(command) { session ->
+        if (session.returnCode.isValueSuccess) {
+            Log.d("DrawingPlaybackView", "Video created successfully at: ${outputFile.absolutePath}")
+        } else {
+            Log.e("DrawingPlaybackView", "Failed to create video: ${session.output}")
+        }
+    }
+}
+
+// 미디어 스캔을 수행하여 갤러리에 파일 추가
+fun scanFile(context: Context, videoFile: File) {
+    MediaScannerConnection.scanFile(context, arrayOf(videoFile.absolutePath), null) { path, uri ->
+        Log.d("DrawingPlaybackView", "Scanned $path:")
+        Log.d("DrawingPlaybackView", "-> uri=$uri")
+    }
+}
 
 
+data class DrawingStep(val path: Path, val color: Color, val thickness: Float)
 
+suspend fun savePageImagesWithTemplate(
+    bitmapsList: List<Bitmap>,
+    context: Context,
+    leftBoxWidth: Dp,
+    boxHeight: Dp,
+    padding: Int = 16 // 바깥 박스를 위한 추가 패딩
+): List<File> {
+    // Dp를 픽셀로 변환
+    val density = context.resources.displayMetrics.density
+    val outerBoxWidthPx = (leftBoxWidth.toPx(density) + padding * 2).toInt()
+    val outerBoxHeightPx = (boxHeight.toPx(density) + padding * 2).toInt()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        data class DrawingStep(val path: Path, val color: Color, val thickness: Float)
-
-
-
-suspend fun savePageImagesWithTemplate(bitmapsList: List<Bitmap>, context: Context): List<File> {
     return withContext(Dispatchers.IO) {
         bitmapsList.mapIndexed { index, drawingBitmap ->
-            // 박스 배경, 템플릿, 그림판의 크기를 동일하게 설정
-            val targetWidth = 2000
-            val targetHeight = 1500
+            val targetWidth = outerBoxWidthPx - padding * 2
+            val targetHeight = outerBoxHeightPx - padding * 2
 
-            // 박스 배경 이미지 불러와서 크기 조정
-            val boxBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.diary_box)
-            val resizedBoxBitmap = Bitmap.createScaledBitmap(boxBitmap, targetWidth, targetHeight, true)
+            // 바깥 박스 배경용 흰색 Bitmap 생성
+            val outerBoxBackground = Bitmap.createBitmap(outerBoxWidthPx, outerBoxHeightPx, Bitmap.Config.ARGB_8888)
+            val outerCanvas = AndroidCanvas(outerBoxBackground)
+            val paint = android.graphics.Paint().apply { color = android.graphics.Color.WHITE }
+            outerCanvas.drawRect(0f, 0f, outerBoxWidthPx.toFloat(), outerBoxHeightPx.toFloat(), paint) // 흰색으로 칠하기
 
             // 템플릿 이미지 불러와서 크기 조정
             val templateBitmap = if (index == 0) {
@@ -421,26 +559,21 @@ suspend fun savePageImagesWithTemplate(bitmapsList: List<Bitmap>, context: Conte
             } else {
                 BitmapFactory.decodeResource(context.resources, R.drawable.write_template)
             }
-            val resizedTemplateBitmap = Bitmap.createScaledBitmap(templateBitmap, targetWidth, targetHeight, true)
+            val resizedTemplateBitmap = Bitmap.createScaledBitmap(templateBitmap, targetWidth - padding * 4, targetHeight - padding * 4, true)
 
             // 그림판 이미지 크기 조정
             val resizedDrawingBitmap = Bitmap.createScaledBitmap(drawingBitmap, targetWidth, targetHeight, true)
 
-            // 같은 크기의 새로운 비트맵 생성
-            val combinedBitmap = Bitmap.createBitmap(targetWidth, targetHeight, Bitmap.Config.ARGB_8888)
-            val canvas = AndroidCanvas(combinedBitmap)
+            // 중앙 위치 계산
+            val centerX = (outerBoxWidthPx - targetWidth + padding*4) / 2f
+            val centerY = (outerBoxHeightPx - targetHeight + padding*4) / 2f
 
-            // 박스 이미지 그리기
-            canvas.drawBitmap(resizedBoxBitmap, 0f, 0f, null)
-
-            // 그림판 그리기
-            canvas.drawBitmap(resizedDrawingBitmap, 0f, 0f, null)
-
-            // 템플릿 그리기
-            canvas.drawBitmap(resizedTemplateBitmap, 0f, 0f, null)
+            // 바깥 박스의 중앙에 템플릿 및 비트맵을 그리기
+            outerCanvas.drawBitmap(resizedTemplateBitmap, centerX, centerY, null)
+            outerCanvas.drawBitmap(resizedDrawingBitmap, centerX, centerY, null)
 
             // 이미지 크기 줄이기
-            val finalBitmap = resizeBitmap(combinedBitmap, 1000, 750)
+            val finalBitmap = resizeBitmap(outerBoxBackground, 1450, 1000) // 저장 크기 설정 (필요시 조정 가능)
 
             // 압축하여 파일로 저장
             val file = File(context.filesDir, "drawing_combined_$index.jpg")
@@ -457,6 +590,9 @@ suspend fun savePageImagesWithTemplate(bitmapsList: List<Bitmap>, context: Conte
     }
 }
 
+// Dp를 픽셀로 변환하는 확장 함수
+fun Dp.toPx(density: Float): Float = this.value * density
+
 // 해상도를 조절하는 함수
 fun resizeBitmap(bitmap: Bitmap, width: Int, height: Int): Bitmap {
     return Bitmap.createScaledBitmap(bitmap, width, height, true)
@@ -468,4 +604,3 @@ fun compressBitmap(bitmap: Bitmap, outputFile: File, quality: Int = 30) {
         bitmap.compress(Bitmap.CompressFormat.JPEG, quality, out)
     }
 }
-

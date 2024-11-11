@@ -2,6 +2,7 @@ package com.example.diarytablet.domain.service
 
 import com.example.diarytablet.domain.dto.response.diary.Diary
 import com.example.diarytablet.domain.dto.response.diary.DiaryForList
+import com.example.diarytablet.model.StickerStock
 import com.example.diarytablet.utils.Const
 import okhttp3.MultipartBody
 import retrofit2.Response
@@ -29,5 +30,8 @@ interface DiaryService {
     suspend fun getDiaryById(
         @Path("diaryId") diaryId:Int
     ) : Diary
+
+    @GET("${Const.API_PATH}stickers/user")
+    suspend fun getUserStickers(): Response<List<StickerStock>>
 
 }

@@ -60,6 +60,7 @@ android {
 dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
     implementation("com.vanniktech:android-image-cropper:4.6.0")
+    implementation ("com.arthenica:ffmpeg-kit-full:6.0-2")
     implementation ("io.reactivex.rxjava2:rxjava:2.2.21")
     implementation ("com.squareup.retrofit2:adapter-rxjava2:2.9.0")
     implementation ("io.reactivex.rxjava2:rxandroid:2.1.1")
@@ -103,7 +104,6 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }
-
 
 kapt {
     correctErrorTypes = true

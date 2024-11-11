@@ -66,6 +66,7 @@ fun Alert(
                             text = title,
                             fontSize = (boxHeight * 0.2f).sp,
                             style = MyTypography.bodyLarge,
+                            color = Color(0xFF49566F),
                             textAlign = TextAlign.Center,
                         )
                     }

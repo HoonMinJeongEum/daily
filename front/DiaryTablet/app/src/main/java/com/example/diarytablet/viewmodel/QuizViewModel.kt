@@ -134,8 +134,16 @@ class QuizViewModel @Inject constructor(
 
         viewModelScope.launch {
             userStore.getValue(UserStore.KEY_ACCESS_TOKEN).collect { jwtToken ->
-                Log.d("QuizViewModel", "JWT 토큰 전송: $jwtToken")
-                socket.emit("authenticate", jwtToken) // 서버에 JWT 토큰 전송
+                userStore.getValue(UserStore.KEY_REFRESH_TOKEN).collect { refreshToken ->
+                    Log.d("QuizViewModel", "JWT 토큰 및 리프레시 토큰 전송: JWT=$jwtToken, RefreshToken=$refreshToken")
+
+                    val authData = JSONObject().apply {
+                        put("jwtToken", jwtToken)
+                        put("refreshToken", refreshToken)
+                    }
+
+                    socket.emit("authenticate", authData.toString()) // 서버에 JWT와 리프레시 토큰 전송
+                }
             }
         }
 
@@ -275,6 +283,9 @@ class QuizViewModel @Inject constructor(
     }
 
     fun setRemoteMediaStream(stream: MediaStream) {
+        if (stream.audioTracks.isNotEmpty()) {
+            stream.audioTracks[0].setEnabled(true) // 오디오 트랙 활성화
+        }
         _remoteMediaStream.postValue(stream)
     }
 }
