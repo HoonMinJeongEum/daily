@@ -2,6 +2,7 @@ package com.example.diaryApp.ui.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,36 +32,20 @@ fun TopLogoImg(
     characterImg: Int? = null
 ) {
     Row(
-        modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.Top
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp), // 상단 여백
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
     ) {
         characterImg?.let {
-            Box(
+            Image(
+                painter = painterResource(id = it),
+                contentDescription = "Character Image",
                 modifier = Modifier
-                    .padding(end = 8.dp)
-                    .size(if(characterImg == R.drawable.navigate_back) {45.dp} else {75.dp}) // 캐릭터 이미지 크기 지정
-            ) {
-                Image(
-                    painter = painterResource(id = it),
-                    contentDescription = "Character Image",
-                    modifier = Modifier.fillMaxSize() // Box 내에서 최대 크기로 확장
-                )
-            }
-        }
-
-        logoImg?.let {
-            Box(
-                modifier = Modifier
-                    .padding(end = 100.dp)
-                    .size(500.dp)
-                    .align(Alignment.Top)
-            ) {
-                Image(
-                    painter = painterResource(id = it),
-                    contentDescription = "Logo Image",
-                    modifier = Modifier.fillMaxSize().offset(x = 10.dp, y = (-210).dp)
-                )
-            }
+                    .padding(start = 8.dp, end = 8.dp)
+                    .size(if(characterImg == R.drawable.navigate_back) {50.dp} else {75.dp}) // 캐릭터 이미지 크기
+            )
         }
     }
 }
