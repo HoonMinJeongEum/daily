@@ -142,8 +142,9 @@ io.on("connection", (socket) => {
           },
         }
       );
-  
+      console.log("요청 토큰", roomData[socket.roomId].refreshToken)
       if (reissueResponse.status === 200) {
+        console.log("응답 데이터", reissueResponse)
         const reissueData = reissueResponse.data;
         console.log("토큰", reissueData.jwtToken)
         console.log("리프레시토큰", reissueData.refreshToken)
