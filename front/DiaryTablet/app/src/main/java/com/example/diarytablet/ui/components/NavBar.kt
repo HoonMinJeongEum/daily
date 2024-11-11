@@ -1,20 +1,15 @@
 package com.example.diarytablet.ui.components
 
 
-import ProfileModal
+import com.example.diarytablet.ui.components.modal.ProfileModal
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.absoluteOffset
-import androidx.compose.foundation.layout.absolutePadding
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,17 +20,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.diarytablet.domain.RetrofitClient
-import com.example.diarytablet.ui.components.BasicButton
-import com.example.diarytablet.ui.components.Profile
-import com.example.diarytablet.ui.components.AlarmButton
+import com.example.diarytablet.ui.components.modal.AlarmModal
+import com.example.diarytablet.ui.theme.DeepPastelNavy
+import com.example.diarytablet.ui.theme.MyTypography
 import com.example.diarytablet.viewmodel.NavBarViewModel
 
 @Composable
@@ -54,7 +50,6 @@ fun Navbar(
     var isProfileMenuVisible by remember { mutableStateOf(false) }
     var isProfileModalVisible by remember { mutableStateOf(false) }
     var isAlarmModalVisible by remember { mutableStateOf(false) }
-
     Row(
         modifier = Modifier
             .wrapContentSize()
@@ -89,7 +84,10 @@ fun Navbar(
         onDismiss = { isProfileModalVisible = false },
         profileImageUrl = profileImageUrl,
         userName = userName,
-        onEditNameClick = { newName -> viewModel.updateUserName(newName) }
+        onEditProfileClick = {file -> viewModel.updateUserName(file)} ,
+        onEditNameClick = { newName -> viewModel.updateUserName(newName) },
+        screenWidth = screenWidth,
+        screenHeight = screenHeight
     )
 
     AlarmModal(
@@ -97,22 +95,24 @@ fun Navbar(
         onDismiss = { isAlarmModalVisible = false },
         alarmItems = alarms,
         onConfirmClick = { alarmId -> viewModel.checkAlarm(alarmId) },
-        navController = navController
+        navController = navController,
+        screenWidth = screenWidth,
+        screenHeight = screenHeight
     )
 
     if (isProfileMenuVisible) {
-        Dialog(
-            onDismissRequest = { isProfileMenuVisible = false },
-            properties = DialogProperties(
-                dismissOnClickOutside = true,
-                usePlatformDefaultWidth = false
-            )
+        Popup(
+            alignment = Alignment.TopEnd,
+            offset = IntOffset(-100,200),
+            properties = PopupProperties(focusable = false , dismissOnClickOutside = true),
+            onDismissRequest = { isProfileMenuVisible = false }
+
         ) {
-            Box(
+             Box(
                 modifier = Modifier
                     .wrapContentSize()
-                    .background(Color.White, shape = RoundedCornerShape(8.dp))
-                    .padding(horizontal = screenWidth * 0.04f, vertical = screenHeight * 0.1f) // 다이얼로그 크기를 화면 비율에 맞춤
+                    .background(Color.White, shape = RoundedCornerShape(16.dp))
+                    .padding(horizontal = screenWidth * 0.03f, vertical = screenHeight * 0.05f)
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -120,6 +120,10 @@ fun Navbar(
                 ) {
                     Text(
                         text = "내 정보 수정",
+                        style = MyTypography.bodyLarge.copy(
+                            fontSize = (screenWidth.value * 0.025f).sp,
+                            color = DeepPastelNavy
+                        ),
                         modifier = Modifier
                             .clickable {
                                 isProfileModalVisible = true
@@ -129,6 +133,10 @@ fun Navbar(
                     )
                     Text(
                         text = "프로필 전환",
+                        style = MyTypography.bodyLarge.copy(
+                            fontSize = (screenWidth.value * 0.025f).sp,
+                            color = DeepPastelNavy
+                        ),
                         modifier = Modifier
                             .clickable {
                                 navController.navigate("profileList") {
@@ -140,6 +148,10 @@ fun Navbar(
                     )
                     Text(
                         text = "로그아웃",
+                        style = MyTypography.bodyLarge.copy(
+                            fontSize = (screenWidth.value * 0.025f).sp,
+                            color = DeepPastelNavy
+                        ),
                         modifier = Modifier
                             .clickable {
                                 RetrofitClient.logout()

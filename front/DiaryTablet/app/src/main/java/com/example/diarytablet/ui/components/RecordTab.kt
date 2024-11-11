@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,8 +39,17 @@ fun RecordTab(
     val tabTitles = listOf("단어장", "일기장")
     var isDiaryDetailVisible by remember { mutableStateOf(false) }
     var selectedDiaryId by remember { mutableStateOf<Int?>(null) }
-
+    val titleId by viewModel.titleId
     // 전체 박스 (탭 + 내용물)
+
+    LaunchedEffect(titleId) {
+        if (titleId != -1) {
+            viewModel.fetchDiaryById(titleId)
+            selectedDiaryId = titleId
+            selectedTabIndex = 1
+            isDiaryDetailVisible = true
+        }
+    }
     Box(
         modifier = modifier
             .fillMaxSize()
