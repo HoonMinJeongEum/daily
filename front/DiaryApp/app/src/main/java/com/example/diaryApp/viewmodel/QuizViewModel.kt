@@ -12,6 +12,7 @@ import org.json.JSONObject
 import androidx.compose.ui.graphics.Path
 import io.socket.client.IO
 import androidx.compose.runtime.State
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.example.diaryApp.datastore.UserStore
@@ -41,20 +42,33 @@ class QuizViewModel @Inject constructor(
     private val _leaveSessionTriggered = MutableLiveData<Boolean>()
     val leaveSessionTriggered: LiveData<Boolean> get() = _leaveSessionTriggered
 
-    // Node.js
+    // 단어
     lateinit var socket: Socket
-    private val _path = mutableStateOf(Path())
-    val path: State<Path> = _path
-    private val _canvasWidth = MutableLiveData<Int>()
-    val canvasWidth: LiveData<Int> get() = _canvasWidth
-    private val _canvasHeight = MutableLiveData<Int>()
-    val canvasHeight: LiveData<Int> get() = _canvasHeight
     private val _isCorrectAnswer = MutableLiveData<Boolean?>()
     val isCorrectAnswer: LiveData<Boolean?> get() = _isCorrectAnswer
     private val _userDisconnectedEvent = MutableLiveData<Boolean?>()
     val userDisconnectedEvent: LiveData<Boolean?> get() = _userDisconnectedEvent
     private val _isWordSelected = MutableLiveData(false)
     val isWordSelected: LiveData<Boolean> get() = _isWordSelected
+
+    // 그림
+    private val _canvasWidth = MutableLiveData<Int>()
+    val canvasWidth: LiveData<Int> get() = _canvasWidth
+    private val _canvasHeight = MutableLiveData<Int>()
+    val canvasHeight: LiveData<Int> get() = _canvasHeight
+    private val _path = mutableStateOf(Path())
+    val path: State<Path> = _path
+    private val _paths = NonNullLiveData<MutableList<Pair<Path, PathStyle>>>(
+        mutableListOf()
+    )
+    private val _pathStyle = NonNullLiveData(
+        PathStyle()
+    )
+    private val removedPaths = mutableListOf<Pair<Path, PathStyle>>()
+    val paths: LiveData<MutableList<Pair<Path, PathStyle>>>
+        get() = _paths
+    val pathStyle: LiveData<PathStyle>
+        get() = _pathStyle
 
     fun setCanvasSize(width: Int, height: Int) {
         _canvasWidth.value = width
@@ -92,31 +106,6 @@ class QuizViewModel @Inject constructor(
             Log.e("QuizViewModel", "roomId : ${sessionId}")
             socket.emit("joinParents", sessionId)
 
-            socket.on("initDrawing") { args ->
-                val drawingData = args[0] as JSONArray
-                for (i in 0 until drawingData.length()) {
-                    val draw = drawingData.getString(i)
-                    val jsonMessage = JSONObject(draw)
-                    val draws = jsonMessage.getString("draw").split(",")
-                    val action = draws[0]
-                    val x = draws[1].toFloat()
-                    val y = draws[2].toFloat()
-                    updatePath(action, x, y)
-                }
-            }
-
-            // 서버로부터 "draw" 이벤트 수신
-            socket.on("draw") { args ->
-                val responseData = args[0] as String
-                val jsonMessage = JSONObject(responseData)
-                val draws = jsonMessage.getString("draw").split(",")
-                val action = draws[0]
-                val x = draws[1].toFloat() * (canvasWidth.value?.toFloat() ?: 1f)
-                val y = draws[2].toFloat() * (canvasHeight.value?.toFloat() ?: 1f)
-
-                updatePath(action, x, y)
-            }
-
             socket.on("checkWord") { args ->
                 val isCorrect = args[0] as Boolean
                 _isCorrectAnswer.postValue(isCorrect)
@@ -128,6 +117,8 @@ class QuizViewModel @Inject constructor(
 
             socket.on("clear") {
                 _path.value = Path()
+                _paths.postValue(mutableListOf())  // paths 초기화
+                removedPaths.clear()
             }
 
             socket.on("setWord") {
@@ -139,6 +130,63 @@ class QuizViewModel @Inject constructor(
                 Log.d("QuizViewModel", "disconnect")
             }
 
+            socket.on("draw") { args ->
+                val responseData = args[0] as String
+                val jsonMessage = JSONObject(responseData)
+                val draws = jsonMessage.getString("draw").split(",")
+                val action = draws[0]
+                val x = draws[1].toFloat() * (canvasWidth.value?.toFloat() ?: 1f) // 상대방의 캔버스 크기 비율 적용
+                val y = draws[2].toFloat() * (canvasHeight.value?.toFloat() ?: 1f)
+
+                updatePath(action, x, y)
+            }
+
+            socket.on("color") { args ->
+                val colorData = args[0] as String
+                val json = JSONObject(colorData)
+                val colorArgb = json.getInt("color")
+                val style = _pathStyle.value
+                style.color = Color(colorArgb)
+
+                _pathStyle.postValue(style)
+            }
+
+            socket.on("width") { args ->
+                val widthData = args[0] as String
+                val json = JSONObject(widthData)
+                val width = json.getString("width").toFloat()
+                val style = _pathStyle.value
+                style.width = width
+
+                _pathStyle.postValue(style)
+            }
+
+            socket.on("alpha") { args ->
+                val alphaData = args[0] as String
+                val json = JSONObject(alphaData)
+                val alpha = json.getString("alpha").toFloat()
+                val style = _pathStyle.value
+                style.alpha = alpha
+
+                _pathStyle.postValue(style)
+            }
+
+            socket.on("addPath") {
+                val pathValue = path.value
+                val pathStyleValue = pathStyle.value?.copy()
+                if (pathStyleValue != null) {
+                    addPath(Pair(pathValue, pathStyleValue))
+                }
+                _path.value = Path()
+            }
+
+            socket.on("undoPath") {
+                undoPath()
+            }
+
+            socket.on("redoPath") {
+                redoPath()
+            }
         }
     }
 
@@ -160,26 +208,9 @@ class QuizViewModel @Inject constructor(
         }
     }
 
-    // 그림 업데이트
-    private fun updatePath(action: String, x: Float, y: Float) {
-        _path.value = Path().apply {
-            addPath(_path.value) // 기존 Path 유지
-            when (action) {
-                "DOWN" -> moveTo(x, y)
-                "MOVE" -> lineTo(x, y)
-            }
-        }
-    }
-
-    // 그림 초기화
-    fun resetPath() {
-        socket.emit("clear" )
-    }
-
     // 단어 확인
     fun sendCheckWordAction(word: String) {
         val message = """{"checkWord":"$word"}"""
-
         socket.emit("checkWord", message)
         Log.d("QuizViewModel", "CheckWord 전송: $word")
     }
@@ -209,4 +240,59 @@ class QuizViewModel @Inject constructor(
         }
         _remoteMediaStream.postValue(stream)
     }
+
+    // 그림 업데이트
+    private fun updatePath(action: String, x: Float, y: Float) {
+        _path.value = Path().apply {
+            addPath(_path.value) // 기존 Path 유지
+            when (action) {
+                "DOWN" -> moveTo(x, y)
+                "MOVE" -> lineTo(x, y)
+            }
+        }
+    }
+
+    // 그림 초기화
+    fun resetPath() {
+        socket.emit("clear" )
+    }
+
+    private fun addPath(pair: Pair<Path, PathStyle>) {
+        val list = _paths.value
+        list.add(pair)
+        _paths.postValue(list)
+    }
+
+    private fun undoPath() {
+        val pathList = _paths.value
+        if (pathList.isEmpty())
+            return
+        val last = pathList.last()
+        val size = pathList.size
+
+        removedPaths.add(last)
+        _paths.postValue(pathList.subList(0, size-1))
+    }
+
+    private fun redoPath() {
+        if (removedPaths.isEmpty())
+            return
+        _paths.postValue((_paths.value + removedPaths.removeLast()) as MutableList<Pair<Path, PathStyle>>)
+    }
 }
+
+class NonNullLiveData<T: Any>(defaultValue: T) : MutableLiveData<T>(defaultValue) {
+
+    init {
+        value = defaultValue
+    }
+
+    override fun getValue() = super.getValue()!!
+}
+
+data class PathStyle(
+    var color: Color = Color.Black,
+    var alpha: Float = 1.0f,
+    var width: Float = 10.0f
+)
+
