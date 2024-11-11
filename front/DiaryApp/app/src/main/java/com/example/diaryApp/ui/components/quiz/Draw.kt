@@ -4,10 +4,14 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.onGloballyPositioned
+import com.example.diaryApp.viewmodel.PathStyle
 import com.example.diaryApp.viewmodel.QuizViewModel
 
 @Composable
@@ -16,6 +20,8 @@ fun Draw(
     viewModel: QuizViewModel
 ) {
     val path by viewModel.path
+    val paths by viewModel.paths.observeAsState()
+    val pathStyle by viewModel.pathStyle.observeAsState()
 
     Canvas(
         modifier = modifier
@@ -24,12 +30,27 @@ fun Draw(
                 viewModel.setCanvasSize(coordinates.size.width, coordinates.size.height) // 뷰모델에 캔버스 크기 전달
             }
     ) {
+        paths?.forEach { pair ->
+            drawPath(
+                path = pair.first,
+                style = pair.second
+            )
+        }
+
         drawPath(
-            path = Path().apply {
-                addPath(path) // WebSocket 수신 경로
-            },
-            color = Color.Black,
-            style = androidx.compose.ui.graphics.drawscope.Stroke(width = 4f)
+            path = path,
+            style = pathStyle!!
         )
     }
+}
+internal fun DrawScope.drawPath(
+    path: Path,
+    style: PathStyle
+) {
+    drawPath(
+        path = path,
+        color = style.color,
+        alpha = style.alpha,
+        style = Stroke(width = style.width)
+    )
 }
