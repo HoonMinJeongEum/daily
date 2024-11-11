@@ -32,6 +32,7 @@ import coil3.request.error
 import coil3.request.placeholder
 import com.example.diarytablet.model.Sticker
 import com.example.diarytablet.R
+import com.example.diarytablet.ui.theme.DarkGray
 import com.example.diarytablet.viewmodel.ShopStockViewModel
 import kotlinx.coroutines.delay
 import okhttp3.OkHttpClient
@@ -160,18 +161,18 @@ fun StickerCard(sticker: Sticker, index: Int, onStickerClick: () -> Unit, viewMo
                     horizontalArrangement = Arrangement.Center,
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
-                        .padding(bottom = 8.dp) // 아래쪽 여백
+                        .padding(bottom = 12.dp) // 아래쪽 여백
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.jogae), // 조개 아이콘
                         contentDescription = null,
-                        modifier = Modifier.size(48.dp) // 아이콘 크기 확대
+                        modifier = Modifier.size(42.dp) // 아이콘 크기 확대
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = "${sticker.price}",
-                        fontSize = 32.sp,
-                        color = Color.Gray
+                        fontSize = 30.sp,
+                        color = DarkGray
                     )
                 }
             }

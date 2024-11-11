@@ -41,14 +41,18 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import coil3.compose.rememberAsyncImagePainter
 import com.example.diarytablet.R
 import com.example.diarytablet.domain.dto.response.diary.CommentDto
 import com.example.diarytablet.domain.dto.response.diary.Diary
+import com.example.diarytablet.ui.theme.DarkGray
+import com.example.diarytablet.ui.theme.GrayDetail
 import com.example.diarytablet.ui.theme.MyTypography
 import com.example.diarytablet.ui.theme.PastelNavy
 import com.example.diarytablet.viewmodel.LogViewModel
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun MyDiaryDetail(
@@ -75,10 +79,10 @@ fun MyDiaryDetail(
     Row(
         modifier = Modifier
             .fillMaxSize()
-            .padding(20.dp)
+            .padding(horizontal = 10.dp)
     ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically // 두 버튼을 수직 가운데 정렬
+            verticalAlignment = Alignment.CenterVertically
         ) {
             DynamicColorButton(
                 onClick = onBackClick,
@@ -87,7 +91,7 @@ fun MyDiaryDetail(
                 textStyle = MyTypography.bodySmall
             )
 
-            Spacer(modifier = Modifier.width(20.dp))
+            Spacer(modifier = Modifier.width(10.dp))
 
             Image(
                 painter = painterResource(id = R.drawable.chat),
@@ -149,6 +153,7 @@ fun MyDiaryComment(
     comments: List<CommentDto>,
     onDismissRequest: () -> Unit
 ) {
+
     Surface(
         shape = RoundedCornerShape(16.dp),
         color = Color.White,
@@ -190,7 +195,7 @@ fun MyDiaryComment(
                 color = PastelNavy,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp),
+                    .padding(bottom = 20.dp),
                 textAlign = TextAlign.Center
             )
 
@@ -199,21 +204,26 @@ fun MyDiaryComment(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
                     items(comments) { comment ->
+                        val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+                        val displayDate = comment.createdAt.format(dateTimeFormatter)
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp)
                         ) {
                             Text(
-                                text = comment.createdAt,
-                                style = MyTypography.bodySmall,
-                                color = Color.Gray,
+                                text = displayDate,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Thin,
+                                color = GrayDetail,
                             )
+                            Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = comment.comment,
+                                color = DarkGray,
                                 style = MyTypography.bodySmall,
                                 fontWeight = FontWeight.Normal
                             )

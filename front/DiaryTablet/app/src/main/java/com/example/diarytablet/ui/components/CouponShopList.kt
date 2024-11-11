@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,6 +19,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.diarytablet.model.Coupon
 import com.example.diarytablet.R
+import com.example.diarytablet.ui.theme.PastelNavy
+import com.example.diarytablet.ui.theme.myFontFamily
 import com.example.diarytablet.viewmodel.ShopStockViewModel
 import kotlinx.coroutines.delay
 
@@ -121,7 +124,8 @@ fun CouponBox(coupon: Coupon, index: Int, onClick: (Coupon) -> Unit) {
                         .weight(0.15f)
                         .height(64.dp),
                     shape = androidx.compose.foundation.shape.RoundedCornerShape(50.dp), // 둥근 테두리 설정
-                    contentPadding = PaddingValues(horizontal = 8.dp)
+                    contentPadding = PaddingValues(horizontal = 8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = PastelNavy)
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.jogae), // 조개 아이콘
@@ -131,7 +135,8 @@ fun CouponBox(coupon: Coupon, index: Int, onClick: (Coupon) -> Unit) {
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = "${coupon.price}",
-                        fontSize = 32.sp,
+                        fontSize = 28.sp,
+                        fontFamily = myFontFamily,
                         color = Color.White
                     )
                 }

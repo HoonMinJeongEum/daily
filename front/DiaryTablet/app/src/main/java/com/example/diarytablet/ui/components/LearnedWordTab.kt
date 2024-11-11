@@ -69,14 +69,14 @@ fun LearnedWordTab(
             ) {
                 Column(
                     modifier = Modifier.fillMaxSize()
-                        .padding(bottom = 20.dp),
+                        .padding(bottom = 24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Top
                 ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 60.dp, vertical = 4.dp),
+                            .padding(horizontal = 60.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
                     ) {
                         DynamicColorButton(
