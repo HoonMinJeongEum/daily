@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -30,13 +31,14 @@ import com.example.diaryApp.R
 import com.example.diaryApp.ui.components.DeleteProfileList
 import com.example.diaryApp.ui.components.NavMenu
 import com.example.diaryApp.ui.components.ProfileList
+import com.example.diaryApp.ui.theme.MyTypography
 import com.example.diaryApp.viewmodel.ProfileViewModel
 
 @Composable
 fun SettingScreen(
     navController: NavController,
     viewModel: ProfileViewModel = hiltViewModel(),
-    backgroundType: BackgroundType = BackgroundType.ACTIVE,
+    backgroundType: BackgroundType = BackgroundType.NORMAL,
 ) {
     BackgroundPlacement(backgroundType = backgroundType)
 
@@ -45,59 +47,56 @@ fun SettingScreen(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        Box(
+        Column(
             modifier = Modifier
-                .fillMaxSize()
-                .align(Alignment.TopCenter)
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.Top
         ) {
-            TopLogoImg(
-                characterImg = R.drawable.daily_character
-            )
-            Text(
-                text = "자녀 관리",
-                fontSize = 30.sp,
-                fontWeight = FontWeight.Normal,
-                color = Color.White,
+            Row(
                 modifier = Modifier
-                    .offset(x = 150.dp, y = 30.dp)
-            )
-        }
-        Box(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .align(Alignment.Center),
-                contentAlignment = Alignment.BottomCenter
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-
-                Box(
-                    modifier = Modifier
-                        .background(Color.White, shape = RoundedCornerShape(topEnd = 50.dp, topStart = 50.dp))
-                        .fillMaxWidth()
-                        .height(780.dp)
+                TopLogoImg(
+                    characterImg = R.drawable.daily_character,
+                    modifier = Modifier.weight(1f)
                 )
 
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    DeleteProfileList(
-                        profileList = profileList,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 100.dp),
-                    )
-                }
-                Box(
+                Text(
+                    text = "자녀 관리",
+                    color = Color.White,
+                    style = MyTypography.bodyMedium,
+                    modifier = Modifier
+                        .weight(2f)
+                        .padding(start = 10.dp)
+                )
+            }
+
+            // 가운데 흰색 박스 안에 DeleteProfileList 상단 정렬
+            Box(
+                modifier = Modifier
+                    .background(Color.White, shape = RoundedCornerShape(topEnd = 50.dp, topStart = 50.dp))
+                    .fillMaxWidth()
+                    .height(780.dp) // 필요한 높이 지정
+            ) {
+                DeleteProfileList(
+                    profileList = profileList,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .align(Alignment.BottomCenter) // NavMenu를 화면 하단에 고정
-                ) {
-                    NavMenu(navController, "setting", "setting")
-                }
+                        .padding(top = 16.dp), // 원하는 만큼 상단 간격 설정
+                    viewModel = viewModel
+                )
             }
+        }
+
+        // 하단 NavMenu를 항상 화면의 최하단에 고정
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+        ) {
+            NavMenu(navController, "setting", "setting")
         }
     }
 }

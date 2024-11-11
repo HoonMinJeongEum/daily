@@ -182,7 +182,7 @@ fun BuyCoupon(
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     DailyButton(
-                        text = "아니오",
+                        text = "취소",
                         fontSize = 18,
                         textColor = White,
                         fontWeight = FontWeight.SemiBold,
@@ -194,7 +194,7 @@ fun BuyCoupon(
                     )
 
                     DailyButton(
-                        text = "네",
+                        text = "사용",
                         fontSize = 18,
                         textColor = White,
                         fontWeight = FontWeight.SemiBold,

@@ -1,14 +1,18 @@
 package com.example.diaryApp.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -29,9 +33,12 @@ import com.example.diaryApp.ui.components.TopLogoImg
 import com.example.diaryApp.ui.theme.BackgroundPlacement
 import com.example.diaryApp.ui.theme.BackgroundType
 import com.example.diaryApp.R
+import com.example.diaryApp.ui.components.DeleteProfileList
 import com.example.diaryApp.ui.components.NavMenu
 import com.example.diaryApp.ui.components.alarm.AlarmItem
+import com.example.diaryApp.ui.components.alarm.AlarmList
 import com.example.diaryApp.ui.components.quiz.QuizAlert
+import com.example.diaryApp.ui.theme.MyTypography
 import com.example.diaryApp.viewmodel.AlarmViewModel
 import com.example.diaryApp.viewmodel.QuizViewModel
 
@@ -40,80 +47,68 @@ fun NotificationScreen(
     navController: NavController,
     viewModel: AlarmViewModel = hiltViewModel(),
     quizViewModel: QuizViewModel = hiltViewModel(),
-    backgroundType: BackgroundType = BackgroundType.ACTIVE
+    backgroundType: BackgroundType = BackgroundType.NORMAL
 ) {
-    var showQuizAlert by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        viewModel.getAlarms()
-    }
 
-    val alarms by viewModel.alarms.observeAsState(emptyList())
+
+    val alarms by viewModel.alarms
 
     BackgroundPlacement(backgroundType = backgroundType)
 
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        Box(
+        Column(
             modifier = Modifier
-                .fillMaxSize()
-                .align(Alignment.TopCenter)
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.Top
         ) {
-            TopLogoImg(
-                characterImg = R.drawable.daily_character
-            )
-            Text(
-                text = "알림",
-                fontSize = 30.sp,
-                fontWeight = FontWeight.Thin,
-                color = Color.White,
-                modifier = Modifier
-                    .offset(x = 183.dp, y = 30.dp)
-            )
-        }
-
-        Box(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            Column(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .align(Alignment.TopCenter)
-                    .padding(top = 100.dp), // 상단 간격 조절
-                verticalArrangement = Arrangement.Top
+                    .padding(top = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // 알림 목록을 리스트로 표시
-                LazyColumn(modifier = Modifier.fillMaxWidth()) {
-                    items(alarms) { alarm ->
-                        AlarmItem(alarm,
-                            navController,
-                            quizViewModel,
-                            onShowQuizAlert = { showQuizAlert = true }
-                        )
-                        HorizontalDivider(
-                            modifier = Modifier.padding(vertical = 8.dp),
-                            thickness = 1.dp,
-                            color = Color.Gray
-                        )
-                    }
-                }
-            }
+                TopLogoImg(
+                    characterImg = R.drawable.daily_character,
+                    modifier = Modifier.weight(1f)
+                )
 
+                Text(
+                    text = "알림",
+                    color = Color.White,
+                    style = MyTypography.bodyMedium,
+                    modifier = Modifier
+                        .weight(2f)
+                        .padding(start = 40.dp)
+                )
+            }
             Box(
                 modifier = Modifier
+                    .background(Color.White, shape = RoundedCornerShape(topEnd = 50.dp, topStart = 50.dp))
                     .fillMaxWidth()
-                    .align(Alignment.BottomCenter) // NavMenu를 화면 하단에 고정
+                    .height(780.dp) // 필요한 높이 지정
             ) {
-                NavMenu(navController, "notification", "notification")
+                AlarmList(
+                    alarmList = alarms,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp, bottom = 80.dp), // 원하는 만큼 상단 간격 설정
+                    quizViewModel = quizViewModel,
+                    alarmViewModel = viewModel,
+                    navController = navController
+                )
             }
         }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter) // NavMenu를 화면 하단에 고정
+        ) {
+            NavMenu(navController, "notification", "notification")
+        }
     }
-    if (showQuizAlert) {
-        QuizAlert(
-            title = "방이 생성되지 않았습니다.",
-            onDismiss = { showQuizAlert = false }
-        )
-    }
+
 }
 
 

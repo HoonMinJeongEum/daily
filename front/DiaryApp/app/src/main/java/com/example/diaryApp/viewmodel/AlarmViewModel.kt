@@ -1,6 +1,8 @@
 package com.example.diaryApp.viewmodel
 
 import android.util.Log
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -21,14 +23,14 @@ class AlarmViewModel @Inject constructor(
     private val userStore: UserStore
 ) : ViewModel() {
 
-    private val _alarms = MutableLiveData<List<AlarmResponseDto>>()
-    val alarms: LiveData<List<AlarmResponseDto>> get() = _alarms
+    private val _alarms = mutableStateOf<List<AlarmResponseDto>>(emptyList())
+    val alarms: State<List<AlarmResponseDto>> get() = _alarms
 
     private val _saveTokenStatus = MutableLiveData<String>()
     val saveTokenStatus: LiveData<String> get() = _saveTokenStatus
 
-    private val _checkAlarmStatus = MutableLiveData<String>()
-    val checkAlarmStatus: LiveData<String> get() = _checkAlarmStatus
+    private val _checkAlarmStatus = mutableStateOf<String?>(null)
+    val checkAlarmStatus: State<String?> get() = _checkAlarmStatus
 
     // FCM 토큰을 가져와 저장하는 함수
     private fun saveFcmToken() {
@@ -57,7 +59,7 @@ class AlarmViewModel @Inject constructor(
         viewModelScope.launch {
             val response = alarmRepository.getAlarms()
             if (response.isSuccessful) {
-                _alarms.value = response.body()?.list
+                _alarms.value = response.body()?.list ?: emptyList()
             } else {
                 _alarms.value = emptyList()
             }

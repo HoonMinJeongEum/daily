@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -47,7 +48,9 @@ fun CouponItem(
     val displayDate = coupon.createdAt.format(dateTimeFormatter)
 
     Box(modifier = Modifier
-        .size(356.dp, 94.dp)
+        .fillMaxWidth()
+        .padding(horizontal = 18.dp, vertical = 10.dp)
+        .height(100.dp)
         .background(LightSkyBlue, RoundedCornerShape(30)),
         contentAlignment = Alignment.Center
     ) {
@@ -118,7 +121,9 @@ fun UsageCouponItem(
     }
     Box(
         modifier = Modifier
-            .size(356.dp, 94.dp)
+            .fillMaxWidth()
+            .padding(horizontal = 18.dp, vertical = 10.dp)
+            .height(100.dp)
             .background(boxColor, RoundedCornerShape(30))
             .shadow(6.dp, RoundedCornerShape(30))
             .clickable(
@@ -128,7 +133,7 @@ fun UsageCouponItem(
     ) {
         Box(
             modifier = Modifier
-                .size(356.dp, 94.dp)
+                .fillMaxSize()
                 .background(boxColor, RoundedCornerShape(30)),
             contentAlignment = Alignment.Center
         ) {

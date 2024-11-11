@@ -3,6 +3,7 @@ package com.example.diaryApp.ui.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentWidth
@@ -35,13 +36,12 @@ fun CouponListItem(
             .fillMaxHeight()
             .wrapContentWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
         items(couponList) { coupon ->
             CouponItem(coupon)
         }
-
         item {
+            Spacer(modifier = Modifier.height(16.dp))
             AddCouponButton(onClick = { onShowDialogChange(true) })
             Spacer(modifier = Modifier.height(160.dp))
         }
@@ -57,10 +57,9 @@ fun UsageCouponListItem(
     val couponViewModel: CouponViewModel = hiltViewModel()
     LazyColumn(
         modifier = modifier
-            .fillMaxHeight()
-            .wrapContentWidth(),
+            .wrapContentWidth()
+            .padding(bottom = 80.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
         items(usageCouponList) { usageCoupon ->
             if (usageCoupon.usedAt == null) {

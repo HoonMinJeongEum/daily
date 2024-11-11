@@ -72,7 +72,7 @@ fun TopBackImage(
     onBackClick: (() -> Unit)? = null
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(top = 16.dp, start = 8.dp),
+        modifier = Modifier.fillMaxWidth().padding(top = 8.dp, start = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         BackImage?.let {
