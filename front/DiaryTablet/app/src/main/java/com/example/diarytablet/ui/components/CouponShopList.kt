@@ -29,14 +29,20 @@ fun CouponShopList(coupons: List<Coupon>, viewModel: ShopStockViewModel) {
     var selectedCoupon by remember { mutableStateOf<Coupon?>(null) }
     var showDialog by remember { mutableStateOf(false) }
 
-    LazyColumn(
-        contentPadding = PaddingValues(5.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+    Box(
+        modifier = Modifier.fillMaxSize() // 화면을 가득 채우도록 설정
     ) {
-        itemsIndexed(coupons) { index, coupon ->
-            CouponBox(coupon, index) {
-                selectedCoupon = coupon
-                showDialog = true
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(0.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top // 위쪽부터 차례로 쌓이도록 설정
+        ) {
+            itemsIndexed(coupons) { index, coupon ->
+                CouponBox(coupon, index) {
+                    selectedCoupon = coupon
+                    showDialog = true
+                }
             }
         }
     }
@@ -54,6 +60,7 @@ fun CouponShopList(coupons: List<Coupon>, viewModel: ShopStockViewModel) {
         )
     }
 }
+
 
 @Composable
 fun CouponBox(coupon: Coupon, index: Int, onClick: (Coupon) -> Unit) {
