@@ -55,7 +55,6 @@ io.on("connection", (socket) => {
 
   socket.on("initDrawing", (initDraw) => {
     socket.to(socket.roomId).emit("initDrawing", initDraw);
-    console.log(`클라이언트가 방 ${roomId}에 참여했습니다.`);
   });
 
   // 실시간 그림
