@@ -23,7 +23,7 @@ fun StickerStockList(stickers: List<StickerStock>) {
         contentPadding = PaddingValues(start = 15.dp, end = 15.dp),
         modifier = Modifier.fillMaxSize()
     ) {
-        itemsIndexed(stickers) { index, sticker ->
+        itemsIndexed(stickers.reversed()) { index, sticker ->
             StickerStockCard(sticker, index)
         }
     }

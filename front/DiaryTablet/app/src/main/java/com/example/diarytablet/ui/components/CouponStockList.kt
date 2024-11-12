@@ -26,7 +26,7 @@ fun CouponStockList(coupons: List<CouponStock>, viewModel: ShopStockViewModel) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top // 리스트가 위쪽부터 시작되도록 설정
         ) {
-            itemsIndexed(coupons) { index, coupon ->
+            itemsIndexed(coupons.reversed()) { index, coupon ->
                 CouponStockBox(coupon, index) { couponId ->
                     viewModel.useCoupon(couponId)
                 }
