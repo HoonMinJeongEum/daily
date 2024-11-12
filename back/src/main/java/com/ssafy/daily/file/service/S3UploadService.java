@@ -36,7 +36,9 @@ public class S3UploadService {
             return ".jpg";
         } else if ("image/png".equals(contentType)) {
             return ".png";
-        } else {
+        } else if ("video/mp4".equals(contentType)){
+            return ".mp4";
+        }else {
             throw new IllegalArgumentException("지원하지 않는 파일 형식: " + contentType);
         }
     }
