@@ -1,5 +1,6 @@
 package com.example.diaryApp.ui.components
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -67,7 +68,7 @@ fun ProfileItem(
     diaryViewModel: DiaryViewModel,
     wordViewModel: WordViewModel,
     quizViewModel: QuizViewModel,
-    onShowQuizAlert: (String) -> Unit
+    onShowQuizAlert: (String, String) -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
 
@@ -149,7 +150,7 @@ fun ProfileItem(
                             quizViewModel.checkSession(
                                 profile.name,
                                 onShowQuizAlert = { newSessionId ->
-                                    onShowQuizAlert(newSessionId)
+                                    onShowQuizAlert(newSessionId, profile.name)
                                 }
                             )
                         }

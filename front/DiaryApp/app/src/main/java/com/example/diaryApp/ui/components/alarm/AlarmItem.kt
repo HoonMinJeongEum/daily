@@ -46,7 +46,7 @@ fun AlarmItem(
     alarm: AlarmResponseDto,
     navController: NavController,
     quizViewModel: QuizViewModel,
-    onShowQuizAlert: (String) -> Unit
+    onShowQuizAlert: (String, String) -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
     val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
@@ -109,7 +109,7 @@ fun AlarmItem(
                                 quizViewModel.checkSession(
                                     alarm.name,
                                     onShowQuizAlert = { newSessionId ->
-                                    onShowQuizAlert(newSessionId)
+                                    onShowQuizAlert(newSessionId, alarm.name)
                                 })
                             }
                         } else {
@@ -117,6 +117,7 @@ fun AlarmItem(
                         }
 
                     },
+                    enabled = alarm.confirmedAt == null
                 ) {
                     if (alarm.confirmedAt != null) {
                         Text(text = "완료", fontSize = 18.sp, fontFamily = myFontFamily)
