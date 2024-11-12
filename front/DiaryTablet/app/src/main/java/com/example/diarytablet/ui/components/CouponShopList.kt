@@ -5,6 +5,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
@@ -17,30 +18,47 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.diarytablet.model.Coupon
 import com.example.diarytablet.R
 import com.example.diarytablet.ui.theme.PastelNavy
 import com.example.diarytablet.ui.theme.myFontFamily
+import com.example.diarytablet.viewmodel.NavBarViewModel
 import com.example.diarytablet.viewmodel.ShopStockViewModel
 import kotlinx.coroutines.delay
 
+enum class CouponModalState {
+    NONE,
+    PURCHASE_CONFIRMATION,
+    INSUFFICIENT_SHELLS,
+    PURCHASE_SUCCESS
+}
+
 @Composable
-fun CouponShopList(coupons: List<Coupon>, viewModel: ShopStockViewModel) {
+fun CouponShopList(
+    coupons: List<Coupon>,
+    viewModel: ShopStockViewModel,
+    navBarViewModel: NavBarViewModel = hiltViewModel() // NavBarViewModel 추가
+) {
     var selectedCoupon by remember { mutableStateOf<Coupon?>(null) }
     var showDialog by remember { mutableStateOf(false) }
+    var couponModalState by remember { mutableStateOf(CouponModalState.NONE) }
+
+    val shellCount by navBarViewModel.shellCount
 
     Box(
-        modifier = Modifier.fillMaxSize() // 화면을 가득 채우도록 설정
+        modifier = Modifier.fillMaxSize()
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(0.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top // 위쪽부터 차례로 쌓이도록 설정
+            verticalArrangement = Arrangement.Top
         ) {
             itemsIndexed(coupons) { index, coupon ->
                 CouponBox(coupon, index) {
                     selectedCoupon = coupon
+                    couponModalState = CouponModalState.PURCHASE_CONFIRMATION
                     showDialog = true
                 }
             }
@@ -50,17 +68,22 @@ fun CouponShopList(coupons: List<Coupon>, viewModel: ShopStockViewModel) {
     if (showDialog && selectedCoupon != null) {
         PurchaseConfirmationDialog(
             coupon = selectedCoupon!!,
+            couponModalState = couponModalState,
             onConfirm = {
-                viewModel.buyCoupon(selectedCoupon!!.id)
-                showDialog = false
+                if (shellCount >= selectedCoupon!!.price) {
+                    viewModel.buyCoupon(selectedCoupon!!.id)
+                    couponModalState = CouponModalState.PURCHASE_SUCCESS
+                } else {
+                    couponModalState = CouponModalState.INSUFFICIENT_SHELLS
+                }
             },
             onCancel = {
                 showDialog = false
+                couponModalState = CouponModalState.NONE
             }
         )
     }
 }
-
 
 @Composable
 fun CouponBox(coupon: Coupon, index: Int, onClick: (Coupon) -> Unit) {
@@ -82,7 +105,7 @@ fun CouponBox(coupon: Coupon, index: Int, onClick: (Coupon) -> Unit) {
                 indication = null,
                 onClick = {
                     isPressed = true
-                    onClick(coupon) // Coupon 객체를 그대로 전달
+                    onClick(coupon)
                 }
             )
     ) {
@@ -124,18 +147,17 @@ fun CouponBox(coupon: Coupon, index: Int, onClick: (Coupon) -> Unit) {
                         .padding(start = 10.dp)
                 )
 
-                // 버튼을 추가하여 조개 아이콘과 가격 표시
                 Button(
-                    onClick = { onClick(coupon) }, // 구매 이벤트 전달
+                    onClick = { onClick(coupon) },
                     modifier = Modifier
                         .weight(0.15f)
                         .height(64.dp),
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(50.dp), // 둥근 테두리 설정
+                    shape = RoundedCornerShape(50.dp),
                     contentPadding = PaddingValues(horizontal = 8.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = PastelNavy)
                 ) {
                     Image(
-                        painter = painterResource(id = R.drawable.jogae), // 조개 아이콘
+                        painter = painterResource(id = R.drawable.jogae),
                         contentDescription = null,
                         modifier = Modifier.size(32.dp)
                     )
@@ -156,6 +178,7 @@ fun CouponBox(coupon: Coupon, index: Int, onClick: (Coupon) -> Unit) {
 @Composable
 fun PurchaseConfirmationDialog(
     coupon: Coupon,
+    couponModalState: CouponModalState,
     onConfirm: () -> Unit,
     onCancel: () -> Unit
 ) {
@@ -163,7 +186,7 @@ fun PurchaseConfirmationDialog(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)) // 모서리를 둥글게 설정
+                .clip(RoundedCornerShape(16.dp))
                 .background(Color.White)
                 .padding(20.dp),
             contentAlignment = Alignment.Center
@@ -172,8 +195,15 @@ fun PurchaseConfirmationDialog(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
+                val message = when (couponModalState) {
+                    CouponModalState.PURCHASE_CONFIRMATION -> "${coupon.description} 쿠폰을 구매할까요?"
+                    CouponModalState.INSUFFICIENT_SHELLS -> "조개를 조금 더 모아볼까요?"
+                    CouponModalState.PURCHASE_SUCCESS -> "구매가 완료되었습니다!"
+                    else -> ""
+                }
+
                 Text(
-                    text = "${coupon.description} 쿠폰을 구매할까요?",
+                    text = message,
                     fontSize = 18.sp,
                     color = Color.Black
                 )
@@ -184,46 +214,52 @@ fun PurchaseConfirmationDialog(
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    // 구매 버튼
-                    Button(
-                        onClick = onConfirm,
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(48.dp),
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(50.dp), // 둥근 테두리 설정
-                        contentPadding = PaddingValues(horizontal = 16.dp)
-                    ) {
-                        // 버튼 안에 조개 이미지와 가격 텍스트 배치
-                        Image(
-                            painter = painterResource(id = R.drawable.jogae),
-                            contentDescription = null,
-                            modifier = Modifier.size(24.dp)
-                        )
+                    if (couponModalState == CouponModalState.PURCHASE_CONFIRMATION) {
+                        Button(
+                            onClick = onConfirm,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp),
+                            shape = RoundedCornerShape(50.dp),
+                            contentPadding = PaddingValues(horizontal = 16.dp)
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.jogae),
+                                contentDescription = null,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "${coupon.price} 조개",
+                                fontSize = 16.sp,
+                                color = Color.White
+                            )
+                        }
+
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "${coupon.price} 조개",
-                            fontSize = 16.sp,
-                            color = Color.White
-                        )
-                    }
 
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    // 취소 버튼
-                    Button(
-                        onClick = onCancel,
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(48.dp),
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(50.dp) // 둥근 테두리 설정
-                    ) {
-                        Text("취소", fontSize = 16.sp)
+                        Button(
+                            onClick = onCancel,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp),
+                            shape = RoundedCornerShape(50.dp)
+                        ) {
+                            Text("취소", fontSize = 16.sp)
+                        }
+                    } else {
+                        Button(
+                            onClick = onCancel,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp),
+                            shape = RoundedCornerShape(50.dp)
+                        ) {
+                            Text("확인", fontSize = 16.sp)
+                        }
                     }
                 }
             }
         }
     }
 }
-
-
-

@@ -6,6 +6,6 @@ import java.util.Date
 data class Coupon(
     val id: Int,
     val description: String,
-    val price: String,
+    val price: Int,
     @SerializedName("created_at") val createdAt: Date
 )
