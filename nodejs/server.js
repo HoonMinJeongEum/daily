@@ -130,7 +130,7 @@ io.on("connection", (socket) => {
           roomData[socket.roomId].jwtToken = newTokens.jwtToken;
           roomData[socket.roomId].refreshToken = newTokens.refreshToken;
           console.log("새로운 JWT 및 리프레시 토큰을 저장했습니다.");
-          await retryWithNewToken(roomData[socket.roomId].jwtToken); // 새 토큰으로 재시도
+          await sendEndSessionRequest(roomData[socket.roomId].jwtToken); // 새 토큰으로 재시도
         }
       } else {
         console.error("스프링 서버로 전송 중 오류 발생:", error);
