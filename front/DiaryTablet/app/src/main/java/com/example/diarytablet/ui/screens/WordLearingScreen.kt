@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,15 +31,32 @@ import com.example.diarytablet.ui.components.WordTap
 import com.example.diarytablet.ui.theme.BackgroundPlacement
 import com.example.diarytablet.ui.theme.BackgroundType
 import com.example.diarytablet.viewmodel.MainViewModel
+import com.example.diarytablet.viewmodel.SpenEventViewModel
 import com.example.diarytablet.viewmodel.WordLearningViewModel
-
+import com.samsung.android.sdk.penremote.AirMotionEvent
+import com.samsung.android.sdk.penremote.ButtonEvent
 @Composable
 fun WordLearningScreen(
     navController: NavController,
     viewModel: WordLearningViewModel = hiltViewModel(),
-    backgroundType: BackgroundType = BackgroundType.DEFAULT
+    backgroundType: BackgroundType = BackgroundType.DEFAULT,
+    spenEventViewModel : SpenEventViewModel
 ) {
-
+    LaunchedEffect(spenEventViewModel) {
+        spenEventViewModel.spenEventFlow.collect { event ->
+            when (event) {
+                is ButtonEvent -> {
+                    when (event.action) {
+                        ButtonEvent.ACTION_DOWN -> Log.d("WordLearningScreen", "S Pen 버튼이 눌렸습니다.")
+                        ButtonEvent.ACTION_UP -> Log.d("WordLearningScreen", "S Pen 버튼이 해제되었습니다.")
+                    }
+                }
+                is AirMotionEvent -> {
+                    Log.d("WordLearningScreen", "에어 모션 움직임: X=${event.deltaX}, Y=${event.deltaY}")
+                }
+            }
+        }
+    }
     val wordList by viewModel.wordList
     val learnedWordList by viewModel.learnedWordList
     BackgroundPlacement(backgroundType = backgroundType)

@@ -52,46 +52,6 @@ fun LoginScreen(
     var errorMessage by remember { mutableStateOf("") }
     BackgroundPlacement(backgroundType = backgroundType)
 
-    val context = LocalContext.current
-
-    // S Pen Remote 연동 확인
-    LaunchedEffect(Unit) {
-        try {
-            // SpenRemote 인스턴스를 가져옵니다.
-            val spenRemote = SpenRemote.getInstance()
-            val isFeatureAvailable = spenRemote.isFeatureEnabled(SpenRemote.FEATURE_TYPE_BUTTON)
-
-            if (isFeatureAvailable) {
-                Log.d("LoginScreen", "S Pen Button feature is available.")
-
-                if (!spenRemote.isConnected) {
-                    spenRemote.connect(context, object : SpenRemote.ConnectionResultCallback {
-                        override fun onSuccess(manager: SpenUnitManager?) {
-                            Log.d("LoginScreen", "S Pen connected successfully.")
-                            Toast.makeText(context, "S Pen connected.", Toast.LENGTH_SHORT).show()
-                        }
-
-                        override fun onFailure(error: Int) {
-                            Log.e("LoginScreen", "S Pen connection failed with error code: $error")
-                            val errorMsg = when (error) {
-//                                SpenRemote.CONNECTION_FAILED -> "S Pen connection failed."
-//                                SpenRemote.UNSUPPORTED_DEVICE -> "Device does not support S Pen."
-                                else -> "Unknown error."
-                            }
-                            Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
-                        }
-                    })
-                }
-            } else {
-                Log.d("LoginScreen", "S Pen Button feature is not available.")
-                Toast.makeText(context, "S Pen feature not available on this device.", Toast.LENGTH_SHORT).show()
-            }
-        } catch (e: NoClassDefFoundError) {
-            Log.e("LoginScreen", "S Pen feature not supported on this device/emulator", e)
-            Toast.makeText(context, "S Pen feature not supported on this device/emulator.", Toast.LENGTH_SHORT).show()
-        }
-    }
-
 
     BoxWithConstraints(
         modifier = Modifier.fillMaxSize()

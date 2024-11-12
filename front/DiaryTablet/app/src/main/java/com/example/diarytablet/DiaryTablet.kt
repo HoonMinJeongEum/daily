@@ -22,6 +22,7 @@ import com.example.diarytablet.ui.screens.ShopScreen
 import com.example.diarytablet.ui.screens.StockScreen
 import com.example.diarytablet.ui.screens.WordLearningScreen
 import com.example.diarytablet.ui.theme.DiaryTabletTheme
+import com.example.diarytablet.viewmodel.SpenEventViewModel
 import com.samsung.android.sdk.penremote.SpenRemote
 import com.samsung.android.sdk.penremote.SpenUnitManager
 
@@ -31,7 +32,7 @@ import javax.inject.Inject
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun DiaryTabletApp(startDestination: String = "login") {
+fun DiaryTabletApp(startDestination: String = "login" , spenEventViewModel: SpenEventViewModel) {
     val navController = rememberNavController()
 
     DiaryTabletTheme {
@@ -72,7 +73,7 @@ fun DiaryTabletApp(startDestination: String = "login") {
                 DiaryScreen(navController = navController)
             }
             composable("wordLearning") {
-                WordLearningScreen(navController = navController)
+                WordLearningScreen(navController = navController, spenEventViewModel = spenEventViewModel)
             }
             composable("quiz") {
                 QuizScreen(navController = navController)
@@ -85,11 +86,9 @@ fun DiaryTabletApp(startDestination: String = "login") {
 
 @HiltAndroidApp
 class DiaryTablet : Application() {
+
     @Inject
     lateinit var userStore: UserStore
-
-    var spenRemote: SpenRemote? = null
-    var spenUnitManager: SpenUnitManager? = null
 
     companion object {
         lateinit var instance: DiaryTablet
@@ -107,57 +106,10 @@ class DiaryTablet : Application() {
             throw IllegalStateException("UserStore is not initialized.")
         }
 
-        // S Pen Remote 초기화 및 연결 시도 (삼성 기기에서만)
-        if (isSamsungDevice()) {
-            initializeSpenRemote()
-        } else {
-            Log.d("DiaryTablet", "S Pen 기능은 삼성 기기에서만 지원됩니다.")
-        }
+
     }
 
-    private fun initializeSpenRemote() {
-        try {
-            spenRemote = SpenRemote.getInstance()
-            // S Pen 기능 확인
-            val isFeatureAvailable = spenRemote?.isFeatureEnabled(SpenRemote.FEATURE_TYPE_BUTTON) ?: false
-            if (isFeatureAvailable) {
-                Log.d("DiaryTablet", "S Pen Button 기능이 사용 가능합니다.")
-                connectSpenRemote()
-            } else {
-                Log.d("DiaryTablet", "S Pen Button 기능을 지원하지 않습니다.")
-            }
-        } catch (e: NoClassDefFoundError) {
-            Log.e("DiaryTablet", "S Pen 기능이 이 기기에서 지원되지 않습니다.", e)
-        }
-    }
 
-    private fun connectSpenRemote() {
-        spenRemote?.let { spen ->
-            if (!spen.isConnected) {
-                spen.connect(this, object : SpenRemote.ConnectionResultCallback {
-                    override fun onSuccess(manager: SpenUnitManager?) {
-                        spenUnitManager = manager
-                        Log.d("DiaryTablet", "S Pen이 성공적으로 연결되었습니다.")
-//                        Toast.makeText(context, "S Pen connected.", Toast.LENGTH_SHORT).show()
-
-                    }
-
-                    override fun onFailure(error: Int) {
-                        val errorMsg = when (error) {
-                            else -> "알 수 없는 오류입니다."
-                        }
-                        Log.e("DiaryTablet", "S Pen 연결 실패: $errorMsg")
-//                        Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
-
-                    }
-                })
-            }
-        }
-    }
-
-    private fun isSamsungDevice(): Boolean {
-        return android.os.Build.MANUFACTURER.equals("Samsung", ignoreCase = true)
-    }
 }
 
 
