@@ -39,9 +39,7 @@ fun Alert(
                 modifier = Modifier
                     .fillMaxWidth(0.35f)
                     .fillMaxHeight(0.4f)
-                    .align(Alignment.Center)
-                    .clip(RoundedCornerShape(32.dp))
-                    .background(Color.White),
+                    .align(Alignment.Center),
             ){
                 Image(
                     painter = painterResource(id = R.drawable.quiz_pop_up),
