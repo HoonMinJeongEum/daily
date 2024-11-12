@@ -82,7 +82,7 @@ public class WordService {
     }
 
     public List<LearningWordResponse> getUnlearnedWords(int memberId) {
-        List<Word> unlearnedWords = wordRepository.findUnlearnedWordsByMemberId(memberId, PageRequest.of(0, 10));
+        List<Word> unlearnedWords = wordRepository.findUnlearnedWordsByMemberId(memberId, PageRequest.of(0, 5));
         return unlearnedWords.stream()
                 .map(word -> new LearningWordResponse(word.getId(), word.getWord(), word.getImg()))
                 .collect(Collectors.toList());
