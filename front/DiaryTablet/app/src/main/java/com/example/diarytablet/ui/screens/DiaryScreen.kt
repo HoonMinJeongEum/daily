@@ -45,34 +45,22 @@ import java.io.File
 import java.io.FileOutputStream
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.diarytablet.viewmodel.DiaryViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import android.graphics.Matrix
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
-import android.media.MediaRecorder
 import android.media.MediaScannerConnection
-import android.media.MediaScannerConnection.scanFile
 import android.os.Environment
-import android.view.Surface
-import android.view.SurfaceHolder
-import android.view.SurfaceView
 import androidx.compose.foundation.clickable
 import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.viewinterop.AndroidView
-import coil3.compose.rememberAsyncImagePainter
 import com.arthenica.ffmpegkit.FFmpegKit
-import java.io.IOException
 import java.net.URL
-import android.graphics.Path as AndroidPath
 
 data class StickerItem(
     val bitmap: Bitmap,
@@ -88,20 +76,18 @@ fun DiaryScreen(
     BackgroundPlacement(backgroundType = backgroundType)
     val responseMessage by diaryViewModel.responseMessage.observeAsState()
     val isLoading by diaryViewModel.isLoading.observeAsState(false)
-
     val userStickers by diaryViewModel.userStickers.observeAsState(emptyList())
     val firstPageStickers = remember { mutableStateListOf<StickerItem>() }
 
-    LaunchedEffect(Unit) {
-        diaryViewModel.fetchUserStickers()
-    }
-
+    var isCreatingVideo by remember { mutableStateOf(false) }
+    var showVideoCreationDialog by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
     var isDrawingMode by remember { mutableStateOf(true) }
     var selectedColor by remember { mutableStateOf(Color.Black) }
     var brushSize by remember { mutableFloatStateOf(5f) }
     var selectedTool by remember { mutableStateOf(ToolType.PENCIL) }
+    var showWarningDialog by remember { mutableStateOf(false) } // 경고 모달 표시 여부
     var isPreviewDialogVisible by remember { mutableStateOf(false) } // 모달 표시 여부
 
     val configuration = LocalConfiguration.current
@@ -128,10 +114,12 @@ fun DiaryScreen(
     val firstPageDrawingSteps =
         remember { mutableStateListOf<DrawingStep>() } // 첫 번째 페이지의 DrawingSteps 저장
 
-    val undoStack = remember { mutableStateListOf<DrawingStep>() }
     val redoStack = remember { mutableStateListOf<DrawingStep>() }
     val redrawTrigger = remember { mutableStateOf(0) }
 
+    LaunchedEffect(Unit) {
+        diaryViewModel.fetchUserStickers()
+    }
     // undo와 redo 기능 수정
     fun undo() {
         if (firstPageDrawingSteps.isNotEmpty()) {
@@ -153,27 +141,31 @@ fun DiaryScreen(
         }
     }
 
-    // 이미지 저장 및 업로드 트리거 함수
     suspend fun saveAndUploadImages() {
-        // leftBoxWidth와 boxHeight 값을 전달
+        isCreatingVideo = true
+        showVideoCreationDialog = true // 동영상 생성 중 모달 표시
+
+        // 동영상 및 이미지 생성
         val imageFiles = savePageImagesWithTemplate(
-            bitmapsList,
-            context,
-            leftBoxWidth = leftBoxWidth,
-            boxHeight = boxHeight,
-            firstPageStickers = firstPageStickers
+            bitmapsList, context, leftBoxWidth, boxHeight, firstPageStickers
         )
-        // 비디오 파일 저장 위치 설정 및 파일 생성
         val videoFile = File(context.getExternalFilesDir(Environment.DIRECTORY_MOVIES), "drawing_playback.mp4")
-        val videoUri = Uri.fromFile(videoFile) // 비디오 파일 URI 생성
+        val videoUri = Uri.fromFile(videoFile)
 
         if (imageFiles.size >= 2) {
             val drawUri = Uri.fromFile(imageFiles[0])
             val writeUri = Uri.fromFile(imageFiles[1])
+
+            // 동영상 생성 완료 시 isCreatingVideo를 false로 업데이트하고 API 호출
+            isCreatingVideo = false
             diaryViewModel.uploadDiary(context, drawUri, writeUri, videoUri)
         } else {
             Log.e("DiaryScreen", "Failed to save images for upload.")
+            isCreatingVideo = false
         }
+
+        // 동영상 생성 모달 종료
+        showVideoCreationDialog = false
     }
 
 
@@ -370,35 +362,58 @@ fun DiaryScreen(
                 Button(onClick = { isDrawingMode = !isDrawingMode }) {
                     Text(if (isDrawingMode) "스크롤 모드로 전환" else "그리기 모드로 전환")
                 }
-                Button(onClick = { isPreviewDialogVisible = true }) {
+                Button(onClick = { showWarningDialog = true }) {
                     Text("그리기 과정 미리보기")
                 }
             }
         }
     }
+    // 경고 모달: 미리보기를 누를 때 경고
+    if (showWarningDialog) {
+        AlertDialog(
+            onDismissRequest = { showWarningDialog = false },
+            title = { Text("경고") },
+            text = { Text("해당 버튼을 누르면 그림일기를 다시 작성할 수 없습니다.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showWarningDialog = false
+                        isPreviewDialogVisible = true // 경고 확인 후 미리보기 창 열기
+                    }
+                ) {
+                    Text("확인")
+                }
+            },
+            dismissButton = {
+                Button(onClick = { showWarningDialog = false }) {
+                    Text("취소")
+                }
+            }
+        )
+    }
 
-    // 모달 대신 전체 화면 Box로 미리보기 보여주기
+    // 미리보기 모달이 표시될 때, "보내기" 버튼을 누르면 동영상 생성 및 업로드 시작
     if (isPreviewDialogVisible) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black.copy(alpha = 0.7f)),
-            contentAlignment = Alignment.Center // 화면의 중앙에 박스를 위치
+            contentAlignment = Alignment.Center
         ) {
             Row(
                 modifier = Modifier
-                    .fillMaxSize(0.9f) // 화면의 90% 크기로 설정
-                    .background(Color.White, shape = RoundedCornerShape(16.dp)) // 흰색 배경 및 둥근 모서리 설정
-                    .padding(16.dp), // 내부 여백 설정
-                horizontalArrangement = Arrangement.SpaceBetween, // 좌우 여백 분리
-                verticalAlignment = Alignment.CenterVertically // 세로 중앙 정렬
+                    .fillMaxSize(0.9f)
+                    .background(Color.White, shape = RoundedCornerShape(16.dp))
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // 템플릿과 경로 표시하는 부분
+                // 미리보기 창의 실제 내용
                 Box(
                     modifier = Modifier
-                        .weight(0.8f) // 왼쪽 공간을 크게 설정
+                        .weight(0.8f)
                         .fillMaxHeight()
-                        .padding(end = 8.dp), // 오른쪽에 여백 추가
+                        .padding(end = 8.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     DrawingPlaybackView(
@@ -410,23 +425,21 @@ fun DiaryScreen(
                     )
                 }
 
-                // 오른쪽에 취소 및 보내기 버튼
+                // 오른쪽에 보내기 버튼
                 Column(
                     modifier = Modifier
-                        .weight(0.2f) // 오른쪽 공간을 작게 설정
+                        .weight(0.2f)
                         .fillMaxHeight(),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.SpaceEvenly // 세로로 균등 배치
+                    verticalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    Button(onClick = { isPreviewDialogVisible = false }) {
-                        Text("취소")
-                    }
                     Button(
                         onClick = {
-                            CoroutineScope(Dispatchers.IO).launch {
-                                saveAndUploadImages() // API 호출
+                            if (!isCreatingVideo) { // 동영상 생성이 완료되지 않았으면
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    saveAndUploadImages() // 동영상 생성 및 API 호출
+                                }
                             }
-                            isPreviewDialogVisible = false
                         }
                     ) {
                         Text("보내기")
@@ -435,10 +448,12 @@ fun DiaryScreen(
             }
         }
     }
+
+
     if (isLoading && responseMessage == null) {
         AlertDialog(
             onDismissRequest = {},
-            title = { Text("로딩 중") },
+            title = { Text("그림일기를 생성 중입니다.") },
             text = { Text("잠시만 기다려주세요") },
             confirmButton = {}
         )
