@@ -7,6 +7,7 @@ data class Diary(
     val drawImg: String,
     val writeImg: String,
     val sound: String,
+    val video: String,
     val createdAt: LocalDateTime,
     val comments: List<CommentDto>
 )
