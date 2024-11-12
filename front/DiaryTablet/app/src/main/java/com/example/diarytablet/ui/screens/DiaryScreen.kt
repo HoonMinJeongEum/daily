@@ -61,6 +61,7 @@ import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import androidx.compose.foundation.clickable
+import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.asComposePath
@@ -85,6 +86,9 @@ fun DiaryScreen(
     diaryViewModel: DiaryViewModel = hiltViewModel()
 ) {
     BackgroundPlacement(backgroundType = backgroundType)
+    val responseMessage by diaryViewModel.responseMessage.observeAsState()
+    val isLoading by diaryViewModel.isLoading.observeAsState(false)
+
     val userStickers by diaryViewModel.userStickers.observeAsState(emptyList())
     val firstPageStickers = remember { mutableStateListOf<StickerItem>() }
 
@@ -431,6 +435,41 @@ fun DiaryScreen(
             }
         }
     }
+    if (isLoading && responseMessage == null) {
+        AlertDialog(
+            onDismissRequest = {},
+            title = { Text("로딩 중") },
+            text = { Text("잠시만 기다려주세요") },
+            confirmButton = {}
+        )
+    }
+
+    // 응답 메시지가 있을 경우 모달창 표시
+    if (responseMessage != null) {
+        AlertDialog(
+            onDismissRequest = {
+                diaryViewModel.clearResponseMessage()
+                navController.navigate("main") {
+                    popUpTo("diary") { inclusive = true } // diary 화면 제거
+                }
+            },
+            title = { Text("알림") },
+            text = { Text(text = responseMessage ?: "") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        diaryViewModel.clearResponseMessage()
+                        navController.navigate("main") {
+                            popUpTo("diary") { inclusive = true } // diary 화면 제거
+                        }
+                    }
+                ) {
+                    Text("확인")
+                }
+            }
+        )
+    }
+
 }
 
 
