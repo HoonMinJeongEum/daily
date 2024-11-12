@@ -4,11 +4,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssafy.daily.alarm.service.AlarmService;
 import com.ssafy.daily.common.Role;
+import com.ssafy.daily.common.StatusResponse;
 import com.ssafy.daily.diary.dto.*;
 import com.ssafy.daily.diary.entity.Diary;
 import com.ssafy.daily.diary.entity.DiaryComment;
 import com.ssafy.daily.diary.repository.DiaryCommentRepository;
 import com.ssafy.daily.diary.repository.DiaryRepository;
+import com.ssafy.daily.exception.AlreadyOwnedException;
 import com.ssafy.daily.exception.S3UploadException;
 import com.ssafy.daily.file.service.S3UploadService;
 import com.ssafy.daily.reward.dto.CouponResponse;
@@ -63,13 +65,13 @@ public class DiaryService {
                 .collect(Collectors.toList());
     }
 
-    public void writeDiary(CustomUserDetails userDetails, MultipartFile drawFile, MultipartFile writeFile) {
+    public StatusResponse writeDiary(CustomUserDetails userDetails, MultipartFile drawFile, MultipartFile writeFile, MultipartFile videoFile) {
         int memberId = userDetails.getMemberId();
         LocalDate today = LocalDate.now();
         boolean diaryExists = diaryRepository.findByMemberIdAndDate(memberId, today).isPresent();
 
         if (diaryExists) {
-            throw new IllegalStateException("오늘 날짜의 일기는 이미 존재합니다.");
+            throw new AlreadyOwnedException("오늘 날짜의 일기는 이미 존재합니다.");
         }
 
         if (drawFile == null || drawFile.isEmpty()) {
@@ -77,6 +79,9 @@ public class DiaryService {
         }
         if (writeFile == null || writeFile.isEmpty()) {
             throw new IllegalArgumentException("일기 파일이 유효하지 않습니다.");
+        }
+        if (videoFile == null || videoFile.isEmpty()) {
+            throw new IllegalArgumentException("동영상 파일이 유효하지 않습니다.");
         }
 
         String drawImgUrl = null;
@@ -91,14 +96,19 @@ public class DiaryService {
         } catch (IOException e) {
             throw new S3UploadException("S3 일기 이미지 업로드 실패");
         }
+        String videoUrl = null;
+        try {
+            videoUrl = s3UploadService.saveFile(videoFile);
+        } catch (IOException e) {
+            throw new S3UploadException("S3 동영상 업로드 실패");
+        }
 
         List<FieldDto> fields = processOcr(writeImgUrl);
 
         String sound = generateBgm(fields);
 
-        // DB에 저장
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new EmptyResultDataAccessException("해당 프로필을 찾을 수 없습니다.", 1));
+                .orElseThrow();
 
         Diary diary = Diary.builder()
                 .content(sound)     // 임시로 sound 데이터 저장
@@ -106,6 +116,7 @@ public class DiaryService {
                 .writeImg(writeImgUrl)
                 .sound(sound)
                 .member(member)
+                .video(videoUrl)
                 .build();
         diaryRepository.save(diary);
 
@@ -127,8 +138,9 @@ public class DiaryService {
         try {
             alarmService.sendNotification(name, titleId, toId, role, title, body);
         } catch (Exception e) {
-            throw new RuntimeException("그림일기 작성 알림 전송에 실패");
+            throw new S3UploadException("그림일기 작성 알림 전송에 실패");
         }
+        return new StatusResponse(200, "그림일기가 정상적으로 저장되었습니다.");
     }
 
     public List<FieldDto> processOcr(String imgUrl) {
@@ -228,4 +240,5 @@ public class DiaryService {
             throw new RuntimeException("그림일기 작성 알림 전송에 실패");
         }
     }
+
 }
