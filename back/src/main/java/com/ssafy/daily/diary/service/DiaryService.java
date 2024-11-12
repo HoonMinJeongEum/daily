@@ -48,6 +48,7 @@ public class DiaryService {
     private final ObjectMapper objectMapper;
     private final S3UploadService s3UploadService;
     private final RestTemplate restTemplate;
+    private static final int DEFAULT_TOKENS = 750;
 
     @Value(("${clova.ocr.apiUrl}"))
     private String apiUrl;
@@ -201,7 +202,7 @@ public class DiaryService {
     }
     private String generateBgm(String content) {
 
-        BgmRequestDto request = new BgmRequestDto(content, null);
+        BgmRequestDto request = new BgmRequestDto(content, DEFAULT_TOKENS);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
