@@ -49,10 +49,10 @@ fun ProfileScreen(
             painter = painterResource(id = R.drawable.logo),
             contentDescription = "Logo",
             modifier = Modifier
-                .width(screenWidth * 0.3f)
+                .width(screenWidth * 0.26f)
                 .aspectRatio(1.67f)
                 .align(Alignment.TopCenter)
-                .padding(top = screenHeight * 0.1f)
+                .padding(top = screenHeight * 0.08f)
         )
 
         // ProfileList 위치 조정
