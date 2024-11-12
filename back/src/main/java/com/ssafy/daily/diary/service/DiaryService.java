@@ -21,6 +21,7 @@ import com.ssafy.daily.user.repository.FamilyRepository;
 import com.ssafy.daily.user.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.hc.core5.http.RequestHeaderFieldsTooLargeException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.*;
@@ -46,12 +47,15 @@ public class DiaryService {
     private final FamilyRepository familyRepository;
     private final ObjectMapper objectMapper;
     private final S3UploadService s3UploadService;
+    private final RestTemplate restTemplate;
 
     @Value(("${clova.ocr.apiUrl}"))
     private String apiUrl;
 
     @Value("${clova.ocr.secretKey}")
     private String secretKey;
+
+    String fastApiUrl = "http://175.209.203.185:9290/generate-bgm/";
 
     public List<MonthlyDiaryResponse> getDiaries(CustomUserDetails userDetails, Integer memberId,
                                           int year, int month) {
@@ -103,15 +107,15 @@ public class DiaryService {
             throw new S3UploadException("S3 동영상 업로드 실패");
         }
 
-        List<FieldDto> fields = processOcr(writeImgUrl);
+        String content = processOcr(writeImgUrl);
 
-        String sound = generateBgm(fields);
+        String sound = generateBgm(content);
 
         Member member = memberRepository.findById(memberId)
                 .orElseThrow();
 
         Diary diary = Diary.builder()
-                .content(sound)     // 임시로 sound 데이터 저장
+                .content(content)
                 .drawImg(drawImgUrl)
                 .writeImg(writeImgUrl)
                 .sound(sound)
@@ -143,7 +147,7 @@ public class DiaryService {
         return new StatusResponse(200, "그림일기가 정상적으로 저장되었습니다.");
     }
 
-    public List<FieldDto> processOcr(String imgUrl) {
+    public String processOcr(String imgUrl) {
         Map<String, Object> requestBody = createRequestBody(imgUrl);
         ResponseEntity<String> response = callOcrApi(requestBody);
 
@@ -151,7 +155,14 @@ public class DiaryService {
         OcrResponse ocrResponse = mapOcrResponse(response.getBody());
 
         // images 배열의 첫 번째 요소에서 fields 배열 가져오기
-        return ocrResponse.getImages().get(0).getFields();
+        List<FieldDto> fields = ocrResponse.getImages().get(0).getFields();
+
+        StringBuilder ocrText = new StringBuilder();
+        for (FieldDto field : fields) {
+            ocrText.append(field.getInferText()).append(" ");
+        }
+
+        return ocrText.toString().trim();
     }
 
     private Map<String, Object> createRequestBody(String imgUrl) {
@@ -188,15 +199,23 @@ public class DiaryService {
             throw new RuntimeException("Failed to parse OCR response", e);
         }
     }
-    private String generateBgm(List<FieldDto> fields) {
-        // BGM 생성 로직 (필요한 처리를 수행)
-        StringBuilder bgmText = new StringBuilder();
-        for (FieldDto field : fields) {
-            bgmText.append(field.getInferText()).append(" ");
-        }
-        // BGM 생성 로직 구현
+    private String generateBgm(String content) {
 
-        return bgmText.toString().trim(); // 예시로 텍스트만 반환
+        BgmRequestDto request = new BgmRequestDto(content, null);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<BgmRequestDto> entity = new HttpEntity<>(request, headers);
+
+        ResponseEntity<String> response = restTemplate.postForEntity(fastApiUrl, entity, String.class);
+        String responseBody = response.getBody();
+        try {
+            // JSON 응답을 Map으로 변환
+            Map<String, Object> responseMap = objectMapper.readValue(responseBody, Map.class);
+            return (String) responseMap.get("s3_url");
+        } catch (Exception e) {
+            throw new RuntimeException("응답에서 s3_url을 추출할 수 없습니다.", e);
+        }
     }
 
     public DiaryResponse getOneDiary(int diaryId) {
