@@ -3,6 +3,7 @@ package com.example.diaryApp.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -31,6 +33,7 @@ import com.example.diaryApp.R
 import com.example.diaryApp.ui.components.DeleteProfileList
 import com.example.diaryApp.ui.components.NavMenu
 import com.example.diaryApp.ui.components.ProfileList
+import com.example.diaryApp.ui.components.TabletHeader
 import com.example.diaryApp.ui.theme.MyTypography
 import com.example.diaryApp.viewmodel.ProfileViewModel
 
@@ -44,9 +47,14 @@ fun SettingScreen(
 
     val profileList by viewModel.profileList
 
-    Box(
-        modifier = Modifier.fillMaxSize()
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxSize()
     ) {
+        val screenWidth = maxWidth
+        val screenHeight = maxHeight
+        val footerHeight = screenWidth / 4.5f
+        val textFieldHeight = screenWidth / 5f
         Column(
             modifier = Modifier
                 .fillMaxSize(),
@@ -54,22 +62,16 @@ fun SettingScreen(
         ) {
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                TopLogoImg(
-                    characterImg = R.drawable.daily_character,
-                    modifier = Modifier.weight(1f)
-                )
-
-                Text(
-                    text = "자녀 관리",
-                    color = Color.White,
-                    style = MyTypography.bodyMedium,
+                TabletHeader(
+                    pageName = "자녀 관리",
+                    navController = navController,
                     modifier = Modifier
-                        .weight(2f)
-                        .padding(start = 10.dp)
+                        .fillMaxWidth()
+                        .wrapContentHeight(),
                 )
             }
 
@@ -77,14 +79,14 @@ fun SettingScreen(
             Box(
                 modifier = Modifier
                     .background(Color.White, shape = RoundedCornerShape(topEnd = 50.dp, topStart = 50.dp))
-                    .fillMaxWidth()
-                    .height(780.dp) // 필요한 높이 지정
-            ) {
+                    .fillMaxSize()
+                    .padding(bottom = footerHeight)
+            ){
                 DeleteProfileList(
                     profileList = profileList,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 16.dp), // 원하는 만큼 상단 간격 설정
+                        .padding(top = screenHeight * 0.04f), // 원하는 만큼 상단 간격 설정
                     viewModel = viewModel
                 )
             }

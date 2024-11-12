@@ -1,9 +1,11 @@
 package com.example.diaryApp.ui.components
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -14,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -29,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.diaryApp.R
 import com.example.diaryApp.domain.RetrofitClient
+import com.example.diaryApp.ui.theme.DeepPastelBlue
 import com.example.diaryApp.ui.theme.MyTypography
 @Composable
 fun TabletHeader(
@@ -37,14 +41,15 @@ fun TabletHeader(
     navController: NavController,
     onClick: () -> Unit = {}
 ) {
-    Box(
+    BoxWithConstraints (
         modifier = Modifier
             .fillMaxWidth(0.9f)
             .wrapContentHeight()
     ) {
+        val screenWidth = maxWidth
         Row(
             modifier = modifier
-                .fillMaxWidth() // 너비를 전체의 90%로 설정하여 양쪽 5% 패딩 효과
+                .fillMaxWidth()
                 .align(Alignment.Center)
                 .aspectRatio(4f),
             verticalAlignment = Alignment.CenterVertically,
@@ -68,33 +73,12 @@ fun TabletHeader(
                             .aspectRatio(1.8f),
                     )
                     // 오른쪽 로그아웃 버튼
-                    Button(onClick = {
-                        RetrofitClient.logout()
-
-                        navController.navigate("login") {
-                            popUpTo("main") { inclusive = true }
-                        }
-                    }) {
-                        Text("로그아웃")
-                    }
-                }
-
-                "alarm" -> {
-                    // 왼쪽 캐릭터 이미지
-                    Image(
-                        painter = painterResource(R.drawable.daily_character),
-                        contentDescription = "Character Icon",
-                        modifier = Modifier.fillMaxHeight(),
-                        contentScale = ContentScale.Fit
-                    )
-                    // 가운데 알림 텍스트
-                    Text(
-                        text = "알림",
-                        modifier = Modifier.weight(1f),
-                        textAlign = TextAlign.Center
-                    )
-                    // 오른쪽 로그아웃 버튼
-                    Button(onClick = {
+                    Button(
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = DeepPastelBlue, // 배경색
+                            contentColor = Color.White //
+                        ),
+                        onClick = {
                         RetrofitClient.logout()
                         navController.navigate("login") {
                             popUpTo("main") { inclusive = true }
@@ -109,13 +93,18 @@ fun TabletHeader(
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             painter = painterResource(R.drawable.navigate_back),
-                            contentDescription = "Back"
+                            contentDescription = "Back",
+                            modifier = Modifier.size(screenWidth * 0.1f),
+                            tint = Color.White
                         )
                     }
                     // 가운데 페이지 이름
                     Text(
                         text = pageName,
-                        modifier = Modifier.weight(1f),
+                        style = MyTypography.bodyLarge.copy(
+                            color = Color.White,
+                            fontSize = (screenWidth.value * 0.08f).sp
+                        ),
                         textAlign = TextAlign.Center
                     )
                     // 오른쪽 빈 공간

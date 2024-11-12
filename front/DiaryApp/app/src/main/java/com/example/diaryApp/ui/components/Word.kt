@@ -6,6 +6,7 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -130,23 +131,24 @@ fun WordListItemByMember(wordList: List<Word>,
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()
+    BoxWithConstraints (modifier = Modifier.fillMaxSize()
         .padding(bottom = 80.dp)) {
+        val screenWidth = maxWidth
         LazyColumn(
             state = listState,
             modifier = Modifier
                 .fillMaxHeight()
                 .wrapContentWidth()
-                .padding(top = 24.dp),
+                .padding(top = screenWidth * 0.05f),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(24.dp),
+            verticalArrangement = Arrangement.spacedBy(screenWidth * 0.08f),
         ) {
             if (wordList.isEmpty()) {
                 item {
                     Text(
                         text = "아직 학습한 단어가 없습니다.",
                         color = Color(0xFF6d6d6d),
-                        fontSize = 20.sp,
+                        fontSize = (screenWidth.value * 0.05f).sp,
                     )
                 }
             } else {
@@ -158,7 +160,7 @@ fun WordListItemByMember(wordList: List<Word>,
                             style = MyTypography.bodySmall,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(start = 60.dp)
+                                .padding(start = screenWidth * 0.08f)
                         )
                     }
                     items(words) { word ->
@@ -172,13 +174,13 @@ fun WordListItemByMember(wordList: List<Word>,
         Column(
             modifier = Modifier
                 .align(Alignment.CenterEnd)
-                .padding(end = 8.dp)
+                .padding(end = screenWidth * 0.02f)
         ) {
             groupStartIndices.keys.forEach { groupKey ->
                 Text(
                     text = groupKey,
                     color = Color.Gray,
-                    fontSize = 16.sp,
+                    fontSize = (screenWidth.value * 0.04f).sp,
                     modifier = Modifier
                         .padding(4.dp)
                         .clickable {
