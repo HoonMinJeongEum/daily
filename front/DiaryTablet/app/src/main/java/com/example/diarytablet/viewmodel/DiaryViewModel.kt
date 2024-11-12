@@ -46,26 +46,27 @@ class DiaryViewModel @Inject constructor(
      * @param drawUri Uri - 그림 파일의 URI.
      * @param writeUri Uri - 작성 파일의 URI.
      */
-    fun uploadDiary(context: Context, drawUri: Uri, writeUri: Uri) {
+    fun uploadDiary(context: Context, drawUri: Uri, writeUri: Uri, videoUri: Uri) {
         viewModelScope.launch {
             val drawFilePart = getFilePart(context, drawUri, "drawFile")
             val writeFilePart = getFilePart(context, writeUri, "writeFile")
+            val videoFilePart = getFilePart(context, videoUri, "videoFile", "video/mp4")
 
-            if (drawFilePart == null || writeFilePart == null) {
-                Log.e("DiaryViewModel", "File parts are null. Upload skipped.")
+            if (drawFilePart == null || writeFilePart == null || videoFilePart == null) {
+                Log.e("DiaryViewModel", "One or more file parts are null. Upload skipped.")
                 return@launch
             }
 
             try {
-                val response = diaryRepository.uploadDiary(drawFilePart, writeFilePart)
+                val response = diaryRepository.uploadDiary(drawFilePart, writeFilePart, videoFilePart)
                 if (response.isSuccessful) {
-                    Log.d("DiaryViewModel", "Image upload successful")
+                    Log.d("DiaryViewModel", "File upload successful")
                 } else {
-                    Log.e("DiaryViewModel", "Image upload failed: ${response.code()} - ${response.errorBody()}")
+                    Log.e("DiaryViewModel", "File upload failed: ${response.code()} - ${response.errorBody()}")
                 }
             } catch (e: Exception) {
-                Log.e("DiaryViewModel", "Exception occurred during upload", e)
-            }
+            Log.e("DiaryViewModel", "Exception occurred during upload", e)
+        }
         }
     }
 
@@ -77,16 +78,14 @@ class DiaryViewModel @Inject constructor(
      * @param partName String - Multipart 파트의 이름.
      * @return MultipartBody.Part? - 파일이 존재하지 않으면 null을 반환.
      */
-    private fun getFilePart(context: Context, fileUri: Uri, partName: String): MultipartBody.Part? {
-        // Uri를 통해 InputStream을 열고, 이를 임시 파일로 저장
+    private fun getFilePart(context: Context, fileUri: Uri, partName: String, mimeType: String = "image/jpeg"): MultipartBody.Part? {
         val inputStream = context.contentResolver.openInputStream(fileUri) ?: return null
-        val file = File.createTempFile("temp_", ".jpg", context.cacheDir)
+        val file = File.createTempFile("temp_", ".${mimeType.split("/")[1]}", context.cacheDir)
         file.outputStream().use { outputStream ->
             inputStream.copyTo(outputStream)
         }
 
-        // 파일을 RequestBody로 변환하여 MultipartBody.Part로 생성
-        val requestFile = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
+        val requestFile = file.asRequestBody(mimeType.toMediaTypeOrNull())
         return MultipartBody.Part.createFormData(partName, file.name, requestFile)
     }
 
