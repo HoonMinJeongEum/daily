@@ -14,8 +14,8 @@ class DiaryRepositoryImpl @Inject constructor(
     private val diaryService: DiaryService,
 ) : DiaryRepository {
 
-    override suspend fun uploadDiary(drawFile: MultipartBody.Part, writeFile: MultipartBody.Part): Response<Void> {
-        return diaryService.uploadDiary(drawFile, writeFile)
+    override suspend fun uploadDiary(drawFile: MultipartBody.Part, writeFile: MultipartBody.Part, videoFile: MultipartBody.Part): Response<Void> {
+        return diaryService.uploadDiary(drawFile, writeFile, videoFile)
     }
     override suspend fun getDiaryList(year: Int, month: Int): Response<List<DiaryForList>> {
         return diaryService.getDiaryList(year, month)
