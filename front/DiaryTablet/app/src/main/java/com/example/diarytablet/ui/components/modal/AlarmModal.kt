@@ -21,6 +21,7 @@ import com.example.diarytablet.domain.dto.response.alarm.AlarmResponseDto
 import com.example.diarytablet.ui.components.BasicButton
 import com.example.diarytablet.ui.theme.DeepPastelBlue
 import com.example.diarytablet.ui.theme.PastelNavy
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun AlarmModal(
@@ -98,6 +99,9 @@ fun AlarmItem(
     screenWidth: Dp,
     screenHeight: Dp
 ) {
+    val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+    val displayDate = alarmItem.createdAt.format(dateTimeFormatter)
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -115,8 +119,8 @@ fun AlarmItem(
             )
             Spacer(modifier = Modifier.height(screenHeight * 0.02f))
             Text(
-                text = alarmItem.createdAt.toString(),
-                fontSize = (screenWidth.value * 0.01f).sp,
+                text = displayDate,
+                fontSize = (screenWidth.value * 0.012f).sp,
                 color = Color.Gray
             )
         }

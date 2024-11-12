@@ -36,7 +36,6 @@ import com.example.diarytablet.ui.theme.BackgroundPlacement
 import com.example.diarytablet.ui.theme.BackgroundType
 import com.example.diarytablet.viewmodel.QuizViewModel
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
@@ -87,6 +86,8 @@ fun QuizScreen(
     var isQuizDisconnected by remember { mutableStateOf(false) }
     val isParentJoined by viewModel.parentJoinedEvent.observeAsState(false)
     var isQuizStartEnabled by remember { mutableStateOf(false) }
+    val pathStyle by viewModel.pathStyle.observeAsState()
+    var isQuizAlertVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(isParentJoined) {
         if (isParentJoined) {
@@ -185,7 +186,7 @@ fun QuizScreen(
                                     .fillMaxHeight(0.9f)
                                     .align(Alignment.Center),
                             ) {
-                                val textSize = with(LocalDensity.current) { (maxHeight * 0.1f).toSp() } // 높이의 5%를 폰트 크기로 설정 (조절 가능)
+                                val textSize = with(LocalDensity.current) { (maxHeight * 0.1f).toSp() }
                                 Column(
                                     modifier = Modifier.align(Alignment.TopCenter),
                                     horizontalAlignment = Alignment.CenterHorizontally
@@ -279,21 +280,25 @@ fun QuizScreen(
                                         horizontalArrangement = Arrangement.SpaceEvenly,
                                         verticalAlignment = Alignment.CenterVertically
                                     ){
-                                        var selectedImage by remember { mutableStateOf("pen") } // 현재 선택된 이미지
-                                        val penScale by animateFloatAsState(targetValue = if (selectedImage == "pen") 1.2f else 1f) // 연필 클릭 시 크기 증가
+                                        var selectedImage by remember { mutableStateOf("pen") }
+                                        val penScale by animateFloatAsState(targetValue = if (selectedImage == "pen") 1.2f else 1f)
                                         val eraserScale by animateFloatAsState(targetValue = if (selectedImage == "eraser") 1.2f else 1f)
+                                        val penColor = remember { mutableStateOf(Color.Black) }
+
                                         Image(
                                             painter = painterResource(id = R.drawable.palette_pen),
                                             contentDescription = "연필",
                                             modifier = Modifier
                                                 .fillMaxHeight(0.8f)
-                                                .graphicsLayer(scaleX = penScale, scaleY = penScale) // 클릭된 이미지에만 스케일 적용
+                                                .graphicsLayer(scaleX = penScale, scaleY = penScale)
                                                 .clickable(
                                                     onClick = {
-                                                        viewModel.updateColor(Color.Black)
-                                                        selectedImage = "pen" // 연필 클릭 시 선택된 이미지로 설정
+                                                        if (selectedImage == "eraser") {
+                                                            viewModel.updateColor(penColor.value)
+                                                            selectedImage = "pen"
+                                                        }
                                                     },
-                                                    indication = null, // 기본 클릭 효과 제거
+                                                    indication = null,
                                                     interactionSource = remember { MutableInteractionSource() }
                                                 )
                                         )
@@ -302,13 +307,17 @@ fun QuizScreen(
                                             contentDescription = "지우개",
                                             modifier = Modifier
                                                 .fillMaxHeight(0.8f)
-                                                .graphicsLayer(scaleX = eraserScale, scaleY = eraserScale) // 클릭된 이미지에만 스케일 적용
+                                                .graphicsLayer(scaleX = eraserScale, scaleY = eraserScale)
                                                 .clickable(
                                                     onClick = {
-                                                        viewModel.updateColor(Color.White)
-                                                        selectedImage = "eraser" // 지우개 클릭 시 선택된 이미지로 설정
+                                                        if (selectedImage == "pen") {
+                                                            penColor.value = pathStyle?.color ?: Color.Black
+                                                            viewModel.updateColor(Color.White)
+                                                            selectedImage = "eraser"
+                                                        }
+
                                                     },
-                                                    indication = null, // 기본 클릭 효과 제거
+                                                    indication = null,
                                                     interactionSource = remember { MutableInteractionSource() }
                                                 )
 
@@ -452,6 +461,15 @@ fun QuizScreen(
                     }
                 },
                 title = "부모님이 방을 나갔어요."
+            )
+        }
+        if(isQuizStartEnabled && !isQuizAlertVisible) {
+            QuizAlert(
+                title = "이제 그림 퀴즈를\n" +
+                        "시작할 수 있어요!",
+                onDismiss = {
+                    isQuizAlertVisible = true
+                }
             )
         }
     }

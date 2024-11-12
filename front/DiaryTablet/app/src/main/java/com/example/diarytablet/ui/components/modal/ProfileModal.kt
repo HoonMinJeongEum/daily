@@ -128,7 +128,7 @@ fun ProfileModal(
                             TextField(
                                 value = editedName,
                                 onValueChange = { editedName = it },
-                                modifier = Modifier.width(screenHeight * 0.4f)
+                                modifier = Modifier.width(screenHeight * 0.3f)
                             )
                             Spacer(modifier = Modifier.width(screenHeight * 0.02f))
                             BasicButton(

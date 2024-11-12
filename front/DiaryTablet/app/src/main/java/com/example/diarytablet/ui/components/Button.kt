@@ -33,16 +33,18 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.diarytablet.R
+import com.example.diarytablet.ui.theme.DeepPastelBlue
 import com.example.diarytablet.ui.theme.MyTypography
 import com.example.diarytablet.ui.theme.PastelNavy
 import com.example.diarytablet.ui.theme.PastelSkyBlue
+import com.example.diarytablet.ui.theme.SkyBlue
 import com.example.diarytablet.ui.theme.White
 
 enum class BasicButtonColor {
     NORMAL, SEASHELL;
 
     fun getBackgroundColor(): Color = when (this) {
-        NORMAL -> PastelSkyBlue
+        NORMAL -> SkyBlue
         SEASHELL -> PastelNavy
     }
 

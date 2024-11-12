@@ -3,6 +3,8 @@ package com.example.diarytablet.ui.screens
 
 import com.example.diarytablet.ui.components.modal.MainModal
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,6 +29,8 @@ import com.example.diarytablet.ui.theme.BackgroundPlacement
 import com.example.diarytablet.ui.theme.BackgroundType
 import com.example.diarytablet.viewmodel.MainViewModel
 import com.example.diarytablet.ui.components.modal.MissionModal
+import com.example.diarytablet.ui.theme.DarkGray
+import com.example.diarytablet.ui.theme.PastelNavy
 
 
 @Composable
@@ -41,6 +45,26 @@ fun MainScreen(
     val isFinished by viewModel.isFinished
     val origin = viewModel.origin
     val missions = viewModel.missions
+
+    var currentIndex by remember { mutableStateOf(0) }
+
+    // 캐릭터 이미지와 텍스트 목록
+    val characterImages = listOf(
+        R.drawable.main_char,   // 하이해꽁
+        R.drawable.main_char2,  // 그림해꽁
+        R.drawable.main_char3,  // 학습해꽁
+        R.drawable.main_char4,  // 부모해꽁
+        R.drawable.main_char5   // 조개해꽁
+    )
+
+    val characterTexts = listOf(
+        "안녕! 나는 해꽁이야.\n다일리에 온 걸 환영해!\n나를 클릭해봐~",
+        "오늘 있었던 일을\n그림일기에 써보자!",
+        "단어를 학습해서\n조개를 모아보자!",
+        "부모님이랑 같이\n그림 퀴즈를 해볼까?",
+        "조개를 모아서\n상점에서 쓸 수 있어!"
+    )
+
 
     val missionItems = when (origin) {
         "wordLearning" -> listOf(
@@ -100,12 +124,19 @@ fun MainScreen(
             ) {
                 Spacer(modifier = Modifier.width(blockWidth)) // 첫 번째 블록
                 Image(
-                    painter = painterResource(id = R.drawable.main_char),
+                    painter = painterResource(id = characterImages[currentIndex]),
                     contentDescription = "Character",
                     modifier = Modifier
                         .width(screenWidth * 0.5f) // 두 번째 블록
                         .aspectRatio(1.67f)
-                        .offset(x = -blockWidth * 0.9f , y = screenHeight * 0.1f)
+                        .offset(x = -blockWidth * 0.9f , y = screenHeight * 0.06f)
+                        .clickable(
+                            indication = null, // 클릭 효과 없애기
+                            interactionSource = remember { MutableInteractionSource() } // 필수: 사용자 인터랙션 관리
+                        ) {
+                            // 이미지 클릭 시 인덱스를 업데이트하여 다음 이미지와 텍스트로 변경
+                            currentIndex = (currentIndex + 1) % characterImages.size
+                        }
                 )
 
                 Box(
@@ -129,10 +160,12 @@ fun MainScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        Text("다일리에 온 걸 환영해!", color = Color.Black, fontSize = 24.sp, lineHeight = 26.sp)
-                        Text("나랑 그림일기도 쓰고", color = Color.Black, fontSize = 24.sp, lineHeight = 26.sp)
-                        Text("단어도 학습해보자!", color = Color.Black, fontSize = 24.sp, lineHeight = 26.sp)
-                        Text("그림퀴즈도 할 수 있어~", color = Color.Black, fontSize = 24.sp, lineHeight = 26.sp)
+                        Text(
+                            text = characterTexts[currentIndex],
+                            color = PastelNavy,
+                            fontSize = (screenHeight.value * 0.04f).sp,
+                            lineHeight = (screenHeight.value * 0.06f).sp
+                        )
                     }
                 }
             }
@@ -162,6 +195,7 @@ fun MainScreen(
                 )
             }
 
+            val buttonFontSize = screenHeight.value * 0.046f
             // 하단 오른쪽 시작하기 버튼
             Box(
                 modifier = Modifier
@@ -172,7 +206,10 @@ fun MainScreen(
                     onClick = { isModalVisible = true },
                     text = "시작하기",
                     imageResId = 11,
-//                    fontSize = screenHeight * 0.045f // 버튼 글자 크기 비율로 조정
+                    modifier = Modifier
+                        .width(screenWidth * 0.2f)
+                        .height(screenHeight * 0.14f),
+                    fontSize = buttonFontSize // 버튼 글자 크기 비율로 조정
                 )
             }
 
