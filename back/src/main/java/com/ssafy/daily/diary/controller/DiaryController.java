@@ -18,9 +18,9 @@ public class DiaryController {
     @PostMapping
     public ResponseEntity<?> writeDiary(@AuthenticationPrincipal CustomUserDetails userDetails
             , @RequestPart("drawFile") MultipartFile drawFile
-            , @RequestPart("writeFile") MultipartFile writeFile){
-        diaryService.writeDiary(userDetails, drawFile, writeFile);
-        return ResponseEntity.ok("그림일기가 정상적으로 저장되었습니다.");
+            , @RequestPart("writeFile") MultipartFile writeFile
+            ,@RequestPart("videoFile") MultipartFile videoFile){
+        return ResponseEntity.ok(diaryService.writeDiary(userDetails, drawFile, writeFile, videoFile));
     }
 
     @GetMapping
@@ -41,6 +41,4 @@ public class DiaryController {
         diaryService.writeComment(userDetails, request);
         return ResponseEntity.ok("댓글 등록 성공");
     }
-
-
 }

@@ -2,13 +2,12 @@ package com.ssafy.daily.reward.service;
 
 import com.ssafy.daily.common.Content;
 import com.ssafy.daily.exception.AlreadyOwnedException;
-import com.ssafy.daily.exception.CouponNotFoundException;
+import com.ssafy.daily.exception.MyNotFoundException;
 import com.ssafy.daily.exception.InsufficientFundsException;
 import com.ssafy.daily.reward.dto.*;
 import com.ssafy.daily.reward.entity.*;
 import com.ssafy.daily.reward.repository.CouponRepository;
 import com.ssafy.daily.reward.repository.EarnedCouponRepository;
-import com.ssafy.daily.reward.repository.ShellRepository;
 import com.ssafy.daily.user.dto.CustomUserDetails;
 import com.ssafy.daily.user.entity.Family;
 import com.ssafy.daily.user.entity.Member;
@@ -59,7 +58,7 @@ public class CouponService {
     // 쿠폰 삭제
     public void deleteCoupon(long couponId) {
         Coupon coupon = couponRepository.findById(couponId)
-                .orElseThrow(() -> new CouponNotFoundException("해당 쿠폰을 찾을 수 없습니다."));
+                .orElseThrow(() -> new MyNotFoundException("해당 쿠폰을 찾을 수 없습니다."));
         if (coupon.getPurchasedAt() != null) {
             throw new AlreadyOwnedException("이미 구매한 쿠폰입니다.");
         }
@@ -89,7 +88,7 @@ public class CouponService {
 
         // 쿠폰 있는지 확인
         Coupon coupon = couponRepository.findById(request.getCouponId())
-                .orElseThrow(() -> new CouponNotFoundException("해당 쿠폰을 찾을 수 없습니다."));
+                .orElseThrow(() -> new MyNotFoundException("해당 쿠폰을 찾을 수 없습니다."));
 
         // 이미 구매한 쿠폰인지 확인
         if (coupon.getPurchasedAt() != null) {
@@ -140,7 +139,7 @@ public class CouponService {
     public void useCoupon(UseCouponRequest request) {
         // 획득한 쿠폰이 존재하는지 확인
         EarnedCoupon earnedCoupon = earnedCouponRepository.findById(request.getEarnedCouponId())
-                .orElseThrow(() -> new CouponNotFoundException("쿠폰이 존재하지 않습니다."));
+                .orElseThrow(() -> new MyNotFoundException("쿠폰이 존재하지 않습니다."));
 
         if(earnedCoupon.getUsedAt() != null) {
             throw new AlreadyOwnedException("이미 사용된 쿠폰 입니다.");
