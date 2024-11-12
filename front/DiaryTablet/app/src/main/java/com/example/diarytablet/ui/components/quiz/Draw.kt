@@ -2,6 +2,8 @@ package com.example.diarytablet.ui.components.quiz
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -10,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -38,8 +41,10 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.diarytablet.R
 import com.example.diarytablet.viewmodel.PathStyle
 import com.example.diarytablet.viewmodel.QuizViewModel
 
@@ -103,200 +108,105 @@ fun Draw(
             style = pathStyle!!
         )
     }
-    Spacer(modifier = Modifier.height(12.dp))
-    // Undo, Redo 버튼
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center
-    ) {
-        DrawingUndoButton {
-            viewModel.undoPath()
-        }
-
-        Spacer(modifier = Modifier.width(24.dp))
-
-        DrawingRedoButton {
-            viewModel.redoPath()
-        }
-    }
-    // 획 스타일 조절하는 영역
-    DrawingStyleArea(
-        onSizeChanged = { viewModel.updateWidth(it) },
-        onColorChanged = { viewModel.updateColor(it) },
-        onAlphaChanged = { viewModel.updateAlpha(it) }
-    )
 }
 @Composable
-fun DrawingStyleArea(
-    onSizeChanged: (Float) -> Unit,
-    onColorChanged: (Color) -> Unit,
-    onAlphaChanged: (Float) -> Unit
+fun DrawingThicknessSelector(
+    modifier: Modifier,
+    onSizeChanged: (Float) -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .wrapContentHeight()
+
+    val thicknessOptions = listOf(10f, 15f, 20f, 25f)
+    var selectedSize by remember { mutableStateOf(thicknessOptions[0]) }
+    Row(
+        modifier.fillMaxSize(),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
+        thicknessOptions.forEach { thickness ->
+            Box(
                 modifier = Modifier
-                    .width(72.dp)
-                    .padding(horizontal = 8.dp),
-                text = "두께",
-                textAlign = TextAlign.Center
-            )
-
-            var size by remember { mutableStateOf(10.0f) }
-
-            Slider(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp),
-                value = size,
-                valueRange = 1.0f..30.0f,
-                onValueChange = {
-                    size = it
-                    onSizeChanged(it)
-                }
+                    .size(thickness.dp)
+                    .clip(CircleShape)
+                    .background(if (selectedSize == thickness) Color.Black else Color.Gray)
+                    .clickable {
+                        selectedSize = thickness
+                        onSizeChanged(thickness)
+                    }
             )
         }
-
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                modifier = Modifier
-                    .width(72.dp)
-                    .padding(horizontal = 8.dp),
-                text = "투명도",
-                textAlign = TextAlign.Center
-            )
-
-            var alpha by remember { mutableStateOf(1.0f) }
-
-            Slider(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp),
-                value = alpha,
-                valueRange = 0.0f..1.0f,
-                onValueChange = {
-                    alpha = it
-                    onAlphaChanged(it)
-                }
-            )
-        }
-
-        DrawingColorPalette(
-            onColorChanged = onColorChanged
-        )
     }
 }
 @Composable
 fun DrawingUndoButton(
+    modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    Button(onClick = { onClick() }) {
-        Text(text = "Undo")
-    }
+    Image(
+        painter = painterResource(id = R.drawable.quiz_undo),
+        contentDescription = "되돌리기",
+        modifier = Modifier.clickable { onClick() }
+    )
 }
 
 @Composable
 fun DrawingRedoButton(
+    modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    Button(onClick = { onClick() }) {
-        Text(text = "Redo")
-    }
+    Image(
+        painter = painterResource(id = R.drawable.quiz_redo),
+        contentDescription = "다시하기",
+        modifier = Modifier.clickable { onClick() }
+    )
 }
 
-//@Composable
-//fun DrawingColorPalette(
-//    onColorChanged: (Color) -> Unit
-//) {
-//    var selectedIndex by remember { mutableStateOf(0) }
-//    val colors = listOf(Color.Black, Color.Red, Color.Green, Color.Blue, Color.Magenta, Color.Yellow, Color.White)
-//    Row(
-//        modifier = Modifier.fillMaxWidth()
-//            .padding(horizontal = 12.dp),
-//        horizontalArrangement = Arrangement.SpaceBetween
-//    ) {
-//        colors.forEachIndexed { index, color ->
-//            Box(
-//                modifier = Modifier.size(36.dp)
-//            ) {
-//                Image(
-//                    modifier = Modifier
-//                        .fillMaxSize()
-//                        .clip(CircleShape)
-//                        .clickable {
-//                            selectedIndex = index
-//                            onColorChanged(color)
-//                        },
-//                    painter = ColorPainter(color),
-//                    contentDescription = "색상 선택"
-//                )
-//
-//                if (selectedIndex == index) {
-//
-//                }
-//            }
-//        }
-//    }
-//}
 @Composable
 fun DrawingColorPalette(
+    modifier: Modifier,
     onColorChanged: (Color) -> Unit
 ) {
     var selectedIndex by remember { mutableStateOf(0) }
-    val colors = listOf(Color.Black, Color.Red, Color.Green, Color.Blue, Color.Magenta, Color.Yellow, Color.White)
-    val radius = 80f // 원형 배치의 반지름
-    val angleStep = 360f / colors.size // 각 색상의 각도 간격
+    val colors = listOf(
+        Color.Red, Color(0xFFFFA500), Color.Yellow, Color(0xFFADFF2F), // 첫 줄: 빨, 주, 노, 연두
+        Color.Green, Color.Cyan, Color.Blue, Color(0xFF00008B),         // 둘째 줄: 초, 하늘, 파, 남
+        Color.Magenta, Color(0xFF8A2BE2), Color.Gray, Color.Black       // 셋째 줄: 핑, 보, 회, 검
+    )
+    Column(
+        modifier.fillMaxSize()
+    ) {
+        colors.chunked(4).forEachIndexed { rowIndex, rowColors ->
+            Row(
+                modifier = Modifier.fillMaxWidth()
+                    .weight(1f)
+            ) {
+                rowColors.forEachIndexed { index, color ->
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable {
+                                selectedIndex = rowIndex * 4 + index
+                                onColorChanged(color)
+                            }
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(color)
+                        )
 
-    Canvas(
-        modifier = Modifier
-            .size(200.dp)
-            .padding(12.dp)
-            .pointerInput(Unit) {
-                detectTapGestures { tapOffset ->
-                    val center = Offset((size.width / 2).toFloat(), (size.height / 2).toFloat())
-                    val angle = calculateAngle(center, tapOffset)
-                    val selected = (angle / angleStep).toInt()
-                    if (selected in colors.indices) {
-                        selectedIndex = selected
-                        onColorChanged(colors[selectedIndex])
+                        if (selectedIndex == rowIndex * 4 + index) {
+                            // 선택된 색상에 테두리 표시
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .border(2.dp, Color.Black)
+                            )
+                        }
                     }
                 }
             }
-    ) {
-        colors.forEachIndexed { index, color ->
-            val angle = Math.toRadians((index * angleStep - 90).toDouble())
-            val x = center.x + radius * Math.cos(angle).toFloat()
-            val y = center.y + radius * Math.sin(angle).toFloat()
-
-            drawCircle(
-                color = color,
-                radius = 20f,
-                center = Offset(x, y),
-            )
-
-            // 선택된 색상에 테두리를 그려서 강조
-            if (selectedIndex == index) {
-                drawCircle(
-                    color = Color.White,
-                    radius = 24f,
-                    center = Offset(x, y),
-                    style = Stroke(width = 3f)
-                )
-            }
         }
     }
-}
-
-// 각도를 계산하는 함수
-fun calculateAngle(center: Offset, point: Offset): Float {
-    val dx = point.x - center.x
-    val dy = point.y - center.y
-    val angle = Math.toDegrees(Math.atan2(dy.toDouble(), dx.toDouble())).toFloat()
-    return if (angle < 0) angle + 360 else angle
 }
 
 
