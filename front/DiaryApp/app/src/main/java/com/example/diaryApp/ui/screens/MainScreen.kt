@@ -77,7 +77,7 @@ fun MainScreen(
                 navController = navController,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .wrapContentHeight()
+                    .wrapContentHeight(),
             )
             Spacer(modifier = Modifier.height(screenHeight*0.06f))
 

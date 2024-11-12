@@ -5,6 +5,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
@@ -36,6 +38,7 @@ import com.example.diaryApp.R
 import com.example.diaryApp.presentation.viewmodel.DiaryViewModel
 import com.example.diaryApp.ui.components.DailyButton
 import com.example.diaryApp.ui.components.NavMenu
+import com.example.diaryApp.ui.components.TabletHeader
 import com.example.diaryApp.ui.components.TopBackImage
 import com.example.diaryApp.ui.theme.BackgroundPlacement
 import com.example.diaryApp.ui.theme.BackgroundType
@@ -59,27 +62,34 @@ fun DiaryDetailScreen(
 
     BackgroundPlacement(backgroundType = backgroundType)
 
-    Box(
-        modifier = Modifier.fillMaxSize()
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxSize()
     ) {
+        val screenWidth = maxWidth
+        val footerHeight = screenWidth / 4.5f
         Column(
             modifier = Modifier
-                .fillMaxSize(),
-            verticalArrangement = Arrangement.Top
+                .fillMaxSize()
+
+            ,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            TopBackImage(
-                logoText = "${diaryViewModel.memberName.value}의 그림 일기",
-                BackImage = R.drawable.navigate_back,
-                onBackClick = {
-                    navController.popBackStack()
+            TabletHeader(
+                pageName = "${diaryViewModel.memberName.value}의 그림 일기",
+                navController = navController,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight(),
+                onClick = {
                     diaryViewModel.clearDiaryDetail()
                 }
             )
             Box(
                 modifier = Modifier
                     .background(Color.White, shape = RoundedCornerShape(topEnd = 50.dp, topStart = 50.dp))
-                    .fillMaxWidth()
-                    .height(780.dp)
+                    .fillMaxSize()
+                    .padding(bottom = footerHeight)
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -117,51 +127,52 @@ fun DiaryDetailScreen(
                         }
                     }
                 }
-            }
-        }
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .background(Color.Gray)
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-        ) {
-            val commentText = remember { mutableStateOf(TextFieldValue("")) }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                TextField(
-                    value = commentText.value,
-                    onValueChange = { commentText.value = it },
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth(0.6f)
-                        .aspectRatio(4f)
-                    ,
-                    placeholder = { Text("댓글을 입력하세요") },
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        focusedIndicatorColor = Color.Transparent, // Remove focused underline
-                        unfocusedIndicatorColor = Color.Transparent
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
+                        .background(Color.Gray)
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    val commentText = remember { mutableStateOf(TextFieldValue("")) }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        TextField(
+                            value = commentText.value,
+                            onValueChange = { commentText.value = it },
+                            modifier = Modifier
+                                .fillMaxWidth(0.6f)
+                                .aspectRatio(4f)
+                            ,
+                            placeholder = { Text("댓글을 입력하세요") },
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                                focusedIndicatorColor = Color.Transparent, // Remove focused underline
+                                unfocusedIndicatorColor = Color.Transparent
+                            )
+
+                        )
+
+                Spacer(modifier = Modifier.size(8.dp))
+
+                DailyButton (
+                    width = 2,
+                    text = "완료",
+                    onClick = {
+                        diaryViewModel.fetchComment(commentText.value.text)
+                        commentText.value = TextFieldValue("") // 전송 후 텍스트 필드 초기화
+                    }
                 )
-
-                )
-
-//                Spacer(modifier = Modifier.size(8.dp))
-
-//                DailyButton (
-//                    width = 2,
-//                    text = "완료",
-//                    onClick = {
-//                        diaryViewModel.fetchComment(commentText.value.text)
-//                        commentText.value = TextFieldValue("") // 전송 후 텍스트 필드 초기화
-//                    }
-//                )
+                    }
+                }
             }
         }
+
+
 
         Box(
             modifier = Modifier

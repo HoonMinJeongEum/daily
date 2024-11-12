@@ -35,6 +35,7 @@ fun TabletHeader(
     pageName: String,
     modifier: Modifier = Modifier,
     navController: NavController,
+    onClick: () -> Unit = {}
 ) {
     Box(
         modifier = Modifier
