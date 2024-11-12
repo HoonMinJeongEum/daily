@@ -160,12 +160,12 @@ fun ColorPalette(selectedColor: Color, onColorChange: (Color) -> Unit) {
 }
 
 // Paint 객체 생성 함수
-fun createPaintForTool(toolType: ToolType, color: Color, strokeWidth: Float): Paint {
+fun createPaintForTool(toolType: ToolType, color: Color, thickness: Float): android.graphics.Paint {
     return when (toolType) {
-        ToolType.CRAYON -> createCrayonPaint(color, strokeWidth)
-        ToolType.ERASER -> createEraserPaint(strokeWidth)
-        ToolType.BRUSH -> createBrushPaint(color, strokeWidth)
-        else -> createPencilPaint(color, strokeWidth)
+        ToolType.ERASER -> createEraserPaint(thickness)
+        ToolType.PENCIL -> createPencilPaint(color, thickness)
+        ToolType.CRAYON -> createCrayonPaint(color, thickness)
+        ToolType.BRUSH -> createBrushPaint(color, thickness)
     }
 }
 
@@ -220,10 +220,10 @@ fun createBrushPaint(color: Color, strokeWidth: Float): Paint {
 // 지우개 도구용 Paint 생성 함수 (투명하게 처리)
 fun createEraserPaint(strokeWidth: Float): Paint {
     return Paint().apply {
-        color = Color.Transparent.toArgb()
+        this.color = android.graphics.Color.TRANSPARENT // 완전한 투명 설정
         this.strokeWidth = strokeWidth
         this.style = Paint.Style.STROKE
         this.strokeCap = Paint.Cap.ROUND
-        xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR) // CLEAR 모드로 설정
+        xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR) // CLEAR 모드로 설정하여 지우기 효과 적용
     }
 }

@@ -51,6 +51,8 @@ import com.example.diarytablet.viewmodel.DiaryViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import android.graphics.Matrix
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffXfermode
 import android.media.MediaRecorder
 import android.media.MediaScannerConnection
 import android.media.MediaScannerConnection.scanFile
@@ -130,7 +132,8 @@ fun DiaryScreen(
             bitmapsList,
             context,
             leftBoxWidth = leftBoxWidth,
-            boxHeight = boxHeight
+            boxHeight = boxHeight,
+            firstPageStickers = firstPageStickers
         )
         if (imageFiles.size >= 2) {
             val drawUri = Uri.fromFile(imageFiles[0])
@@ -253,7 +256,8 @@ fun DiaryScreen(
                                                         DrawingStep(
                                                             path = Path().apply { addPath(path.value) },
                                                             color = selectedColor,
-                                                            thickness = brushSize
+                                                            thickness = brushSize,
+                                                            toolType = selectedTool
                                                         )
                                                     )
                                                 }
@@ -360,6 +364,7 @@ fun DiaryScreen(
                 ) {
                     DrawingPlaybackView(
                         drawingSteps = firstPageDrawingSteps,
+                        firstPageStickers = firstPageStickers,
                         context = context,
                         templateWidth = with(LocalDensity.current) { (leftBoxWidth - padding * 2).toPx().toInt() },
                         templateHeight = with(LocalDensity.current) { (boxHeight - padding * 2).toPx().toInt() }
@@ -403,42 +408,61 @@ suspend fun loadBitmapFromUrl(url: String): Bitmap? = withContext(Dispatchers.IO
     }
 }
 
-
 @Composable
 fun DrawingPlaybackView(
     drawingSteps: List<DrawingStep>,
+    firstPageStickers: List<StickerItem>,
     context: Context,
     templateWidth: Int,
     templateHeight: Int
 ) {
-    val currentPath = remember { Path() }
     var currentStepIndex by remember { mutableIntStateOf(0) }
-    val outputDir = File(context.filesDir, "frames").apply { mkdirs() } // 프레임 저장 디렉토리
+    val overlayBitmap = remember {
+        Bitmap.createBitmap(templateWidth, templateHeight, Bitmap.Config.ARGB_8888)
+    }
+    val overlayCanvas = remember { AndroidCanvas(overlayBitmap) }
+    val currentPath = remember { Path() }
+    val outputDir = File(context.filesDir, "frames").apply { mkdirs() }
     val videoFile = File(context.getExternalFilesDir(Environment.DIRECTORY_MOVIES), "drawing_playback.mp4")
 
     LaunchedEffect(drawingSteps) {
         currentStepIndex = 0
-        while (currentStepIndex < drawingSteps.size) {
-            delay(10) // 여기서 속도
-            currentPath.addPath(drawingSteps[currentStepIndex].path)
+        val totalSteps = drawingSteps.size
+        overlayCanvas.drawColor(android.graphics.Color.TRANSPARENT, PorterDuff.Mode.CLEAR) // 비트맵 초기화
 
-            // 각 프레임을 Bitmap으로 저장
-            val bitmap = Bitmap.createBitmap(templateWidth, templateHeight, Bitmap.Config.ARGB_8888)
-            val canvas = AndroidCanvas(bitmap)
-            drawToBitmap(canvas, currentPath, templateWidth, templateHeight, context)
-            saveBitmapToFile(bitmap, File(outputDir, "frame_$currentStepIndex.png"))
+        while (currentStepIndex < totalSteps) {
+            delay(1)  // 재생 속도 조정
 
-            currentStepIndex += 2
+            // 현재 Step 추가 및 최적화 적용
+            val step = drawingSteps[currentStepIndex]
+            val paint = createPaintForTool(step.toolType, step.color, step.thickness)
+            if (step.toolType == ToolType.ERASER) {
+                paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR)
+            }
+
+            // currentPath에 새로운 path를 추가하고 overlayCanvas에 그리기
+            currentPath.addPath(step.path)
+            overlayCanvas.drawPath(step.path.asAndroidPath(), paint)
+
+            val frameBitmap = Bitmap.createBitmap(templateWidth, templateHeight, Bitmap.Config.ARGB_8888)
+            val frameCanvas = AndroidCanvas(frameBitmap)
+            drawToBitmap(frameCanvas, overlayBitmap, templateWidth, templateHeight, context)
+
+            // 생성한 프레임을 파일로 저장
+            val frameFile = File(outputDir, "frame_$currentStepIndex.png")
+            saveBitmapToFile(frameBitmap, frameFile)
+
+            currentStepIndex++
         }
 
-        // FFmpeg로 프레임을 동영상으로 결합
+
+        // 모든 프레임을 비디오로 결합
         createVideoFromFrames(context, outputDir, videoFile)
 
         // 동영상 파일을 갤러리에 추가
         scanFile(context, videoFile)
     }
 
-    // UI 구성 (프레임을 캡처하면서 실시간으로 보여줌)
     Box(
         modifier = Modifier
             .width(templateWidth.dp)
@@ -447,64 +471,61 @@ fun DrawingPlaybackView(
         contentAlignment = Alignment.TopStart
     ) {
         Canvas(
-            modifier = Modifier
-                .fillMaxSize()
+            modifier = Modifier.fillMaxSize()
         ) {
             drawIntoCanvas { canvas ->
+                // 배경 템플릿 그리기
                 val templateBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.draw_template)
                 val resizedTemplateBitmap = Bitmap.createScaledBitmap(templateBitmap, templateWidth, templateHeight, true)
                 canvas.nativeCanvas.drawBitmap(resizedTemplateBitmap, 0f, 0f, null)
             }
 
-            drawingSteps.take(currentStepIndex).forEach { step ->
-                drawPath(
-                    path = step.path,
-                    color = step.color,
-                    style = Stroke(width = step.thickness, cap = StrokeCap.Round)
-                )
+            // 최종적으로 Overlay Bitmap을 그리기
+            drawIntoCanvas { canvas ->
+                canvas.nativeCanvas.drawBitmap(overlayBitmap, 0f, 0f, null)
             }
         }
     }
 }
-
-// 경로를 Bitmap에 그리는 함수
+// drawToBitmap 함수: overlayBitmap을 포함하여 캔버스에 최종 이미지를 그리기
 fun drawToBitmap(
     canvas: AndroidCanvas,
-    path: Path,
+    overlayBitmap: Bitmap,
     width: Int,
     height: Int,
     context: Context
 ) {
-    // 배경을 흰색으로 설정
-    val backgroundPaint = android.graphics.Paint().apply {
-        color = android.graphics.Color.WHITE
-        style = android.graphics.Paint.Style.FILL
-    }
-    canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), backgroundPaint)
+    // 먼저 흰색 배경을 그리기
+    canvas.drawColor(android.graphics.Color.WHITE)
 
-
-    // 템플릿 이미지 그리기
+    // 템플릿을 배경에 그리기
     val templateBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.draw_template)
     val resizedTemplateBitmap = Bitmap.createScaledBitmap(templateBitmap, width, height, true)
     canvas.drawBitmap(resizedTemplateBitmap, 0f, 0f, null)
 
-
-    val paint = android.graphics.Paint().apply {
-        style = android.graphics.Paint.Style.STROKE
-        strokeWidth = 5f
-        color = android.graphics.Color.BLACK
-    }
-
-    // 경로 그리기
-    canvas.drawPath(path.asAndroidPath(), paint)
+    // overlayBitmap을 그리기 (경로와 지우개 효과 포함)
+    canvas.drawBitmap(overlayBitmap, 0f, 0f, null)
 }
 
-// Bitmap을 파일로 저장하는 함수
-fun saveBitmapToFile(bitmap: Bitmap, file: File) {
-    FileOutputStream(file).use { out ->
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+// Bitmap을 파일로 저장하는 함수에 로그 추가
+fun saveBitmapToFile(bitmap: Bitmap, file: File): Boolean {
+    return try {
+        FileOutputStream(file).use { out ->
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+        }
+        if (file.exists()) {
+            Log.d("DiaryScreen", "File created successfully: ${file.absolutePath}")
+            true
+        } else {
+            Log.e("DiaryScreen", "File creation failed: ${file.absolutePath}")
+            false
+        }
+    } catch (e: Exception) {
+        Log.e("DiaryScreen", "Error saving bitmap to file: ${e.message}")
+        false
     }
 }
+
 
 // 동영상 생성 함수
 fun createVideoFromFrames(context: Context, framesDir: File, outputFile: File) {
@@ -519,6 +540,9 @@ fun createVideoFromFrames(context: Context, framesDir: File, outputFile: File) {
     }
 }
 
+
+
+
 // 미디어 스캔을 수행하여 갤러리에 파일 추가
 fun scanFile(context: Context, videoFile: File) {
     MediaScannerConnection.scanFile(context, arrayOf(videoFile.absolutePath), null) { path, uri ->
@@ -528,13 +552,19 @@ fun scanFile(context: Context, videoFile: File) {
 }
 
 
-data class DrawingStep(val path: Path, val color: Color, val thickness: Float)
+data class DrawingStep(
+    val path: Path,
+    val color: Color,
+    val thickness: Float,
+    val toolType: ToolType // toolType 추가
+)
 
 suspend fun savePageImagesWithTemplate(
     bitmapsList: List<Bitmap>,
     context: Context,
     leftBoxWidth: Dp,
     boxHeight: Dp,
+    firstPageStickers: List<StickerItem>,
     padding: Int = 16 // 바깥 박스를 위한 추가 패딩
 ): List<File> {
     // Dp를 픽셀로 변환
@@ -547,7 +577,7 @@ suspend fun savePageImagesWithTemplate(
             val targetWidth = outerBoxWidthPx - padding * 2
             val targetHeight = outerBoxHeightPx - padding * 2
 
-            // 바깥 박스 배경용 흰색 Bitmap 생성
+            // 바깥 박스 배경용 흰색 Bitma
             val outerBoxBackground = Bitmap.createBitmap(outerBoxWidthPx, outerBoxHeightPx, Bitmap.Config.ARGB_8888)
             val outerCanvas = AndroidCanvas(outerBoxBackground)
             val paint = android.graphics.Paint().apply { color = android.graphics.Color.WHITE }
@@ -560,21 +590,23 @@ suspend fun savePageImagesWithTemplate(
                 BitmapFactory.decodeResource(context.resources, R.drawable.write_template)
             }
             val resizedTemplateBitmap = Bitmap.createScaledBitmap(templateBitmap, targetWidth - padding * 4, targetHeight - padding * 4, true)
-
-            // 그림판 이미지 크기 조정
             val resizedDrawingBitmap = Bitmap.createScaledBitmap(drawingBitmap, targetWidth, targetHeight, true)
-
             // 중앙 위치 계산
             val centerX = (outerBoxWidthPx - targetWidth + padding*4) / 2f
             val centerY = (outerBoxHeightPx - targetHeight + padding*4) / 2f
-
             // 바깥 박스의 중앙에 템플릿 및 비트맵을 그리기
             outerCanvas.drawBitmap(resizedTemplateBitmap, centerX, centerY, null)
             outerCanvas.drawBitmap(resizedDrawingBitmap, centerX, centerY, null)
-
+            // 스티커 추가 (첫 번째 페이지에만 스티커 표시)
+            if (index == 0) {
+                firstPageStickers.forEach { sticker ->
+                    val stickerX = centerX + sticker.position.value.x
+                    val stickerY = centerY + sticker.position.value.y
+                    outerCanvas.drawBitmap(sticker.bitmap, stickerX, stickerY, null)
+                }
+            }
             // 이미지 크기 줄이기
             val finalBitmap = resizeBitmap(outerBoxBackground, 1450, 1000) // 저장 크기 설정 (필요시 조정 가능)
-
             // 압축하여 파일로 저장
             val file = File(context.filesDir, "drawing_combined_$index.jpg")
             compressBitmap(finalBitmap, file, quality = 50)
