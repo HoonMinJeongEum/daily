@@ -36,7 +36,6 @@ import com.example.diarytablet.ui.theme.BackgroundPlacement
 import com.example.diarytablet.ui.theme.BackgroundType
 import com.example.diarytablet.viewmodel.QuizViewModel
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
@@ -88,6 +87,7 @@ fun QuizScreen(
     val isParentJoined by viewModel.parentJoinedEvent.observeAsState(false)
     var isQuizStartEnabled by remember { mutableStateOf(false) }
     val pathStyle by viewModel.pathStyle.observeAsState()
+    var isQuizAlertVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(isParentJoined) {
         if (isParentJoined) {
@@ -461,6 +461,15 @@ fun QuizScreen(
                     }
                 },
                 title = "부모님이 방을 나갔어요."
+            )
+        }
+        if(isQuizStartEnabled && !isQuizAlertVisible) {
+            QuizAlert(
+                title = "이제 그림 퀴즈를\n" +
+                        "시작할 수 있어요!",
+                onDismiss = {
+                    isQuizAlertVisible = true
+                }
             )
         }
     }
