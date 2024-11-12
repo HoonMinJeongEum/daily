@@ -89,7 +89,7 @@ public class AlarmService {
         
         // 알림 조회
         FCMToken fcmToken = getToken(id, role);
-        List<Alarm> list = alarmRepository.findByFcmTokenId(fcmToken.getId());
+        List<Alarm> list = alarmRepository.findByFcmTokenIdWithSorting(fcmToken.getId());
 
         return new AlarmListResponse(list.stream()
                 .map(AlarmResponse::new)
