@@ -154,7 +154,7 @@ public class CouponService {
         int familyId = userDetails.getFamily().getId();
 
         return memberRepository.findByFamilyId(familyId).stream()
-                .flatMap(member -> earnedCouponRepository.findByMemberId(member.getId()).stream())
+                .flatMap(member -> earnedCouponRepository.findByMemberIdWithSorting(member.getId()).stream())
                 .map(ChildCouponResponse::new)
                 .collect(Collectors.toList());
     }
