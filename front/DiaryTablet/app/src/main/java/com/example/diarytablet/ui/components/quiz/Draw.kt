@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
@@ -165,7 +166,7 @@ fun DrawingColorPalette(
     modifier: Modifier,
     onColorChanged: (Color) -> Unit
 ) {
-    var selectedIndex by remember { mutableStateOf(0) }
+    var selectedIndex by remember { mutableStateOf(11) }
     val colors = listOf(
         Color.Red, Color(0xFFFFA500), Color.Yellow, Color(0xFFADFF2F), // 첫 줄: 빨, 주, 노, 연두
         Color.Green, Color.Cyan, Color.Blue, Color(0xFF00008B),         // 둘째 줄: 초, 하늘, 파, 남
@@ -195,12 +196,28 @@ fun DrawingColorPalette(
                         )
 
                         if (selectedIndex == rowIndex * 4 + index) {
-                            // 선택된 색상에 테두리 표시
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .border(2.dp, Color.Black)
-                            )
+                            if (rowIndex == 0) {
+                                // 첫 번째 줄에서 선택된 색상에 테두리 표시
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .border(
+                                            1.5.dp,
+                                            Color.Black,
+                                            when (index) {
+                                                0 -> RoundedCornerShape(topStart = 16.dp)  // 첫 번째 칸은 왼쪽 둥글게
+                                                3 -> RoundedCornerShape(topEnd = 16.dp)    // 네 번째 칸은 오른쪽 꼭지점 둥글게
+                                                else -> RoundedCornerShape(0.dp)  // 나머지는 각진 모서리
+                                            }
+                                        )
+                                )
+                            } else {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .border(1.5.dp, Color.Black)
+                                )
+                            }
                         }
                     }
                 }
