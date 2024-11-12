@@ -12,6 +12,7 @@ import org.json.JSONObject
 import androidx.compose.ui.graphics.Path
 import io.socket.client.IO
 import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -69,6 +70,7 @@ class QuizViewModel @Inject constructor(
         get() = _paths
     val pathStyle: LiveData<PathStyle>
         get() = _pathStyle
+
 
     fun setCanvasSize(width: Int, height: Int) {
         _canvasWidth.value = width

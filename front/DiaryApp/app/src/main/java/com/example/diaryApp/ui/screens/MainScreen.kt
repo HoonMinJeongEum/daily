@@ -60,6 +60,7 @@ fun MainScreen(
     var showQuizAlert by remember { mutableStateOf(false) }
     var showQuizConfirmDialog by remember { mutableStateOf(false) }
     var sessionId by remember { mutableStateOf<String?>(null) }
+    var childName by remember { mutableStateOf<String?>(null) }
 
     BoxWithConstraints(
         modifier = Modifier
@@ -90,9 +91,10 @@ fun MainScreen(
                 diaryViewModel = diaryViewModel,
                 wordViewModel = wordViewModel,
                 quizViewModel = quizViewModel,
-                onShowQuizAlert = { newSessionId ->
+                onShowQuizAlert = { newSessionId, newChildName ->
                     if (newSessionId.isNotEmpty()) {
                         sessionId = newSessionId
+                        childName = newChildName
                         showQuizConfirmDialog = true
                     } else {
                         showQuizAlert = true
@@ -143,7 +145,7 @@ fun MainScreen(
                 },
                 onConfirm = {
                     showQuizConfirmDialog = false
-                    navController.navigate("catchMind/$sessionId")
+                    navController.navigate("catchMind/$sessionId/$childName")
                 },
                 title = "그림 퀴즈에 입장할까요?",
             )

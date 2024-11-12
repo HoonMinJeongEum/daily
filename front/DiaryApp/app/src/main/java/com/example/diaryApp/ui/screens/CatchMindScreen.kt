@@ -1,5 +1,6 @@
 package com.example.diaryApp.ui.screens
 
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -12,9 +13,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -40,6 +43,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,6 +56,8 @@ import com.example.diaryApp.ui.theme.BackgroundType
 import com.example.diaryApp.ui.theme.MyTypography
 import com.example.diaryApp.viewmodel.QuizViewModel
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import com.example.diaryApp.ui.components.quiz.Alert
 
 enum class QuizModalState {
@@ -66,7 +72,8 @@ fun CatchMindScreen(
     navController: NavController,
     viewModel: QuizViewModel = hiltViewModel(),
     backgroundType: BackgroundType = BackgroundType.NORMAL,
-    sessionId: String
+    sessionId: String,
+    childName: String
 ) {
     BackgroundPlacement(backgroundType = backgroundType)
 
@@ -122,52 +129,45 @@ fun CatchMindScreen(
                 contentAlignment = Alignment.Center
             ) {
                 val boxHeight = with(LocalDensity.current) { maxHeight.toPx() }
-                Row(
+                Box (
                     modifier = Modifier
                         .fillMaxHeight()
-                        .fillMaxWidth(0.9f),
-                    verticalAlignment = Alignment.CenterVertically
-                ){
+                        .fillMaxWidth(0.85f)
+                ) {
                     Image(
                         painter = painterResource(id = R.drawable.navigate_back),
                         contentDescription = "퀴즈 뒤로가기 이미지",
                         modifier = Modifier
-                            .weight(0.25f)
                             .fillMaxHeight(0.25f)
+                            .aspectRatio(1f)
                             .clickable {
                                 showQuizEnd = true
-                            },
+                            }
+                            .align(Alignment.CenterStart),
                         contentScale = ContentScale.FillBounds
                     )
-                    Spacer(
-                        modifier = Modifier.weight(0.7f)
-                    )
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
+                }
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = buildAnnotatedString {
+                            withStyle(style = SpanStyle(fontSize = (boxHeight * 0.13f).sp)) {
+                                append(childName)
+                            }
+                            withStyle(style = SpanStyle(fontSize = (boxHeight * 0.1f).sp)) {
+                                append(" 와 그림 퀴즈")
+                            }
+                        },
+                        style = MyTypography.bodyLarge,
+                        color = Color.White,
+                        textAlign = TextAlign.Center,
                         modifier = Modifier
-                            .weight(3f)
-                    ) {
-                        Text(
-                            text = "자녀1",
-                            fontSize = (boxHeight * 0.18f).sp,
-                            style = MyTypography.bodyLarge,
-                            color = Color.White,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier
-                                .weight(2f)
-                                .align(Alignment.CenterVertically)
-                        )
-                        Text(
-                            text = "와 그림 퀴즈",
-                            fontSize = (boxHeight * 0.13f).sp,
-                            style = MyTypography.bodyLarge,
-                            color = Color.White,
-                            textAlign = TextAlign.Start,
-                            modifier = Modifier
-                                .weight(6f)
-                                .align(Alignment.CenterVertically)
-                        )
-                    }
+                            .fillMaxWidth()
+                    )
                 }
             }
 
@@ -200,7 +200,7 @@ fun CatchMindScreen(
                     Spacer(modifier = Modifier.weight(0.3f))
                     Box(
                         modifier = Modifier
-                            .weight(4f)
+                            .weight(3.7f)
                             .fillMaxWidth(0.9f)
                             .border(1.dp, Color.Black, RoundedCornerShape(32.dp))
                             .clip(RoundedCornerShape(32.dp))
@@ -222,7 +222,7 @@ fun CatchMindScreen(
                     )
                     Row(
                         modifier = Modifier
-                            .weight(0.4f)
+                            .weight(0.7f)
                             .fillMaxWidth(0.9f),
                         horizontalArrangement = Arrangement.Start,
                         verticalAlignment = Alignment.CenterVertically
@@ -240,7 +240,9 @@ fun CatchMindScreen(
 
                             Text(
                                 text = "정답",
-                                fontSize = with(LocalDensity.current) { textSize.toSp() }
+                                fontSize = with(LocalDensity.current) { textSize.toSp() },
+                                style = MyTypography.bodyLarge,
+                                color = Color.Black,
                             )
                         }
                     }
@@ -257,24 +259,21 @@ fun CatchMindScreen(
                                 .weight(1.6f)
                                 .background(Color.White, shape = RoundedCornerShape(7.dp))
                                 .border(1.dp, Color.Gray, shape = RoundedCornerShape(7.dp))
-                                .fillMaxHeight()
+                                .fillMaxHeight(),
+                            contentAlignment = Alignment.Center
                         ) {
                             val fieldHeight = with(LocalDensity.current) { maxHeight.toPx() }
-                            val fontSize = (fieldHeight * 0.25f).sp
-                            Row(
-                                modifier = Modifier.fillMaxSize(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Spacer(modifier = Modifier.weight(0.04f))
-                                BasicTextField(
-                                    value = inputWord,
-                                    onValueChange = { inputWord = it },
-                                    modifier = Modifier
-                                        .weight(0.9f)
-                                        .fillMaxHeight(0.6f),
-                                    textStyle = TextStyle(color = Color.Black, fontSize = fontSize)
-                                )
-                            }
+                            val fontSize = (fieldHeight * 0.2f).sp
+
+                            BasicTextField(
+                                value = inputWord,
+                                onValueChange = { inputWord = it },
+                                modifier = Modifier
+                                    .fillMaxHeight(0.7f)
+                                    .fillMaxWidth(0.9f),
+                                textStyle = TextStyle(color = Color.Black, fontSize = fontSize)
+                            )
+
                         }
                         Spacer(modifier = Modifier.weight(0.1f))
                         Button(
@@ -304,9 +303,10 @@ fun CatchMindScreen(
                                 val buttonHeight = with(LocalDensity.current) { maxHeight.toPx() }
                                 Text(
                                     text = "전송",
-                                    fontSize = (buttonHeight * 0.3f).sp,
+                                    fontSize = (buttonHeight * 0.25f).sp,
                                     textAlign = TextAlign.Center,
                                     style = MyTypography.bodyLarge,
+                                    color = Color.White,
                                     modifier = Modifier
                                         .fillMaxWidth(),
                                 )
