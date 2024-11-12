@@ -1,4 +1,4 @@
-//import androidx.compose.foundation.Canvas
+package com.example.diarytablet.ui.components.modal//import androidx.compose.foundation.Canvas
 //import androidx.compose.foundation.background
 //import androidx.compose.foundation.clickable
 //import androidx.compose.foundation.layout.Arrangement

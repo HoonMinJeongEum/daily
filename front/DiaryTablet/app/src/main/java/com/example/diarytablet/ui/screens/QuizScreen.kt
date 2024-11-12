@@ -1,8 +1,10 @@
 package com.example.diarytablet.ui.screens
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -38,6 +40,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -48,6 +51,10 @@ import com.example.diarytablet.R
 import com.example.diarytablet.ui.components.quiz.Alert
 import com.example.diarytablet.ui.components.BasicButton
 import com.example.diarytablet.ui.components.quiz.Draw
+import com.example.diarytablet.ui.components.quiz.DrawingColorPalette
+import com.example.diarytablet.ui.components.quiz.DrawingRedoButton
+import com.example.diarytablet.ui.components.quiz.DrawingThicknessSelector
+import com.example.diarytablet.ui.components.quiz.DrawingUndoButton
 import com.example.diarytablet.ui.components.quiz.QuizAlert
 import com.example.diarytablet.ui.components.quiz.RecommendWordModal
 import com.example.diarytablet.ui.components.quiz.Video
@@ -161,7 +168,7 @@ fun QuizScreen(
                         Image(
                             painter = painterResource(id = R.drawable.diary_box),
                             contentDescription = "배경 이미지",
-                            modifier = Modifier.fillMaxSize().alpha(0.8f),
+                            modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.FillBounds
                         )
                         Draw(
@@ -169,7 +176,7 @@ fun QuizScreen(
                                 .fillMaxSize(0.9f)
                                 .clipToBounds()
                                 .align(Alignment.Center),
-                            viewModel = viewModel
+                            viewModel = viewModel,
                         )
                         selectedWord?.let { word ->
                             BoxWithConstraints(
@@ -233,8 +240,7 @@ fun QuizScreen(
 
                             Box(
                                 modifier = Modifier
-                                    .fillMaxSize()
-                                    .weight(3f)
+                                    .weight(2.5f)
                                     .clip(RoundedCornerShape(32.dp))
                                     .background(color = Color.White.copy(alpha = 0.8f))
                             ){
@@ -247,16 +253,90 @@ fun QuizScreen(
                             Spacer(modifier = Modifier.weight(0.5f))
                             Box(
                                 modifier = Modifier
-                                    .fillMaxSize()
-                                    .weight(4f)
+                                    .weight(4.7f)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(color = Color.White.copy(alpha = 0.8f))
                             ){
-                                Image(
-                                    painter = painterResource(id = R.drawable.drawing),
-                                    contentDescription = "팔레트",
+                                Column (
                                     modifier = Modifier
-                                )
+                                        .fillMaxWidth(),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                ){
+                                    DrawingColorPalette(
+                                        modifier = Modifier
+                                            .weight(2f),
+                                        onColorChanged = { viewModel.updateColor(it) }
+                                    )
+                                    DrawingThicknessSelector(
+                                        modifier = Modifier
+                                            .weight(1f),
+                                        onSizeChanged = { viewModel.updateWidth(it) },
+                                    )
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .weight(0.7f),
+                                        horizontalArrangement = Arrangement.SpaceEvenly,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ){
+                                        var selectedImage by remember { mutableStateOf("pen") } // 현재 선택된 이미지
+                                        val penScale by animateFloatAsState(targetValue = if (selectedImage == "pen") 1.2f else 1f) // 연필 클릭 시 크기 증가
+                                        val eraserScale by animateFloatAsState(targetValue = if (selectedImage == "eraser") 1.2f else 1f)
+                                        Image(
+                                            painter = painterResource(id = R.drawable.palette_pen),
+                                            contentDescription = "연필",
+                                            modifier = Modifier
+                                                .fillMaxHeight(0.8f)
+                                                .graphicsLayer(scaleX = penScale, scaleY = penScale) // 클릭된 이미지에만 스케일 적용
+                                                .clickable(
+                                                    onClick = {
+                                                        viewModel.updateColor(Color.Black)
+                                                        selectedImage = "pen" // 연필 클릭 시 선택된 이미지로 설정
+                                                    },
+                                                    indication = null, // 기본 클릭 효과 제거
+                                                    interactionSource = remember { MutableInteractionSource() }
+                                                )
+                                        )
+                                        Image(
+                                            painter = painterResource(id = R.drawable.palette_eraser),
+                                            contentDescription = "지우개",
+                                            modifier = Modifier
+                                                .fillMaxHeight(0.8f)
+                                                .graphicsLayer(scaleX = eraserScale, scaleY = eraserScale) // 클릭된 이미지에만 스케일 적용
+                                                .clickable(
+                                                    onClick = {
+                                                        viewModel.updateColor(Color.White)
+                                                        selectedImage = "eraser" // 지우개 클릭 시 선택된 이미지로 설정
+                                                    },
+                                                    indication = null, // 기본 클릭 효과 제거
+                                                    interactionSource = remember { MutableInteractionSource() }
+                                                )
+
+                                        )
+                                    }
+
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth(0.3f)
+                                            .weight(0.5f),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ){
+                                        DrawingUndoButton(
+                                            modifier = Modifier
+                                                .weight(1f),
+                                            onClick = { viewModel.undoPath() }
+                                        )
+                                        Spacer(modifier = Modifier.weight(0.1f))
+                                        DrawingRedoButton(
+                                            modifier = Modifier
+                                                .weight(1f),
+                                            onClick = { viewModel.redoPath() }
+                                        )
+                                    }
+                                }
+
                             }
-                            Spacer(modifier = Modifier.weight(0.5f))
+                            Spacer(modifier = Modifier.weight(0.3f))
                             BasicButton(
                                 modifier = Modifier.align(Alignment.CenterHorizontally),
                                 onClick = {

@@ -13,6 +13,8 @@ datastorePreferencesCoreJvm = "1.1.1"
 volley = "1.2.1"
 firebaseMessagingKtx = "24.0.3"
 uiTestAndroid = "1.7.0"
+appcompat = "1.7.0"
+roomCompilerProcessingTesting = "2.6.1"
 
 
 [libraries]
@@ -35,6 +37,8 @@ androidx-datastore-preferences-core-jvm = { group = "androidx.datastore", name =
 volley = { group = "com.android.volley", name = "volley", version.ref = "volley" }
 firebase-messaging-ktx = { group = "com.google.firebase", name = "firebase-messaging-ktx", version.ref = "firebaseMessagingKtx" }
 androidx-ui-test-android = { group = "androidx.compose.ui", name = "ui-test-android", version.ref = "uiTestAndroid" }
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+androidx-room-compiler-processing-testing = { group = "androidx.room", name = "room-compiler-processing-testing", version.ref = "roomCompilerProcessingTesting" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -44,7 +44,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             sendNotification(title, body)
         }
         CoroutineScope(Dispatchers.IO).launch {
-//            userStore.setAlarmState(true)
+            userStore.setAlarmState(true)
         }
     }
 

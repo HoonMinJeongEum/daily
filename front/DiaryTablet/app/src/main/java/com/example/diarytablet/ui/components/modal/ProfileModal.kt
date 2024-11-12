@@ -1,7 +1,18 @@
+package com.example.diarytablet.ui.components.modal
+
+import CropActivity
+import android.content.Context
+import android.content.Intent
+import android.database.Cursor
+import android.net.Uri
+import android.provider.OpenableColumns
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -12,10 +23,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -23,6 +36,10 @@ import androidx.compose.ui.window.DialogProperties
 import coil3.compose.AsyncImage
 import com.example.diarytablet.R
 import com.example.diarytablet.ui.components.BasicButton
+import com.example.diarytablet.ui.theme.DeepPastelNavy
+import java.io.File
+import java.io.FileOutputStream
+import java.io.InputStream
 
 @Composable
 fun ProfileModal(
@@ -30,10 +47,35 @@ fun ProfileModal(
     onDismiss: () -> Unit,
     profileImageUrl: String,
     userName: String,
-    onEditNameClick: (String) -> Unit
+    onEditProfileClick: (String) -> Unit,
+    onEditNameClick: (String) -> Unit,
+    screenWidth: Dp,
+    screenHeight: Dp
 ) {
     var isEditing by remember { mutableStateOf(false) }
     var editedName by remember { mutableStateOf(userName) }
+    var croppedImageUri by remember { mutableStateOf<Uri?>(null) }
+
+    val context = LocalContext.current
+
+    // 이미지 선택 및 크롭 작업을 수행하는 런처 설정
+    val cropImageLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        val uri = result.data?.data
+        if (uri != null) {
+            croppedImageUri = uri // 크롭된 이미지 URI로 업데이트
+            onEditProfileClick(uri.toString()) // 프로필 수정 콜백 호출
+        }
+    }
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let {
+            // 선택한 이미지를 크롭하기 위한 `CropActivity` 호출
+            val cropIntent = Intent(context, CropActivity::class.java).apply {
+                putExtra("imageUri", it.toString())
+            }
+            cropImageLauncher.launch(cropIntent)
+        }
+    }
 
     if (isModalVisible) {
         Dialog(
@@ -42,17 +84,15 @@ fun ProfileModal(
         ) {
             Box(
                 modifier = Modifier
-                    .width(500.dp)
-                    .padding(40.dp)
-                    .background(Color.White, shape = RoundedCornerShape(30.dp))
-                    .padding(24.dp)
+                    .size(screenHeight * 0.6f)
+                    .background(Color.White, shape = RoundedCornerShape(screenWidth * 0.02f))
+                    .padding(screenHeight * 0.04f)
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(screenHeight * 0.02f),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    // 닫기 버튼
                     Box(
                         modifier = Modifier
                             .align(Alignment.End)
@@ -61,21 +101,25 @@ fun ProfileModal(
                         Image(
                             painter = painterResource(id = R.drawable.mission_close),
                             contentDescription = "Close",
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(screenHeight * 0.05f)
                         )
                     }
 
-
+                    // 크롭된 이미지가 있으면 해당 이미지를, 없으면 기존 프로필 이미지를 보여줌
                     AsyncImage(
-                        model = profileImageUrl,
+                        model = croppedImageUri ?: profileImageUrl,
                         contentDescription = null,
-                        modifier = Modifier.size(120.dp),
+                        modifier = Modifier
+                            .size(screenHeight * 0.25f)
+                            .clip(CircleShape)
+                            .clickable {
+                                imagePickerLauncher.launch("image/*") // 이미지 선택 시작
+                            },
                         contentScale = ContentScale.Crop
                     )
 
-                    Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.height(screenHeight * 0.03f))
 
-                    // 닉네임과 수정 아이콘
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center
@@ -84,9 +128,9 @@ fun ProfileModal(
                             TextField(
                                 value = editedName,
                                 onValueChange = { editedName = it },
-                                modifier = Modifier.width(200.dp)
+                                modifier = Modifier.width(screenHeight * 0.4f)
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(screenHeight * 0.02f))
                             BasicButton(
                                 text = "완료",
                                 imageResId = 11,
@@ -98,15 +142,15 @@ fun ProfileModal(
                         } else {
                             Text(
                                 text = userName,
-                                fontSize = 24.sp,
-                                color = Color(0xFF49566F)
+                                fontSize = (screenHeight.value * 0.05f).sp,
+                                color = DeepPastelNavy
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(screenHeight * 0.025f))
                             Image(
-                                painter = painterResource(id = R.drawable.pencil), // 펜 아이콘 리소스
+                                painter = painterResource(id = R.drawable.pencil),
                                 contentDescription = "Edit Name",
                                 modifier = Modifier
-                                    .size(24.dp)
+                                    .size(screenHeight * 0.05f)
                                     .clickable { isEditing = true }
                             )
                         }
