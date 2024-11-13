@@ -2,6 +2,7 @@ package com.example.diarytablet.ui.components
 
 import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -22,6 +23,8 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import com.example.diarytablet.R
 import com.example.diarytablet.domain.dto.response.Profile
+import com.example.diarytablet.ui.theme.GrayDetail
+import com.example.diarytablet.ui.theme.GrayText
 import com.example.diarytablet.ui.theme.MyTypography
 import com.example.diarytablet.ui.theme.PastelNavy
 
@@ -42,7 +45,7 @@ fun ProfileList(
             horizontalArrangement = Arrangement.spacedBy(screenWidth * 0.04f, Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Spacer(modifier = Modifier.height(screenHeight * 0.2f))
+            Spacer(modifier = Modifier.height(screenHeight * 0.25f))
 
             profileList.forEach { profile ->
                 val profileWithDefaultImg = if (profile.img.isNullOrEmpty()) {
@@ -66,7 +69,7 @@ fun ProfileItem(
     Box(
         modifier = Modifier
             .width(containerWidth * 0.2f) // ProfileItem의 전체 너비를 조정
-            .aspectRatio(0.75f) // 너비 대비 높이 비율 설정
+            .aspectRatio(0.7f) // 너비 대비 높이 비율 설정
             .clickable { onChooseProfile(profile) }
 //            .padding(containerWidth * 0.02f)
     ) {
@@ -90,6 +93,7 @@ fun ProfileItem(
                     .fillMaxWidth(0.6f)
                     .aspectRatio(1f)
                     .clip(CircleShape)
+                    .border(1.dp, GrayDetail, CircleShape)
             ) {
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)

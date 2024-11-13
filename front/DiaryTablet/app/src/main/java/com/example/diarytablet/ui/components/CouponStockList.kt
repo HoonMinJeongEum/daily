@@ -1,6 +1,4 @@
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -13,20 +11,25 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.diarytablet.R
-import com.example.diarytablet.model.Coupon
 import com.example.diarytablet.model.CouponStock
 import com.example.diarytablet.viewmodel.ShopStockViewModel
 import kotlinx.coroutines.delay
 
 @Composable
 fun CouponStockList(coupons: List<CouponStock>, viewModel: ShopStockViewModel) {
-    LazyColumn(
-        contentPadding = PaddingValues(5.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+    Box(
+        modifier = Modifier.fillMaxSize() // 전체 화면을 채우도록 설정
     ) {
-        itemsIndexed(coupons) { index, coupon ->
-            CouponStockBox(coupon, index) { couponId ->
-                viewModel.useCoupon(couponId)
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(0.dp), // 패딩 값을 0으로 설정
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top // 리스트가 위쪽부터 시작되도록 설정
+        ) {
+            itemsIndexed(coupons.reversed()) { index, coupon ->
+                CouponStockBox(coupon, index) { couponId ->
+                    viewModel.useCoupon(couponId)
+                }
             }
         }
     }
@@ -48,13 +51,6 @@ fun CouponStockBox(coupon: CouponStock, index: Int, onClick: (Int) -> Unit) {
             .padding(0.dp)
             .fillMaxWidth(0.9f)
             .aspectRatio(6.8f / 1f)
-//            .clickable(
-//                indication = null, // 클릭 시 시각적 효과 제거
-//                interactionSource = remember { MutableInteractionSource() }
-//            ) {
-//                isPressed = true
-//                onClick(coupon.id)
-//            }
     ) {
         // 클릭 후 일정 시간 후에 상태를 원래대로 복귀
         LaunchedEffect(isPressed) {
