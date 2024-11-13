@@ -42,6 +42,8 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.net.URL
+import android.graphics.Canvas as AndroidCanvas
+
 
 suspend fun loadBitmapFromUrl(url: String): Bitmap? = withContext(Dispatchers.IO) {
     try {
@@ -55,51 +57,65 @@ suspend fun loadBitmapFromUrl(url: String): Bitmap? = withContext(Dispatchers.IO
     }
 }
 
+// DiaryScreen.kt의 일부
 @Composable
 fun DrawingPlaybackView(
     drawingSteps: List<DrawingStep>,
     firstPageStickers: List<StickerItem>,
     context: Context,
     templateWidth: Int,
-    templateHeight: Int
+    templateHeight: Int,
 ) {
-    var currentStepIndex by remember { mutableIntStateOf(0) }
     val overlayBitmap = remember {
         Bitmap.createBitmap(templateWidth, templateHeight, Bitmap.Config.ARGB_8888)
     }
-    val overlayCanvas = remember { Canvas(overlayBitmap) }
+    val overlayCanvas = remember { AndroidCanvas(overlayBitmap) }
     val currentPath = remember { Path() }
     val outputDir = File(context.filesDir, "frames").apply {
-        if (exists()) deleteRecursively()
+        // 폴더 내 모든 파일 삭제
+        if (exists()) {
+            deleteRecursively()
+        }
         mkdirs()
     }
     val videoFile = File(context.getExternalFilesDir(Environment.DIRECTORY_MOVIES), "drawing_playback.mp4")
 
     LaunchedEffect(drawingSteps) {
-        currentStepIndex = 0
         overlayCanvas.drawColor(android.graphics.Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
+
+        // 한 번에 그릴 path의 개수
+        val batchStepCount = 15
+        var currentStepIndex = 0
+        var frameCounter = 0
+
         while (currentStepIndex < drawingSteps.size) {
-            // 매 스텝을 추가하고 그리기
-            val step = drawingSteps[currentStepIndex]
-            val paint = createPaintForTool(step.toolType, step.color, step.thickness)
-            if (step.toolType == ToolType.ERASER) {
-                paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR)
+            for (i in 0 until batchStepCount) {
+                if (currentStepIndex >= drawingSteps.size) break
+                val step = drawingSteps[currentStepIndex]
+                val paint = createPaintForTool(step.toolType, step.color, step.thickness)
+
+                if (step.toolType == ToolType.ERASER) {
+                    paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR)
+                }
+
+                // 각 step의 path를 overlayCanvas에 추가하여 그리기
+                currentPath.addPath(step.path)
+                overlayCanvas.drawPath(step.path.asAndroidPath(), paint)
+
+                currentStepIndex++
             }
 
-            // 새로운 경로 추가 및 캔버스에 그리기
-            currentPath.addPath(step.path)
-            overlayCanvas.drawPath(step.path.asAndroidPath(), paint)
-
-            // 프레임 비트맵 생성 및 저장
+            // batchStepCount 만큼 그린 후, 프레임 비트맵을 저장
             val frameBitmap = Bitmap.createBitmap(templateWidth, templateHeight, Bitmap.Config.ARGB_8888)
-            val frameCanvas = Canvas(frameBitmap)
+            val frameCanvas = AndroidCanvas(frameBitmap)
             drawToBitmap(frameCanvas, overlayBitmap, templateWidth, templateHeight, context)
 
-            val frameFile = File(outputDir, "frame_$currentStepIndex.png")
+            val frameFile = File(outputDir, "frame_$frameCounter.png")
             saveBitmapToFile(frameBitmap, frameFile)
+            frameCounter++
 
-            currentStepIndex++
-            delay(1) // 빠르게 저장하기 위한 지연 시간 설정
+            // 지연 시간을 두고 다시 그리기
+            delay(50) // 지연 시간 조정하여 속도 제어
         }
 
         // 모든 프레임을 비디오로 결합
@@ -107,6 +123,7 @@ fun DrawingPlaybackView(
         scanFile(context, videoFile)
     }
 
+    // Box로 캔버스 및 템플릿과 그려진 경로를 포함한 UI 구성
     Box(
         modifier = Modifier
             .width(templateWidth.dp)
@@ -117,18 +134,22 @@ fun DrawingPlaybackView(
         Canvas(
             modifier = Modifier.fillMaxSize()
         ) {
+            // 템플릿 비트맵을 배경에 그림
             drawIntoCanvas { canvas ->
                 val templateBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.draw_template)
                 val resizedTemplateBitmap = Bitmap.createScaledBitmap(templateBitmap, templateWidth, templateHeight, true)
                 canvas.nativeCanvas.drawBitmap(resizedTemplateBitmap, 0f, 0f, null)
             }
 
+            // 현재 overlayBitmap (경로 및 지우개 효과가 포함된 비트맵) 그리기
             drawIntoCanvas { canvas ->
                 canvas.nativeCanvas.drawBitmap(overlayBitmap, 0f, 0f, null)
             }
         }
     }
 }
+
+
 
 // drawToBitmap 함수: overlayBitmap을 포함하여 캔버스에 최종 이미지를 그리기
 fun drawToBitmap(
