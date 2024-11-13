@@ -95,7 +95,7 @@ class DiaryViewModel @Inject constructor(
     }
     // 에러 상태 초기화 함수
     fun clearResponseMessage() {
-        _responseMessage.value = null
+        _responseMessage.postValue(null)
     }
 
     private fun getFilePart(context: Context, fileUri: Uri, partName: String, mimeType: String = "image/jpeg"): MultipartBody.Part? {
