@@ -21,6 +21,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.diarytablet.model.Coupon
 import com.example.diarytablet.R
+import com.example.diarytablet.ui.components.modal.CommonModal
+import com.example.diarytablet.ui.components.modal.CommonPopup
 import com.example.diarytablet.ui.theme.PastelNavy
 import com.example.diarytablet.ui.theme.myFontFamily
 import com.example.diarytablet.viewmodel.NavBarViewModel
@@ -66,22 +68,65 @@ fun CouponShopList(
     }
 
     if (showDialog && selectedCoupon != null) {
-        PurchaseConfirmationDialog(
-            coupon = selectedCoupon!!,
-            couponModalState = couponModalState,
-            onConfirm = {
-                if (shellCount >= selectedCoupon!!.price) {
-                    viewModel.buyCoupon(selectedCoupon!!.id)
-                    couponModalState = CouponModalState.PURCHASE_SUCCESS
-                } else {
-                    couponModalState = CouponModalState.INSUFFICIENT_SHELLS
-                }
-            },
-            onCancel = {
-                showDialog = false
-                couponModalState = CouponModalState.NONE
+//        PurchaseConfirmationDialog(
+//            coupon = selectedCoupon!!,
+//            couponModalState = couponModalState,
+//            onConfirm = {
+//                if (shellCount >= selectedCoupon!!.price) {
+//                    viewModel.buyCoupon(selectedCoupon!!.id)
+//                    couponModalState = CouponModalState.PURCHASE_SUCCESS
+//                } else {
+//                    couponModalState = CouponModalState.INSUFFICIENT_SHELLS
+//                }
+//            },
+//            onCancel = {
+//                showDialog = false
+//                couponModalState = CouponModalState.NONE
+//            }
+//        )
+
+        when (couponModalState) {
+            CouponModalState.PURCHASE_CONFIRMATION -> {
+                val titleText = "${selectedCoupon!!.description}\n쿠폰을 구매할까요?"
+                val confirmText = "${selectedCoupon!!.price}"
+                val confirmIconResId = R.drawable.jogae
+
+                CommonModal(
+                    onDismissRequest = {
+                        showDialog = false
+                        couponModalState = CouponModalState.NONE
+                    },
+                    titleText = titleText,
+                    confirmText = confirmText,
+                    confirmIconResId = confirmIconResId,
+                    onConfirm = {
+                        if (shellCount >= selectedCoupon!!.price) {
+                            viewModel.buyCoupon(selectedCoupon!!.id)
+                            couponModalState = CouponModalState.PURCHASE_SUCCESS
+                        } else {
+                            couponModalState = CouponModalState.INSUFFICIENT_SHELLS
+                        }
+                    }
+                )
             }
-        )
+
+            CouponModalState.INSUFFICIENT_SHELLS, CouponModalState.PURCHASE_SUCCESS -> {
+                val titleText = when (couponModalState) {
+                    CouponModalState.INSUFFICIENT_SHELLS -> "조개를 조금 더 모아보아요!"
+                    CouponModalState.PURCHASE_SUCCESS -> "구매가 완료되었습니다!"
+                    else -> ""
+                }
+
+                CommonPopup(
+                    onDismissRequest = {
+                        showDialog = false
+                        couponModalState = CouponModalState.NONE
+                    },
+                    titleText = titleText
+                )
+            }
+            else -> Unit
+        }
     }
 }
 

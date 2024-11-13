@@ -20,6 +20,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,23 +36,32 @@ import com.example.diarytablet.ui.components.DailyButton
 import com.example.diarytablet.ui.theme.DeepPastelNavy
 import com.example.diarytablet.ui.theme.GrayText
 import com.example.diarytablet.ui.theme.MyTypography
+import com.example.diarytablet.ui.theme.PastelNavy
+import com.example.diarytablet.ui.theme.myFontFamily
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
 fun CommonModal(
     onDismissRequest: () -> Unit,
     titleText: String,
-    cancelText: String,
-    confirmText: String,
+    cancelText: String = "아니오",
+    confirmText: String = "네",
     modifier: Modifier = Modifier,
-    confirmButtonColor: Color,
+    confirmButtonColor: Color = PastelNavy,
+    confirmIconResId: Int? = null,
     onConfirm: () -> Unit
 ){
     val context = LocalContext.current
     val screenWidth = context.resources.displayMetrics.widthPixels
+    val screenHeight = context.resources.displayMetrics.heightPixels
 
-    // 화면 비율에 따른 fontSize 계산 (예: 화면 너비의 1.5%)
-    val buttonFontSize = (screenWidth * 0.015).sp
+    val buttonWidth = (screenWidth * 0.065).dp
+    val buttonHeight = (screenHeight * 0.045).dp
+    val buttonFontSize = (buttonWidth.value * 0.2).sp
+    val textFontSize = (screenWidth * 0.014).sp
+    val lineHeightRatio = 1.5f // 원하는 배율로 설정
+    val lineHeight = textFontSize * lineHeightRatio
 
     Dialog(onDismissRequest = onDismissRequest) {
         Box(
@@ -61,35 +71,38 @@ fun CommonModal(
             Surface(
                 shape = RoundedCornerShape(25.dp),
                 color = Color.White,
-                modifier = Modifier.padding(20.dp)
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 20.dp)
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 36.dp, bottom = 24.dp, start = 18.dp, end = 18.dp)
+                        .padding(top = 70.dp, bottom = 40.dp)
                         .background(Color.White),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
                         text = titleText,
+                        fontSize = textFontSize,
                         color = DeepPastelNavy,
-                        style = MyTypography.bodySmall,
-                        modifier = Modifier.padding(bottom = 24.dp)
+                        fontFamily = myFontFamily,
+                        textAlign = TextAlign.Center,
+                        lineHeight = lineHeight,
+                        modifier = Modifier.padding(bottom = 40.dp)
                     )
 
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        horizontalArrangement = Arrangement.spacedBy(20.dp)
                     ) {
                         DailyButton(
                             text = cancelText,
                             fontSize = buttonFontSize,
                             textColor = Color.White,
-                            fontWeight = FontWeight.SemiBold,
+                            fontWeight = FontWeight.Normal,
                             backgroundColor = GrayText,
                             cornerRadius = 35,
-                            width = 80.dp,
-                            height = 50.dp,
-                            onClick = {
+                            width = buttonWidth,
+                                    height = buttonHeight,
+                                            onClick = {
                                 onDismissRequest()
                             }
                         )
@@ -98,18 +111,66 @@ fun CommonModal(
                             text = confirmText,
                             fontSize = buttonFontSize,
                             textColor = Color.White,
-                            fontWeight = FontWeight.SemiBold,
+                            fontWeight = FontWeight.Normal,
                             backgroundColor = confirmButtonColor,
+                            iconResId = confirmIconResId,
                             cornerRadius = 35,
-                            width = 80.dp,
-                            height = 50.dp,
+                            width = buttonWidth,
+                                    height = buttonHeight,
                             onClick = {
                                 onConfirm()
-                                onDismissRequest()
                             }
                         )
                     }
 
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun CommonPopup(
+    onDismissRequest: () -> Unit,
+    titleText: String,
+){
+    val context = LocalContext.current
+    val screenWidth = context.resources.displayMetrics.widthPixels
+    val screenHeight = context.resources.displayMetrics.heightPixels
+
+    val textFontSize = (screenWidth * 0.014).sp
+    val lineHeightRatio = 1.5f // 원하는 배율로 설정
+    val lineHeight = textFontSize * lineHeightRatio
+
+    LaunchedEffect(Unit) {
+        delay(2000)
+        onDismissRequest()
+    }
+    Dialog(onDismissRequest = onDismissRequest) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Surface(
+                shape = RoundedCornerShape(25.dp),
+                color = Color.White,
+                modifier = Modifier.padding(horizontal = 30.dp, vertical = 40.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 50.dp, bottom = 40.dp, start = 30.dp, end = 30.dp)
+                        .background(Color.White),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = titleText,
+                        fontSize = textFontSize,
+                        color = DeepPastelNavy,
+                        fontFamily = myFontFamily,
+                        textAlign = TextAlign.Center,
+                        lineHeight = lineHeight,
+                    )
                 }
             }
         }

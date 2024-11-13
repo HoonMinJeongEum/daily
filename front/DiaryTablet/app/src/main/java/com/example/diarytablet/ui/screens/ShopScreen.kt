@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.diarytablet.R
+import com.example.diarytablet.ui.components.BasicButton
 import com.example.diarytablet.ui.theme.BackgroundPlacement
 import com.example.diarytablet.ui.theme.BackgroundType
 import com.example.diarytablet.viewmodel.ShopStockViewModel
@@ -34,6 +35,7 @@ fun ShopScreen(
 
     val coupons by viewModel.coupons.observeAsState(emptyList())
     val stickers by viewModel.stickers.observeAsState(emptyList())
+    val remainingShells by viewModel.remainingShells.observeAsState(0)
 
     LaunchedEffect(Unit) {
         viewModel.fetchCoupons()
@@ -50,7 +52,7 @@ fun ShopScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 40.dp, bottom = 40.dp),
+                .padding(start = 40.dp, end = 40.dp, bottom = 40.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
@@ -70,6 +72,12 @@ fun ShopScreen(
                 fontSize = 40.sp,
                 color = Color.White,
                 textAlign = TextAlign.Start
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            BasicButton(
+                onClick = {},
+                text = remainingShells.toString(),
+                isOutlined = false
             )
         }
 

@@ -1,9 +1,12 @@
 package com.example.diarytablet.viewmodel
 
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.diarytablet.datastore.UserStore
 import com.example.diarytablet.domain.repository.ShopStockRepository
 import com.example.diarytablet.model.Coupon
 import com.example.diarytablet.model.CouponStock
@@ -17,8 +20,12 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ShopStockViewModel @Inject constructor(
+    private val userStore: UserStore,
     private val shopStockRepository: ShopStockRepository
 ) : ViewModel() {
+
+    private val _shellCount = mutableIntStateOf(0)
+    val shellCount: State<Int> get() = _shellCount
 
     private val _coupons = MutableLiveData<List<Coupon>>()
     val coupons: LiveData<List<Coupon>> get() = _coupons

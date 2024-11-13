@@ -41,7 +41,7 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalDensity
+ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -49,6 +49,8 @@ import androidx.compose.ui.unit.sp
 import com.example.diarytablet.R
 import com.example.diarytablet.ui.components.quiz.Alert
 import com.example.diarytablet.ui.components.BasicButton
+import com.example.diarytablet.ui.components.modal.CommonModal
+import com.example.diarytablet.ui.components.modal.CommonPopup
 import com.example.diarytablet.ui.components.quiz.Draw
 import com.example.diarytablet.ui.components.quiz.DrawingColorPalette
 import com.example.diarytablet.ui.components.quiz.DrawingRedoButton
@@ -332,11 +334,15 @@ fun QuizScreen(
                                             contentDescription = "지우개",
                                             modifier = Modifier
                                                 .fillMaxHeight(0.8f)
-                                                .graphicsLayer(scaleX = eraserScale, scaleY = eraserScale)
+                                                .graphicsLayer(
+                                                    scaleX = eraserScale,
+                                                    scaleY = eraserScale
+                                                )
                                                 .clickable(
                                                     onClick = {
                                                         if (selectedImage == "pen") {
-                                                            penColor.value = pathStyle?.color ?: Color.Black
+                                                            penColor.value =
+                                                                pathStyle?.color ?: Color.Black
                                                             viewModel.updateColor(Color.White)
                                                             selectedImage = "eraser"
                                                         }
@@ -379,26 +385,47 @@ fun QuizScreen(
 
         when (quizModalState) {
             QuizModalState.START_CONFIRM -> {
-                Alert(
-                    isVisible = true,
-                    onDismiss = { quizModalState = QuizModalState.NONE },
-                    onConfirm = {
+//                Alert(
+//                    isVisible = true,
+//                    onDismiss = { quizModalState = QuizModalState.NONE },
+//                    onConfirm = {
+//                        quizModalState = QuizModalState.WORD_SELECTION
+//                        isQuizStarted = true
+//                        viewModel.resetPath()
+//                        viewModel.sendQuizStart()
+//                    },
+//                    title = "그림퀴즈를 시작할까요?",
+//                    confirmText = "퀴즈시작"
+//                )
+                CommonModal(
+                    onDismissRequest = {quizModalState = QuizModalState.NONE},
+                    titleText= "그림퀴즈를 시작할까요?",
+                    confirmText= "퀴즈 시작",
+                    onConfirm= {
                         quizModalState = QuizModalState.WORD_SELECTION
                         isQuizStarted = true
                         viewModel.resetPath()
                         viewModel.sendQuizStart()
                     },
-                    title = "그림퀴즈를 시작할까요?",
-                    confirmText = "퀴즈시작"
                 )
+
             }
 
             QuizModalState.CORRECT_ANSWER -> {
                 if (currentRound < 3) {
-                    QuizAlert(
-                        title = "정답이에요!\n" +
-                                "다음 퀴즈로 넘어갑니다.",
-                        onDismiss = {
+//                    QuizAlert(
+//                        title = "정답이에요!\n" +
+//                                "다음 퀴즈로 넘어갑니다.",
+//                        onDismiss = {
+//                            quizModalState = QuizModalState.WORD_SELECTION
+//                            viewModel.resetIsCorrectAnswer()
+//                            currentRound++
+//                            viewModel.resetPath()
+//                        }
+//                    )
+                    CommonPopup(
+                        titleText = "정답이에요!\n다음 퀴즈로 넘어갑니다.",
+                        onDismissRequest = {
                             quizModalState = QuizModalState.WORD_SELECTION
                             viewModel.resetIsCorrectAnswer()
                             currentRound++
@@ -406,10 +433,9 @@ fun QuizScreen(
                         }
                     )
                 } else {
-                    QuizAlert(
-                        title = "정답입니다!\n" +
-                                "퀴즈가 끝났습니다.",
-                        onDismiss = {
+                    CommonPopup(
+                        titleText = "정답입니다!\n퀴즈가 끝났습니다.",
+                        onDismissRequest = {
                             quizModalState = QuizModalState.NONE
                             selectedWord = null
                             viewModel.resetIsCorrectAnswer()
@@ -420,10 +446,9 @@ fun QuizScreen(
             }
 
             QuizModalState.INCORRECT_ANSWER -> {
-                QuizAlert(
-                    title = "틀렸습니다.\n" +
-                            "다시 시도해보세요!",
-                    onDismiss = {
+                CommonPopup(
+                    titleText = "틀렸습니다.\n다시 시도해보세요!",
+                    onDismissRequest = {
                         quizModalState = QuizModalState.NONE
                         viewModel.resetIsCorrectAnswer()
                     }
@@ -437,44 +462,42 @@ fun QuizScreen(
             }
 
         }
-        Alert(
-            isVisible = isQuizEnded,
-            onDismiss = {
-                isQuizEnded = false
-            },
-            onConfirm = {
-                viewModel.leaveSession()
-                if (currentRound >= 3) {
-                    navController.navigate("main?origin=quiz&isFinished=true") {
-                        popUpTo("quiz") { inclusive = true }
-                    }
+        if (isQuizEnded){
+            CommonModal(
+                onDismissRequest = {isQuizEnded = false},
+                titleText= "퀴즈를 종료할까요?",
+                confirmText= "종료",
+                onConfirm= {
+                    viewModel.leaveSession()
+                    if (currentRound >= 3) {
+                        navController.navigate("main?origin=quiz&isFinished=true") {
+                            popUpTo("quiz") { inclusive = true }
+                        }
 
-                } else {
-                    navController.navigate("main") {
-                        popUpTo("quiz") { inclusive = true }
+                    } else {
+                        navController.navigate("main") {
+                            popUpTo("quiz") { inclusive = true }
+                        }
                     }
-                }
+                },
+            )
+        }
 
-            },
-            title = "퀴즈를 종료할까요?",
-            confirmText = "종료"
-        )
         if(isQuizDisconnected) {
-            QuizAlert(
-                onDismiss = {
+            CommonPopup(
+                titleText = "부모님이 방을 나갔어요.",
+                onDismissRequest = {
                     viewModel.leaveSession()
                     navController.navigate("main") {
                         popUpTo("quiz") { inclusive = true }
                     }
-                },
-                title = "부모님이 방을 나갔어요."
+                }
             )
         }
         if(isQuizStartEnabled && !isQuizAlertVisible) {
-            QuizAlert(
-                title = "이제 그림 퀴즈를\n" +
-                        "시작할 수 있어요!",
-                onDismiss = {
+            CommonPopup(
+                titleText = "이제 그림 퀴즈를\n시작할 수 있어요!",
+                onDismissRequest = {
                     isQuizAlertVisible = true
                 }
             )

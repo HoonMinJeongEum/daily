@@ -50,7 +50,6 @@ fun ShopTab(
 
     Box(
         modifier = modifier
-            .offset(x = screenWidth * 0.02f, y = -screenHeight * 0.03f) // 오른쪽과 위로 이동
             .fillMaxSize()
             .background(Color.White, shape = RoundedCornerShape(16.dp))
             .padding(top = 30.dp)
