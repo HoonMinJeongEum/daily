@@ -1,6 +1,7 @@
 package com.example.diaryApp.ui.components.quiz
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -49,9 +50,11 @@ fun Alert(
                         .fillMaxWidth(0.95f)
                         .fillMaxHeight(0.65f)
                         .align(Alignment.Center),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     BoxWithConstraints(
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxWidth()
                             .weight(1f),
                         contentAlignment = Alignment.Center
 
@@ -59,7 +62,7 @@ fun Alert(
                         val boxHeight = with(LocalDensity.current) { maxHeight.toPx() }
                         Text(
                             text = title,
-                            fontSize = (boxHeight * 0.23f).sp,
+                            fontSize = (boxHeight * 0.15f).sp,
                             style = MyTypography.bodyLarge,
                             color = Color(0xFF49566F),
                             textAlign = TextAlign.Center,
@@ -92,7 +95,8 @@ fun Alert(
                                 val buttonHeight = with(LocalDensity.current) { maxHeight.toPx() }
                                 Text(
                                     text = "아니오",
-                                    fontSize = (buttonHeight * 0.3f).sp,
+                                    color = Color.White,
+                                    fontSize = (buttonHeight * 0.15f).sp,
                                     style = MyTypography.bodyLarge,
                                     textAlign = TextAlign.Center,
                                 )
@@ -118,7 +122,8 @@ fun Alert(
                                 val buttonHeight = with(LocalDensity.current) { maxHeight.toPx() }
                                 Text(
                                     text = "네",
-                                    fontSize = (buttonHeight * 0.3f).sp,
+                                    color = Color.White,
+                                    fontSize = (buttonHeight * 0.15f).sp,
                                     style = MyTypography.bodyLarge,
                                     textAlign = TextAlign.Center,
                                 )

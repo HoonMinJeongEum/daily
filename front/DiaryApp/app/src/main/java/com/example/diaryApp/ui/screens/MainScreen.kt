@@ -65,6 +65,7 @@ fun MainScreen(
     var showQuizAlert by remember { mutableStateOf(false) }
     var showQuizConfirmDialog by remember { mutableStateOf(false) }
     var sessionId by remember { mutableStateOf<String?>(null) }
+    var childName by remember { mutableStateOf<String?>(null) }
 
     BoxWithConstraints(
         modifier = Modifier
@@ -100,26 +101,27 @@ fun MainScreen(
 
             item {
 
-                ProfileList(
-                    profileList = profileList,
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    navController = navController,
-                    profileViewModel = profileViewModel,
-                    diaryViewModel = diaryViewModel,
-                    wordViewModel = wordViewModel,
-                    quizViewModel = quizViewModel,
-                    onShowQuizAlert = { newSessionId ->
-                        if (newSessionId.isNotEmpty()) {
-                            sessionId = newSessionId
-                            showQuizConfirmDialog = true
-                        } else {
-                            showQuizAlert = true
-                        }
+            ProfileList(
+                profileList = profileList,
+                modifier = Modifier
+                    .fillMaxWidth(),
+                navController = navController,
+                profileViewModel = profileViewModel,
+                diaryViewModel = diaryViewModel,
+                wordViewModel = wordViewModel,
+                quizViewModel = quizViewModel,
+                onShowQuizAlert = { newSessionId, newChildName ->
+                    if (newSessionId.isNotEmpty()) {
+                        sessionId = newSessionId
+                        childName = newChildName
+                        showQuizConfirmDialog = true
+                    } else {
+                        showQuizAlert = true
                     }
-                )
+                }
+            )
+                }
             }
-        }
 
         Box(
             modifier = Modifier
@@ -136,7 +138,7 @@ fun MainScreen(
                 },
                 onConfirm = {
                     showQuizConfirmDialog = false
-                    navController.navigate("catchMind/$sessionId")
+                    navController.navigate("catchMind/$sessionId/$childName")
                 },
                 title = "그림 퀴즈에 입장할까요?",
             )

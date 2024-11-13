@@ -35,7 +35,7 @@ fun ProfileList(
     diaryViewModel: DiaryViewModel,
     wordViewModel: WordViewModel,
     quizViewModel: QuizViewModel,
-    onShowQuizAlert: (String) -> Unit
+    onShowQuizAlert: (String, String) -> Unit
 ) {
     var showDialog by remember { mutableStateOf(false) }
 

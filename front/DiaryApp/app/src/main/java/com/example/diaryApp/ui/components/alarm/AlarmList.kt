@@ -44,6 +44,7 @@ fun AlarmList(
     Log.d("AlarmList", "${alarmList}")
     var showQuizConfirmDialog by remember { mutableStateOf(false) }
     var sessionId by remember { mutableStateOf<String?>(null) }
+    var childName by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
         alarmViewModel.getAlarms()
@@ -62,9 +63,10 @@ fun AlarmList(
                 alarm,
                 navController,
                 quizViewModel,
-                onShowQuizAlert = { newSessionId ->
+                onShowQuizAlert = { newSessionId, newChildName ->
                     if (newSessionId.isNotEmpty()) {
                         sessionId = newSessionId
+                        childName = newChildName
                         showQuizConfirmDialog = true
                     } else {
                         showQuizAlert = true
@@ -86,7 +88,7 @@ fun AlarmList(
             },
             onConfirm = {
                 showQuizConfirmDialog = false
-                navController.navigate("catchMind/$sessionId")
+                navController.navigate("catchMind/$sessionId/$childName")
             },
             title = "그림 퀴즈에 입장할까요?",
         )
