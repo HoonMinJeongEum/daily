@@ -83,6 +83,7 @@ class ShopStockViewModel @Inject constructor(
                 val response = shopStockRepository.buyCoupon(requestBody)
                 if (response.isSuccessful) {
                     _remainingShells.postValue(response.body())
+                    fetchCoupons()
                 } else {
                     _errorMessage.postValue("쿠폰 구매에 실패했습니다.")
                 }
@@ -101,6 +102,7 @@ class ShopStockViewModel @Inject constructor(
                 val response = shopStockRepository.buySticker(requestBody)
                 if (response.isSuccessful) {
                     _remainingShells.postValue(response.body())
+                    fetchStickers()
                 } else {
                     _errorMessage.postValue("스티커 구매에 실패했습니다.")
                 }
