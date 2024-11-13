@@ -77,7 +77,7 @@ public class QuizService {
         }
 
         // 알림
-        alarmService.sendNotification(childName, sessionId, userDetails.getFamily().getId(), Role.PARENT, "그림 퀴즈", "요청");
+        alarmService.sendNotification(userDetails.getMember().getName(), sessionId, userDetails.getFamily().getId(), Role.PARENT, "그림 퀴즈", "요청");
         return new SessionResponse(sessionId);
     }
 
