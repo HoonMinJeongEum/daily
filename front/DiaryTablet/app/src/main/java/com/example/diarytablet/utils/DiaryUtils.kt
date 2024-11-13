@@ -49,7 +49,7 @@ suspend fun loadBitmapFromUrl(url: String): Bitmap? = withContext(Dispatchers.IO
     try {
         val originalBitmap = BitmapFactory.decodeStream(URL(url).openStream())
         originalBitmap?.let {
-            Bitmap.createScaledBitmap(it, 100, 100, true) // 고정된 크기로 리사이즈
+            Bitmap.createScaledBitmap(it, 150, 150, true) // 고정된 크기로 리사이즈
         }
     } catch (e: Exception) {
         e.printStackTrace()

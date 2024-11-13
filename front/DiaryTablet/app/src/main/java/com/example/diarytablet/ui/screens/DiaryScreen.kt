@@ -185,7 +185,7 @@ fun DiaryScreen(
             )
             Spacer(modifier = Modifier.width(30.dp))
             Text(
-                text = "다이어리",
+                text = "그림일기",
                 fontSize = 32.sp,
                 color = Color.White,
                 textAlign = TextAlign.Start
