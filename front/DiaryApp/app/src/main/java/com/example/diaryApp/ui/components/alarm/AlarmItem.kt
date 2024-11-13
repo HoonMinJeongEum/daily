@@ -1,5 +1,6 @@
 package com.example.diaryApp.ui.components.alarm
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,8 +28,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.diaryApp.domain.dto.response.alarm.AlarmResponseDto
+import com.example.diaryApp.presentation.viewmodel.DiaryViewModel
 import com.example.diaryApp.ui.theme.DarkGray
 import com.example.diaryApp.ui.theme.DeepPastelBlue
 import com.example.diaryApp.ui.theme.DeepPastelNavy
@@ -37,7 +40,9 @@ import com.example.diaryApp.ui.theme.LightSkyBlue
 import com.example.diaryApp.ui.theme.MyTypography
 import com.example.diaryApp.ui.theme.PastelNavy
 import com.example.diaryApp.ui.theme.myFontFamily
+import com.example.diaryApp.viewmodel.AlarmViewModel
 import com.example.diaryApp.viewmodel.QuizViewModel
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
 
@@ -49,6 +54,8 @@ fun AlarmItem(
     alarm: AlarmResponseDto,
     navController: NavController,
     quizViewModel: QuizViewModel,
+    alarmViewModel: AlarmViewModel = hiltViewModel(),
+    diaryViewModel: DiaryViewModel = hiltViewModel(),
     onShowQuizAlert: (String, String) -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -118,7 +125,12 @@ fun AlarmItem(
                                 })
                             }
                         } else {
-                            navController.navigate("diary")
+                            diaryViewModel.memberName.value = alarm.name
+                            alarmViewModel.checkAlarm(alarm.id)
+                            navController.navigate("diary/${alarm.titleId}")
+                            Log.e("alarm", diaryViewModel.memberName.value)
+                            Log.e("alarm", alarm.titleId)
+                            Log.e("alarm", "${alarm.id}")
                         }
 
                     },
