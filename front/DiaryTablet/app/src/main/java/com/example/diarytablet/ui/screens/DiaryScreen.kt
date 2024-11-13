@@ -45,33 +45,22 @@ import java.io.File
 import java.io.FileOutputStream
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.diarytablet.viewmodel.DiaryViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import android.graphics.Matrix
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
-import android.media.MediaRecorder
 import android.media.MediaScannerConnection
-import android.media.MediaScannerConnection.scanFile
 import android.os.Environment
-import android.view.Surface
-import android.view.SurfaceHolder
-import android.view.SurfaceView
 import androidx.compose.foundation.clickable
+import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.viewinterop.AndroidView
-import coil3.compose.rememberAsyncImagePainter
 import com.arthenica.ffmpegkit.FFmpegKit
-import java.io.IOException
 import java.net.URL
-import android.graphics.Path as AndroidPath
 
 data class StickerItem(
     val bitmap: Bitmap,
@@ -85,19 +74,20 @@ fun DiaryScreen(
     diaryViewModel: DiaryViewModel = hiltViewModel()
 ) {
     BackgroundPlacement(backgroundType = backgroundType)
+    val responseMessage by diaryViewModel.responseMessage.observeAsState()
+    val isLoading by diaryViewModel.isLoading.observeAsState(false)
     val userStickers by diaryViewModel.userStickers.observeAsState(emptyList())
     val firstPageStickers = remember { mutableStateListOf<StickerItem>() }
 
-    LaunchedEffect(Unit) {
-        diaryViewModel.fetchUserStickers()
-    }
-
+    var isCreatingVideo by remember { mutableStateOf(false) }
+    var showVideoCreationDialog by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
     var isDrawingMode by remember { mutableStateOf(true) }
     var selectedColor by remember { mutableStateOf(Color.Black) }
     var brushSize by remember { mutableFloatStateOf(5f) }
     var selectedTool by remember { mutableStateOf(ToolType.PENCIL) }
+    var showWarningDialog by remember { mutableStateOf(false) } // 경고 모달 표시 여부
     var isPreviewDialogVisible by remember { mutableStateOf(false) } // 모달 표시 여부
 
     val configuration = LocalConfiguration.current
@@ -124,25 +114,61 @@ fun DiaryScreen(
     val firstPageDrawingSteps =
         remember { mutableStateListOf<DrawingStep>() } // 첫 번째 페이지의 DrawingSteps 저장
 
+    val redoStack = remember { mutableStateListOf<DrawingStep>() }
+    val redrawTrigger = remember { mutableStateOf(0) }
 
-    // 이미지 저장 및 업로드 트리거 함수
+    LaunchedEffect(Unit) {
+        diaryViewModel.fetchUserStickers()
+    }
+    // undo와 redo 기능 수정
+    fun undo() {
+        if (firstPageDrawingSteps.isNotEmpty()) {
+            val lastStroke = firstPageDrawingSteps.removeLast()
+            redoStack.add(lastStroke) // redoStack에 저장
+            redrawTrigger.value++ // Trigger recomposition
+        } else {
+            Log.d("DiaryScreen", "Undo: No steps to undo.")
+        }
+    }
+
+    fun redo() {
+        if (redoStack.isNotEmpty()) {
+            val lastUndoneStroke = redoStack.removeLast() // redoStack에서 가져오기
+            firstPageDrawingSteps.add(lastUndoneStroke) // 다시 firstPageDrawingSteps에 추가
+            redrawTrigger.value++
+        } else {
+            Log.d("DiaryScreen", "Redo: No steps to redo.")
+        }
+    }
+
     suspend fun saveAndUploadImages() {
-        // leftBoxWidth와 boxHeight 값을 전달
+        isCreatingVideo = true
+        showVideoCreationDialog = true // 동영상 생성 중 모달 표시
+
+        // 동영상 및 이미지 생성
         val imageFiles = savePageImagesWithTemplate(
-            bitmapsList,
-            context,
-            leftBoxWidth = leftBoxWidth,
-            boxHeight = boxHeight,
-            firstPageStickers = firstPageStickers
+            bitmapsList, context, leftBoxWidth, boxHeight, firstPageStickers
         )
+        val videoFile = File(context.getExternalFilesDir(Environment.DIRECTORY_MOVIES), "drawing_playback.mp4")
+        val videoUri = Uri.fromFile(videoFile)
+
         if (imageFiles.size >= 2) {
             val drawUri = Uri.fromFile(imageFiles[0])
             val writeUri = Uri.fromFile(imageFiles[1])
-            diaryViewModel.uploadDiary(context, drawUri, writeUri)
+
+            // 동영상 생성 완료 시 isCreatingVideo를 false로 업데이트하고 API 호출
+            isCreatingVideo = false
+            diaryViewModel.uploadDiary(context, drawUri, writeUri, videoUri)
         } else {
             Log.e("DiaryScreen", "Failed to save images for upload.")
+            isCreatingVideo = false
         }
+
+        // 동영상 생성 모달 종료
+        showVideoCreationDialog = false
     }
+
+
 
     val centerPosition = Offset(
         x = with(density) { leftBoxWidth.toPx() / 2 },
@@ -201,10 +227,12 @@ fun DiaryScreen(
                             },
                             onDrag = { change, dragAmount ->
                                 if (pagerState.currentPage == 0) {
-                                    firstPageStickers.lastOrNull()?.let { lastSticker ->
-                                        lastSticker.position.value += dragAmount
-                                        change.consume()
-                                    }
+                                    firstPageStickers
+                                        .lastOrNull()
+                                        ?.let { lastSticker ->
+                                            lastSticker.position.value += dragAmount
+                                            change.consume()
+                                        }
                                 }
                             }
                         )
@@ -269,16 +297,26 @@ fun DiaryScreen(
                                     }
                                 }
                         ) {
-                            drawIntoCanvas { canvas ->
-                                canvas.nativeCanvas.drawBitmap(currentBitmap, 0f, 0f, null)
+                            for (step in firstPageDrawingSteps) {
+                                drawPath(
+                                    path = step.path,
+                                    color = step.color,
+                                    style = Stroke(width = step.thickness, cap = StrokeCap.Round)
+                                )
+                            }
+                            if (pagerState.currentPage == 0) {
+                                firstPageStickers.forEach { stickerItem ->
+                                    drawIntoCanvas { canvas ->
+                                        canvas.nativeCanvas.drawBitmap(
+                                            stickerItem.bitmap,
+                                            stickerItem.position.value.x,
+                                            stickerItem.position.value.y,
+                                            null
+                                        )
+                                    }
+                                }
                             }
 
-                            // 현재 경로를 Canvas에 실시간 반영
-                            drawPath(
-                                path = path.value,
-                                color = selectedColor,
-                                style = Stroke(width = brushSize, cap = StrokeCap.Round)
-                            )
                             if (pagerState.currentPage == 0) {
                                 firstPageStickers.forEach { stickerItem ->
                                     drawIntoCanvas { canvas ->
@@ -292,6 +330,7 @@ fun DiaryScreen(
                                 }
                             }
                         }
+
 
 
                         Image(
@@ -308,7 +347,7 @@ fun DiaryScreen(
                 modifier = Modifier
                     .width(contentWidth * 0.25f)
                     .fillMaxHeight()
-                    .background(Color.LightGray),
+                    .background(Color.Transparent),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 PaletteTool(
@@ -325,41 +364,66 @@ fun DiaryScreen(
                                 firstPageStickers.add(StickerItem(bitmap, mutableStateOf(centerPosition)))
                             }
                         }
-                    }
+                    },
+                    onUndo = { undo() },
+                    onRedo = { redo() }
                 )
 
                 Button(onClick = { isDrawingMode = !isDrawingMode }) {
                     Text(if (isDrawingMode) "스크롤 모드로 전환" else "그리기 모드로 전환")
                 }
-                Button(onClick = { isPreviewDialogVisible = true }) {
+                Button(onClick = { showWarningDialog = true }) {
                     Text("그리기 과정 미리보기")
                 }
             }
         }
     }
+    // 경고 모달: 미리보기를 누를 때 경고
+    if (showWarningDialog) {
+        AlertDialog(
+            onDismissRequest = { showWarningDialog = false },
+            title = { Text("경고") },
+            text = { Text("해당 버튼을 누르면 그림일기를 다시 작성할 수 없습니다.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showWarningDialog = false
+                        isPreviewDialogVisible = true // 경고 확인 후 미리보기 창 열기
+                    }
+                ) {
+                    Text("확인")
+                }
+            },
+            dismissButton = {
+                Button(onClick = { showWarningDialog = false }) {
+                    Text("취소")
+                }
+            }
+        )
+    }
 
-    // 모달 대신 전체 화면 Box로 미리보기 보여주기
+    // 미리보기 모달이 표시될 때, "보내기" 버튼을 누르면 동영상 생성 및 업로드 시작
     if (isPreviewDialogVisible) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black.copy(alpha = 0.7f)),
-            contentAlignment = Alignment.Center // 화면의 중앙에 박스를 위치
+            contentAlignment = Alignment.Center
         ) {
             Row(
                 modifier = Modifier
-                    .fillMaxSize(0.9f) // 화면의 90% 크기로 설정
-                    .background(Color.White, shape = RoundedCornerShape(16.dp)) // 흰색 배경 및 둥근 모서리 설정
-                    .padding(16.dp), // 내부 여백 설정
-                horizontalArrangement = Arrangement.SpaceBetween, // 좌우 여백 분리
-                verticalAlignment = Alignment.CenterVertically // 세로 중앙 정렬
+                    .fillMaxSize(0.9f)
+                    .background(Color.White, shape = RoundedCornerShape(16.dp))
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // 템플릿과 경로 표시하는 부분
+                // 미리보기 창의 실제 내용
                 Box(
                     modifier = Modifier
-                        .weight(0.8f) // 왼쪽 공간을 크게 설정
+                        .weight(0.8f)
                         .fillMaxHeight()
-                        .padding(end = 8.dp), // 오른쪽에 여백 추가
+                        .padding(end = 8.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     DrawingPlaybackView(
@@ -371,23 +435,21 @@ fun DiaryScreen(
                     )
                 }
 
-                // 오른쪽에 취소 및 보내기 버튼
+                // 오른쪽에 보내기 버튼
                 Column(
                     modifier = Modifier
-                        .weight(0.2f) // 오른쪽 공간을 작게 설정
+                        .weight(0.2f)
                         .fillMaxHeight(),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.SpaceEvenly // 세로로 균등 배치
+                    verticalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    Button(onClick = { isPreviewDialogVisible = false }) {
-                        Text("취소")
-                    }
                     Button(
                         onClick = {
-                            CoroutineScope(Dispatchers.IO).launch {
-                                saveAndUploadImages() // API 호출
+                            if (!isCreatingVideo) { // 동영상 생성이 완료되지 않았으면
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    saveAndUploadImages() // 동영상 생성 및 API 호출
+                                }
                             }
-                            isPreviewDialogVisible = false
                         }
                     ) {
                         Text("보내기")
@@ -396,7 +458,45 @@ fun DiaryScreen(
             }
         }
     }
+
+
+    if (isLoading && responseMessage == null) {
+        AlertDialog(
+            onDismissRequest = {},
+            title = { Text("그림일기를 생성 중입니다.") },
+            text = { Text("잠시만 기다려주세요") },
+            confirmButton = {}
+        )
+    }
+
+    // 응답 메시지가 있을 경우 모달창 표시
+    if (responseMessage != null) {
+        AlertDialog(
+            onDismissRequest = {
+                diaryViewModel.clearResponseMessage()
+                navController.navigate("main") {
+                    popUpTo("diary") { inclusive = true } // diary 화면 제거
+                }
+            },
+            title = { Text("알림") },
+            text = { Text(text = responseMessage ?: "") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        diaryViewModel.clearResponseMessage()
+                        navController.navigate("main") {
+                            popUpTo("diary") { inclusive = true } // diary 화면 제거
+                        }
+                    }
+                ) {
+                    Text("확인")
+                }
+            }
+        )
+    }
+
 }
+
 
 // URL에서 Bitmap 로드하는 함수
 suspend fun loadBitmapFromUrl(url: String): Bitmap? = withContext(Dispatchers.IO) {
@@ -414,7 +514,7 @@ fun DrawingPlaybackView(
     firstPageStickers: List<StickerItem>,
     context: Context,
     templateWidth: Int,
-    templateHeight: Int
+    templateHeight: Int,
 ) {
     var currentStepIndex by remember { mutableIntStateOf(0) }
     val overlayBitmap = remember {
@@ -422,44 +522,40 @@ fun DrawingPlaybackView(
     }
     val overlayCanvas = remember { AndroidCanvas(overlayBitmap) }
     val currentPath = remember { Path() }
-    val outputDir = File(context.filesDir, "frames").apply { mkdirs() }
-    val videoFile = File(context.getExternalFilesDir(Environment.DIRECTORY_MOVIES), "drawing_playback.mp4")
+    val outputDir = File(context.filesDir, "frames").apply {
+        // 시작 시 기존 프레임 폴더를 비우기
+        if (exists()) deleteRecursively()
+        mkdirs()
+    }
+    val videoFile =
+        File(context.getExternalFilesDir(Environment.DIRECTORY_MOVIES), "drawing_playback.mp4").apply {
+            // 시작 시 기존 비디오 파일 삭제
+            if (exists()) delete()
+        }
 
     LaunchedEffect(drawingSteps) {
         currentStepIndex = 0
-        val totalSteps = drawingSteps.size
-        overlayCanvas.drawColor(android.graphics.Color.TRANSPARENT, PorterDuff.Mode.CLEAR) // 비트맵 초기화
+        overlayCanvas.drawColor(android.graphics.Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
 
-        while (currentStepIndex < totalSteps) {
-            delay(1)  // 재생 속도 조정
+        val batchStepCount = 5 // 한 번에 그릴 스텝 개수
+        while (currentStepIndex < drawingSteps.size) {
+            for (i in 0 until batchStepCount) {
+                if (currentStepIndex >= drawingSteps.size) break
+                val step = drawingSteps[currentStepIndex]
+                val paint = createPaintForTool(step.toolType, step.color, step.thickness)
+                if (step.toolType == ToolType.ERASER) {
+                    paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR)
+                }
 
-            // 현재 Step 추가 및 최적화 적용
-            val step = drawingSteps[currentStepIndex]
-            val paint = createPaintForTool(step.toolType, step.color, step.thickness)
-            if (step.toolType == ToolType.ERASER) {
-                paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR)
+                currentPath.addPath(step.path)
+                overlayCanvas.drawPath(step.path.asAndroidPath(), paint)
+
+                currentStepIndex++
             }
-
-            // currentPath에 새로운 path를 추가하고 overlayCanvas에 그리기
-            currentPath.addPath(step.path)
-            overlayCanvas.drawPath(step.path.asAndroidPath(), paint)
-
-            val frameBitmap = Bitmap.createBitmap(templateWidth, templateHeight, Bitmap.Config.ARGB_8888)
-            val frameCanvas = AndroidCanvas(frameBitmap)
-            drawToBitmap(frameCanvas, overlayBitmap, templateWidth, templateHeight, context)
-
-            // 생성한 프레임을 파일로 저장
-            val frameFile = File(outputDir, "frame_$currentStepIndex.png")
-            saveBitmapToFile(frameBitmap, frameFile)
-
-            currentStepIndex++
+            delay(100) // 지연 시간을 조정하여 재생 속도 제어
         }
 
-
-        // 모든 프레임을 비디오로 결합
         createVideoFromFrames(context, outputDir, videoFile)
-
-        // 동영상 파일을 갤러리에 추가
         scanFile(context, videoFile)
     }
 
@@ -474,19 +570,20 @@ fun DrawingPlaybackView(
             modifier = Modifier.fillMaxSize()
         ) {
             drawIntoCanvas { canvas ->
-                // 배경 템플릿 그리기
-                val templateBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.draw_template)
-                val resizedTemplateBitmap = Bitmap.createScaledBitmap(templateBitmap, templateWidth, templateHeight, true)
+                val templateBitmap =
+                    BitmapFactory.decodeResource(context.resources, R.drawable.draw_template)
+                val resizedTemplateBitmap =
+                    Bitmap.createScaledBitmap(templateBitmap, templateWidth, templateHeight, true)
                 canvas.nativeCanvas.drawBitmap(resizedTemplateBitmap, 0f, 0f, null)
             }
 
-            // 최종적으로 Overlay Bitmap을 그리기
             drawIntoCanvas { canvas ->
                 canvas.nativeCanvas.drawBitmap(overlayBitmap, 0f, 0f, null)
             }
         }
     }
 }
+
 // drawToBitmap 함수: overlayBitmap을 포함하여 캔버스에 최종 이미지를 그리기
 fun drawToBitmap(
     canvas: AndroidCanvas,
@@ -539,8 +636,6 @@ fun createVideoFromFrames(context: Context, framesDir: File, outputFile: File) {
         }
     }
 }
-
-
 
 
 // 미디어 스캔을 수행하여 갤러리에 파일 추가
