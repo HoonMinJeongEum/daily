@@ -45,11 +45,9 @@ fun DiaryScreen(
             .fillMaxSize()
     ) {
         val screenWidth = maxWidth
-        val footerHeight = screenWidth / 4.5f
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = footerHeight)
             ,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -67,19 +65,15 @@ fun DiaryScreen(
             Box(
                 modifier = Modifier
                     .background(Color.White, shape = RoundedCornerShape(topEnd = 50.dp, topStart = 50.dp))
-                    .fillMaxWidth()
-                    .height(780.dp)
+                    .fillMaxSize()
+
             ) {
-                DailyCalendar(viewModel = diaryViewModel, navController = navController)
+                DailyCalendar(
+                    screenWidth = screenWidth,
+                    viewModel = diaryViewModel, navController = navController)
             }
         }
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.BottomCenter)
-            ) {
-                NavMenu(navController, "main", "diary")
-            }
+
         }
     }
 

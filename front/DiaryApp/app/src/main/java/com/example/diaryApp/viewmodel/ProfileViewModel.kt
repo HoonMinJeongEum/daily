@@ -58,8 +58,8 @@ class ProfileViewModel @Inject constructor(
             val memberImgFile = memberImg.value?.let { uriToFile(getApplication(),it) }
 
             if (memberImgFile == null) {
-                errorMessage.value = "이미지를 선택해주세요."
                 isLoading.value = false
+                errorMessage.value = "이미지를 선택해주세요."
                 return@launch
             }
 
@@ -68,6 +68,7 @@ class ProfileViewModel @Inject constructor(
                 val imgRequestBody = memberImgFile.asRequestBody("image/jpeg".toMediaTypeOrNull())
                 val imgPart = MultipartBody.Part.createFormData("file", memberImgFile.name, imgRequestBody)
                 profileListRepository.createProfile(requestBody, imgPart)
+                loadProfiles()
                 onSuccess()
             } catch (e: Exception) {
                 errorMessage.value = e.message
@@ -75,7 +76,6 @@ class ProfileViewModel @Inject constructor(
                 onError()
             } finally {
                 isLoading.value = false
-                loadProfiles()
             }
         }
     }
@@ -88,11 +88,10 @@ class ProfileViewModel @Inject constructor(
         try {
             profileListRepository.deleteProfile(memberId)
             Log.d("ProfileViewModel", "Succes Delete Profile")
+            loadProfiles()
         } catch(e:Exception) {
             errorMessage.value = e.message
             Log.e("ProfileViewModel", "Error adding profile: ${e.message}")
-        } finally {
-            loadProfiles()
         }
 
     }

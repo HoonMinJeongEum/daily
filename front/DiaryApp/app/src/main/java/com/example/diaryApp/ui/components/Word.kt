@@ -132,14 +132,14 @@ fun WordListItemByMember(wordList: List<Word>,
     }
 
     BoxWithConstraints (modifier = Modifier.fillMaxSize()
-        .padding(bottom = 80.dp)) {
+        ) {
         val screenWidth = maxWidth
         LazyColumn(
             state = listState,
             modifier = Modifier
                 .fillMaxHeight()
                 .wrapContentWidth()
-                .padding(top = screenWidth * 0.05f),
+                .padding(top = screenWidth * 0.02f),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(screenWidth * 0.08f),
         ) {

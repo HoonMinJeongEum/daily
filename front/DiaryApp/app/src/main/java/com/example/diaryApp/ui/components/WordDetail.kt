@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -24,12 +25,17 @@ import com.example.diaryApp.domain.dto.response.word.Word
 import com.example.diaryApp.ui.components.toCalendarDateString
 
 @Composable
-fun WordDetail(word: Word, onDismissRequest: () -> Unit) {
+fun WordDetail(
+    screenWidth: Dp,
+    screenHeight: Dp,
+    word: Word,
+    onDismissRequest: () -> Unit
+) {
     Dialog(onDismissRequest = onDismissRequest) {
         Surface(
-            shape = RoundedCornerShape(30.dp),
+            shape = RoundedCornerShape(screenWidth * 0.04f), // 화면 너비의 4%로 둥근 모서리 설정
             color = Color.White,
-            modifier = Modifier.padding(20.dp)
+            modifier = Modifier.padding(screenWidth * 0.05f) // 화면 너비의 5%로 패딩 설정
         ) {
             Column(
                 modifier = Modifier
@@ -40,16 +46,16 @@ fun WordDetail(word: Word, onDismissRequest: () -> Unit) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 16.dp, end = 16.dp),
+                        .padding(top = screenHeight * 0.02f, end = screenWidth * 0.04f), // 화면 비율로 상단 패딩 설정
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Spacer(modifier = Modifier.weight(1f)) // 타이틀 왼쪽에 빈 공간을 추가
+                    Spacer(modifier = Modifier.weight(1f))
                     IconButton(onClick = onDismissRequest) {
                         Icon(
                             imageVector = Icons.Filled.Close,
                             contentDescription = "Close",
                             tint = Color.Gray,
-                            modifier = Modifier.size(32.dp)
+                            modifier = Modifier.size(screenWidth * 0.08f) // 화면 너비의 8%로 아이콘 크기 설정
                         )
                     }
                 }
@@ -60,23 +66,25 @@ fun WordDetail(word: Word, onDismissRequest: () -> Unit) {
                     color = Color(0xFF5A72A0),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 10.dp),
-                    textAlign = TextAlign.Center
+                        .padding(top = screenHeight * 0.01f), // 화면 높이의 1%로 패딩 설정
+                    textAlign = TextAlign.Center,
+                    fontSize = (screenWidth * 0.06f).value.sp // 화면 너비의 6%로 폰트 크기 설정
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(screenHeight * 0.02f)) // 화면 높이의 2% 간격
+
                 // 콘텐츠 부분
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(Color.White),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                    verticalArrangement = Arrangement.spacedBy(screenHeight * 0.005f) // 화면 높이의 0.5% 간격
                 ) {
                     Text(
                         text = word.createdAt.toCalendarDateString(),
                         color = Color(0xFF49566F),
-                        fontSize = 20.sp,
+                        fontSize = (screenWidth * 0.05f).value.sp, // 화면 너비의 5%로 폰트 크기 설정
                         textAlign = TextAlign.Center
                     )
 
@@ -85,8 +93,9 @@ fun WordDetail(word: Word, onDismissRequest: () -> Unit) {
                         contentDescription = "Original Image",
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(250.dp),
-                        contentScale = ContentScale.Crop
+                            .height(screenHeight * 0.2f)
+                        , // 화면 높이의 30%로 이미지 높이 설정
+                        contentScale = ContentScale.Fit
                     )
 
                     Image(
@@ -94,13 +103,15 @@ fun WordDetail(word: Word, onDismissRequest: () -> Unit) {
                         contentDescription = "Transcription Image",
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(200.dp),
-                        contentScale = ContentScale.Crop
+                            .height(screenHeight * 0.2f)
+                        , // 화면 높이의 24%로 이미지 높이 설정
+                        contentScale = ContentScale.Fit
                     )
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(screenHeight * 0.02f)) // 화면 높이의 2% 간격
             }
         }
     }
 }
+

@@ -3,6 +3,7 @@ package com.example.diaryApp.ui.screens
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -22,9 +23,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -45,13 +49,33 @@ fun JoinScreen(
     joinViewModel: JoinViewModel = hiltViewModel(),
     backgroundType: BackgroundType = BackgroundType.DEFAULT
 ) {
-    val isUsernameValid = joinViewModel.username.value.length in 4..20 &&
-            joinViewModel.username.value.any { it.isLetter() } && // 영어 알파벳 포함
-            joinViewModel.username.value.any { it.isDigit() } // 숫자 포함
+    val focusManager = LocalFocusManager.current
+    var isUsernameValid by remember { mutableStateOf(false) }
+    var isCheckUsername by remember { mutableStateOf(false) }
+    var isPasswordValid by remember { mutableStateOf(false) }
+    var isPasswordCheckValid by remember { mutableStateOf(false) }
+    var isUsernameTouched by remember { mutableStateOf(false) }
+    var isPasswordTouched by remember { mutableStateOf(false) }
+    var isPasswordCheckTouched by remember { mutableStateOf(false) }
+    val allValid = isUsernameValid && isPasswordValid && isPasswordCheckValid
+    val usernameErrorMessage = joinViewModel.usernameErrorMessage
 
-    val isPasswordValid = joinViewModel.password.value.length in 8..20 &&
-            joinViewModel.password.value.any { !it.isLetterOrDigit() } &&
-            joinViewModel.password.value.any { it.isLetter() }
+
+    fun validateUsername() {
+        isUsernameValid = joinViewModel.username.value.length in 4..20 &&
+                joinViewModel.username.value.any { it.isLetter() } &&
+                joinViewModel.username.value.any { it.isDigit() }
+    }
+
+    fun validatePassword() {
+        isPasswordValid = joinViewModel.password.value.length in 8..20 &&
+                joinViewModel.password.value.any { !it.isLetterOrDigit() } &&
+                joinViewModel.password.value.any { it.isLetter() }
+    }
+
+    fun validatePasswordCheck() {
+        isPasswordCheckValid = joinViewModel.password.value == joinViewModel.passwordCheck.value
+    }
 
     // Alert Dialog 상태 관리
     var showSuccessDialog by remember { mutableStateOf(false) }
@@ -59,119 +83,217 @@ fun JoinScreen(
 
     BackgroundPlacement(backgroundType = backgroundType)
 
-    Box(
+    BoxWithConstraints (
         modifier = Modifier
             .fillMaxSize()
     ) {
+        val screenWidth = maxWidth
+        val screenHeight = maxHeight
         Image(
-            painter = painterResource(id = R.drawable.daily_logo), // 다일리 로고 이미지
+            painter = painterResource(id = R.drawable.main_logo), // 다일리 로고 이미지
             contentDescription = "Centered Logo",
             modifier = Modifier
-                .size(500.dp)
-                .offset(y = (-100).dp)
+                .size(screenWidth * 0.4f)
+                .offset(y = -screenHeight * 0.15f)
                 .align(Alignment.Center)
         )
 
         Column(
             modifier = Modifier
                 .align(Alignment.Center)
-                .padding(top=330.dp)
-            , horizontalAlignment = Alignment.CenterHorizontally
+                .padding(top = screenHeight * 0.4f),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            if (!isUsernameValid) {
-                Text(
-                    fontSize = 12.sp,
-                    text = "아이디는 영어, 숫자 포함 4-20자",
-                    color = Color.Red,
-                    modifier = Modifier.padding(end = 92.dp, top = 4.dp) // 적절한 패딩 추가
+            if (isUsernameTouched) {
+                if (!isUsernameValid) {
+                    Text(
+                        fontSize = (screenWidth.value * 0.025f).sp,
+                        text = "아이디는 영어, 숫자 포함 4-20자",
+                        color = Color.Red,
+                        modifier = Modifier.offset(x = -screenWidth * 0.2f)
+                    )
+                } else {
+                    Text(
+                        fontSize = (screenWidth.value * 0.025f).sp,
+                        text = usernameErrorMessage.value,
+                        color = if (joinViewModel.isUsernameAvailable.value == true) Color.Green else Color.Red,
+                        modifier = Modifier.offset(x = -screenWidth * 0.2f)
+                    )
+                }
+            } else {
+                Spacer( modifier = Modifier
+                    .height(screenWidth * 0.03f)
                 )
             }
-
+            Spacer( modifier = Modifier
+                .height(screenWidth * 0.02f)
+            )
             Row(
-                modifier = Modifier.width(315.dp),
+                modifier = Modifier.width(screenWidth * 0.75f),
                 verticalAlignment = Alignment.CenterVertically
             ) {
 
                 MyTextField(
                     value = joinViewModel.username.value,
                     placeholder = "아이디",
-                    iconResId = R.drawable.daily_id_icon,
-                    onValueChange = { joinViewModel.username.value = it },
-                    modifier = Modifier.weight(1f)
+                    onValueChange = {
+                        joinViewModel.username.value = it
+                        if (isUsernameTouched) validateUsername()
+                        joinViewModel.usernameErrorMessage.value = ""
+                        isCheckUsername = false
+                    },
+                    modifier = Modifier.weight(1f),
+                    width = screenWidth,
+                    height = screenHeight * 0.9f,
+                    imeAction = ImeAction.Done,
+                    onImeAction = {
+                        isUsernameTouched = true
+                        validateUsername()
+                        if (isUsernameValid) {
+                            focusManager.clearFocus()
+                        }
+
+                    }
                 )
 
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(screenWidth * 0.02f))
 
                 DailyButton(
                     text = "중복확인",
-                    fontSize = 16,
+                    fontSize = (screenWidth.value * 0.04f).toInt(),
                     textColor = White,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                    fontWeight = FontWeight.Bold,
                     backgroundColor = PastelNavy,
                     cornerRadius = 50,
-                    width = 85,
-                    height = 60,
-                    onClick = {},
+                    width = (screenWidth * 0.25f).value.toInt(),
+                    height = (screenHeight * 0.08f).value.toInt(),
+                    onClick = {
+                        isUsernameTouched = true
+                        validateUsername()
+                        if (isUsernameValid) {
+                            joinViewModel.checkUsernameAvailability()
+                        }
+                    },
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp)) // 원하는 간격 설정
+            Spacer(modifier = Modifier.height(screenHeight * 0.03f))
 
-            if (!isPasswordValid) {
-                Text(
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Thin,
-                    text = "비밀번호는 영어, 숫자, 특수문자 포함 8-20자",
-                    color = Color.Red,
-                    modifier = Modifier.padding(start = 16.dp, top = 4.dp) // 적절한 패딩 추가
-                )
-            }
+
 
             MyTextField(
                 value = joinViewModel.password.value,
                 placeholder = "비밀번호",
-                iconResId = R.drawable.daily_password_icon,
                 isPassword = true,
-                onValueChange = { joinViewModel.password.value = it },
+                onValueChange = {
+                    joinViewModel.password.value = it
+                    isPasswordTouched = true
+                    validatePassword()
+                    validatePasswordCheck()
+                },
+                width = screenWidth,
+                height = screenHeight * 0.9f,
+                imeAction = ImeAction.Next,
+                onImeAction = {
+                    validatePassword()
+                    if (isPasswordValid) {
+                        focusManager.moveFocus(FocusDirection.Down)
+                    }
+                }
             )
+            Spacer(modifier = Modifier.height(screenWidth * 0.035f))
 
-            Spacer(modifier = Modifier.height(8.dp)) // 원하는 간격 설정
+            if (!isPasswordValid && isPasswordTouched) {
+                Text(
+                    fontSize = (screenWidth.value * 0.025f).sp,
+                    fontWeight = FontWeight.Thin,
+                    text = "비밀번호는 영어, 숫자, 특수문자 포함 8-20자",
+                    color = Color.Red,
+                    modifier = Modifier.offset(x = -screenWidth * 0.1f)
+                )
+            } else {
+
+                Spacer(modifier = Modifier.height(screenHeight * 0.014f))
+            }
+            Spacer(modifier = Modifier.height(screenHeight * 0.016f))
 
             MyTextField(
                 value = joinViewModel.passwordCheck.value,
                 placeholder = "비밀번호 확인",
-                iconResId = R.drawable.daily_password_icon,
                 isPassword = true,
-                onValueChange = { joinViewModel.passwordCheck.value = it },
-            )
+                onValueChange = {
+                    joinViewModel.passwordCheck.value = it
+                    validatePasswordCheck()
+                    isPasswordCheckTouched = true
 
-            Spacer(modifier = Modifier.height(30.dp)) // 원하는 간격 설정
+                },
+                width = screenWidth,
+                height = screenHeight * 0.9f,
+                imeAction = ImeAction.Done,
+                onImeAction = {
+                    isPasswordCheckTouched = true
+                    validatePassword()
+                    if (isPasswordCheckValid) {
+                        focusManager.clearFocus()
+                    }
+                }
+
+            )
+            Spacer(modifier = Modifier.height(screenWidth * 0.035f))
+
+            if (!isPasswordCheckValid && isPasswordCheckTouched) {
+                Text(
+                    fontSize = (screenWidth.value * 0.025f).sp,
+                    fontWeight = FontWeight.Thin,
+                    text = "비밀번호가 일치하지 않습니다.",
+                    color = Color.Red,
+                    modifier = Modifier.offset(x = -screenWidth * 0.1f)
+                )
+            } else {
+
+                Spacer(modifier = Modifier.height(screenHeight * 0.014f))
+            }
+            Spacer(modifier = Modifier.height(screenWidth * 0.035f))
 
             DailyButton(
                 text = "회원가입",
-                fontSize = 26,
+                fontSize = (screenWidth.value * 0.05f).toInt(),
                 textColor = White,
                 fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                backgroundColor = PastelNavy,
+                backgroundColor = if (allValid) PastelNavy else Color.Gray,
                 cornerRadius = 50,
-                width = 140,
-                height = 60,
+                width = (screenWidth * 0.35f).value.toInt(),
+                height = (screenHeight * 0.08f).value.toInt(),
                 onClick = {
-                    joinViewModel.join(
-                        onSuccess = {
-                            Log.d("JoinScreen", "JoinSuccess called")
-                            navController.navigate("login") {
-                                popUpTo("join") { inclusive = true }
-                                showSuccessDialog = true
-                            }
-                        } , onErrorPassword = {
-                            showErrorDialog = true
-                        }, onError = {
-                            showErrorDialog = true
-                        }
-                    )
+                    if (allValid) {
+                        joinViewModel.join(
+                            onSuccess = {
+                                Log.d("JoinScreen", "JoinSuccess called")
+                                navController.navigate("login") {
+                                    popUpTo("join") { inclusive = true }
+                                    showSuccessDialog = true
+                                }
+                            },
+                            onErrorPassword = { showErrorDialog = true },
+                            onError = { showErrorDialog = true }
+                        )
+                    }
                 },
+
+            )
+            Spacer(modifier = Modifier.height(screenHeight * 0.007f)) // 원하는 간격 설정
+
+            DailyButton(
+                text = "로그인",
+                fontSize = ((screenWidth.value) * 0.04f).toInt(),
+                textColor = PastelNavy,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                backgroundColor = Color.Transparent,
+                cornerRadius = 35,
+                width = ((screenWidth.value) * 0.35f).toInt(),
+                height = ((screenWidth.value) * 0.15f).toInt(),
+                onClick = {navController.navigate("login")},
             )
         }
 

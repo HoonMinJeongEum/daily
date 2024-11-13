@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.liveData
 import com.example.diaryApp.domain.dto.request.diary.DiaryCommentRequestDto
+import com.example.diaryApp.domain.dto.response.diary.CommentDto
 import com.example.diaryApp.domain.dto.response.diary.Diary
 import com.example.diaryApp.domain.dto.response.diary.DiaryForList
 import com.example.diaryApp.domain.repository.diary.DiaryRepository
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import retrofit2.Response
+import java.time.LocalDateTime
 import java.util.Calendar
 import javax.inject.Inject
 
@@ -87,9 +89,15 @@ class DiaryViewModel @Inject constructor(
                     // Repository를 통해 API 호출
                     val response = diaryRepository.fetchComment(diaryCommentRequestDto)
                     if (response.isSuccessful) {
+                        val newComment = CommentDto(
+                            comment = comment,
+                            createdAt = LocalDateTime.now().toString()  // 현재 시간을 문자열로 변환
+                        )
+                        _diaryDetail.value = _diaryDetail.value?.copy(
+                            comments = _diaryDetail.value?.comments.orEmpty() + newComment
+                        )
                         Log.d("DiaryViewModel", "Comment posted successfully: ${response.body()}")
-                        // 댓글이 성공적으로 등록된 후 필요한 추가 동작이 있다면 여기에 작성
-                    } else {
+                         } else {
                         Log.e("DiaryViewModel", "Failed to post comment: ${response.errorBody()?.string()}")
                     }
                 } catch (e: Exception) {

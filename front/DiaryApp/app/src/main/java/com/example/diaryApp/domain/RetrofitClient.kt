@@ -132,7 +132,7 @@ object RetrofitClient {
         suspend fun reissueToken(@Header("Cookie") refreshToken: String): Response<Void>
 
         @POST("${Const.API_PATH}user/logout")
-        suspend fun logout(): Response<Void>
+        suspend fun logout(@Header("Cookie") refreshToken: String): Response<Void>
     }
 
     fun login(accessToken: String, refreshToken: String) {
@@ -150,16 +150,21 @@ object RetrofitClient {
         runBlocking {
             val authService = getInstance().create(AuthService::class.java)
             try {
-                authService.logout()
+                val cleanedRefreshToken = refreshToken?.substringBefore(";") ?: ""
+                authService.logout(cleanedRefreshToken)
+                // 로컬 토큰 삭제
+                accessToken = null
+                refreshToken = null
+
+                userStore.clearValue(UserStore.KEY_USER_NAME)
+                userStore.clearValue(UserStore.KEY_PASSWORD)
+                userStore.clearValue(UserStore.KEY_ACCESS_TOKEN)
+                userStore.clearValue(UserStore.KEY_REFRESH_TOKEN)
             } catch (e: HttpException) {
                 // 로그아웃 실패 처리
             }
 
-            // 로컬 토큰 삭제
-            accessToken = null
-            refreshToken = null
-            userStore.setValue(UserStore.KEY_ACCESS_TOKEN, "")
-            userStore.setValue(UserStore.KEY_REFRESH_TOKEN, "")
+
         }
     }
 

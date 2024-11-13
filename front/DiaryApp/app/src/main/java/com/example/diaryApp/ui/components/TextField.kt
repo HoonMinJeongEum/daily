@@ -3,10 +3,15 @@ package com.example.diaryApp.ui.components
 import android.annotation.SuppressLint
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -14,15 +19,21 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.diaryApp.ui.theme.DeepPastelNavy
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
@@ -33,41 +44,70 @@ fun MyTextField(
     isPassword: Boolean = false,
     onValueChange: (String) -> Unit,
     @SuppressLint("ModifierParameter") modifier: Modifier = Modifier,
-    width: Int = 300,
-    height: Int = 60
+    width: Dp,
+    height: Dp,
+    imeAction: ImeAction = ImeAction.Done,
+    onImeAction: () -> Unit = {},
+    focusRequester: FocusRequester = FocusRequester()
 ) {
-    val textState = remember { mutableStateOf("") }
     val textPlace = if (iconResId == null) {
-        androidx.compose.ui.text.TextStyle(fontSize = 14.sp, textAlign = TextAlign.Start) // 왼쪽 정렬
+        com.example.diaryApp.ui.theme.MyTypography.bodyMedium.copy(
+            fontSize = (width.value * 0.05f).sp, textAlign = TextAlign.Start, color = DeepPastelNavy)
     } else {
-        androidx.compose.ui.text.TextStyle(fontSize = 14.sp) // 기본 텍스트 스타일
+        com.example.diaryApp.ui.theme.MyTypography.bodyMedium.copy(
+            fontSize = (width.value * 0.05f).sp,
+            color = DeepPastelNavy
+        )
     }
-    TextField(
-        value = value, // value 추가
-        onValueChange = onValueChange,
-        placeholder = { Text(placeholder, fontSize = 15.sp, color = Color.Gray) },
+
+    Box(
         modifier = modifier
-            .padding(8.dp)
-            .background(Color.White, RoundedCornerShape(150.dp))
-            .shadow(elevation = 4.dp, shape = RoundedCornerShape(35.dp))
-            .size(width = width.dp, height = height.dp),
-        visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
-        leadingIcon = {
-            iconResId?.let {
-                Icon(
-                    painter = painterResource(id = it),
-                    contentDescription = null,
-                    modifier = Modifier.size(24.dp), // 아이콘 크기 조정
-                    tint = Color.Gray
-                )
-            }
-        },
-        colors = TextFieldDefaults.textFieldColors(
-            containerColor = Color.White, // 배경색을 흰색으로 설정
-            focusedIndicatorColor = Color.Transparent, // 포커스 상태의 하단 선 색상
-            unfocusedIndicatorColor = Color.Transparent // 비포커스 상태의 하단 선 색상
-        ),
-        shape = RoundedCornerShape(35.dp),
-        textStyle = textPlace
-    )
+            .shadow(elevation = width * 0.01f, shape = RoundedCornerShape(35.dp), clip = false)
+            .background(Color.White, RoundedCornerShape(35.dp))
+            .size(width = width * 0.75f, height = height * 0.08f),
+        contentAlignment = Alignment.CenterStart
+
+    ) {
+        TextField(
+            value = value,
+            onValueChange = onValueChange,
+            placeholder = { Text(placeholder, fontSize = (width.value * 0.05f).sp, color = Color.Gray) },
+            visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
+            leadingIcon = {
+                iconResId?.let {
+                    Icon(
+                        painter = painterResource(id = it),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(width * 0.07f)
+                            .offset( y = -height * 0.007f),
+                        tint = Color.Gray
+                    )
+                }
+            },
+            keyboardOptions = KeyboardOptions.Default.copy(imeAction = imeAction),
+            keyboardActions = KeyboardActions(onNext = { onImeAction() }, onDone = { onImeAction() }),
+            colors = TextFieldDefaults.textFieldColors(
+                containerColor = Color.Transparent,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent
+            ),
+            shape = RoundedCornerShape(35.dp),
+            textStyle = textPlace,
+            modifier = Modifier
+                .fillMaxSize()
+
+                .then(
+                    if (iconResId != null) {
+                        Modifier
+                            .padding(start = width * 0.03f)
+                            .offset(y = height * 0.007f)
+                    } else Modifier
+                        .offset(x = -width * 0.04f)
+                        .offset(y = height * 0.003f)
+                )// TextField가 Box 내에서 전체 크기 차지
+                .focusRequester(focusRequester)
+        )
+    }
 }
+

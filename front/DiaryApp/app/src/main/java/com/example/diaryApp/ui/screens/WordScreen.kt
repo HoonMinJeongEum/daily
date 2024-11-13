@@ -106,16 +106,16 @@ fun WordScreen(
                         DailyRegisterButton(
                             text = "가나다순",
                             backgroundColor = Color.Transparent,
-                            width = 140,
-                            height = 60,
+                            width = (screenWidth.value * 0.3f).toInt(),
+                            height = (screenWidth.value * 0.13f).toInt(),
                             isSelected = selectedTab == "가나다순",
                             onClick = { selectedTab = "가나다순" },
                         )
                         DailyRegisterButton(
                             text = "날짜순",
                             backgroundColor = Color.Transparent,
-                            width = 140,
-                            height = 60,
+                            width = (screenWidth.value * 0.3f).toInt(),
+                            height = (screenWidth.value * 0.13f).toInt(),
                             isSelected = selectedTab == "날짜순",
                             onClick = { selectedTab = "날짜순" },
                         )
@@ -132,19 +132,14 @@ fun WordScreen(
                     // 모달 창 표시 (isModalOpen이 true일 때만)
                     if (isModalOpen && selectedWord != null) {
                         WordDetail(
+                            screenWidth = screenWidth,
+                            screenHeight = screenHeight,
                             word = selectedWord!!,
                             onDismissRequest = { isModalOpen = false }
                         )
                     }
                 }
             }
-        }
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-        ) {
-            NavMenu(navController, "main", "word")
         }
     }
 }

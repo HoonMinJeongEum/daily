@@ -22,4 +22,8 @@ class UserRepositoryImpl @Inject constructor(
         val response = userService.join(joinRequestDto)
         return response
     }
+    override suspend fun checkUsernameAvailability(username: String): Response<Void> {
+        return userService.checkUsernameAvailability(username)
+    }
+
 }

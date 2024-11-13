@@ -102,14 +102,14 @@ fun CreateCoupon(
                         value = couponViewModel.couponDescription.value,
                         placeholder = "소원명",
                         onValueChange = { couponViewModel.couponDescription.value = it },
-                        width = 280,
-                        height = 50
+                        width = 280.dp,
+                        height = 50.dp
                     )
                     MyTextField(
                         value = if (couponViewModel.couponPrice.value == 0) "" else couponViewModel.couponPrice.value.toString(),
                         placeholder = "가격",
-                        width = 280,
-                        height = 50,
+                        width = 280.dp,
+                        height = 50.dp,
                         onValueChange = {
                             if (it.all { char -> char.isDigit() } || it.isEmpty()) {
                                 couponViewModel.couponPrice.value = it.toIntOrNull() ?: 0
