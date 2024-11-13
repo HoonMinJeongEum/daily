@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
@@ -48,6 +49,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -67,148 +69,179 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun CreateProfile(
+    screenHeight: Dp,
+    screenWidth: Dp,
     profileViewModel: ProfileViewModel,
     onCancel: () -> Unit
 ) {
+    var showWarning by remember { mutableStateOf(false) }
+    var warningMessage by remember { mutableStateOf("") }
+    var selectedImageUri by remember { mutableStateOf<android.net.Uri?>(null) }
 
     Dialog(onDismissRequest = { onCancel() }) {
-            Surface(
-                shape = RoundedCornerShape(25.dp),
-                color = Color.White,
-                modifier = Modifier.padding(20.dp)
+        Surface(
+            shape = RoundedCornerShape(10),
+            color = Color.White,
+            modifier = Modifier
+                .width(screenWidth * 0.8f)
+                .wrapContentHeight()
+                .padding(screenWidth * 0.04f)
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(screenWidth * 0.04f)
+                    .fillMaxWidth()
+                ,
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Column(
-                    modifier = Modifier.padding(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ){
-                    Row(
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Spacer(modifier = Modifier.weight(1f))
+                    IconButton(onClick = onCancel) {
+                        Icon(
+                            imageVector = Icons.Filled.Close,
+                            contentDescription = "Close",
+                            tint = Color.Gray,
+                            modifier = Modifier.size(screenWidth * 0.08f)
+                        )
+                    }
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(screenHeight * 0.01f),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: android.net.Uri? ->
+                        selectedImageUri = uri
+                        profileViewModel.memberImg.value = selectedImageUri
+                        showWarning = false
+                    }
+
+                    Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 8.dp, end = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                            .size(screenWidth * 0.3f)
+                            .clip(RoundedCornerShape(50))
+                            .border(1.dp, Color.LightGray, RoundedCornerShape(50))
+                            .clickable { launcher.launch("image/*") },
+                        contentAlignment = Alignment.Center
                     ) {
-                        Spacer(modifier = Modifier.weight(1f)) // 타이틀 왼쪽에 빈 공간을 추가
-                        IconButton(onClick = onCancel) {
-                            Icon(
-                                imageVector = Icons.Filled.Close,
-                                contentDescription = "Close",
-                                tint = Color.Gray,
-                                modifier = Modifier.size(32.dp)
+                        if (selectedImageUri != null) {
+                            Image(
+                                painter = rememberAsyncImagePainter(selectedImageUri),
+                                contentDescription = "Selected Profile Image",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.size(screenWidth * 0.3f)
+                            )
+                        } else {
+                            Text(
+                                text = "프로필 추가",
+                                fontSize = (screenWidth * 0.04f).value.sp,
+                                color = DarkGray,
+                                textAlign = TextAlign.Center
                             )
                         }
                     }
 
-                    Row(
+                    Spacer(modifier = Modifier.width(screenWidth * 0.05f))
+
+                    // 커스텀 스타일을 추가한 텍스트 필드
+                    Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly,
-                        verticalAlignment = Alignment.CenterVertically
+                            .width(screenWidth * 0.4f)
+                            .background(Color.White, RoundedCornerShape(8.dp)) // 배경색과 모서리 둥글게
+                            .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
+                            .padding(horizontal = screenWidth * 0.02f, vertical = screenHeight * 0.01f)
                     ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                        ) {
-                            var selectedImageUri by remember { mutableStateOf<android.net.Uri?>(null) }
-                            val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: android.net.Uri? ->
-                                selectedImageUri = uri
-                                profileViewModel.memberImg.value = selectedImageUri
-                            }
+                        val focusRequester = remember { FocusRequester() }
+                        val isFocused = remember { mutableStateOf(false) }
 
-                            if (selectedImageUri != null) {
-                                Image(
-                                    painter = rememberAsyncImagePainter(selectedImageUri),
-                                    contentDescription = "Selected Profile Image",
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier
-                                        .size(80.dp)
-                                        .clip(RoundedCornerShape(50.dp))
-                                        .border(1.dp, Color.LightGray, RoundedCornerShape(50.dp))
-                                )
-                            } else {
-                                Box(
-                                    modifier = Modifier
-                                        .size(80.dp)
-                                        .clip(RoundedCornerShape(50.dp))
-                                        .border(1.dp, Color.LightGray, RoundedCornerShape(50.dp))
-                                ) {
-                                    DailyButton(
-                                        text = "프로필 추가",
-                                        fontSize = 12,
-                                        textColor = DarkGray,
-                                        fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
-                                        backgroundColor = Color.Transparent,
-                                        cornerRadius = 60,
-                                        width = 80,
-                                        height = 80,
-                                        onClick = { launcher.launch("image/*") },
-                                    )
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(14.dp))
-
-                            val focusRequester = remember { FocusRequester() }
-                            val isFocused = remember { mutableStateOf(false) }
-
-                            Box(
-                                modifier = Modifier
-                                    .width(100.dp)
-                                    .clickable { focusRequester.requestFocus() },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                if (profileViewModel.memberName.value.isEmpty() && !isFocused.value) {
-                                    Text(
-                                        text = "이름",
-                                        modifier = Modifier.alpha(0.5f),
-                                        fontSize = 18.sp,
-                                        fontFamily = myFontFamily,
-                                        textAlign = TextAlign.Center
-                                    )
-                                }
-
-                                BasicTextField(
-                                    value = profileViewModel.memberName.value,
-                                    onValueChange = {
-                                        if (it.length <= 20) {
-                                            profileViewModel.memberName.value = it
-                                        }
-                                    },
-                                    modifier = Modifier
-                                        .focusRequester(focusRequester)
-                                        .onFocusChanged { focusState -> isFocused.value = focusState.isFocused }
-                                        .background(Color.Transparent)
-                                        .width(100.dp) // Specific width setting
-                                )
-                            }
+                        if (profileViewModel.memberName.value.isEmpty() && !isFocused.value) {
+                            Text(
+                                text = "이름",
+                                modifier = Modifier.alpha(0.5f),
+                                fontSize = (screenWidth * 0.04f).value.sp,
+                                color = Color.Gray
+                            )
                         }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        DailyButton(
-                            text = "추가",
-                            fontSize = 20,
-                            textColor = DarkGray,
-                            fontWeight = FontWeight.Normal,
-                            backgroundColor = PastelSkyBlue,
-                            cornerRadius = 50,
-                            width = 90,
-                            height = 35,
-                            onClick = {
-                                Log.d("JoinScreen", "click the create profile button")
-                                if (profileViewModel.memberName.value.isNotBlank()) {
-                                    profileViewModel.addProfile(
-                                        onSuccess = {
-                                            Log.d("JoinScreen", "JoinSuccess called")
-                                            onCancel()
-                                        },
-                                        onError = {
-                                            Log.d("JoinScreen", "JoinSuccess Fail")
-                                            onCancel()
-                                        }
-                                    )
+
+                        BasicTextField(
+                            value = profileViewModel.memberName.value,
+                            onValueChange = {
+                                if (it.length <= 20) {
+                                    profileViewModel.memberName.value = it
                                 }
-                            }
+                                showWarning = false
+                            },
+                            modifier = Modifier
+                                .focusRequester(focusRequester)
+                                .onFocusChanged { focusState -> isFocused.value = focusState.isFocused }
+                                .background(Color.Transparent) // 배경 투명
+                                .fillMaxWidth()
+                                .padding(vertical = screenHeight * 0.005f)
                         )
                     }
                 }
+
+                Spacer(modifier = Modifier.height(screenHeight * 0.01f))
+
+                if (showWarning) {
+                    Text(
+                        text = warningMessage,
+                        color = Color.Red,
+                        fontSize = (screenWidth * 0.035f).value.sp,
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    )
+                } else {
+                    Spacer(
+                        modifier = Modifier
+                            .height(screenWidth * 0.04f)
+                    )
+                }
+                Spacer(modifier = Modifier.height(screenHeight * 0.02f))
+
+                DailyButton(
+                    text = "추가",
+                    fontSize = (screenWidth * 0.05f).value.toInt(),
+                    textColor = Color.White,
+                    fontWeight = FontWeight.Normal,
+                    backgroundColor = PastelSkyBlue,
+                    cornerRadius = 50,
+                    width = (screenWidth * 0.25f).value.toInt(),
+                    height = (screenHeight * 0.06f).value.toInt(),
+                    onClick = {
+                        if (profileViewModel.memberName.value.isBlank()) {
+                            showWarning = true
+                            warningMessage = "이름을 입력해주세요."
+                        } else if (profileViewModel.memberImg.value == null) {
+                            showWarning = true
+                            warningMessage = "프로필 이미지를 선택해주세요."
+                        } else {
+                            profileViewModel.addProfile(
+                                onSuccess = {
+                                    Log.d("CreateProfile", "Profile creation successful")
+                                    onCancel()
+                                },
+                                onError = {
+                                    showWarning = true
+                                    warningMessage = "프로필 추가에 실패했습니다. 다시 시도해 주세요."
+                                }
+                            )
+                        }
+                    },
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+                Spacer(modifier = Modifier.height(screenHeight * 0.02f))
+
             }
         }
     }
+}
+
+

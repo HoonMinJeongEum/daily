@@ -22,6 +22,8 @@ class JoinViewModel @Inject constructor(
     val username = mutableStateOf("")
     val password = mutableStateOf("")
     val passwordCheck = mutableStateOf("")
+    val isUsernameAvailable = mutableStateOf<Boolean?>(null) // 중복 체크 결과 상태
+    val usernameErrorMessage = mutableStateOf("")
 
     private val userStore: UserStore = UserStore(application)
 
@@ -51,6 +53,26 @@ class JoinViewModel @Inject constructor(
             }
         }
     }
+    fun checkUsernameAvailability() {
+        viewModelScope.launch {
+            try {
+                val response = userRepository.checkUsernameAvailability(username.value)
+                if (response.isSuccessful) {
+                    isUsernameAvailable.value = true
+                    usernameErrorMessage.value = "사용 가능한 아이디입니다."
+
+                } else {
+                    isUsernameAvailable.value = false
+                    usernameErrorMessage.value = "아이디가 중복됩니다."
+                }
+            } catch (e: Exception) {
+                Log.e("JoinViewModel", "Username check error: ${e.message}")
+                isUsernameAvailable.value = false
+                usernameErrorMessage.value = "서버와 통신 중 오류가 발생했습니다."
+            }
+        }
+    }
+
 
     private fun handleException(e: Exception, onErrorPassword: () -> Unit, onError: () -> Unit) {
         when (e) {

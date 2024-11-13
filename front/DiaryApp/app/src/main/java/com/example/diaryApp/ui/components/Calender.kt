@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -28,9 +29,9 @@ import com.example.diaryApp.ui.theme.SkyBlue
 import java.time.LocalDateTime
 import java.util.*
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun DailyCalendar(
+    screenWidth : Dp,
     viewModel: DiaryViewModel,
     navController: NavController
 ) {
@@ -40,9 +41,9 @@ fun DailyCalendar(
     val diaryList by viewModel.diaryList.observeAsState()
 
     LaunchedEffect(Unit) {
-        if (diaryList?.body().isNullOrEmpty()) {
+//        if (diaryList?.body().isNullOrEmpty()) {
             viewModel.fetchDiaryList()
-        }
+//        }
     }
 
     val monthYearText = "${year}년 ${month + 1}월"
@@ -66,14 +67,14 @@ fun DailyCalendar(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(30.dp)
+            .padding(screenWidth * 0.05f)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceAround,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 24.dp)
+                .padding(bottom = screenWidth * 0.06f)
         ) {
 
             IconButton(onClick = { navigateToPreviousMonth(year, month) { updatedYear, updatedMonth ->
@@ -81,12 +82,15 @@ fun DailyCalendar(
             } }) {
                 Image(painter = painterResource(R.drawable.calender_back),
                     contentDescription = "Previous Month",
-                    modifier = Modifier.size(30.dp, 30.dp))
+                    modifier = Modifier.size(screenWidth * 0.08f)
+                )
             }
 
             Text(
                 text = monthYearText,
-                style = MyTypography.bodyMedium,
+                style = MyTypography.bodyMedium.copy(
+                    fontSize = (screenWidth * 0.06f).value.sp
+                ),
                 color = GrayText,
                 modifier = Modifier
                     .align(Alignment.CenterVertically)
@@ -98,12 +102,12 @@ fun DailyCalendar(
             } }) {
                 Image(painter = painterResource(R.drawable.calender_next),
                     contentDescription = "Previous Month",
-                    modifier = Modifier.size(30.dp, 30.dp))
+                    modifier = Modifier.size(screenWidth * 0.08f)
+                )
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
-
+        Spacer(modifier = Modifier.height(screenWidth * 0.06f))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceAround
@@ -111,15 +115,15 @@ fun DailyCalendar(
             daysOfWeek.forEach { day ->
                 Text(
                     text = day,
-                    style = MyTypography.bodySmall,
+                    style = MyTypography.bodySmall.copy(
+                        fontSize = (screenWidth * 0.05f).value.sp
+                    ),
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.size(36.dp)
-                )
+                    modifier = Modifier.size(screenWidth * 0.12f)                )
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
-
+        Spacer(modifier = Modifier.height(screenWidth * 0.02f))
         Column {
             for (i in 0 until rows) {
                 Row(
@@ -129,13 +133,14 @@ fun DailyCalendar(
                 ) {
                     for (j in 0..6) {
                         if (i == 0 && j < startDayOfWeek || day > daysInMonth) {
-                            Spacer(modifier = Modifier.size(36.dp))
-                        } else {
+                            Spacer(modifier = Modifier.size(screenWidth * 0.1f))                        } else {
                             val date = calendar.apply { set(Calendar.DAY_OF_MONTH, day) }.time
                             val localDate = LocalDateTime.of(year, month + 1, day, 0, 0).toLocalDate()
                             val isDiaryDate = diaryDatesSet.contains(LocalDateTime.of(year, month + 1, day, 0, 0).toLocalDate())
                             val diaryId = diaryList?.body()?.firstOrNull { it.createdAt.toLocalDate() == localDate }?.id.toString()
-                            DateCell(date = day,
+                            DateCell(
+                                screenWidth = screenWidth,
+                                date = day,
                                 isDiaryDate = isDiaryDate,
                                 onClick = {
                                     if (isDiaryDate) {
@@ -150,6 +155,8 @@ fun DailyCalendar(
                         }
                     }
                 }
+                Spacer(modifier = Modifier.height(screenWidth * 0.02f)) // 줄 사이에 간격 추가
+
             }
         }
     }
@@ -157,6 +164,7 @@ fun DailyCalendar(
 
 @Composable
 fun DateCell(
+    screenWidth: Dp,
     date: Int,
     isDiaryDate: Boolean,
     diaryId: String,
@@ -165,7 +173,7 @@ fun DateCell(
 ) {
     Box(
         modifier = Modifier
-            .size(36.dp)
+            .size(screenWidth * 0.1f)
             .background(
                 if (isDiaryDate) SkyBlue else Color.Transparent,
                 shape = CircleShape
@@ -179,8 +187,9 @@ fun DateCell(
     ) {
         Text(
             text = "$date",
-            style = MaterialTheme.typography.bodySmall,
-            fontSize = 18.sp,
+            style = MyTypography.bodySmall.copy(
+                fontSize = (screenWidth * 0.05f).value.sp,
+            ),
             fontWeight = if (isDiaryDate) FontWeight.Bold else FontWeight.Normal,
             color = if (isDiaryDate) Color.White else MaterialTheme.colorScheme.onSurface
         )

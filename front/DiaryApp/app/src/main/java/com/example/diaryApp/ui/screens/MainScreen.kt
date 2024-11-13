@@ -75,36 +75,31 @@ fun MainScreen(
         val screenHeight = maxHeight
         val footerHeight = screenWidth / 4.5f
         val headerHeight = screenWidth / 3.2f
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .wrapContentHeight()
-                ,
-            horizontalAlignment = Alignment.CenterHorizontally,
+                .wrapContentHeight(),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             TabletHeader(
                 pageName = "main",
                 navController = navController,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .wrapContentHeight(),
-                )
+                    .wrapContentHeight()
+            )
         }
-
-        LazyColumn(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = headerHeight ,bottom = footerHeight),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(screenHeight * 0.03f) // Optional spacing between items
+                .padding(top = headerHeight * 1.1f, bottom = footerHeight)
+
         ) {
-
-            item {
-
             ProfileList(
+                screenHeight = screenHeight,
+                screenWidth = screenWidth,
                 profileList = profileList,
-                modifier = Modifier
-                    .fillMaxWidth(),
                 navController = navController,
                 profileViewModel = profileViewModel,
                 diaryViewModel = diaryViewModel,
@@ -120,8 +115,7 @@ fun MainScreen(
                     }
                 }
             )
-                }
-            }
+        }
 
         Box(
             modifier = Modifier
@@ -130,17 +124,16 @@ fun MainScreen(
         ) {
             NavMenu(navController, "main", "main")
         }
+
         if (showQuizConfirmDialog && sessionId != null) {
             Alert(
                 isVisible = true,
-                onDismiss = {
-                    showQuizConfirmDialog = false
-                },
+                onDismiss = { showQuizConfirmDialog = false },
                 onConfirm = {
                     showQuizConfirmDialog = false
                     navController.navigate("catchMind/$sessionId/$childName")
                 },
-                title = "그림 퀴즈에 입장할까요?",
+                title = "그림 퀴즈에 입장할까요?"
             )
         }
 
@@ -152,4 +145,5 @@ fun MainScreen(
         }
     }
 }
+
 

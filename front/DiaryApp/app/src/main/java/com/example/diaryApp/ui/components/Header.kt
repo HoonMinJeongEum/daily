@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -70,7 +71,8 @@ fun TabletHeader(
                         painter = painterResource(R.drawable.main_logo),
                         contentDescription = "logo",
                         modifier = Modifier.fillMaxHeight(0.5f)
-                            .aspectRatio(1.8f),
+                            .aspectRatio(1.8f)
+                            .offset(x = screenWidth * 0.03f),
                     )
                     // 오른쪽 로그아웃 버튼
                     Button(
@@ -84,7 +86,12 @@ fun TabletHeader(
                             popUpTo("main") { inclusive = true }
                         }
                     }) {
-                        Text("로그아웃")
+                        Text( text = "로그아웃",
+                            style = MyTypography.bodyMedium.copy(
+                                color = Color.White,
+                                fontSize = (screenWidth.value * 0.045f).sp
+                            ),
+                            textAlign = TextAlign.Center)
                     }
                 }
 

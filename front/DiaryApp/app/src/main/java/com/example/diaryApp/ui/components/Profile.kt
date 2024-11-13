@@ -34,6 +34,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -68,14 +69,16 @@ fun ProfileItem(
     diaryViewModel: DiaryViewModel,
     wordViewModel: WordViewModel,
     quizViewModel: QuizViewModel,
-    onShowQuizAlert: (String, String) -> Unit
+    onShowQuizAlert: (String, String) -> Unit,
+    screenHeight: Dp,
+    screenWidth: Dp,
 ) {
     val coroutineScope = rememberCoroutineScope()
 
     Box(
         modifier = Modifier
-            .size(394.dp, 165.dp)
-            .padding(8.dp)
+            .size(screenWidth * 0.9f, screenHeight * 0.2f),
+
     ) {
         Image(
             painter = painterResource(id = R.drawable.profile_container),
@@ -86,12 +89,13 @@ fun ProfileItem(
 
         Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+                .fillMaxSize()
+                .padding(bottom = screenWidth * 0.02f),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(
+                verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Image(
@@ -99,32 +103,33 @@ fun ProfileItem(
                     contentDescription = "Profile Image",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
-                        .size(80.dp)
-                        .clip(RoundedCornerShape(50.dp))
-                        .border(1.dp, Color.LightGray, RoundedCornerShape(50.dp))
+                        .size(screenWidth * 0.18f)
+                        .clip(RoundedCornerShape(50))
+                        .border(1.dp, Color.LightGray, RoundedCornerShape(50))
                 )
 
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(screenHeight * 0.01f))
 
                 Text(
                     text = profile.name,
-                    fontSize = 16.sp,
+                    fontSize = (screenWidth.value * 0.05f).sp,
                     color = PastelGreen
                 )
             }
             Column(
+                verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 DailyButton(
                     text = "그림 일기",
-                    fontSize = 17,
+                    fontSize = (screenWidth.value * 0.045f).toInt(),
                     textColor = DarkGray,
                     fontWeight = FontWeight.Normal,
                     backgroundColor = PastelYellow,
                     cornerRadius = 30,
-                    width = 110,
-                    height = 42,
-                    shadowElevation = 8.dp,
+                    width = (screenWidth.value * 0.23f).toInt(),
+                    height = (screenHeight.value * 0.06f).toInt(),
+                    shadowElevation = screenWidth * 0.03f,
                     onClick = {
                         runBlocking {
                             updateMemberInfoDiary(profile, diaryViewModel)
@@ -133,18 +138,18 @@ fun ProfileItem(
                   },
             )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(screenHeight * 0.02f))
 
                 DailyButton(
                     text = "그림 퀴즈",
-                    fontSize = 17,
+                    fontSize = (screenWidth.value * 0.045f).toInt(),
                     textColor = DarkGray,
                     fontWeight = FontWeight.Normal,
                     backgroundColor = PastelPink,
                     cornerRadius = 30,
-                    width = 110,
-                    height = 42,
-                    shadowElevation = 8.dp,
+                    width = (screenWidth.value * 0.23f).toInt(),
+                    height = (screenHeight.value * 0.06f).toInt(),
+                    shadowElevation = screenWidth * 0.03f,
                     onClick = {
                         coroutineScope.launch {
                             quizViewModel.checkSession(
@@ -158,18 +163,19 @@ fun ProfileItem(
                 )
             }
             Column(
+                verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 DailyButton(
                     text = "단어장",
-                    fontSize = 17,
+                    fontSize = (screenWidth.value * 0.045f).toInt(),
                     textColor = DarkGray,
                     fontWeight = FontWeight.Normal,
                     backgroundColor = PastelSkyBlue,
                     cornerRadius = 30,
-                    width = 110,
-                    height = 42,
-                    shadowElevation = 8.dp,
+                    width = (screenWidth.value * 0.23f).toInt(),
+                    height = (screenHeight.value * 0.06f).toInt(),
+                    shadowElevation = screenWidth * 0.03f,
                     onClick = {
                         runBlocking {
                         updateMemberInfoWord(profile, wordViewModel)
@@ -177,18 +183,18 @@ fun ProfileItem(
                     }},
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(screenHeight * 0.02f))
 
                 DailyButton(
                     text = profile.shellCount.toString(),
-                    fontSize = 17,
+                    fontSize = (screenWidth.value * 0.045f).toInt(),
                     textColor = DarkGray,
                     fontWeight = FontWeight.Normal,
                     backgroundColor = PastelLightGreen,
                     cornerRadius = 30,
-                    width = 110,
-                    height = 42,
-                    shadowElevation = 8.dp,
+                    width = (screenWidth.value * 0.23f).toInt(),
+                    height = (screenHeight.value * 0.06f).toInt(),
+                    shadowElevation = screenWidth * 0.03f,
                     iconResId = R.drawable.shell,
                     onClick = {},
                 )
