@@ -36,11 +36,10 @@ enum class CouponModalState {
 
 @Composable
 fun CouponShopList(
-    initialCoupons: List<Coupon>,
+    coupons: List<Coupon>,
     viewModel: ShopStockViewModel,
     navBarViewModel: NavBarViewModel = hiltViewModel()
 ) {
-    var coupons by remember { mutableStateOf(initialCoupons) }
     var selectedCoupon by remember { mutableStateOf<Coupon?>(null) }
     var showDialog by remember { mutableStateOf(false) }
     var couponModalState by remember { mutableStateOf(CouponModalState.NONE) }
@@ -73,7 +72,6 @@ fun CouponShopList(
             onConfirm = {
                 if (shellCount >= selectedCoupon!!.price) {
                     viewModel.buyCoupon(selectedCoupon!!.id)
-                    coupons = coupons.filter { it.id != selectedCoupon!!.id }
                     couponModalState = CouponModalState.PURCHASE_SUCCESS
                 } else {
                     couponModalState = CouponModalState.INSUFFICIENT_SHELLS
