@@ -1,6 +1,9 @@
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -23,6 +26,7 @@ import com.example.diarytablet.model.Sticker
 import com.example.diarytablet.viewmodel.ShopStockViewModel
 import com.example.diarytablet.R
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ShopTab(
     coupons: List<Coupon>,
@@ -137,16 +141,29 @@ fun ShopTab(
                 modifier = Modifier
                     .size(screenHeight * 0.3f) // 화면 높이의 12%로 설정
                     .offset(x = -screenWidth * 0.01f, y = screenHeight * 0.03f)
+                    .combinedClickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() },
+                        onClick = {
+                            showInfo = !showInfo
+                        }
+                    )
                     .zIndex(0f)
             )
 
             // 물음표 또는 문구
             Box(
                 modifier = Modifier
-                    .offset(x = screenWidth * 0.08f, y = screenHeight * 0.05f) // 수달과 물음표 간격 조정
+                    .offset(x = screenWidth * 0.08f, y = screenHeight * 0.05f)
                     .width(if (showInfo) screenWidth * 0.4f else screenWidth * 0.07f)
                     .height(if (showInfo) screenHeight * 0.15f else screenHeight * 0.07f)
-                    .clickable { showInfo = !showInfo }
+                    .combinedClickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() },
+                        onClick = {
+                            showInfo = !showInfo
+                        }
+                    )
                     .zIndex(1f)
             ) {
                 if (showInfo) {
