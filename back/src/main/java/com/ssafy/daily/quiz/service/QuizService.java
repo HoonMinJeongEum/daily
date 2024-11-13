@@ -52,7 +52,7 @@ public class QuizService {
         // 세션 아이디 생성
         Member member = userDetails.getMember();
         String username = userDetails.getUsername();
-        String childName = userDetails.getMember().getName();
+        String childName = String.valueOf(userDetails.getMember().getId());
         String customSessionId = childName + username;
         Quiz quiz = quizRepository.findByMemberId(userDetails.getMember().getId());
 
@@ -121,7 +121,7 @@ public class QuizService {
     // 세션 체크
     public CheckSessionResponse checkSession(CustomUserDetails userDetails, CheckSessionRequest request) {
         String username = userDetails.getUsername();
-        String childName = request.getChildName();
+        String childName = String.valueOf(userDetails.getMember().getId());
         String customSessionId = childName + username;
 
         Quiz quiz = quizRepository.findBySessionId(customSessionId);
@@ -138,7 +138,7 @@ public class QuizService {
     public void endSession(CustomUserDetails userDetails) {
         // 알림 완료 처리
         String username = userDetails.getUsername();
-        String childName = userDetails.getMember().getName();
+        String childName = String.valueOf(userDetails.getMember().getId());
         String customSessionId = childName + username;
         confirmAlarmsByTitleAndTitleId("그림 퀴즈", customSessionId);
 
