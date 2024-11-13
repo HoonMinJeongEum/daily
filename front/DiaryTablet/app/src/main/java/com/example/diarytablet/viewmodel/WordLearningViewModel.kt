@@ -10,11 +10,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.diarytablet.R
+import com.example.diarytablet.datastore.UserStore
 import com.example.diarytablet.domain.dto.request.WordRequestDto
 import com.example.diarytablet.domain.dto.response.WordResponseDto
 import com.example.diarytablet.domain.repository.WordRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -28,8 +30,11 @@ import android.graphics.Color as AndroidColor
 
 @HiltViewModel
 class WordLearningViewModel @Inject constructor(
+    private val userStore: UserStore,
     private val wordRepository: WordRepository
 ) : ViewModel() {
+
+    val username: Flow<String> = userStore.getValue(UserStore.KEY_PROFILE_NAME)
 
     private val _wordList = mutableStateOf<List<WordResponseDto>>(emptyList())
     val wordList: State<List<WordResponseDto>> get() = _wordList
