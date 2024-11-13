@@ -168,9 +168,9 @@ fun DrawingColorPalette(
 ) {
     var selectedIndex by remember { mutableStateOf(11) }
     val colors = listOf(
-        Color.Red, Color(0xFFFFA500), Color.Yellow, Color(0xFFADFF2F), // 첫 줄: 빨, 주, 노, 연두
-        Color.Green, Color.Cyan, Color.Blue, Color(0xFF00008B),         // 둘째 줄: 초, 하늘, 파, 남
-        Color.Magenta, Color(0xFF8A2BE2), Color.Gray, Color.Black       // 셋째 줄: 핑, 보, 회, 검
+        Color.Red, Color(0xFFFFA500), Color.Yellow, Color(0xFFADFF2F),
+        Color.Green, Color(0xFF87CEEB), Color.Blue, Color(0xFF000080),
+        Color(0xFFFFC0CB), Color(0xFF800080), Color.Gray, Color.Black     // 셋째 줄: 핑, 보, 회, 검
     )
     Column(
         modifier.fillMaxSize()

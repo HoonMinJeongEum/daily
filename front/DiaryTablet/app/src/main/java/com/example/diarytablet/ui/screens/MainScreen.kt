@@ -25,6 +25,7 @@ import com.example.diarytablet.ui.components.BasicButton
 import com.example.diarytablet.ui.components.MissionBar
 import com.example.diarytablet.ui.components.MissionItem
 import com.example.diarytablet.ui.components.Navbar
+import com.example.diarytablet.ui.components.main.TypingText
 import com.example.diarytablet.ui.theme.BackgroundPlacement
 import com.example.diarytablet.ui.theme.BackgroundType
 import com.example.diarytablet.viewmodel.MainViewModel
@@ -103,7 +104,6 @@ fun MainScreen(
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 MissionBar(
@@ -111,6 +111,7 @@ fun MainScreen(
                     screenWidth = screenWidth,
                     screenHeight = screenHeight
                 )
+                Spacer(modifier = Modifier.weight(1f))
                 Navbar(
                     navController = navController,
                     screenWidth = screenWidth,
@@ -156,13 +157,19 @@ fun MainScreen(
                     Column(
                         modifier = Modifier
                             .align(Alignment.Center)
-                            .padding(blockWidth * 0.1f),
+                            .padding(blockWidth * 0.1f)
+                            .clickable(
+                                indication = null, // 클릭 효과 없애기
+                                interactionSource = remember { MutableInteractionSource() } // 필수: 사용자 인터랙션 관리
+                            ) {
+                                // 이미지 클릭 시 인덱스를 업데이트하여 다음 이미지와 텍스트로 변경
+                                currentIndex = (currentIndex + 1) % characterImages.size
+                            },
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        Text(
+                        TypingText(
                             text = characterTexts[currentIndex],
-                            color = PastelNavy,
                             fontSize = (screenHeight.value * 0.04f).sp,
                             lineHeight = (screenHeight.value * 0.06f).sp
                         )
