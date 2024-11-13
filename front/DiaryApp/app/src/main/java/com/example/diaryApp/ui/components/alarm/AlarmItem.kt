@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -43,6 +44,8 @@ import java.time.format.DateTimeFormatter
 
 @Composable
 fun AlarmItem(
+    screenHeight : Dp,
+    screenWidth : Dp,
     alarm: AlarmResponseDto,
     navController: NavController,
     quizViewModel: QuizViewModel,
@@ -54,8 +57,8 @@ fun AlarmItem(
 
     Box(modifier = Modifier
         .fillMaxWidth()
-        .padding(horizontal = 16.dp, vertical = 4.dp)
-        .height(100.dp),
+        .padding(horizontal = screenHeight * 0.01f, vertical = screenWidth * 0.01f)
+        .height(screenHeight * 0.1f),
         contentAlignment = Alignment.Center
     ) {
         Row(
@@ -66,7 +69,7 @@ fun AlarmItem(
             Column(
                 horizontalAlignment = Alignment.Start,
                 modifier = Modifier.weight(0.7f)
-                    .padding(start = 20.dp)
+                    .padding(start = screenWidth * 0.04f)
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -75,26 +78,28 @@ fun AlarmItem(
                     Text(
                         text = alarm.name,
                         color = PastelNavy,
-                        style = MyTypography.bodySmall
+                        style = MyTypography.bodySmall.copy(
+                            fontSize = (screenWidth.value * 0.05f).sp
+                        )
                     )
-                    Text(text = " 님의 ", fontSize = 18.sp, color = DarkGray)
-                    Text(text = alarm.title, fontSize = 22.sp, color = DeepPastelBlue)
+                    Text(text = " 님의 ", fontSize = (screenWidth.value * 0.04f).sp, color = DarkGray)
+                    Text(text = alarm.title, fontSize = (screenWidth.value * 0.045f).sp, color = DeepPastelBlue)
                     if (alarm.title == "그림 퀴즈") {
-                        Text(text = " 요청", fontSize = 18.sp, color = DarkGray)
+                        Text(text = " 요청", fontSize = (screenWidth.value * 0.04f).sp, color = DarkGray)
                     } else {
-                        Text(text = " 업로드", fontSize = 18.sp, color = DarkGray)
+                        Text(text = " 업로드", fontSize = (screenWidth.value * 0.04f).sp, color = DarkGray)
                     }
                 }
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(screenHeight * 0.015f))
 
-                Text(text = displayDate, fontSize = 16.sp, color = GrayDetail)
+                Text(text = displayDate, fontSize = (screenWidth.value * 0.03f).sp, color = GrayDetail)
             }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.End,
                 modifier = Modifier
                     .weight(0.3f)
-                    .padding(end = 20.dp)
+                    .padding(end = screenWidth * 0.04f)
             ) {
                 Button(
                     modifier = Modifier
@@ -120,12 +125,12 @@ fun AlarmItem(
                     enabled = alarm.confirmedAt == null
                 ) {
                     if (alarm.confirmedAt != null) {
-                        Text(text = "완료", fontSize = 18.sp, fontFamily = myFontFamily)
+                        Text(text = "완료", fontSize = (screenWidth.value * 0.04f).sp, fontFamily = myFontFamily)
                     } else {
                         if (alarm.title == "그림 퀴즈") {
-                            Text(text = "수락", fontSize = 18.sp, fontFamily = myFontFamily)
+                            Text(text = "수락", fontSize = (screenWidth.value * 0.04f).sp, fontFamily = myFontFamily)
                         } else {
-                            Text(text = "입장", fontSize = 18.sp, fontFamily = myFontFamily)
+                            Text(text = "입장", fontSize = (screenWidth.value * 0.04f).sp, fontFamily = myFontFamily)
                         }
                     }
                 }

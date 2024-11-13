@@ -6,10 +6,13 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -25,6 +28,7 @@ import com.example.diaryApp.ui.theme.BackgroundType
 import com.example.diaryApp.R
 import com.example.diaryApp.presentation.viewmodel.DiaryViewModel
 import com.example.diaryApp.ui.components.NavMenu
+import com.example.diaryApp.ui.components.TabletHeader
 import com.example.diaryApp.ui.components.TopBackImage
 import com.example.diaryApp.viewmodel.ProfileViewModel
 
@@ -36,19 +40,26 @@ fun DiaryScreen(
 ) {
     BackgroundPlacement(backgroundType = backgroundType)
 
-    Box(
-        modifier = Modifier.fillMaxSize()
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxSize()
     ) {
+        val screenWidth = maxWidth
+        val footerHeight = screenWidth / 4.5f
         Column(
             modifier = Modifier
-                .fillMaxSize(),
-            verticalArrangement = Arrangement.Top
+                .fillMaxSize()
+                .padding(bottom = footerHeight)
+            ,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            TopBackImage(
-                logoText = "${diaryViewModel.memberName.value}의 그림 일기",
-                BackImage = R.drawable.navigate_back,
-                onBackClick = {
-                    navController.popBackStack()
+            TabletHeader(
+                pageName = "${diaryViewModel.memberName.value}의 그림 일기",
+                navController = navController,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight(),
+                onClick = {
                     diaryViewModel.memberName.value = ""
                     diaryViewModel.memberId.intValue = 0
                 }

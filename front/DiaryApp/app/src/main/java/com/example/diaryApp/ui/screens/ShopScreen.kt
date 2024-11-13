@@ -3,6 +3,7 @@ package com.example.diaryApp.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,6 +36,7 @@ import com.example.diaryApp.ui.components.CouponListItem
 import com.example.diaryApp.ui.components.CreateCoupon
 import com.example.diaryApp.ui.components.DailyRegisterButton
 import com.example.diaryApp.ui.components.NavMenu
+import com.example.diaryApp.ui.components.TabletHeader
 import com.example.diaryApp.ui.components.TopBackImage
 import com.example.diaryApp.ui.components.TopLogoImg
 import com.example.diaryApp.ui.components.UsageCouponListItem
@@ -55,9 +58,14 @@ fun ShoppingScreen(
     val couponList by couponViewModel.couponList
     val usageCouponList by couponViewModel.usageCouponList
 
-    Box(
-        modifier = Modifier.fillMaxSize()
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxSize()
     ) {
+        val screenWidth = maxWidth
+        val screenHeight = maxHeight
+        val footerHeight = screenWidth / 4.5f
+        val textFieldHeight = screenWidth / 5f
         Column(
             modifier = Modifier
                 .fillMaxSize(),
@@ -65,29 +73,23 @@ fun ShoppingScreen(
         ) {
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                TopLogoImg(
-                    characterImg = R.drawable.daily_character,
-                    modifier = Modifier.weight(1f)
-                )
-
-                Text(
-                    text = "상점",
-                    color = Color.White,
-                    style = MyTypography.bodyMedium,
+                TabletHeader(
+                    pageName = "상점",
+                    navController = navController,
                     modifier = Modifier
-                        .weight(2f)
-                        .padding(start = 40.dp)
+                        .fillMaxWidth()
+                        .wrapContentHeight(),
                 )
             }
             Box(
                 modifier = Modifier
                     .background(Color.White, shape = RoundedCornerShape(topEnd = 50.dp, topStart = 50.dp))
-                    .fillMaxWidth()
-                    .height(780.dp)
+                    .fillMaxSize()
+                    .padding(bottom = footerHeight)
             ){
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -96,9 +98,9 @@ fun ShoppingScreen(
                 ) {
                     Row(
                         modifier = Modifier.padding(
-                            top = 16.dp,
-                            start = 16.dp,
-                            end = 16.dp
+                            top = screenWidth  * 0.03f,
+                            start = screenWidth  * 0.03f,
+                            end = screenWidth  * 0.03f,
                         )
                     ) {
                         DailyRegisterButton(
@@ -122,19 +124,23 @@ fun ShoppingScreen(
                     when (selectedTab) {
                         "쿠폰 등록" -> {
                             CouponListItem(
+                                screenWidth = screenWidth,
+                                screenHeight = screenHeight,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(top = 24.dp),
-                                couponList,
+                                    .padding(top = screenWidth  * 0.05f),
+                                couponList = couponList,
                                 onShowDialogChange = { showDialog = it }
                             )
                         }
                         "쿠폰 내역" -> {
                             UsageCouponListItem(
+                                screenWidth = screenWidth,
+                                screenHeight = screenHeight,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(top = 24.dp),
-                                usageCouponList,
+                                    .padding(top = screenWidth  * 0.05f),
+                                usageCouponList =usageCouponList,
                                 onShowBuyDialogChange = { showBuyDialog = it }
                             )
                         }

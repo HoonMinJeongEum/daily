@@ -4,12 +4,14 @@ import WordDetail
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,6 +32,7 @@ import com.example.diaryApp.R
 import com.example.diaryApp.domain.dto.response.word.Word
 import com.example.diaryApp.ui.components.DailyRegisterButton
 import com.example.diaryApp.ui.components.NavMenu
+import com.example.diaryApp.ui.components.TabletHeader
 import com.example.diaryApp.ui.components.TopBackImage
 import com.example.diaryApp.ui.components.TopLogoImg
 import com.example.diaryApp.ui.components.WordListItemByMember
@@ -62,26 +65,32 @@ fun WordScreen(
 
     val displayedList = if (selectedTab == "날짜순") sortedWordList else wordList
 
-    Box(
+    BoxWithConstraints (
         modifier = Modifier.fillMaxSize()
     ) {
+        val screenWidth = maxWidth
+        val screenHeight = maxHeight
+        val footerHeight = screenWidth / 4.5f
+        val headerHeight = screenWidth / 3.2f
         Column(
             modifier = Modifier
                 .fillMaxSize(),
-            verticalArrangement = Arrangement.Top
-        ){
-                TopBackImage(
-                    logoText = "${wordViewModel.memberName.value} 의 단어장",
-                    BackImage = R.drawable.navigate_back,
-                    onBackClick = {
-                        navController.popBackStack()
-                    }
-                )
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.CenterHorizontally,
+
+            ){
+            TabletHeader(
+                pageName = "${wordViewModel.memberName.value}의 그림 일기",
+                navController = navController,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight(),
+
+            )
             Box(
                 modifier = Modifier
                     .background(Color.White, shape = RoundedCornerShape(topEnd = 50.dp, topStart = 50.dp))
                     .fillMaxWidth()
-                    .height(780.dp)
             ){
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -89,9 +98,9 @@ fun WordScreen(
                 ) {
                     Row(
                         modifier = Modifier.padding(
-                            top = 16.dp,
-                            start = 16.dp,
-                            end = 16.dp
+                            top = screenWidth  * 0.03f,
+                            start = screenWidth  * 0.03f,
+                            end = screenWidth  * 0.03f,
                         )
                     ) {
                         DailyRegisterButton(

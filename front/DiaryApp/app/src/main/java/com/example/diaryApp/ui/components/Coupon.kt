@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -25,6 +26,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.diaryApp.R
@@ -108,6 +110,8 @@ fun CouponItem(
 
 @Composable
 fun UsageCouponItem(
+    screenHeight: Dp,
+    screenWidth: Dp,
     usageCoupon: UsageCoupon,
     onClick: () -> Unit
 ) {
@@ -119,11 +123,11 @@ fun UsageCouponItem(
     } else {
         usageCoupon.createdAt.format(dateTimeFormatter)
     }
-    Box(
+    Box (
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 18.dp, vertical = 10.dp)
-            .height(100.dp)
+            .padding(horizontal = screenHeight * 0.02f, screenWidth * 0.02f)
+            .height(screenHeight * 0.18f)
             .background(boxColor, RoundedCornerShape(30))
             .shadow(6.dp, RoundedCornerShape(30))
             .clickable(
@@ -146,7 +150,7 @@ fun UsageCouponItem(
                     horizontalAlignment = Alignment.Start,
                     modifier = Modifier
                         .weight(0.7f)
-                        .padding(start = 20.dp)
+                        .padding(start = screenWidth * 0.04f)
                 ) {
                     Text(
                         text = usageCoupon.description,
@@ -154,24 +158,24 @@ fun UsageCouponItem(
                         color = DeepPastelNavy
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(screenHeight * 0.02f))
 
                     Text(
                         text = if (usageCoupon.usedAt != null) "사용 일시 $displayDate" else "등록 일시 $displayDate",
-                        fontSize = 12.sp,
+                        fontSize = (screenWidth.value * 0.04f).sp,
                         fontWeight = FontWeight.Thin,
                         color = GrayDetail
                     )
                 }
 
-                Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.width(screenWidth * 0.04f))
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.End,
                     modifier = Modifier
                         .weight(0.3f)
-                        .padding(end = 20.dp)
+                        .padding(screenWidth * 0.04f)
                 ) {
                     Text(
                         text = usageCoupon.name,

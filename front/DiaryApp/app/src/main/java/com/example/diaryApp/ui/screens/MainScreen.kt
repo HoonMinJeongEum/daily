@@ -1,6 +1,7 @@
 package com.example.diaryApp.ui.screens
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -46,6 +48,9 @@ import com.example.diaryApp.viewmodel.ProfileViewModel
 import com.example.diaryApp.viewmodel.QuizViewModel
 import com.example.diaryApp.viewmodel.WordViewModel
 
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+
 @Composable
 fun MainScreen(
     navController: NavController,
@@ -68,19 +73,33 @@ fun MainScreen(
     ) {
         val screenWidth = maxWidth
         val screenHeight = maxHeight
+        val footerHeight = screenWidth / 4.5f
+        val headerHeight = screenWidth / 3.2f
         Column(
             modifier = Modifier
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .fillMaxWidth()
+                .wrapContentHeight()
+                ,
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             TabletHeader(
                 pageName = "main",
                 navController = navController,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .wrapContentHeight()
-            )
-            Spacer(modifier = Modifier.height(screenHeight*0.06f))
+                    .wrapContentHeight(),
+                )
+        }
+
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = headerHeight ,bottom = footerHeight),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(screenHeight * 0.03f) // Optional spacing between items
+        ) {
+
+            item {
 
             ProfileList(
                 profileList = profileList,
@@ -101,35 +120,9 @@ fun MainScreen(
                     }
                 }
             )
+                }
+            }
 
-//
-//        Column(
-//            modifier = Modifier.fillMaxWidth(),
-//            horizontalAlignment = Alignment.CenterHorizontally
-//        ) {
-//            ProfileList(
-//                profileList = profileList,
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .padding(top = 100.dp),
-//                navController = navController,
-//                profileViewModel = profileViewModel,
-//                diaryViewModel = diaryViewModel,
-//                wordViewModel = wordViewModel,
-//                quizViewModel = quizViewModel,
-//                onShowQuizAlert = { newSessionId ->
-//                    if (newSessionId.isNotEmpty()) {
-//                        sessionId = newSessionId
-//                        showQuizConfirmDialog = true
-//                    } else {
-//                        showQuizAlert = true
-//                    }
-//                }
-//            )
-//        }
-
-
-        }
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -159,3 +152,4 @@ fun MainScreen(
         }
     }
 }
+

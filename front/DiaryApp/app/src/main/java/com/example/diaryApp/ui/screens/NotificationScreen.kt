@@ -3,6 +3,7 @@ package com.example.diaryApp.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -57,32 +58,43 @@ fun NotificationScreen(
 
     BackgroundPlacement(backgroundType = backgroundType)
 
-    Box(
-        modifier = Modifier.fillMaxSize()
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxSize()
     ) {
+        val screenWidth = maxWidth
+        val screenHeight = maxHeight
+        val footerHeight = screenWidth / 4.5f
+        val textFieldHeight = screenWidth / 5f
         Column(
             modifier = Modifier
                 .fillMaxSize(),
             verticalArrangement = Arrangement.Top
         ) {
-            TabletHeader(
-                pageName = "alarm",
-                navController = navController,
+            Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight()
-            )
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TabletHeader(
+                    pageName = "알림",
+                    navController = navController,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight()
+                )
+            }
             Box(
                 modifier = Modifier
                     .background(Color.White, shape = RoundedCornerShape(topEnd = 50.dp, topStart = 50.dp))
-                    .fillMaxWidth()
-                    .height(780.dp) // 필요한 높이 지정
+                    .fillMaxSize()
+                    .padding(bottom = footerHeight) // 필요한 높이 지정
             ) {
                 AlarmList(
+                    screenHeight = screenHeight,
+                    screenWidth = screenWidth,
                     alarmList = alarms,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp, bottom = 80.dp), // 원하는 만큼 상단 간격 설정
                     quizViewModel = quizViewModel,
                     alarmViewModel = viewModel,
                     navController = navController
