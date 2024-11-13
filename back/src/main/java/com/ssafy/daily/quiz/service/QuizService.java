@@ -8,7 +8,9 @@ import com.ssafy.daily.quiz.dto.*;
 import com.ssafy.daily.quiz.entity.Quiz;
 import com.ssafy.daily.quiz.repository.QuizRepository;
 import com.ssafy.daily.user.dto.CustomUserDetails;
+import com.ssafy.daily.user.entity.Family;
 import com.ssafy.daily.user.entity.Member;
+import com.ssafy.daily.user.repository.MemberRepository;
 import com.ssafy.daily.word.entity.LearnedWord;
 import com.ssafy.daily.word.entity.Word;
 import com.ssafy.daily.word.repository.LearnedWordRepository;
@@ -32,6 +34,7 @@ public class QuizService {
     private final QuizRepository quizRepository;
     private final AlarmService alarmService;
     private final AlarmRepository alarmRepository;
+    private final MemberRepository memberRepository;
 
     @Value("${openvidu.url}")
     private String OPENVIDU_URL;
@@ -52,8 +55,8 @@ public class QuizService {
         // 세션 아이디 생성
         Member member = userDetails.getMember();
         String username = userDetails.getUsername();
-        String childName = String.valueOf(userDetails.getMember().getId());
-        String customSessionId = childName + username;
+        String childName = userDetails.getMember().getName();
+        String customSessionId = userDetails.getMember().getId() + username;
         Quiz quiz = quizRepository.findByMemberId(userDetails.getMember().getId());
 
         // 세션 생성
@@ -77,7 +80,7 @@ public class QuizService {
         }
 
         // 알림
-        alarmService.sendNotification(userDetails.getMember().getName(), sessionId, userDetails.getFamily().getId(), Role.PARENT, "그림 퀴즈", "요청");
+        alarmService.sendNotification(childName, sessionId, userDetails.getFamily().getId(), Role.PARENT, "그림 퀴즈", "요청");
         return new SessionResponse(sessionId);
     }
 
@@ -121,8 +124,9 @@ public class QuizService {
     // 세션 체크
     public CheckSessionResponse checkSession(CustomUserDetails userDetails, CheckSessionRequest request) {
         String username = userDetails.getUsername();
-        String childName = String.valueOf(userDetails.getMember().getId());
-        String customSessionId = childName + username;
+        String childName = request.getChildName();
+        Member member = memberRepository.findByFamilyIdAndName(userDetails.getFamily().getId(), childName);
+        String customSessionId = member.getId() + username;
 
         Quiz quiz = quizRepository.findBySessionId(customSessionId);
 
@@ -138,8 +142,7 @@ public class QuizService {
     public void endSession(CustomUserDetails userDetails) {
         // 알림 완료 처리
         String username = userDetails.getUsername();
-        String childName = String.valueOf(userDetails.getMember().getId());
-        String customSessionId = childName + username;
+        String customSessionId = userDetails.getMember().getId() + username;
         confirmAlarmsByTitleAndTitleId("그림 퀴즈", customSessionId);
 
         // 세션 종료
