@@ -492,12 +492,18 @@ fun DiaryScreen(
         diaryViewModel.fetchUserStickers()
     }
 
+    val isLoading by diaryViewModel.isLoading.observeAsState(false)
+    val responseMessage by diaryViewModel.responseMessage.observeAsState()
+
     val context = LocalContext.current
     var isDrawingMode by remember { mutableStateOf(true) }
+    var isPreviewDialogVisible by remember { mutableStateOf(false) }
+    var isWarningDialogVisible by remember { mutableStateOf(false) }
+    var isVideoReady by remember { mutableStateOf(false)}
+
     var selectedColor by remember { mutableStateOf(Color.Black) }
     var brushSize by remember { mutableFloatStateOf(5f) }
     var selectedTool by remember { mutableStateOf(ToolType.PENCIL) }
-    var isPreviewDialogVisible by remember { mutableStateOf(false) }
 
     val configuration = LocalConfiguration.current
     val screenWidthDp = configuration.screenWidthDp.dp
@@ -768,8 +774,10 @@ fun DiaryScreen(
                 Button(onClick = { isDrawingMode = !isDrawingMode }) {
                     Text(if (isDrawingMode) "스크롤 모드로 전환" else "그리기 모드로 전환")
                 }
-                Button(onClick = { isPreviewDialogVisible = true }) {
-                    Text("그리기 과정 미리보기")
+                Button(onClick = {
+                    isWarningDialogVisible = true
+                }) {
+                    Text("그림 일기 작성 완료")
                 }
             }
         }
@@ -793,6 +801,41 @@ fun DiaryScreen(
             contentAlignment = Alignment.Center
         ) {
             Text("X", color = Color.Red, fontSize = 16.sp)
+        }
+    }
+    if (isWarningDialogVisible) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.7f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth(0.4f)
+                    .background(Color.White, shape = RoundedCornerShape(16.dp))
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text("그림 일기를 다시 작성 할 수 없어요!", fontSize = 20.sp, color = Color.Black)
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    Button(onClick = { isWarningDialogVisible = false }) {
+                        Text("취소")
+                    }
+                    Button(onClick = {
+                        isWarningDialogVisible = false
+                        isPreviewDialogVisible = true // 확인 버튼을 눌렀을 때 프리뷰 다이얼로그 표시
+                        isVideoReady = false // 동영상 준비 상태 초기화
+                    }) {
+                        Text("확인")
+                    }
+                }
+            }
         }
     }
 
@@ -823,7 +866,8 @@ fun DiaryScreen(
                         firstPageStickers = firstPageStickers,
                         context = context,
                         templateWidth = with(LocalDensity.current) { (leftBoxWidth - padding * 2).toPx().toInt() },
-                        templateHeight = with(LocalDensity.current) { (boxHeight - padding * 2).toPx().toInt() }
+                        templateHeight = with(LocalDensity.current) { (boxHeight - padding * 2).toPx().toInt() },
+                        onVideoReady = { isVideoReady = true }
                     )
                 }
 
@@ -839,14 +883,52 @@ fun DiaryScreen(
                     }
                     Button(
                         onClick = {
-                            CoroutineScope(Dispatchers.IO).launch {
-                                saveAndUploadImages()
+                            if (isVideoReady) {
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    diaryViewModel.clearResponseMessage() // 이전 응답 메시지 초기화
+                                    saveAndUploadImages() // 이미지 저장 및 업로드 함수 호출
+                                }
                             }
-                            isPreviewDialogVisible = false
-                        }
+                        },
+                        enabled = isVideoReady && !isLoading // 로딩 중이 아니고, 비디오 준비 완료 시 활성화
                     ) {
-                        Text("보내기")
+                        Text("일기 저장")
                     }
+                }
+            }
+        }
+    }
+    if (isLoading) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("일기가 생성중입니다. 잠시만 기다려주세요.", color = Color.White, fontSize = 18.sp)
+        }
+    }
+
+    responseMessage?.let { message ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(message, color = Color.White, fontSize = 18.sp)
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = {
+                        diaryViewModel.clearResponseMessage()
+                        isPreviewDialogVisible = false // 다이얼로그 닫기
+                        navController.navigate("main") // 메인 화면으로 이동
+                    }
+                ) {
+                    Text("확인")
                 }
             }
         }

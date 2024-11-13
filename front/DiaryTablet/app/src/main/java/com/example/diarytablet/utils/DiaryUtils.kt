@@ -65,7 +65,8 @@ fun DrawingPlaybackView(
     context: Context,
     templateWidth: Int,
     templateHeight: Int,
-) {
+    onVideoReady: () -> Unit
+    ) {
     val overlayBitmap = remember {
         Bitmap.createBitmap(templateWidth, templateHeight, Bitmap.Config.ARGB_8888)
     }
@@ -121,6 +122,7 @@ fun DrawingPlaybackView(
         // 모든 프레임을 비디오로 결합
         createVideoFromFrames(context, outputDir, videoFile)
         scanFile(context, videoFile)
+        onVideoReady()
     }
 
     // Box로 캔버스 및 템플릿과 그려진 경로를 포함한 UI 구성
