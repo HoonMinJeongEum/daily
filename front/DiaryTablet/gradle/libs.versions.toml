@@ -15,6 +15,7 @@ firebaseMessagingKtx = "24.0.3"
 uiTestAndroid = "1.7.0"
 appcompat = "1.7.0"
 roomCompilerProcessingTesting = "2.6.1"
+foundationAndroid = "1.6.7"
 
 
 [libraries]
@@ -39,6 +40,7 @@ firebase-messaging-ktx = { group = "com.google.firebase", name = "firebase-messa
 androidx-ui-test-android = { group = "androidx.compose.ui", name = "ui-test-android", version.ref = "uiTestAndroid" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 androidx-room-compiler-processing-testing = { group = "androidx.room", name = "room-compiler-processing-testing", version.ref = "roomCompilerProcessingTesting" }
+androidx-foundation-android = { group = "androidx.compose.foundation", name = "foundation-android", version.ref = "foundationAndroid" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

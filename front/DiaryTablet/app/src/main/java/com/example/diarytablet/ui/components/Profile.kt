@@ -2,7 +2,9 @@ package com.example.diarytablet.ui.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material3.MaterialTheme
@@ -30,7 +32,11 @@ fun Profile(
     Box(
         modifier = modifier
             .size(75.dp) // 크기 설정
-            .clickable { onProfileClick() }, // 클릭 이벤트 처리
+            .aspectRatio(1f)
+            .clickable(
+                indication = null, // 클릭 효과 제거
+                interactionSource = remember { MutableInteractionSource() }
+            ) { onProfileClick() }, // 클릭 이벤트 처리
         contentAlignment = Alignment.Center
     ) {
         Surface(
