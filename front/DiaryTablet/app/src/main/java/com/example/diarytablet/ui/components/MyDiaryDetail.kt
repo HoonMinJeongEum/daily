@@ -1,5 +1,7 @@
 package com.example.diarytablet.ui.components
 
+import android.media.MediaPlayer
+import android.net.Uri
 import android.widget.VideoView
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -29,6 +31,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -39,6 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -84,6 +88,7 @@ fun MyDiaryDetail(
         Dialog(onDismissRequest = { isVideoOpen = false }) {
             MyDiaryVideo(
                 video = diary?.video,
+                sound = diary?.sound,
                 onDismissRequest = { isVideoOpen = false }
             )
         }
@@ -179,8 +184,19 @@ fun MyDiaryContent(
 @Composable
 fun MyDiaryVideo(
     video: String?,
+    sound: String?,
     onDismissRequest: () -> Unit
 ){
+    val context = LocalContext.current
+    var mediaPlayer: MediaPlayer? = remember { MediaPlayer() }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            // VideoView와 MediaPlayer 리소스 해제
+            mediaPlayer?.release()
+            mediaPlayer = null
+        }
+    }
     Surface(
         shape = RoundedCornerShape(16.dp),
         color = Color.White,
@@ -219,13 +235,24 @@ fun MyDiaryVideo(
                     .padding(bottom = 20.dp),
                 textAlign = TextAlign.Center
             )
-            video?.let { // video가 null이 아닐 때만 VideoView 생성
+
+            video?.let { videoUrl ->
+                sound?.let { soundUrl ->
+                    mediaPlayer?.apply {
+                        setDataSource(context, Uri.parse(soundUrl))
+                        setOnPreparedListener { start() }
+                        prepareAsync()
+                    }
+                }
+
                 AndroidView(
                     factory = { context ->
                         VideoView(context).apply {
-                            setVideoPath(it)
-                            setOnPreparedListener { it.isLooping = true }
-                            start()
+                            setVideoPath(videoUrl)
+                            setOnPreparedListener {
+                                it.isLooping = true
+                                start()
+                            }
                         }
                     },
                     modifier = Modifier
