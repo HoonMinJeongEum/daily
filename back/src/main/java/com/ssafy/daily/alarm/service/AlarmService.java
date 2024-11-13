@@ -32,7 +32,8 @@ public class AlarmService {
 
         int id = userDetails.getMember() == null ? userDetails.getFamily().getId() : userDetails.getMember().getId();
         Role role = userDetails.getMember() == null ? Role.PARENT : Role.CHILD;
-
+        System.out.println("FCM Role: " + role);
+        System.out.println("FCM Id: " + id);
         // 기존 토큰 조회
         FCMToken existingToken = fcmTokenRepository.findByUserIdAndRole(id, role);
 
