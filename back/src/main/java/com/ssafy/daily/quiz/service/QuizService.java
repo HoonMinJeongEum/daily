@@ -125,7 +125,6 @@ public class QuizService {
         String customSessionId = childName + username;
 
         Quiz quiz = quizRepository.findBySessionId(customSessionId);
-        confirmAlarmsByTitleAndTitleId("그림 퀴즈", customSessionId);
 
         if(quiz == null || quiz.getEndAt() != null) {
             return new CheckSessionResponse(null);
