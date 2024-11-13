@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -26,6 +27,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
@@ -34,9 +36,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -51,25 +55,40 @@ import com.example.diaryApp.viewmodel.CouponViewModel
 
 @Composable
 fun CreateCoupon(
+    screenWidth: Dp,
     couponViewModel: CouponViewModel,
     onCancel: () -> Unit
 ) {
+    val context = LocalContext.current
+    var showAlertDescription by remember { mutableStateOf(false) } // 소원명 경고 상태
+    var showAlertPrice by remember { mutableStateOf(false) } // 가격 경고 상태
+
+    LaunchedEffect(Unit) {
+        showAlertDescription = false
+        showAlertPrice = false
+        couponViewModel.couponDescription.value = ""
+        couponViewModel.couponPrice.value = 0
+    }
+
     Dialog(onDismissRequest = onCancel) {
         Surface(
-            shape = RoundedCornerShape(30.dp),
+            shape = RoundedCornerShape(screenWidth * 0.08f),
             color = Color.White,
-            modifier = Modifier.padding(20.dp)
+            modifier = Modifier
+                .padding(screenWidth * 0.05f)
+                .fillMaxWidth()
+                .wrapContentHeight()
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(20.dp)
+                    .padding(horizontal = screenWidth * 0.05f, vertical = screenWidth * 0.03f)
                     .background(Color.White),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Spacer(modifier = Modifier.weight(1f))
@@ -78,7 +97,7 @@ fun CreateCoupon(
                             imageVector = Icons.Filled.Close,
                             contentDescription = "Close",
                             tint = Color.Gray,
-                            modifier = Modifier.size(32.dp)
+                            modifier = Modifier.size(screenWidth * 0.08f)
                         )
                     }
                 }
@@ -86,70 +105,110 @@ fun CreateCoupon(
                 Text(
                     text = "쿠폰 생성",
                     color = Color(0xFF5A72A0),
-                    modifier = Modifier
-                        .fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center,
-                    style = MyTypography.bodyMedium
+                    style = MyTypography.bodyMedium.copy(
+                        color = DeepPastelNavy,
+                        fontSize = (screenWidth * 0.08f).value.sp
+                    )
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(screenWidth * 0.06f))
 
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    MyTextField(
-                        value = couponViewModel.couponDescription.value,
-                        placeholder = "소원명",
-                        onValueChange = { couponViewModel.couponDescription.value = it },
-                        width = 280.dp,
-                        height = 50.dp
+                MyTextField(
+                    value = couponViewModel.couponDescription.value,
+                    placeholder = "소원명",
+                    onValueChange = { couponViewModel.couponDescription.value = it },
+                    width = screenWidth,
+                    height = screenWidth * 1.9f
+                )
+
+                if (showAlertDescription) {
+                    Text(
+                        text = "소원명을 입력해주세요.",
+                        color = Color.Red,
+                        style = MyTypography.bodySmall.copy(
+                            fontSize = (screenWidth.value * 0.03f).sp
+                        ),
+                        modifier = Modifier
+                            .padding(top = screenWidth * 0.02f)
+                            .offset(x = (-screenWidth * 0.1f))
                     )
-                    MyTextField(
-                        value = if (couponViewModel.couponPrice.value == 0) "" else couponViewModel.couponPrice.value.toString(),
-                        placeholder = "가격",
-                        width = 280.dp,
-                        height = 50.dp,
-                        onValueChange = {
-                            if (it.all { char -> char.isDigit() } || it.isEmpty()) {
-                                couponViewModel.couponPrice.value = it.toIntOrNull() ?: 0
-                            }
-                        }
-                    )
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    Row {
-                        DailyButton(
-                            text = "쿠폰 생성",
-                            fontSize = 20,
-                            textColor = White,
-                            fontWeight = FontWeight.Bold,
-                            backgroundColor = PastelNavy,
-                            cornerRadius = 35,
-                            width = 120,
-                            height = 50,
-                            onClick = {
-                                couponViewModel.createCoupon(
-                                    onSuccess = {
-                                        Log.d("CouponScreen", "Coupon Success called")
-                                        onCancel()
-                                    },
-                                    onError = {
-                                        Log.d("CouponScreen", "Coupon creation failed")
-                                    }
-                                )
-                                onCancel()
-                            },
-                        )
-                    }
+                } else {
+                    Spacer(modifier = Modifier.height(screenWidth * 0.055f)) // 빈 공간으로 높이 확보
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(screenWidth * 0.05f))
+
+                MyTextField(
+                    value = if (couponViewModel.couponPrice.value == 0) "" else couponViewModel.couponPrice.value.toString(),
+                    placeholder = "가격",
+                    width = screenWidth,
+                    height = screenWidth * 1.9f,
+                    onValueChange = {
+                        if (it.all { char -> char.isDigit() } || it.isEmpty()) {
+                            couponViewModel.couponPrice.value = it.toIntOrNull() ?: 0
+                        }
+                    }
+                )
+
+                if (showAlertPrice) {
+                    Text(
+                        text = "가격을 입력해주세요.",
+                        color = Color.Red,
+                        style = MyTypography.bodySmall.copy(
+                            fontSize = (screenWidth.value * 0.03f).sp
+                        ),
+                        modifier = Modifier.padding(top = screenWidth * 0.02f)
+                            .offset(x = (-screenWidth * 0.1f))
+                    )
+                } else {
+                    Spacer(modifier = Modifier.height(screenWidth * 0.055f)) // 빈 공간으로 높이 확보
+                }
+
+                Spacer(modifier = Modifier.height(screenWidth * 0.06f))
+
+                DailyButton(
+                    text = "쿠폰 생성",
+                    fontSize = (screenWidth * 0.05f).value.toInt(),
+                    textColor = White,
+                    cornerRadius = 16,
+                    fontWeight = FontWeight.Bold,
+                    backgroundColor = PastelNavy,
+                    width = (screenWidth * 0.5f).value.toInt(),
+                    height = (screenWidth * 0.13f).value.toInt(),
+                    onClick = {
+                        // 소원명과 가격 모두 입력 여부 확인
+                        val isDescriptionEmpty = couponViewModel.couponDescription.value.isBlank()
+                        val isPriceEmpty = couponViewModel.couponPrice.value == 0
+
+                        if (isDescriptionEmpty || isPriceEmpty) {
+                            showAlertDescription = isDescriptionEmpty
+                            showAlertPrice = isPriceEmpty
+                        } else {
+                            showAlertDescription = false
+                            showAlertPrice = false
+                            couponViewModel.createCoupon(
+                                onSuccess = {
+                                    Log.d("CouponScreen", "Coupon Success called")
+                                    onCancel()
+                                },
+                                onError = {
+                                    Log.d("CouponScreen", "Coupon creation failed")
+                                }
+                            )
+                            onCancel()
+                        }
+                    },
+                )
+
+                Spacer(modifier = Modifier.height(screenWidth * 0.02f))
             }
         }
     }
 }
+
+
 @Composable
 fun BuyCoupon(
     couponViewModel: CouponViewModel,

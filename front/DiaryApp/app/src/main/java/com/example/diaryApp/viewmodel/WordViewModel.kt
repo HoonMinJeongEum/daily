@@ -29,14 +29,20 @@ class WordViewModel @Inject constructor(
     val memberName = mutableStateOf<String>("")
     val memberId = mutableIntStateOf(0)
 
-    private val _wordList = MutableLiveData<Response<List<Word>>>()
-    val wordList: LiveData<Response<List<Word>>> get() = _wordList
+    private val _wordList = MutableLiveData<Response<List<Word>>?>()
+    val wordList: LiveData<Response<List<Word>>?> get() = _wordList
 
     // "날짜순"으로 정렬된 리스트를 derivedStateOf로 제공 (최신순으로 정렬)
     val dateSortedWordList = MediatorLiveData<List<Word>>().apply {
         addSource(_wordList) { response ->
-            value = response.body()?.sortedByDescending { it.createdAt } ?: emptyList()
+            value = response?.body()?.sortedByDescending { it.createdAt } ?: emptyList()
         }
+    }
+
+    fun clearAll() {
+        memberName.value = ""
+        memberId.value = 0
+        _wordList.value = null
     }
 
     fun getWordList() {

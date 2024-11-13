@@ -50,6 +50,7 @@ import com.example.diaryApp.viewmodel.WordViewModel
 
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.LaunchedEffect
 
 @Composable
 fun MainScreen(
@@ -60,6 +61,11 @@ fun MainScreen(
     quizViewModel: QuizViewModel = hiltViewModel(),
     backgroundType: BackgroundType = BackgroundType.ACTIVE
 ) {
+    LaunchedEffect(Unit) {
+        diaryViewModel.clearAll() // DiaryViewModel 상태 초기화
+        wordViewModel.clearAll()   // WordViewModel 상태 초기화
+    }
+
     BackgroundPlacement(backgroundType = backgroundType)
     val profileList by profileViewModel.profileList
     var showQuizAlert by remember { mutableStateOf(false) }

@@ -60,7 +60,7 @@ fun WordScreen(
 
     // wordList와 sortedWordList를 observe하여 상태를 감시
     val wordListResponse by wordViewModel.wordList.observeAsState(Response.success(emptyList()))
-    val wordList = wordListResponse.body() ?: emptyList() // LiveData에서 실제 List<Word> 추출
+    val wordList = wordListResponse?.body() ?: emptyList() // LiveData에서 실제 List<Word> 추출
     val sortedWordList by wordViewModel.dateSortedWordList.observeAsState(emptyList())
 
     val displayedList = if (selectedTab == "날짜순") sortedWordList else wordList

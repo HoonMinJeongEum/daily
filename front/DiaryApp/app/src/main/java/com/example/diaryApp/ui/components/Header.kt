@@ -94,6 +94,30 @@ fun TabletHeader(
                             textAlign = TextAlign.Center)
                     }
                 }
+                "상점", "알림", "자녀 관리" -> {
+                    // 왼쪽 캐릭터 이미지
+                    Image(
+                        painter = painterResource(R.drawable.daily_character),
+                        contentDescription = "Character Icon",
+                        modifier = Modifier.fillMaxHeight()
+                            .aspectRatio(0.85f),
+
+                        )
+                    // 가운데 페이지 이름 텍스트
+                    Text(
+                        text = pageName,
+                        style = MyTypography.bodyLarge.copy(
+                            color = Color.White,
+                            fontSize = (screenWidth.value * 0.08f).sp
+                        ),
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier
+                        .fillMaxHeight(0.5f)
+                        .aspectRatio(1.8f)
+                    )// 일관성 유지를 위한 빈 공간
+
+                }
 
                 else -> {
                     // 왼쪽 뒤로 가기 버튼

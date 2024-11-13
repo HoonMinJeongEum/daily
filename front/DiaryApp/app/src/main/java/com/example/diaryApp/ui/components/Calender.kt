@@ -42,7 +42,8 @@ fun DailyCalendar(
 
     LaunchedEffect(Unit) {
 //        if (diaryList?.body().isNullOrEmpty()) {
-            viewModel.fetchDiaryList()
+        viewModel.clearDiaryDetail()
+        viewModel.fetchDiaryList()
 //        }
     }
 
