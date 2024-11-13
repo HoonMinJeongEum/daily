@@ -17,6 +17,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -28,6 +31,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.diarytablet.R
 import com.example.diarytablet.ui.components.WordTap
+import com.example.diarytablet.ui.components.modal.CommonModal
 import com.example.diarytablet.ui.theme.BackgroundPlacement
 import com.example.diarytablet.ui.theme.BackgroundType
 import com.example.diarytablet.viewmodel.MainViewModel
@@ -43,6 +47,7 @@ fun WordLearningScreen(
     val wordList by viewModel.wordList
     val learnedWordList by viewModel.learnedWordList
     val username by viewModel.username.collectAsState(initial = "")
+    var isModalOpen by remember { mutableStateOf(false) }
 
     BackgroundPlacement(backgroundType = backgroundType)
 
@@ -68,9 +73,7 @@ fun WordLearningScreen(
                     modifier = Modifier
                         .size(60.dp)
                         .clickable {
-                            navController.navigate("main") {
-                                popUpTo("wordLearning") { inclusive = true }
-                            }
+                            isModalOpen = true
                         }
                 )
                 Spacer(modifier = Modifier.width(30.dp))
@@ -99,5 +102,18 @@ fun WordLearningScreen(
                 username = username
             )
         }
+    }
+    if (isModalOpen) {
+        CommonModal(
+            onDismissRequest = { isModalOpen = false },
+            titleText = "단어 학습을 종료할까요?",
+            confirmText= "종료",
+            onConfirm = {
+                isModalOpen = false
+                navController.navigate("main") {
+                    popUpTo("wordLearning") { inclusive = true }
+                }
+            }
+        )
     }
 }

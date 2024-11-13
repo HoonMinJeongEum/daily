@@ -20,6 +20,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.diarytablet.datastore.UserStore
 import com.example.diarytablet.domain.RetrofitClient
+import com.example.diarytablet.ui.components.modal.CommonModal
 import com.example.diarytablet.ui.components.quiz.Alert
 import com.example.diarytablet.ui.screens.MainScreen
 import com.example.diarytablet.ui.screens.ProfileScreen
@@ -92,12 +93,13 @@ fun DiaryTabletApp(startDestination: String = "login") {
         }
     }
     if (showExitDialog) {
-        Alert(
-            isVisible = true,
-            onDismiss = { showExitDialog = false },
-            onConfirm = { activity?.finishAffinity() },
-            title = "앱을 종료하시겠어요?",
-            confirmText = "종료"
+        CommonModal(
+            onDismissRequest = { showExitDialog = false },
+            titleText = "앱을 종료하시겠어요?",
+            confirmText= "종료",
+            onConfirm = {
+                activity?.finishAffinity()
+            }
         )
     }
 }
