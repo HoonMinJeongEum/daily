@@ -23,7 +23,7 @@ fun StickerStockList(stickers: List<StickerStock>) {
         contentPadding = PaddingValues(start = 15.dp, end = 15.dp),
         modifier = Modifier.fillMaxSize()
     ) {
-        itemsIndexed(stickers) { index, sticker ->
+        itemsIndexed(stickers.reversed()) { index, sticker ->
             StickerStockCard(sticker, index)
         }
     }
@@ -82,7 +82,7 @@ fun StickerStockCard(sticker: StickerStock, index: Int) {
                     error = painterResource(R.drawable.loading)
                 ),
                 contentDescription = "스티커 이미지",
-                modifier = Modifier.size(64.dp)
+                modifier = Modifier.size(80.dp)
             )
         }
     }
