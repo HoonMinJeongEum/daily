@@ -68,7 +68,7 @@ fun RecommendWordModal(
                         val buttonHeight = with(LocalDensity.current) { maxHeight.toPx() }
                         Text(
                             text = word,
-                            fontSize = (buttonHeight * 0.4f).sp,
+                            fontSize = (buttonHeight * 0.25f).sp,
                             style = MyTypography.bodyLarge,
                             textAlign = TextAlign.Center,
                         )
