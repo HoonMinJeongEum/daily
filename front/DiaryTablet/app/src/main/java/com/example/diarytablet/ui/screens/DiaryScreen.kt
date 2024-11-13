@@ -297,16 +297,26 @@ fun DiaryScreen(
                                     }
                                 }
                         ) {
-                            drawIntoCanvas { canvas ->
-                                canvas.nativeCanvas.drawBitmap(currentBitmap, 0f, 0f, null)
+                            for (step in firstPageDrawingSteps) {
+                                drawPath(
+                                    path = step.path,
+                                    color = step.color,
+                                    style = Stroke(width = step.thickness, cap = StrokeCap.Round)
+                                )
+                            }
+                            if (pagerState.currentPage == 0) {
+                                firstPageStickers.forEach { stickerItem ->
+                                    drawIntoCanvas { canvas ->
+                                        canvas.nativeCanvas.drawBitmap(
+                                            stickerItem.bitmap,
+                                            stickerItem.position.value.x,
+                                            stickerItem.position.value.y,
+                                            null
+                                        )
+                                    }
+                                }
                             }
 
-                            // 현재 경로를 Canvas에 실시간 반영
-                            drawPath(
-                                path = path.value,
-                                color = selectedColor,
-                                style = Stroke(width = brushSize, cap = StrokeCap.Round)
-                            )
                             if (pagerState.currentPage == 0) {
                                 firstPageStickers.forEach { stickerItem ->
                                     drawIntoCanvas { canvas ->
@@ -504,7 +514,7 @@ fun DrawingPlaybackView(
     firstPageStickers: List<StickerItem>,
     context: Context,
     templateWidth: Int,
-    templateHeight: Int
+    templateHeight: Int,
 ) {
     var currentStepIndex by remember { mutableIntStateOf(0) }
     val overlayBitmap = remember {
@@ -512,41 +522,39 @@ fun DrawingPlaybackView(
     }
     val overlayCanvas = remember { AndroidCanvas(overlayBitmap) }
     val currentPath = remember { Path() }
-    val outputDir = File(context.filesDir, "frames").apply {
-        if (exists()) deleteRecursively()
-        mkdirs()
-    }
-    val videoFile = File(context.getExternalFilesDir(Environment.DIRECTORY_MOVIES), "drawing_playback.mp4")
+    val outputDir = File(context.filesDir, "frames").apply { mkdirs() }
+    val videoFile =
+        File(context.getExternalFilesDir(Environment.DIRECTORY_MOVIES), "drawing_playback.mp4")
 
     LaunchedEffect(drawingSteps) {
         currentStepIndex = 0
         overlayCanvas.drawColor(android.graphics.Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
+
+        // 프레임을 빠르게 진행하기 위해 한 번에 여러 스텝을 그리도록 설정
+        val batchStepCount = 5 // 한 번에 그릴 스텝 개수
         while (currentStepIndex < drawingSteps.size) {
-            // 매 스텝을 추가하고 그리기
-            val step = drawingSteps[currentStepIndex]
-            val paint = createPaintForTool(step.toolType, step.color, step.thickness)
-            if (step.toolType == ToolType.ERASER) {
-                paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR)
+            for (i in 0 until batchStepCount) {
+                if (currentStepIndex >= drawingSteps.size) break
+                val step = drawingSteps[currentStepIndex]
+                val paint = createPaintForTool(step.toolType, step.color, step.thickness)
+                if (step.toolType == ToolType.ERASER) {
+                    paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR)
+                }
+
+                // currentPath에 새로운 path를 추가하고 overlayCanvas에 그리기
+                currentPath.addPath(step.path)
+                overlayCanvas.drawPath(step.path.asAndroidPath(), paint)
+
+                currentStepIndex++
             }
-
-            // 새로운 경로 추가 및 캔버스에 그리기
-            currentPath.addPath(step.path)
-            overlayCanvas.drawPath(step.path.asAndroidPath(), paint)
-
-            // 프레임 비트맵 생성 및 저장
-            val frameBitmap = Bitmap.createBitmap(templateWidth, templateHeight, Bitmap.Config.ARGB_8888)
-            val frameCanvas = AndroidCanvas(frameBitmap)
-            drawToBitmap(frameCanvas, overlayBitmap, templateWidth, templateHeight, context)
-
-            val frameFile = File(outputDir, "frame_$currentStepIndex.png")
-            saveBitmapToFile(frameBitmap, frameFile)
-
-            currentStepIndex++
-            delay(1) // 빠르게 저장하기 위한 지연 시간 설정
+            // 빠르게 진행하면서 지연시간을 줄임
+            delay(100) // 지연 시간을 조정하여 재생 속도 제어
         }
 
         // 모든 프레임을 비디오로 결합
         createVideoFromFrames(context, outputDir, videoFile)
+
+        // 동영상 파일을 갤러리에 추가
         scanFile(context, videoFile)
     }
 
@@ -561,18 +569,21 @@ fun DrawingPlaybackView(
             modifier = Modifier.fillMaxSize()
         ) {
             drawIntoCanvas { canvas ->
-                val templateBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.draw_template)
-                val resizedTemplateBitmap = Bitmap.createScaledBitmap(templateBitmap, templateWidth, templateHeight, true)
+                // 배경 템플릿 그리기
+                val templateBitmap =
+                    BitmapFactory.decodeResource(context.resources, R.drawable.draw_template)
+                val resizedTemplateBitmap =
+                    Bitmap.createScaledBitmap(templateBitmap, templateWidth, templateHeight, true)
                 canvas.nativeCanvas.drawBitmap(resizedTemplateBitmap, 0f, 0f, null)
             }
 
+            // 최종적으로 Overlay Bitmap을 그리기
             drawIntoCanvas { canvas ->
                 canvas.nativeCanvas.drawBitmap(overlayBitmap, 0f, 0f, null)
             }
         }
     }
 }
-
 // drawToBitmap 함수: overlayBitmap을 포함하여 캔버스에 최종 이미지를 그리기
 fun drawToBitmap(
     canvas: AndroidCanvas,
@@ -615,7 +626,7 @@ fun saveBitmapToFile(bitmap: Bitmap, file: File): Boolean {
 
 // 동영상 생성 함수
 fun createVideoFromFrames(context: Context, framesDir: File, outputFile: File) {
-    val command = "-y -framerate 30 -i ${framesDir.absolutePath}/frame_%d.png -c:v mpeg4 -qscale:v 2 -pix_fmt yuv420p ${outputFile.absolutePath}"
+    val command = "-y -framerate 10 -i ${framesDir.absolutePath}/frame_%d.png -c:v mpeg4 -qscale:v 2 -pix_fmt yuv420p ${outputFile.absolutePath}"
 
     FFmpegKit.executeAsync(command) { session ->
         if (session.returnCode.isValueSuccess) {
