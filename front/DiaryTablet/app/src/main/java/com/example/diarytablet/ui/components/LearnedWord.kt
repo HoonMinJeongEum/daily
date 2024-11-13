@@ -130,12 +130,18 @@ fun WordListItemByMember(wordList: List<WordLearnedResponseDto>,
     ) {
         if (wordList.isEmpty()) {
             item {
-                Text(
-                    text = "단어 목록이 없습니다.",
-                    color = Color(0xFF6d6d6d),
-                    fontSize = 30.sp,
-                    style = MyTypography.bodyMedium,
-                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "단어 목록이 없습니다.",
+                        color = Color(0xFF6d6d6d),
+                        fontSize = 30.sp,
+                        style = MyTypography.bodyMedium,
+                    )
+                }
             }
         } else {
             groupedWords.forEach { (groupKey, words) ->
