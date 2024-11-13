@@ -7,6 +7,7 @@ import com.example.diarytablet.utils.Const
 import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.GET
+import retrofit2.http.Headers
 import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
@@ -18,7 +19,8 @@ interface DiaryService {
     @POST("${Const.API_PATH}diaries")
     suspend fun uploadDiary(
         @Part drawFile: MultipartBody.Part,
-        @Part writeFile: MultipartBody.Part
+        @Part writeFile: MultipartBody.Part,
+        @Part videoFile: MultipartBody.Part,
     ): Response<Void>
     @GET("${Const.API_PATH}diaries")
     suspend fun getDiaryList(

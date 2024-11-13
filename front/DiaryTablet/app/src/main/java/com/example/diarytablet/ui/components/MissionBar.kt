@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.diarytablet.R
+import com.example.diarytablet.ui.theme.DeepPastelNavy
 import com.example.diarytablet.ui.theme.MyTypography
 data class MissionItem(
     val text: String,
@@ -62,14 +63,14 @@ fun MissionBar(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = barWidth * 0.05f), // 화면 크기에 비례한 여백
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        .padding(horizontal = barWidth * 0.06f), // 화면 크기에 비례한 여백
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = "오늘의 미션",
                         style = MyTypography.bodyLarge.copy(
-                            fontSize = (barWidth.value * 0.033f).sp
+                            fontSize = (barWidth.value * 0.034f).sp
                         ),
                     )
                     missions.forEach { mission ->
@@ -83,7 +84,7 @@ fun MissionBar(
 
 @Composable
 fun MissionRow(mission: MissionItem, containerHeight: Dp) {
-    val iconSize = containerHeight * 0.35f // 화면 크기에 비례한 아이콘 크기 설정
+    val iconSize = containerHeight * 0.30f // 화면 크기에 비례한 아이콘 크기 설정
 
     Row(
         modifier = Modifier
@@ -102,8 +103,9 @@ fun MissionRow(mission: MissionItem, containerHeight: Dp) {
         Text(
             text = mission.text,
             style = MyTypography.bodyLarge.copy(
-                fontSize = (containerHeight.value * 0.2f).sp
-            ),
+                fontSize = (containerHeight.value * 0.2f).sp,
+                color = DeepPastelNavy,
+            )
         )
     }
 }
