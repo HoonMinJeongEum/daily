@@ -32,21 +32,32 @@ public class QuestService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new RuntimeException("구성원을 찾을 수 없습니다."));
         Quest quest = questRepository.findByMemberId(memberId);
+        boolean check = quest.isDiaryStatus() && quest.isWordStatus() && quest.isQuizStatus();
 
-        // 퀘스트 완료 상태 업데이트
-        boolean isQuestUpdated = updateQuestStatus(userDetails, quest, request);
+        switch (request.getQuestType()) {
+            case DIARY:
+                if (!quest.isDiaryStatus()) {
+                    shellService.saveShellLog(member, (byte) 10, Content.MISSION);
+                    quest.setDiaryStatus(true);
+                }
+                break;
+            case QUIZ:
+                shellService.saveShellLog(member, (byte) 10, Content.MISSION);
+                quest.setQuizStatus(true);
+                break;
+            case WORD:
+                shellService.saveShellLog(member, (byte) 10, Content.MISSION);
+                quest.setWordStatus(true);
+                break;
+            default:
+                throw new IllegalArgumentException("존재하지 않는 퀘스트 타입입니다.");
+        }
+        questRepository.save(quest);
 
-        if (isQuestUpdated) {
-            // 기본 보상 지급
-            shellService.saveShellLog(member, (byte) 10, Content.MISSION);
-
-            // 모든 퀘스트가 완료된 경우 추가 보상 지급
-            if (quest.isDiaryStatus() && quest.isQuizStatus() && quest.isWordStatus()) {
-                shellService.saveShellLog(member, (byte) 15, Content.MISSION);
-            }
-
-            // 퀘스트 업데이트 저장
-            questRepository.save(quest);
+        // 모든 퀘스트가 완료된 경우 추가 보상 지급
+        if (!check && quest.isDiaryStatus() && quest.isQuizStatus() && quest.isWordStatus()) {
+            shellService.saveShellLog(member, (byte) 15, Content.MISSION);
+            return new StatusResponse(204, "추가 보상이 지급되었습니다.");
         }
 
         return new StatusResponse(200, "퀘스트가 성공적으로 완료되었습니다.");
@@ -65,32 +76,4 @@ public class QuestService {
         }
         questRepository.saveAll(quests);
     }
-
-    // 퀘스트 상태 업데이트
-    private boolean updateQuestStatus(CustomUserDetails userDetails, Quest quest, UpdateQuestRequest request) {
-        switch (request.getQuestType()) {
-            case DIARY:
-                if (!quest.isDiaryStatus()) {
-                    quest.setDiaryStatus(true);
-                    return true;
-                }
-                break;
-            case QUIZ:
-                if (!quest.isQuizStatus()) {
-                    quest.setQuizStatus(true);
-                    return true;
-                }
-                break;
-            case WORD:
-                if (!quest.isWordStatus()) {
-                    quest.setWordStatus(true);
-                    return true;
-                }
-                break;
-            default:
-                throw new IllegalArgumentException("존재하지 않는 퀘스트 타입입니다.");
-        }
-        return false;
-    }
-
 }
