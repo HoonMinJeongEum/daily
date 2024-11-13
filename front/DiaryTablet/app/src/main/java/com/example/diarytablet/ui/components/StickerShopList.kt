@@ -60,11 +60,10 @@ fun newImageLoader(context: android.content.Context): ImageLoader {
 
 @Composable
 fun StickerShopList(
-    initialStickers: List<Sticker>,
+    stickers: List<Sticker>,
     shopViewModel: ShopStockViewModel,
     navBarViewModel: NavBarViewModel = hiltViewModel()
 ) {
-    var stickers by remember { mutableStateOf(initialStickers) }
     var selectedSticker by remember { mutableStateOf<Sticker?>(null) }
     var isModalVisible by remember { mutableStateOf(false) }
     var stickerModalState by remember { mutableStateOf(StickerModalState.NONE) }
@@ -97,7 +96,6 @@ fun StickerShopList(
             onConfirm = {
                 if (shellCount >= selectedSticker!!.price) {
                     shopViewModel.buySticker(selectedSticker!!.id)
-                    stickers = stickers.filter { it.id != selectedSticker!!.id }
                     stickerModalState = StickerModalState.PURCHASE_SUCCESS
                 } else {
                     stickerModalState = StickerModalState.INSUFFICIENT_SHELLS
