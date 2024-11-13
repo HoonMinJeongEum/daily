@@ -130,7 +130,7 @@ fun ColorPalette(selectedColor: Color, onColorChange: (Color) -> Unit) {
 
 @Composable
 fun ThicknessSelector(onThicknessChange: (Float) -> Unit) {
-    val thicknessOptions = listOf(4f, 6f, 8f, 10f)
+    val thicknessOptions = listOf(4f, 8f, 16f, 20f)
     Row(
         horizontalArrangement = Arrangement.SpaceEvenly,
         modifier = Modifier.fillMaxWidth()
@@ -138,7 +138,7 @@ fun ThicknessSelector(onThicknessChange: (Float) -> Unit) {
         thicknessOptions.forEach { thickness ->
             Box(
                 modifier = Modifier
-                    .size(thickness.dp * 2)
+                    .size(thickness.dp)
                     .background(Color.Gray, CircleShape)
                     .clickable { onThicknessChange(thickness) }
             )
@@ -210,7 +210,7 @@ fun StickerRow(
                 ),
                 contentDescription = "스티커 이미지",
                 modifier = Modifier
-                    .size(30.dp)
+                    .size(40.dp)
                     .clickable { onStickerSelect(sticker) }
             )
         }
@@ -219,12 +219,13 @@ fun StickerRow(
 
 fun createPaintForTool(toolType: ToolType, color: androidx.compose.ui.graphics.Color, thickness: Float): android.graphics.Paint {
     return when (toolType) {
-        ERASER -> createEraserPaint(thickness)
-        PENCIL -> createPencilPaint(color, thickness)
-        CRAYON -> createCrayonPaint(color, thickness)
+        ToolType.ERASER -> createEraserPaint(thickness) // 지우개 설정
+        ToolType.PENCIL -> createPencilPaint(color, thickness)
+        ToolType.CRAYON -> createCrayonPaint(color, thickness)
         else -> throw IllegalArgumentException("Unsupported ToolType: $toolType")
     }
 }
+
 
 
 
