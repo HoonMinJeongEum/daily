@@ -1,5 +1,6 @@
 package com.example.diarytablet.ui.components
 
+import android.widget.VideoView
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -42,6 +44,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import coil3.compose.rememberAsyncImagePainter
 import com.example.diarytablet.R
@@ -66,6 +69,7 @@ fun MyDiaryDetail(
 
     val diaryDetail = viewModel.diaryDetail.observeAsState()
     var isDialogOpen by remember { mutableStateOf(false) }
+    var isVideoOpen by remember { mutableStateOf(false) }
     val diary = diaryDetail.value
 
     if (isDialogOpen && diary != null) {
@@ -76,13 +80,25 @@ fun MyDiaryDetail(
             )
         }
     }
+    if (isVideoOpen) {
+        Dialog(onDismissRequest = { isVideoOpen = false }) {
+            MyDiaryVideo(
+                video = diary?.video,
+                onDismissRequest = { isVideoOpen = false }
+            )
+        }
+    }
     Row(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 10.dp)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier
+                .fillMaxHeight()
+                .padding(bottom = 24.dp),
+            verticalArrangement = Arrangement.SpaceBetween,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             DynamicColorButton(
                 onClick = onBackClick,
@@ -91,17 +107,29 @@ fun MyDiaryDetail(
                 textStyle = MyTypography.bodySmall
             )
 
-            Spacer(modifier = Modifier.width(10.dp))
-
-            Image(
-                painter = painterResource(id = R.drawable.chat),
-                contentDescription = "Open Dialog",
-                modifier = Modifier
-                    .clickable {
-                        isDialogOpen = true
-                    }
-                    .size(60.dp)
-            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(14.dp), // 이미지 간 간격 설정
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.chat),
+                    contentDescription = "Open Dialog",
+                    modifier = Modifier
+                        .clickable {
+                            isDialogOpen = true
+                        }
+                        .size(60.dp)
+                )
+                Image(
+                    painter = painterResource(id = R.drawable.video),
+                    contentDescription = "Open Video",
+                    modifier = Modifier
+                        .clickable {
+                            isVideoOpen = true
+                        }
+                        .size(50.dp)
+                )
+            }
         }
 
         diary?.let {
@@ -149,11 +177,71 @@ fun MyDiaryContent(
 }
 
 @Composable
+fun MyDiaryVideo(
+    video: String?,
+    onDismissRequest: () -> Unit
+){
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = Color.White,
+        modifier = Modifier.padding(16.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Spacer(modifier = Modifier.weight(1f))
+                IconButton(
+                    onClick = onDismissRequest,
+                    modifier = Modifier.size(50.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close",
+                        tint = Color.Gray,
+                        modifier = Modifier.size(42.dp) // 아이콘 크기 조정
+                    )
+                }
+            }
+
+            Text(
+                text = "저장된 영상이 없어요.",
+                style = MyTypography.bodyMedium,
+                color = PastelNavy,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 20.dp),
+                textAlign = TextAlign.Center
+            )
+            video?.let { // video가 null이 아닐 때만 VideoView 생성
+                AndroidView(
+                    factory = { context ->
+                        VideoView(context).apply {
+                            setVideoPath(it)
+                            setOnPreparedListener { it.isLooping = true }
+                            start()
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(1808f / 1231f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
 fun MyDiaryComment(
     comments: List<CommentDto>,
     onDismissRequest: () -> Unit
 ) {
-
     Surface(
         shape = RoundedCornerShape(16.dp),
         color = Color.White,
