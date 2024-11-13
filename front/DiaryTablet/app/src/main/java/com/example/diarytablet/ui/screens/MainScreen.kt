@@ -129,7 +129,7 @@ fun MainScreen(
                     modifier = Modifier
                         .width(screenWidth * 0.5f) // 두 번째 블록
                         .aspectRatio(1.67f)
-                        .offset(x = -blockWidth * 0.9f , y = screenHeight * 0.06f)
+                        .offset(x = -blockWidth * 0.5f , y = screenHeight * 0.06f)
                         .clickable(
                             indication = null, // 클릭 효과 없애기
                             interactionSource = remember { MutableInteractionSource() } // 필수: 사용자 인터랙션 관리
@@ -143,7 +143,7 @@ fun MainScreen(
                     modifier = Modifier
                         .width(screenWidth * 0.8f) // 세 번째 블록
                         .aspectRatio(0.9f)
-                        .offset(x = -blockWidth * 1.5f)
+                        .offset(x = -blockWidth * 1.2f)
                 ) {
                     Image(
                         modifier =
