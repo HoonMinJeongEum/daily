@@ -325,21 +325,19 @@ fun DeleteProfileItem(profile: Profile) {
 }
 
 
-suspend fun updateMemberInfoDiary(
+fun updateMemberInfoDiary(
     profile:Profile,
     diaryViewModel: DiaryViewModel
 ) {
     diaryViewModel.memberName.value = profile.name
     diaryViewModel.memberId.value = profile.id
-    delay(1000)
 }
 
-suspend fun updateMemberInfoWord(
+fun updateMemberInfoWord(
     profile:Profile,
     wordViewModel: WordViewModel
 ) {
     wordViewModel.memberName.value = profile.name
     wordViewModel.memberId.intValue = profile.id
-    delay(1000)
 }
 

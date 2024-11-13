@@ -19,10 +19,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -35,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
@@ -42,6 +45,9 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
+import coil3.request.CachePolicy
+import coil3.request.ImageRequest
+import coil3.size.Size
 import com.example.diaryApp.R
 import com.example.diaryApp.domain.dto.response.diary.CommentDto
 import com.example.diaryApp.presentation.viewmodel.DiaryViewModel
@@ -71,7 +77,7 @@ fun DiaryDetailScreen(
     }
 
     val diaryDetail = diaryViewModel.diaryDetail.observeAsState()
-    val comments = remember { mutableStateOf(diaryDetail.value?.comments ?: emptyList()) }
+    val comments = remember(diaryDetail.value?.comments) { mutableStateOf(diaryDetail.value?.comments ?: emptyList()) }
     val commentText = remember { mutableStateOf("") }
 
     BackgroundPlacement(backgroundType = backgroundType)
@@ -101,50 +107,91 @@ fun DiaryDetailScreen(
                     .background(Color.White, shape = RoundedCornerShape(topEnd = 50.dp, topStart = 50.dp))
                     .fillMaxSize()
             ) {
+
                 LazyColumn(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = screenWidth * 0.02f)
-                        .padding(bottom = textFieldHeight * 2f, top = screenHeight * 0.04f)
+                        .padding(bottom = textFieldHeight * 2.2f, top = screenHeight * 0.04f)
                 ) {
                     item {
-                        val painterDraw = rememberAsyncImagePainter(diaryDetail.value?.drawImg)
                         Image(
-                            painter = painterDraw,
-                            contentDescription = "Draw Image",
-                            contentScale = ContentScale.Fit,
-                            modifier = Modifier.fillMaxWidth()
+                            painter = rememberAsyncImagePainter(
+                                model = diaryDetail.value?.drawImg,
+                                placeholder = painterResource(R.drawable.main_logo),
+                                error = painterResource(R.drawable.main_logo)
+                            ),
+                            contentDescription = "drawImg",
+                            modifier = Modifier
+                                .fillMaxWidth()
                         )
+
+
+
                     }
                     item {
-                        val painterWrite = rememberAsyncImagePainter(diaryDetail.value?.writeImg)
                         Image(
-                            painter = painterWrite,
-                            contentDescription = "Write Image",
-                            contentScale = ContentScale.Fit,
-                            modifier = Modifier.fillMaxWidth()
+                            painter = rememberAsyncImagePainter(
+                                model = diaryDetail.value?.writeImg,
+                                placeholder = painterResource(R.drawable.main_logo),
+                                error = painterResource(R.drawable.main_logo)
+                            ),
+                            contentDescription = "writeImg",
+                            modifier = Modifier
+                                .fillMaxWidth()
                         )
                     }
+
+                    item {
+                        Spacer(modifier = Modifier.height(screenWidth * 0.04f))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(3.dp)
+                                .background(Color.LightGray, shape = RoundedCornerShape(50))
+                        )
+                        Spacer(modifier = Modifier.height(screenWidth * 0.04f))
+
+                    }
+
                     items(comments.value.size) { index ->
                         val comment = comments.value[index]
-                        Column(
-                            modifier = Modifier.padding(vertical = screenWidth * 0.01f)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = screenWidth * 0.02f)
+                                .padding(horizontal = screenWidth * 0.04f),
+                            verticalAlignment = Alignment.Top
                         ) {
-                            Text(
-                                text = comment.comment,
-                                fontSize = (screenWidth * 0.04f).value.sp
+                            // Circle Image Icon
+                            Image(
+                                painter = painterResource(R.drawable.daily_character),
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(screenWidth * 0.12f)
+                                    .background(Color.LightGray, shape = CircleShape)
+                                    .padding(8.dp)
                             )
-                            Text(
-                                text = "작성 시간: ${comment.createdAt}",
-                                fontSize = (screenWidth * 0.035f).value.sp,
-                                color = Color.Gray,
-                                modifier = Modifier.padding(top = screenWidth * 0.005f)
-                            )
+
+                            Spacer(modifier = Modifier.width(screenWidth * 0.04f))
+
+                            // Comment Text and Date
+                            Column {
+                                Text(
+                                    text = comment.comment,
+                                    style = MyTypography.bodyLarge.copy(fontSize = (screenWidth * 0.04f).value.sp),
+                                    color = DeepPastelNavy
+                                )
+                                Text(
+                                    text = "작성 시간: ${comment.createdAt}",
+                                    fontSize = (screenWidth * 0.035f).value.sp,
+                                    color = Color.Gray,
+                                    modifier = Modifier.padding(top = screenWidth * 0.005f)
+                                )
+                            }
                         }
-                        Spacer(modifier = Modifier.height(screenWidth * 0.02f))
-                    }
-                }
+                }}
 
                 Column(
                     modifier = Modifier

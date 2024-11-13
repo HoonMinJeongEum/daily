@@ -36,11 +36,11 @@ class DiaryViewModel @Inject constructor(
     private val _month = MutableStateFlow(Calendar.getInstance().get(Calendar.MONTH))
     val month: StateFlow<Int> get() = _month
 
-    private val _diaryId = MutableLiveData<Int>()
-    val diaryId: LiveData<Int> get() = _diaryId
+    private val _diaryId = MutableLiveData<Int?>()
+    val diaryId: LiveData<Int?> get() = _diaryId
 
-    private val _diaryList = MutableLiveData<Response<List<DiaryForList>>>()
-    val diaryList: LiveData<Response<List<DiaryForList>>> get() = _diaryList
+    private val _diaryList = MutableLiveData<Response<List<DiaryForList>>?>()
+    val diaryList: LiveData<Response<List<DiaryForList>>?> get() = _diaryList
 
     private val _diaryDetail = MutableLiveData<Diary?>()
     val diaryDetail: LiveData<Diary?> get() = _diaryDetail
@@ -55,6 +55,16 @@ class DiaryViewModel @Inject constructor(
         fetchDiaryList()
     }
 
+    fun clearAll() {
+        _year.value = Calendar.getInstance().get(Calendar.YEAR)
+        _month.value = Calendar.getInstance().get(Calendar.MONTH)
+        _diaryId.value = null
+        _diaryList.value = null
+        _diaryDetail.value = null
+        memberName.value = ""
+        memberId.value = 0
+    }
+
     fun fetchDiaryList() {
         viewModelScope.launch {
             val list = diaryRepository.getDiaryList(memberId.intValue, year.value, month.value + 1)
@@ -66,11 +76,13 @@ class DiaryViewModel @Inject constructor(
         _diaryId.value = diaryId
         viewModelScope.launch {
             val response = diaryRepository.getDiaryById(diaryId)
+
             _diaryDetail.value = response
         }
     }
 
     fun clearDiaryDetail() {
+        _diaryId.value = null
         _diaryDetail.value = null
     }
 

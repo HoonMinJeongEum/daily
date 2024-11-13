@@ -147,6 +147,7 @@ fun ShoppingScreen(
                     }
                     if (showDialog) {
                         CreateCoupon(
+                            screenWidth = screenWidth,
                             couponViewModel = couponViewModel,
                             onCancel = { showDialog = false }
                         )
