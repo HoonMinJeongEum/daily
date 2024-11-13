@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,6 +42,8 @@ fun WordLearningScreen(
 
     val wordList by viewModel.wordList
     val learnedWordList by viewModel.learnedWordList
+    val username by viewModel.username.collectAsState(initial = "")
+
     BackgroundPlacement(backgroundType = backgroundType)
 
     Box(
@@ -92,7 +95,8 @@ fun WordLearningScreen(
                     viewModel.finishWordLearning()
                 },
                 learnedWordList = learnedWordList,
-                navController = navController
+                navController = navController,
+                username = username
             )
         }
     }
