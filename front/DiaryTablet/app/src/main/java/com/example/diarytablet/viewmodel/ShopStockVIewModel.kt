@@ -1,9 +1,13 @@
 package com.example.diarytablet.viewmodel
 
+import android.util.Log
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.diarytablet.datastore.UserStore
 import com.example.diarytablet.domain.repository.ShopStockRepository
 import com.example.diarytablet.model.Coupon
 import com.example.diarytablet.model.CouponStock
@@ -17,6 +21,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ShopStockViewModel @Inject constructor(
+    private val userStore: UserStore,
     private val shopStockRepository: ShopStockRepository
 ) : ViewModel() {
 
@@ -84,6 +89,7 @@ class ShopStockViewModel @Inject constructor(
                 if (response.isSuccessful) {
                     _remainingShells.postValue(response.body())
                     fetchCoupons()
+                    Log.d("ShopStockViewModel", "remainingShells: ${response.body()}")
                 } else {
                     _errorMessage.postValue("쿠폰 구매에 실패했습니다.")
                 }

@@ -65,8 +65,6 @@ fun Navbar(
         verticalAlignment = Alignment.CenterVertically
     ) {
         BasicButton(
-            modifier = Modifier
-                .weight(2f),
             onClick = {},
             text = shellCount.toString(),
             isOutlined = false
