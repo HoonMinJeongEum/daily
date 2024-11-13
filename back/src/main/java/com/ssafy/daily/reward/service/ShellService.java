@@ -41,7 +41,7 @@ public class ShellService {
     }
 
     // Shell 로그 저장
-    public void saveShellLog(Member member, byte stock, Content content) {
+    public void saveShellLog(Member member, int stock, Content content) {
         Shell shellLog = Shell.builder()
                 .member(member)
                 .stock(stock)

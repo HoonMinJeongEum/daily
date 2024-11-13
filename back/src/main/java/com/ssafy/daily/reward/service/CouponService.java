@@ -113,7 +113,7 @@ public class CouponService {
         earnedCouponRepository.save(earnedCoupon);
 
         // Shell 로그
-        shellService.saveShellLog(member, (byte) (-coupon.getPrice()), Content.COUPON);
+        shellService.saveShellLog(member, (-coupon.getPrice()), Content.COUPON);
 
         return shellService.getUserShell(memberId);
     }

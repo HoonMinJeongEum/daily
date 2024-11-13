@@ -86,7 +86,7 @@ public class StickerService {
         earnedStickerRepository.save(earnedSticker);
 
         // Shell 로그
-        shellService.saveShellLog(member, (byte) (-sticker.getPrice()), Content.STICKER);
+        shellService.saveShellLog(member, (-sticker.getPrice()), Content.STICKER);
 
         return shellService.getUserShell(memberId);
     }

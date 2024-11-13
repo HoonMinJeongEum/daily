@@ -37,16 +37,16 @@ public class QuestService {
         switch (request.getQuestType()) {
             case DIARY:
                 if (!quest.isDiaryStatus()) {
-                    shellService.saveShellLog(member, (byte) 10, Content.MISSION);
+                    shellService.saveShellLog(member, 10, Content.MISSION);
                     quest.setDiaryStatus(true);
                 }
                 break;
             case QUIZ:
-                shellService.saveShellLog(member, (byte) 10, Content.MISSION);
+                shellService.saveShellLog(member, 10, Content.MISSION);
                 quest.setQuizStatus(true);
                 break;
             case WORD:
-                shellService.saveShellLog(member, (byte) 10, Content.MISSION);
+                shellService.saveShellLog(member, 10, Content.MISSION);
                 quest.setWordStatus(true);
                 break;
             default:
@@ -56,7 +56,7 @@ public class QuestService {
 
         // 모든 퀘스트가 완료된 경우 추가 보상 지급
         if (!check && quest.isDiaryStatus() && quest.isQuizStatus() && quest.isWordStatus()) {
-            shellService.saveShellLog(member, (byte) 15, Content.MISSION);
+            shellService.saveShellLog(member, 15, Content.MISSION);
             return new StatusResponse(204, "추가 보상이 지급되었습니다.");
         }
 
