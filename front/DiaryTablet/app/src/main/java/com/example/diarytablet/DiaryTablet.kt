@@ -2,11 +2,17 @@ package com.example.diarytablet
 
 import DiaryScreen
 import LoginScreen
+import android.app.Activity
 import android.app.Application
 import android.util.Log
-import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -14,6 +20,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.diarytablet.datastore.UserStore
 import com.example.diarytablet.domain.RetrofitClient
+import com.example.diarytablet.ui.components.quiz.Alert
 import com.example.diarytablet.ui.screens.MainScreen
 import com.example.diarytablet.ui.screens.ProfileScreen
 import com.example.diarytablet.ui.screens.RecordScreen
@@ -26,13 +33,18 @@ import com.samsung.android.sdk.penremote.SpenRemote
 import com.samsung.android.sdk.penremote.SpenUnitManager
 
 import dagger.hilt.android.HiltAndroidApp
-import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun DiaryTabletApp(startDestination: String = "login") {
     val navController = rememberNavController()
+    var showExitDialog by remember { mutableStateOf(false) }
+    val activity = LocalContext.current as? Activity
+
+    BackHandler {
+        showExitDialog = true
+    }
 
     DiaryTabletTheme {
         NavHost(navController, startDestination = startDestination) {
@@ -79,6 +91,15 @@ fun DiaryTabletApp(startDestination: String = "login") {
             }
         }
     }
+    if (showExitDialog) {
+        Alert(
+            isVisible = true,
+            onDismiss = { showExitDialog = false },
+            onConfirm = { activity?.finishAffinity() },
+            title = "앱을 종료하시겠어요?",
+            confirmText = "종료"
+        )
+    }
 }
 
 
@@ -109,7 +130,7 @@ class DiaryTablet : Application() {
 
         // S Pen Remote 초기화 및 연결 시도 (삼성 기기에서만)
         if (isSamsungDevice()) {
-            initializeSpenRemote()
+//            initializeSpenRemote()
         } else {
             Log.d("DiaryTablet", "S Pen 기능은 삼성 기기에서만 지원됩니다.")
         }

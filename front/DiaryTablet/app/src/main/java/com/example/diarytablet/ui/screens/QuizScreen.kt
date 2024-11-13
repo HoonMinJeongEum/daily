@@ -71,7 +71,7 @@ enum class QuizModalState {
 fun QuizScreen(
     navController: NavController,
     viewModel: QuizViewModel = hiltViewModel(),
-    backgroundType: BackgroundType = BackgroundType.DEFAULT
+    backgroundType: BackgroundType = BackgroundType.DRAWING_QUIZ
 ) {
     BackgroundPlacement(backgroundType = backgroundType)
 
@@ -228,10 +228,10 @@ fun QuizScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.weight(0.2f))
+                    Spacer(modifier = Modifier.weight(0.1f))
                     Box(
                         modifier = Modifier
-                            .weight(1f)
+                            .weight(1.1f)
                     ) {
                         Column (
                             verticalArrangement = Arrangement.SpaceBetween,
@@ -276,7 +276,7 @@ fun QuizScreen(
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .weight(0.7f),
+                                            .weight(1.2f),
                                         horizontalArrangement = Arrangement.SpaceEvenly,
                                         verticalAlignment = Alignment.CenterVertically
                                     ){
@@ -284,7 +284,32 @@ fun QuizScreen(
                                         val penScale by animateFloatAsState(targetValue = if (selectedImage == "pen") 1.2f else 1f)
                                         val eraserScale by animateFloatAsState(targetValue = if (selectedImage == "eraser") 1.2f else 1f)
                                         val penColor = remember { mutableStateOf(Color.Black) }
+                                        Spacer(modifier = Modifier.weight(0.2f))
+                                        BoxWithConstraints(
+                                            modifier = Modifier
+                                                .fillMaxHeight(0.5f)
+                                                .weight(0.9f)
+                                        ) {
+                                            val buttonSize = minOf(maxWidth, maxHeight) // 가로와 세로 중 작은 값을 기준으로 크기 설정
 
+                                            DrawingUndoButton(
+                                                modifier = Modifier.size(buttonSize), // 버튼을 1:1 비율로 설정
+                                                onClick = { viewModel.undoPath() }
+                                            )
+                                        }
+
+                                        BoxWithConstraints(
+                                            modifier = Modifier
+                                                .fillMaxHeight(0.5f)
+                                                .weight(0.9f)
+                                        ) {
+                                            val buttonSize = minOf(maxWidth, maxHeight)
+
+                                            DrawingRedoButton(
+                                                modifier = Modifier.size(buttonSize),
+                                                onClick = { viewModel.redoPath() }
+                                            )
+                                        }
                                         Image(
                                             painter = painterResource(id = R.drawable.palette_pen),
                                             contentDescription = "연필",
@@ -322,25 +347,7 @@ fun QuizScreen(
                                                 )
 
                                         )
-                                    }
-
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth(0.3f)
-                                            .weight(0.5f),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ){
-                                        DrawingUndoButton(
-                                            modifier = Modifier
-                                                .weight(1f),
-                                            onClick = { viewModel.undoPath() }
-                                        )
-                                        Spacer(modifier = Modifier.weight(0.1f))
-                                        DrawingRedoButton(
-                                            modifier = Modifier
-                                                .weight(1f),
-                                            onClick = { viewModel.redoPath() }
-                                        )
+                                        Spacer(modifier = Modifier.weight(0.2f))
                                     }
                                 }
 
