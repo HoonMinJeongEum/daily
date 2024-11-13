@@ -1,5 +1,6 @@
 package com.example.diarytablet.viewmodel
 
+import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.lifecycle.LiveData
@@ -23,9 +24,6 @@ class ShopStockViewModel @Inject constructor(
     private val userStore: UserStore,
     private val shopStockRepository: ShopStockRepository
 ) : ViewModel() {
-
-    private val _shellCount = mutableIntStateOf(0)
-    val shellCount: State<Int> get() = _shellCount
 
     private val _coupons = MutableLiveData<List<Coupon>>()
     val coupons: LiveData<List<Coupon>> get() = _coupons
@@ -91,6 +89,7 @@ class ShopStockViewModel @Inject constructor(
                 if (response.isSuccessful) {
                     _remainingShells.postValue(response.body())
                     fetchCoupons()
+                    Log.d("ShopStockViewModel", "remainingShells: ${response.body()}")
                 } else {
                     _errorMessage.postValue("쿠폰 구매에 실패했습니다.")
                 }

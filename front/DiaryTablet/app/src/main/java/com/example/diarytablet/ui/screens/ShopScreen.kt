@@ -23,24 +23,29 @@ import com.example.diarytablet.R
 import com.example.diarytablet.ui.components.BasicButton
 import com.example.diarytablet.ui.theme.BackgroundPlacement
 import com.example.diarytablet.ui.theme.BackgroundType
+import com.example.diarytablet.viewmodel.NavBarViewModel
 import com.example.diarytablet.viewmodel.ShopStockViewModel
 
 @Composable
 fun ShopScreen(
     navController: NavController,
     viewModel: ShopStockViewModel = hiltViewModel(),
+    navBarViewModel: NavBarViewModel = hiltViewModel(),
     backgroundType: BackgroundType = BackgroundType.DEFAULT
 ) {
     BackgroundPlacement(backgroundType = backgroundType)
 
     val coupons by viewModel.coupons.observeAsState(emptyList())
     val stickers by viewModel.stickers.observeAsState(emptyList())
-    val remainingShells by viewModel.remainingShells.observeAsState(0)
+    val shellCount by navBarViewModel.shellCount
+    val remainingShells by viewModel.remainingShells.observeAsState()
 
     LaunchedEffect(Unit) {
         viewModel.fetchCoupons()
         viewModel.fetchStickers()
+        navBarViewModel.initializeData()
     }
+    val shellCountToDisplay = if (remainingShells != null) remainingShells!! else shellCount
 
     Box(
         modifier = Modifier
@@ -76,7 +81,7 @@ fun ShopScreen(
             Spacer(modifier = Modifier.weight(1f))
             BasicButton(
                 onClick = {},
-                text = remainingShells.toString(),
+                text = shellCountToDisplay.toString(),
                 isOutlined = false
             )
         }
@@ -93,7 +98,8 @@ fun ShopScreen(
                 coupons = coupons,
                 stickers = stickers,
                 modifier = Modifier.align(Alignment.Center),
-                viewModel = viewModel
+                viewModel = viewModel,
+                navBarViewModel = navBarViewModel
             )
         }
     }

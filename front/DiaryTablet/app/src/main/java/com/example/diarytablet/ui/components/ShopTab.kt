@@ -29,6 +29,7 @@ import com.example.diarytablet.model.Sticker
 import com.example.diarytablet.viewmodel.ShopStockViewModel
 import com.example.diarytablet.R
 import com.example.diarytablet.ui.theme.DarkGray
+import com.example.diarytablet.viewmodel.NavBarViewModel
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -36,7 +37,8 @@ fun ShopTab(
     coupons: List<Coupon>,
     stickers: List<Sticker>,
     modifier: Modifier = Modifier,
-    viewModel: ShopStockViewModel
+    viewModel: ShopStockViewModel,
+    navBarViewModel: NavBarViewModel
 ) {
     // 화면 크기 가져오기
     val configuration = LocalConfiguration.current
@@ -124,9 +126,9 @@ fun ShopTab(
                 contentAlignment = Alignment.Center
             ) {
                 if (selectedTabIndex == 0) {
-                    CouponShopList(coupons, viewModel)
+                    CouponShopList(coupons, viewModel, navBarViewModel)
                 } else {
-                    StickerShopList(stickers, viewModel)
+                    StickerShopList(stickers, viewModel, navBarViewModel)
                 }
             }
         }
