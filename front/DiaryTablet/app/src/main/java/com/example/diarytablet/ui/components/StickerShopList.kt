@@ -111,13 +111,19 @@ fun StickerShopList(
 
 @Composable
 fun StickerCard(sticker: Sticker, index: Int, onStickerClick: () -> Unit, viewModel: ShopStockViewModel) {
-    var isPressed by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val imageLoader = remember { newImageLoader(context) }
 
-    val backgroundImage = if (isPressed) {
-        if (index % 2 == 0) R.drawable.sticker_yellow_down else R.drawable.sticker_blue_down
-    } else {
-        if (index % 2 == 0) R.drawable.sticker_yellow_up else R.drawable.sticker_blue_up
-    }
+    val painter = rememberAsyncImagePainter(
+        model = ImageRequest.Builder(context)
+            .data(sticker.img)
+            .placeholder(R.drawable.loading)
+            .error(R.drawable.loading)
+            .build(),
+        imageLoader = imageLoader
+    )
+
+    val backgroundImage = if (index % 2 == 0) R.drawable.sticker_yellow_up else R.drawable.sticker_blue_up
 
     Box(
         modifier = Modifier
@@ -126,19 +132,10 @@ fun StickerCard(sticker: Sticker, index: Int, onStickerClick: () -> Unit, viewMo
             .aspectRatio(1f)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null
-            ) {
-                isPressed = true
-                onStickerClick()
-            }
+                indication = null,
+                onClick = onStickerClick
+            )
     ) {
-        LaunchedEffect(isPressed) {
-            if (isPressed) {
-                delay(100L)
-                isPressed = false
-            }
-        }
-
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -156,17 +153,6 @@ fun StickerCard(sticker: Sticker, index: Int, onStickerClick: () -> Unit, viewMo
                     .padding(top = 48.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                val context = LocalContext.current
-                val imageLoader = newImageLoader(context)
-                val painter = rememberAsyncImagePainter(
-                    model = ImageRequest.Builder(context)
-                        .data(sticker.img)
-                        .placeholder(R.drawable.loading)
-                        .error(R.drawable.loading)
-                        .build(),
-                    imageLoader = imageLoader,
-                )
-
                 Image(
                     painter = painter,
                     contentDescription = "Sticker Image",
