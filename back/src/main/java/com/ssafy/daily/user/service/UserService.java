@@ -282,7 +282,7 @@ public class UserService {
     }
 
     @Transactional
-    public String modifyProfileImg(MultipartFile file, CustomUserDetails userDetails) {
+    public ModifyImgResponse modifyProfileImg(MultipartFile file, CustomUserDetails userDetails) {
         int memberId = userDetails.getMemberId();
 
         Member orgMember = memberRepository.findById(memberId)
@@ -296,6 +296,6 @@ public class UserService {
         }
 
         orgMember.updateImg(imageUrl);
-        return imageUrl;
+        return new ModifyImgResponse(imageUrl);
     }
 }
