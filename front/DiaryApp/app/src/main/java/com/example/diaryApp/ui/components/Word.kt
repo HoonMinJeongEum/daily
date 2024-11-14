@@ -67,7 +67,7 @@ fun LocalDateTime.toCalendarDateString(): String {
         set(Calendar.DAY_OF_MONTH, this@toCalendarDateString.dayOfMonth)
     }
     // SimpleDateFormat으로 날짜 형식 지정
-    val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    val formatter = SimpleDateFormat("yyyy년 MM월 dd일", Locale.getDefault())
     return formatter.format(calendar.time)
 }
 
@@ -112,15 +112,6 @@ fun WordListItemByMember(wordList: List<Word>,
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
 
-//    val groupStartIndices = remember {
-//        mutableMapOf<String, Int>().apply {
-//            var currentIndex = 0
-//            groupedWords.forEach { (groupKey, words) ->
-//                this[groupKey] = currentIndex
-//                currentIndex += words.size + 1 // 그룹 헤더(1) + 그룹 내 항목 개수
-//            }
-//        }
-//    }
     val groupStartIndices = remember(selectedTab, wordList) {
         mutableMapOf<String, Int>().apply {
             var currentIndex = 0
@@ -139,17 +130,23 @@ fun WordListItemByMember(wordList: List<Word>,
             modifier = Modifier
                 .fillMaxHeight()
                 .wrapContentWidth()
-                .padding(top = screenWidth * 0.02f),
+                .padding(top = screenWidth * 0.05f),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(screenWidth * 0.08f),
+            verticalArrangement = Arrangement.spacedBy(screenWidth * 0.06f),
         ) {
             if (wordList.isEmpty()) {
                 item {
-                    Text(
-                        text = "아직 학습한 단어가 없습니다.",
-                        color = Color(0xFF6d6d6d),
-                        fontSize = (screenWidth.value * 0.05f).sp,
-                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "아직 학습한 단어가 없습니다.",
+                            color = Color(0xFF6d6d6d),
+                            fontSize = (screenWidth.value * 0.06f).sp,
+                        )
+                    }
                 }
             } else {
                 groupedWords.forEach { (groupKey, words) ->
@@ -160,7 +157,7 @@ fun WordListItemByMember(wordList: List<Word>,
                             style = MyTypography.bodySmall,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(start = screenWidth * 0.08f)
+                                .padding(start = screenWidth * 0.15f)
                         )
                     }
                     items(words) { word ->
