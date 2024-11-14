@@ -29,7 +29,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
@@ -101,11 +104,66 @@ public class DiaryService {
         } catch (IOException e) {
             throw new S3UploadException("S3 일기 이미지 업로드 실패");
         }
-        String videoUrl = null;
+        String videoUrl;
+        File mp4TempFile = null;
+        File webmTempFile = null;
         try {
-            videoUrl = s3UploadService.saveFile(videoFile);
-        } catch (IOException e) {
-            throw new S3UploadException("S3 동영상 업로드 실패");
+            // MultipartFile을 임시 mp4 파일로 저장
+            mp4TempFile = File.createTempFile("temp-video", ".mp4");
+            videoFile.transferTo(mp4TempFile);
+
+            // 임시 webm 파일 생성
+            webmTempFile = File.createTempFile("temp-video", ".webm");
+
+            System.out.println("mp4TempFile: " + mp4TempFile.getAbsolutePath());
+            System.out.println("webmTempFile: " + webmTempFile.getAbsolutePath());
+
+
+            // FFmpeg로 mp4를 webm으로 변환
+            ProcessBuilder processBuilder = new ProcessBuilder(
+                    "ffmpeg",
+                    "-y",
+                    "-i", mp4TempFile.getAbsolutePath(),
+                    "-c:v", "libvpx",
+                    "-c:a", "libvorbis",
+                    webmTempFile.getAbsolutePath()
+            );
+
+            processBuilder.redirectErrorStream(true);
+            Process process = processBuilder.start();
+
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    System.out.println("FFmpeg: " + line);
+                }
+            }
+
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                System.out.println("동영상 변환 실패");
+                throw new S3UploadException("동영상 변환 실패");
+            }
+
+            if (!webmTempFile.exists()) {
+                System.out.println("변환된 파일이 존재하지 않습니다.");
+                throw new S3UploadException("변환된 파일이 존재하지 않습니다.");
+            }
+
+            // 변환된 webm 파일을 S3에 업로드
+            videoUrl = s3UploadService.saveFile(webmTempFile, "video/webm");
+
+        } catch (IOException | InterruptedException e) {
+            System.out.println("예외 발생: " + e.getMessage());
+            throw new S3UploadException("S3 동영상 업로드 실패: " + e.getMessage());
+        } finally {
+            // 임시 파일 삭제
+            if (mp4TempFile != null && mp4TempFile.exists()) {
+                mp4TempFile.delete();
+            }
+            if (webmTempFile != null && webmTempFile.exists()) {
+                webmTempFile.delete();
+            }
         }
 
         String content = processOcr(writeImgUrl);
