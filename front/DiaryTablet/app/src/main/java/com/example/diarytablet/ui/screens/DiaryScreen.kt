@@ -47,9 +47,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import android.os.Environment
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -59,6 +62,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextAlign
+import com.canhub.cropper.CropImage.CancelledResult.rotation
 import com.example.diarytablet.ui.components.DailyButton
 import com.example.diarytablet.ui.components.modal.CommonModal
 import com.example.diarytablet.ui.components.modal.CommonPopup
@@ -128,6 +132,17 @@ fun DiaryScreen(
     val undoStack = remember { mutableStateListOf<DrawingStep>() }
     val redoStack = remember { mutableStateListOf<DrawingStep>() }
     val redrawTrigger = remember { mutableStateOf(0) }
+
+    val infiniteTransition = rememberInfiniteTransition()
+    val rotation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ), label = ""
+    )
+
 
     fun undo() {
         if (firstPageDrawingSteps.isNotEmpty()) {
@@ -469,23 +484,56 @@ fun DiaryScreen(
                 Column(
                     modifier = Modifier
                         .weight(0.2f)
-                        .fillMaxHeight(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.SpaceEvenly
+                        .fillMaxHeight()
+                        .padding(start = 30.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally, // 왼쪽 정렬로 시작
+                    verticalArrangement = Arrangement.Bottom
                 ) {
-                    Button(
-                        onClick = {
-                            if (isVideoReady) {
+                    if (isVideoReady && !isLoading) {
+                        DailyButton(
+                            text = "일기 저장",
+                            fontSize = 20.sp,
+                            onClick = {
                                 CoroutineScope(Dispatchers.IO).launch {
                                     diaryViewModel.clearResponseMessage() // 이전 응답 메시지 초기화
                                     saveAndUploadImages() // 이미지 저장 및 업로드 함수 호출
                                 }
-                            }
-                        },
-                        enabled = isVideoReady && !isLoading // 로딩 중이 아니고, 비디오 준비 완료 시 활성화
-                    ) {
-                        Text("일기 저장")
+                            },
+                            cornerRadius = 50,
+                            width = 200.dp,
+                            height = 60.dp
+                        )
+                    } else {
+                        val rotation by rememberInfiniteTransition().animateFloat(
+                            initialValue = 0f,
+                            targetValue = 360f,
+                            animationSpec = infiniteRepeatable(
+                                animation = tween(durationMillis = 1000, easing = LinearEasing)
+                            ), label = ""
+                        )
+
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "동영상을 만들고 있어요!\n잠시만 기다려 주세요!",
+                                color = Color.Gray,
+                                fontSize = 18.sp,
+                                textAlign = TextAlign.Center
+                            )
+
+                            // 빙글빙글 도는 로딩 아이콘
+                            Image(
+                                painter = painterResource(id = R.drawable.loading), // 로딩 아이콘 리소스
+                                contentDescription = "로딩 중 아이콘",
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .graphicsLayer { rotationZ = rotation }
+                            )
+                        }
                     }
+                    Spacer(modifier = Modifier.height(35.dp)) // 하단 여백 추가
                 }
             }
         }
