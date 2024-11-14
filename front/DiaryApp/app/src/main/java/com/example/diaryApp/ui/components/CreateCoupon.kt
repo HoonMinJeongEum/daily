@@ -71,138 +71,145 @@ fun CreateCoupon(
     }
 
     Dialog(onDismissRequest = onCancel) {
-        Surface(
-            shape = RoundedCornerShape(screenWidth * 0.08f),
-            color = Color.White,
-            modifier = Modifier
-                .padding(screenWidth * 0.05f)
-                .fillMaxWidth()
-                .wrapContentHeight()
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.fillMaxSize()
         ) {
-            Column(
+
+            Surface(
+                shape = RoundedCornerShape(screenWidth * 0.08f),
+                color = Color.White,
                 modifier = Modifier
+                    .padding(screenWidth * 0.05f)
                     .fillMaxWidth()
-                    .padding(horizontal = screenWidth * 0.05f, vertical = screenWidth * 0.03f)
-                    .background(Color.White),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                    .wrapContentHeight()
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = screenWidth * 0.05f, vertical = screenWidth * 0.03f)
+                        .background(Color.White),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
-                    Spacer(modifier = Modifier.weight(1f))
-                    IconButton(onClick = onCancel) {
-                        Icon(
-                            imageVector = Icons.Filled.Close,
-                            contentDescription = "Close",
-                            tint = Color.Gray,
-                            modifier = Modifier.size(screenWidth * 0.08f)
-                        )
-                    }
-                }
-
-                Text(
-                    text = "쿠폰 생성",
-                    color = Color(0xFF5A72A0),
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center,
-                    style = MyTypography.bodyMedium.copy(
-                        color = DeepPastelNavy,
-                        fontSize = (screenWidth * 0.08f).value.sp
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(screenWidth * 0.06f))
-
-                MyTextField(
-                    value = couponViewModel.couponDescription.value,
-                    placeholder = "소원명",
-                    onValueChange = { couponViewModel.couponDescription.value = it },
-                    width = screenWidth,
-                    height = screenWidth * 1.9f
-                )
-
-                if (showAlertDescription) {
-                    Text(
-                        text = "소원명을 입력해주세요.",
-                        color = Color.Red,
-                        style = MyTypography.bodySmall.copy(
-                            fontSize = (screenWidth.value * 0.03f).sp
-                        ),
-                        modifier = Modifier
-                            .padding(top = screenWidth * 0.02f)
-                            .offset(x = (-screenWidth * 0.1f))
-                    )
-                } else {
-                    Spacer(modifier = Modifier.height(screenWidth * 0.055f)) // 빈 공간으로 높이 확보
-                }
-
-                Spacer(modifier = Modifier.height(screenWidth * 0.05f))
-
-                MyTextField(
-                    value = if (couponViewModel.couponPrice.value == 0) "" else couponViewModel.couponPrice.value.toString(),
-                    placeholder = "가격",
-                    width = screenWidth,
-                    height = screenWidth * 1.9f,
-                    onValueChange = {
-                        if (it.all { char -> char.isDigit() } || it.isEmpty()) {
-                            couponViewModel.couponPrice.value = it.toIntOrNull() ?: 0
-                        }
-                    }
-                )
-
-                if (showAlertPrice) {
-                    Text(
-                        text = "가격을 입력해주세요.",
-                        color = Color.Red,
-                        style = MyTypography.bodySmall.copy(
-                            fontSize = (screenWidth.value * 0.03f).sp
-                        ),
-                        modifier = Modifier.padding(top = screenWidth * 0.02f)
-                            .offset(x = (-screenWidth * 0.1f))
-                    )
-                } else {
-                    Spacer(modifier = Modifier.height(screenWidth * 0.055f)) // 빈 공간으로 높이 확보
-                }
-
-                Spacer(modifier = Modifier.height(screenWidth * 0.06f))
-
-                DailyButton(
-                    text = "쿠폰 생성",
-                    fontSize = (screenWidth * 0.05f).value.toInt(),
-                    textColor = White,
-                    cornerRadius = 16,
-                    fontWeight = FontWeight.Bold,
-                    backgroundColor = PastelNavy,
-                    width = (screenWidth * 0.5f).value.toInt(),
-                    height = (screenWidth * 0.13f).value.toInt(),
-                    onClick = {
-                        // 소원명과 가격 모두 입력 여부 확인
-                        val isDescriptionEmpty = couponViewModel.couponDescription.value.isBlank()
-                        val isPriceEmpty = couponViewModel.couponPrice.value == 0
-
-                        if (isDescriptionEmpty || isPriceEmpty) {
-                            showAlertDescription = isDescriptionEmpty
-                            showAlertPrice = isPriceEmpty
-                        } else {
-                            showAlertDescription = false
-                            showAlertPrice = false
-                            couponViewModel.createCoupon(
-                                onSuccess = {
-                                    Log.d("CouponScreen", "Coupon Success called")
-                                    onCancel()
-                                },
-                                onError = {
-                                    Log.d("CouponScreen", "Coupon creation failed")
-                                }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Spacer(modifier = Modifier.weight(1f))
+                        IconButton(onClick = onCancel) {
+                            Icon(
+                                imageVector = Icons.Filled.Close,
+                                contentDescription = "Close",
+                                tint = Color.Gray,
+                                modifier = Modifier.size(screenWidth * 0.08f)
                             )
-                            onCancel()
                         }
-                    },
-                )
+                    }
 
-                Spacer(modifier = Modifier.height(screenWidth * 0.02f))
+                    Text(
+                        text = "쿠폰 생성",
+                        color = Color(0xFF5A72A0),
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center,
+                        style = MyTypography.bodyMedium.copy(
+                            color = DeepPastelNavy,
+                            fontSize = (screenWidth * 0.08f).value.sp
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.height(screenWidth * 0.06f))
+
+                    MyTextField(
+                        value = couponViewModel.couponDescription.value,
+                        placeholder = "소원명",
+                        onValueChange = { couponViewModel.couponDescription.value = it },
+                        width = screenWidth,
+                        height = screenWidth * 1.9f
+                    )
+
+                    if (showAlertDescription) {
+                        Text(
+                            text = "소원명을 입력해주세요.",
+                            color = Color.Red,
+                            style = MyTypography.bodySmall.copy(
+                                fontSize = (screenWidth.value * 0.03f).sp
+                            ),
+                            modifier = Modifier
+                                .padding(top = screenWidth * 0.02f)
+                                .offset(x = (-screenWidth * 0.1f))
+                        )
+                    } else {
+                        Spacer(modifier = Modifier.height(screenWidth * 0.055f)) // 빈 공간으로 높이 확보
+                    }
+
+                    Spacer(modifier = Modifier.height(screenWidth * 0.05f))
+
+                    MyTextField(
+                        value = if (couponViewModel.couponPrice.value == 0) "" else couponViewModel.couponPrice.value.toString(),
+                        placeholder = "가격",
+                        width = screenWidth,
+                        height = screenWidth * 1.9f,
+                        onValueChange = {
+                            if (it.all { char -> char.isDigit() } || it.isEmpty()) {
+                                couponViewModel.couponPrice.value = it.toIntOrNull() ?: 0
+                            }
+                        }
+                    )
+
+                    if (showAlertPrice) {
+                        Text(
+                            text = "가격을 입력해주세요.",
+                            color = Color.Red,
+                            style = MyTypography.bodySmall.copy(
+                                fontSize = (screenWidth.value * 0.03f).sp
+                            ),
+                            modifier = Modifier.padding(top = screenWidth * 0.02f)
+                                .offset(x = (-screenWidth * 0.1f))
+                        )
+                    } else {
+                        Spacer(modifier = Modifier.height(screenWidth * 0.055f)) // 빈 공간으로 높이 확보
+                    }
+
+                    Spacer(modifier = Modifier.height(screenWidth * 0.06f))
+
+                    DailyButton(
+                        text = "쿠폰 생성",
+                        fontSize = (screenWidth * 0.05f).value.toInt(),
+                        textColor = White,
+                        cornerRadius = 16,
+                        fontWeight = FontWeight.Bold,
+                        backgroundColor = PastelNavy,
+                        width = (screenWidth * 0.5f).value.toInt(),
+                        height = (screenWidth * 0.13f).value.toInt(),
+                        onClick = {
+                            // 소원명과 가격 모두 입력 여부 확인
+                            val isDescriptionEmpty =
+                                couponViewModel.couponDescription.value.isBlank()
+                            val isPriceEmpty = couponViewModel.couponPrice.value == 0
+
+                            if (isDescriptionEmpty || isPriceEmpty) {
+                                showAlertDescription = isDescriptionEmpty
+                                showAlertPrice = isPriceEmpty
+                            } else {
+                                showAlertDescription = false
+                                showAlertPrice = false
+                                couponViewModel.createCoupon(
+                                    onSuccess = {
+                                        Log.d("CouponScreen", "Coupon Success called")
+                                        onCancel()
+                                    },
+                                    onError = {
+                                        Log.d("CouponScreen", "Coupon creation failed")
+                                    }
+                                )
+                                onCancel()
+                            }
+                        },
+                    )
+
+                    Spacer(modifier = Modifier.height(screenWidth * 0.02f))
+                }
             }
         }
     }
@@ -215,65 +222,73 @@ fun BuyCoupon(
     onCancel: () -> Unit
 ) {
     Dialog(onDismissRequest = onCancel) {
-        Surface(
-            shape = RoundedCornerShape(25.dp),
-            color = Color.White,
-            modifier = Modifier.padding(20.dp)
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.fillMaxSize()
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 36.dp,
-                        bottom = 24.dp,
-                        start = 18.dp,
-                        end = 18.dp)
-                    .background(Color.White),
-                horizontalAlignment = Alignment.CenterHorizontally
+
+            Surface(
+                shape = RoundedCornerShape(25.dp),
+                color = Color.White,
+                modifier = Modifier.padding(20.dp)
             ) {
-                Text(
-                    text = "쿠폰을 사용할까요?",
-                    color = DeepPastelNavy,
-                    style = MyTypography.bodySmall,
-                    modifier = Modifier.padding(bottom = 24.dp)
-                )
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            top = 36.dp,
+                            bottom = 24.dp,
+                            start = 18.dp,
+                            end = 18.dp
+                        )
+                        .background(Color.White),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    DailyButton(
-                        text = "취소",
-                        fontSize = 18,
-                        textColor = White,
-                        fontWeight = FontWeight.SemiBold,
-                        backgroundColor = Gray,
-                        cornerRadius = 35,
-                        width = 80,
-                        height = 50,
-                        onClick = { onCancel() },
+                    Text(
+                        text = "쿠폰을 사용할까요?",
+                        color = DeepPastelNavy,
+                        style = MyTypography.bodySmall,
+                        modifier = Modifier.padding(bottom = 24.dp)
                     )
 
-                    DailyButton(
-                        text = "사용",
-                        fontSize = 18,
-                        textColor = White,
-                        fontWeight = FontWeight.SemiBold,
-                        backgroundColor = DeepPastelNavy,
-                        cornerRadius = 35,
-                        width = 80,
-                        height = 50,
-                        onClick = {
-                            couponViewModel.buyCoupon(
-                                onSuccess = {
-                                    Log.d("CouponScreen", "Coupon Success called")
-                                    onCancel()
-                                },
-                                onError = {
-                                    Log.d("CouponScreen", "Coupon creation failed")
-                                }
-                            )
-                            onCancel()
-                        },
-                    )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        DailyButton(
+                            text = "취소",
+                            fontSize = 18,
+                            textColor = White,
+                            fontWeight = FontWeight.SemiBold,
+                            backgroundColor = Gray,
+                            cornerRadius = 35,
+                            width = 80,
+                            height = 50,
+                            onClick = { onCancel() },
+                        )
+
+                        DailyButton(
+                            text = "사용",
+                            fontSize = 18,
+                            textColor = White,
+                            fontWeight = FontWeight.SemiBold,
+                            backgroundColor = DeepPastelNavy,
+                            cornerRadius = 35,
+                            width = 80,
+                            height = 50,
+                            onClick = {
+                                couponViewModel.buyCoupon(
+                                    onSuccess = {
+                                        Log.d("CouponScreen", "Coupon Success called")
+                                        onCancel()
+                                    },
+                                    onError = {
+                                        Log.d("CouponScreen", "Coupon creation failed")
+                                    }
+                                )
+                                onCancel()
+                            },
+                        )
+                    }
                 }
             }
         }
