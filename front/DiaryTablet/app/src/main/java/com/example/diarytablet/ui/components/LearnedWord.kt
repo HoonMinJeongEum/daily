@@ -64,7 +64,7 @@ fun LocalDateTime.toCalendarDateString(): String {
         set(Calendar.DAY_OF_MONTH, this@toCalendarDateString.dayOfMonth)
     }
     // SimpleDateFormat으로 날짜 형식 지정
-    val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    val formatter = SimpleDateFormat("yyyy년 MM월 dd일", Locale.getDefault())
     return formatter.format(calendar.time)
 }
 

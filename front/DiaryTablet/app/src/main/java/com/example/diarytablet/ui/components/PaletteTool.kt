@@ -2,10 +2,13 @@ import android.graphics.Bitmap
 import android.graphics.BitmapShader
 import android.graphics.Canvas
 import android.graphics.Shader
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,9 +19,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,76 +37,111 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import coil3.compose.rememberAsyncImagePainter
 import com.example.diarytablet.R
 import com.example.diarytablet.model.StickerStock
 import com.example.diarytablet.model.ToolType
-import com.example.diarytablet.model.ToolType.*
+import androidx.compose.foundation.lazy.items
 
 @Composable
 fun PaletteTool(
     selectedTool: ToolType,
     selectedColor: Color,
+    onScrollModeChange: (Boolean) -> Unit,
     onColorChange: (Color) -> Unit,
     onThicknessChange: (Float) -> Unit,
     onToolSelect: (ToolType) -> Unit,
     stickerList: List<StickerStock>,
     onStickerSelect: (StickerStock) -> Unit,
-    onUndo: () -> Unit, // 되돌리기 콜백
-    onRedo: () -> Unit  // 다시하기 콜백 추가
 ) {
+    var isStickerModalVisible by remember { mutableStateOf(false) }
+
+    fun handleToolSelect(tool: ToolType) {
+        onToolSelect(tool)
+        onScrollModeChange(tool == ToolType.FINGER) // FINGER가 선택되면 스크롤 모드 활성화
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(10.dp)
             .border(2.dp, Color.Gray, RoundedCornerShape(16.dp))
-            .clip(RoundedCornerShape(16.dp)),
+            .clip(RoundedCornerShape(16.dp))
+            .width(250.dp),  // 팔레트 툴 박스의 고정 너비
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // 색상 팔레트
         ColorPalette(selectedColor = selectedColor, onColorChange = onColorChange)
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(30.dp))
 
-        // 두께 선택 버튼
         ThicknessSelector(onThicknessChange = onThicknessChange)
 
+        Spacer(modifier = Modifier.height(30.dp))
+
+        ToolSelectionRow(
+            selectedTool = selectedTool,
+            onToolSelect = { handleToolSelect(it) },
+            onStickerIconClick = { isStickerModalVisible = true } // 스티커 모달창 열기
+        )
+
         Spacer(modifier = Modifier.height(20.dp))
-
-        // 도구 선택 섹션 (이미지 사용)
-        ToolSelectionRow(selectedTool = selectedTool, onToolSelect = onToolSelect)
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        // 되돌리기 및 다시하기 버튼 행
-        UndoRedoButtons(onUndo = onUndo, onRedo = onRedo)
     }
-    // 스티커 목록
-    StickerRow(stickerList = stickerList, onStickerSelect = onStickerSelect)
+
+    // 스티커 모달창
+    if (isStickerModalVisible) {
+        StickerModal(
+            stickerList = stickerList,
+            onStickerSelect = { sticker ->
+                onStickerSelect(sticker)
+                isStickerModalVisible = false // 스티커 선택 후 모달창 닫기
+            },
+            onDismiss = { isStickerModalVisible = false } // 모달창 닫기
+        )
+    }
 }
 
+
 @Composable
-fun UndoRedoButtons(onUndo: () -> Unit, onRedo: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(10.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.ic_undo), // 되돌리기 아이콘 리소스 사용
-            contentDescription = "Undo",
+fun StickerModal(
+    stickerList: List<StickerStock>,
+    onStickerSelect: (StickerStock) -> Unit,
+    onDismiss: () -> Unit
+) {
+    Dialog(onDismissRequest = { onDismiss() }) {
+        Box(
             modifier = Modifier
-                .size(40.dp)
-                .clickable { onUndo() }
-        )
-        Image(
-            painter = painterResource(id = R.drawable.ic_redo), // 다시하기 아이콘 리소스 사용
-            contentDescription = "Redo",
-            modifier = Modifier
-                .size(40.dp)
-                .clickable { onRedo() }
-        )
+                .wrapContentSize()
+                .clip(RoundedCornerShape(12.dp))
+                .background(Color.White)
+                .padding(16.dp)
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text("스티커 선택", color = Color.Black, fontSize = 18.sp)
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // 스티커 목록을 가로로 스크롤 가능하게 표시
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(stickerList) { sticker ->
+                        Image(
+                            painter = rememberAsyncImagePainter(
+                                model = sticker.img,
+                                placeholder = painterResource(R.drawable.loading),
+                                error = painterResource(R.drawable.loading)
+                            ),
+                            contentDescription = "스티커 이미지",
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clickable { onStickerSelect(sticker) }
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -130,17 +176,28 @@ fun ColorPalette(selectedColor: Color, onColorChange: (Color) -> Unit) {
 
 @Composable
 fun ThicknessSelector(onThicknessChange: (Float) -> Unit) {
-    val thicknessOptions = listOf(4f, 8f, 16f, 20f)
+    val thicknessOptions = listOf(10f, 20f, 35f, 50f)
+    var selectedThickness by remember { mutableStateOf(10f) } // 선택된 굵기 상태 저장
+
     Row(
         horizontalArrangement = Arrangement.SpaceEvenly,
         modifier = Modifier.fillMaxWidth()
     ) {
         thicknessOptions.forEach { thickness ->
+            // 선택된 굵기일 경우 색상을 진하게 변경
+            val color by animateColorAsState(
+                targetValue = if (thickness == selectedThickness) Color.DarkGray else Color.Gray
+            )
+
             Box(
                 modifier = Modifier
+                    .align(Alignment.CenterVertically)
                     .size(thickness.dp)
-                    .background(Color.Gray, CircleShape)
-                    .clickable { onThicknessChange(thickness) }
+                    .background(color, CircleShape)
+                    .clickable {
+                        selectedThickness = thickness // 선택된 굵기 상태 업데이트
+                        onThicknessChange(thickness) // 굵기 변경 함수 호출
+                    }
             )
         }
     }
@@ -149,10 +206,11 @@ fun ThicknessSelector(onThicknessChange: (Float) -> Unit) {
 @Composable
 fun ToolSelectionRow(
     selectedTool: ToolType,
-    onToolSelect: (ToolType) -> Unit
+    onToolSelect: (ToolType) -> Unit,
+    onStickerIconClick: () -> Unit
 ) {
     Row(
-        horizontalArrangement = Arrangement.SpaceEvenly,
+        horizontalArrangement = Arrangement.Center, // 중앙 정렬
         modifier = Modifier.fillMaxWidth()
     ) {
         ToolImage(
@@ -160,60 +218,59 @@ fun ToolSelectionRow(
             selected = selectedTool == ToolType.PENCIL,
             onClick = { onToolSelect(ToolType.PENCIL) }
         )
-        ToolImage(
-            imageRes = R.drawable.palette_crayon,
-            selected = selectedTool == ToolType.CRAYON,
-            onClick = { onToolSelect(ToolType.CRAYON) }
-        )
+
+        Spacer(modifier = Modifier.width(8.dp)) // 아이콘 간격
+
         ToolImage(
             imageRes = R.drawable.palette_eraser,
             selected = selectedTool == ToolType.ERASER,
             onClick = { onToolSelect(ToolType.ERASER) }
         )
+
+        Spacer(modifier = Modifier.width(8.dp)) // 아이콘 간격
+
+        ToolImage(
+            imageRes = R.drawable.palette_sticker,
+            selected = false,
+            onClick = { onStickerIconClick() }
+        )
+
+        Spacer(modifier = Modifier.width(8.dp)) // 아이콘 간격
+
+        ToolImage(
+            imageRes = R.drawable.palette_finger,
+            selected = selectedTool == ToolType.FINGER,
+            onClick = { onToolSelect(ToolType.FINGER) }
+        )
     }
 }
 
+
 @Composable
 fun ToolImage(imageRes: Int, selected: Boolean, onClick: () -> Unit) {
-    val borderSize = if (selected) 4.dp else 0.dp
+    val size by animateDpAsState(targetValue = if (selected) 40.dp else 30.dp)
 
     Box(
         modifier = Modifier
             .size(50.dp)
-            .padding(borderSize)
-            .clickable(onClick = onClick),
+            .clickable(
+                onClick = onClick,
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }
+            ),
         contentAlignment = Alignment.Center
     ) {
         Image(
             painter = painterResource(id = imageRes),
             contentDescription = null,
-            modifier = Modifier.size(40.dp)
+            modifier = Modifier
+                .size(size)
+                .background(
+                    color = if (selected) Color.LightGray else Color.Transparent,
+                    shape = CircleShape
+                ) // 선택 시 배경 색을 추가해 강조
+                .padding(4.dp)
         )
-    }
-}
-
-@Composable
-fun StickerRow(
-    stickerList: List<StickerStock>,
-    onStickerSelect: (StickerStock) -> Unit
-) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        stickerList.forEach { sticker ->
-            Image(
-                painter = rememberAsyncImagePainter(
-                    model = sticker.img,
-                    placeholder = painterResource(R.drawable.loading),
-                    error = painterResource(R.drawable.loading)
-                ),
-                contentDescription = "스티커 이미지",
-                modifier = Modifier
-                    .size(40.dp)
-                    .clickable { onStickerSelect(sticker) }
-            )
-        }
     }
 }
 
@@ -225,9 +282,6 @@ fun createPaintForTool(toolType: ToolType, color: androidx.compose.ui.graphics.C
         else -> throw IllegalArgumentException("Unsupported ToolType: $toolType")
     }
 }
-
-
-
 
 fun createPencilPaint(color: androidx.compose.ui.graphics.Color, strokeWidth: Float): android.graphics.Paint {
     return android.graphics.Paint().apply {
@@ -266,9 +320,6 @@ fun createCrayonPaint(color: androidx.compose.ui.graphics.Color, strokeWidth: Fl
     }
 }
 
-
-
-
 fun createEraserPaint(strokeWidth: Float): android.graphics.Paint {
     return android.graphics.Paint().apply {
         this.color = android.graphics.Color.TRANSPARENT
@@ -278,5 +329,3 @@ fun createEraserPaint(strokeWidth: Float): android.graphics.Paint {
         xfermode = android.graphics.PorterDuffXfermode(android.graphics.PorterDuff.Mode.CLEAR)
     }
 }
-
-
