@@ -74,10 +74,11 @@ fun PaletteTool(
     ) {
         ColorPalette(selectedColor = selectedColor, onColorChange = onColorChange)
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(30.dp))
+
         ThicknessSelector(onThicknessChange = onThicknessChange)
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(30.dp))
 
         ToolSelectionRow(
             selectedTool = selectedTool,

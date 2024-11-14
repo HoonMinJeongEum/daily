@@ -67,7 +67,7 @@ class DiaryViewModel @Inject constructor(
                 if (response.isSuccessful && response.code() == 200) {
                     _responseMessage.postValue("그림일기 작성 완료!")
                 } else if (response.code() == 409) {
-                    _responseMessage.postValue("오늘의 일기 작성 완료 ㅜ")
+                    _responseMessage.postValue("일기는 하루에 하나씩!")
                 } else {
                     val errorBody = response.errorBody()?.string()
                     val errorResponse = errorBody?.let { parseErrorResponse(it) }
