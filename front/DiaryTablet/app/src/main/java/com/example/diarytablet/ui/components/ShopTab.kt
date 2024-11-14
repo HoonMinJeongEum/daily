@@ -1,3 +1,4 @@
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -49,6 +50,28 @@ fun ShopTab(
     var selectedTabIndex by remember { mutableStateOf(0) }
     val tabTitles = listOf("쿠  폰", "스티커")
     var showInfo by remember { mutableStateOf(false) } // 물음표 클릭 시 표시할 문구 상태
+
+    var shakeState by remember { mutableStateOf(false) }
+    val rotation by animateFloatAsState(if (shakeState) 5f else 0f)
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            // 5초 동안 대기
+            kotlinx.coroutines.delay(4000L)
+            // 흔들림 애니메이션 시작
+            shakeState = true
+            kotlinx.coroutines.delay(100L)  // 좌우 한 번씩 0.1초씩 흔들기
+            shakeState = false
+            kotlinx.coroutines.delay(100L)
+            shakeState = true
+            kotlinx.coroutines.delay(100L)
+            shakeState = false
+            kotlinx.coroutines.delay(100L)
+            shakeState = true
+            kotlinx.coroutines.delay(100L)
+            shakeState = false
+        }
+    }
 
     Box(
         modifier = modifier
@@ -115,7 +138,7 @@ fun ShopTab(
                 modifier = Modifier
                     .width(1.dp)
                     .fillMaxHeight()
-                    .background(Color.Gray)
+                    .background(DarkGray)
             )
 
             // 오른쪽 내용물 표시
@@ -146,6 +169,7 @@ fun ShopTab(
                 modifier = Modifier
                     .size(screenHeight * 0.3f)
                     .offset(x = -screenWidth * 0.01f, y = screenHeight * 0.03f)
+                    .graphicsLayer(rotationZ = rotation)
                     .combinedClickable(
                         indication = null,
                         interactionSource = remember { MutableInteractionSource() },
