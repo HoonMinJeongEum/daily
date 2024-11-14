@@ -1,8 +1,6 @@
 package com.example.diarytablet.ui.components.modal
 
-import CropActivity
 import android.content.Context
-import android.content.Intent
 import android.database.Cursor
 import android.net.Uri
 import android.provider.OpenableColumns
@@ -14,6 +12,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -29,7 +28,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -37,11 +35,16 @@ import coil3.compose.AsyncImage
 import com.example.diarytablet.R
 import com.example.diarytablet.ui.components.BasicButton
 import com.example.diarytablet.ui.theme.DeepPastelNavy
-import com.example.diarytablet.viewmodel.NavBarViewModel
 import java.io.File
 import java.io.FileOutputStream
-import java.io.InputStream
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileModal(
     isModalVisible: Boolean,
@@ -53,29 +56,21 @@ fun ProfileModal(
     screenWidth: Dp,
     screenHeight: Dp
 ) {
-    var isEditing by remember { mutableStateOf(false) }
-    var editedName by remember { mutableStateOf(userName) }
-    var croppedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var isEditing by remember(key1 = isModalVisible) { mutableStateOf(false) }
+    var editedName by remember(key1 = isModalVisible) { mutableStateOf(userName) }
+    var imageUri by remember(key1 = isModalVisible) { mutableStateOf<Uri?>(null) }
+    val focusRequester = remember { FocusRequester() }
+    var isTextFieldFocused by remember(key1 = isModalVisible) { mutableStateOf(false) }
 
     val context = LocalContext.current
 
-    // 이미지 선택 및 크롭 작업을 수행하는 런처 설정
-    val cropImageLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        val uri = result.data?.data
-        if (uri != null) {
-            croppedImageUri = uri // 크롭된 이미지 URI로 업데이트
-            onEditProfileClick(uri.toString()) // 프로필 수정 콜백 호출
-        }
-    }
-
     val imagePickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
-            croppedImageUri = it // 선택된 이미지 URI로 업데이트
-            val filePath = getFilePathFromUri(context, it) // Uri를 파일 경로로 변환
-            filePath?.let { path -> onEditProfileClick(path) } // 프로필 이미지 업데이트 콜백 호출
+            imageUri = it
+            val filePath = getFilePathFromUri(context, it)
+            filePath?.let { path -> onEditProfileClick(path) }
         }
     }
-
 
     if (isModalVisible) {
         Dialog(
@@ -107,17 +102,34 @@ fun ProfileModal(
                         )
                     }
 
-                    AsyncImage(
-                        model = croppedImageUri ?: profileImageUrl,
-                        contentDescription = null,
+                    Box(
                         modifier = Modifier
                             .size(screenHeight * 0.25f)
                             .clip(CircleShape)
                             .clickable {
-                                imagePickerLauncher.launch("image/*") // 이미지 선택 시작
-                            },
-                        contentScale = ContentScale.Crop
-                    )
+                                imagePickerLauncher.launch("image/*")
+                            }
+                    ) {
+                        AsyncImage(
+                            model = imageUri ?: profileImageUrl,
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color.Black.copy(alpha = 0.3f))
+                        )
+                        Icon(
+                            painter = painterResource(id = R.drawable.pencil),
+                            contentDescription = "Edit Profile",
+                            modifier = Modifier
+                                .size(screenHeight * 0.05f)
+                                .align(Alignment.Center),
+                            tint = Color.White
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(screenHeight * 0.03f))
 
@@ -129,8 +141,31 @@ fun ProfileModal(
                             TextField(
                                 value = editedName,
                                 onValueChange = { editedName = it },
-                                modifier = Modifier.width(screenHeight * 0.3f)
+                                modifier = Modifier
+                                    .width(screenHeight * 0.3f)
+                                    .height(screenHeight * 0.1f)
+                                    .focusRequester(focusRequester)
+                                    .onFocusChanged { focusState ->
+                                        isTextFieldFocused = focusState.isFocused
+                                        if (focusState.isFocused && editedName == userName) {
+                                            editedName = ""
+                                        }
+                                    },
+                                placeholder = {
+                                    if (!isTextFieldFocused) {
+                                        Text(text = userName)
+                                    }
+                                },
+                                colors = TextFieldDefaults.textFieldColors(
+                                    containerColor = Color(0xFFF0F0F0),
+                                    focusedIndicatorColor = DeepPastelNavy,
+                                    unfocusedIndicatorColor = Color.Gray
+                                ),
+                                textStyle = MaterialTheme.typography.bodyMedium.copy(
+                                    fontSize = 38.sp
+                                )
                             )
+
                             Spacer(modifier = Modifier.width(screenHeight * 0.02f))
                             BasicButton(
                                 text = "완료",

@@ -58,8 +58,10 @@ fun Navbar(
         viewModel.initializeData()
     }
 
-    LaunchedEffect(profileImageUrl) {
-        Log.d("Navbar", "profileImageUrl 변경 감지: $profileImageUrl")
+    LaunchedEffect(isProfileModalVisible) {
+        if (!isProfileModalVisible) {
+            viewModel.initializeData()
+        }
     }
 
     Row(
@@ -102,7 +104,6 @@ fun Navbar(
         screenWidth = screenWidth,
         screenHeight = screenHeight
     )
-
 
     AlarmModal(
         isModalVisible = isAlarmModalVisible,
