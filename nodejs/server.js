@@ -48,9 +48,15 @@ io.on("connection", (socket) => {
   socket.on("joinParents", (roomId) => {
     socket.join(roomId);
     socket.roomId = roomId;
-    
+    socket.emit("aspectRatio", roomData[socket.roomId].aspectRatio);
     socket.to(socket.roomId).emit("joinParents");
     console.log(`클라이언트가 방 ${roomId}에 참여했습니다.`);
+  });
+
+  // 비율 전달
+  socket.on("aspectRatio", (aspectRatio) => {
+    roomData[socket.roomId].aspectRatio = aspectRatio;
+    io.to(socket.roomId).emit("aspectRatio", aspectRatio); 
   });
 
   // 실시간 그림
