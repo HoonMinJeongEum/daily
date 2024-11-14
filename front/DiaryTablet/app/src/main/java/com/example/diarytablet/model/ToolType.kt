@@ -1,5 +1,5 @@
 package com.example.diarytablet.model
 
 enum class ToolType {
-    CRAYON, PENCIL, ERASER
+    CRAYON, PENCIL, ERASER, FINGER
 }

@@ -215,6 +215,11 @@ fun DiaryScreen(
                                     tapOffset.x in (stickerPosition.x..stickerPosition.x + sticker.bitmap.width) &&
                                             tapOffset.y in (stickerPosition.y..stickerPosition.y + sticker.bitmap.height)
                                 }.takeIf { it >= 0 }
+
+                                if (selectedStickerIndex != null) {
+                                    isDrawingMode = false // 스크롤 모드로 전환
+                                    selectedTool = ToolType.FINGER // 손가락 도구 선택 상태
+                                }
                             }
                         )
                     }
@@ -341,25 +346,33 @@ fun DiaryScreen(
                 PaletteTool(
                     selectedTool = selectedTool,
                     selectedColor = selectedColor,
+                    onScrollModeChange = { isScrollMode ->
+                        isDrawingMode = !isScrollMode
+                        if (isScrollMode) selectedTool = ToolType.FINGER // 스크롤 모드에서 손가락 아이콘 선택
+                    },
                     onColorChange = { selectedColor = it },
                     onThicknessChange = { brushSize = it },
-                    onToolSelect = { selectedTool = it },
+                    onToolSelect = { tool ->
+                        selectedTool = tool
+                        if (tool == ToolType.PENCIL || tool == ToolType.ERASER) {
+                            selectedStickerIndex = null // 연필 또는 지우개 선택 시 스티커 선택 해제
+                            isDrawingMode = true       // 드로잉 모드로 전환
+                        }
+                    },
                     stickerList = userStickers,
                     onStickerSelect = { sticker ->
                         CoroutineScope(Dispatchers.IO).launch {
                             val bitmap = loadBitmapFromUrl(sticker.img)
                             if (bitmap != null) {
                                 firstPageStickers.add(StickerItem(bitmap, mutableStateOf(centerPosition)))
+                                selectedStickerIndex = firstPageStickers.size - 1
+                                isDrawingMode = false // 스티커 선택 시 스크롤 모드로 전환
+                                selectedTool = ToolType.FINGER // 손가락 도구 선택으로 스크롤 모드 시각화
                             }
                         }
-                    },
-                    onUndo = { undo() },
-                    onRedo = { redo() }
+                    }
                 )
 
-                Button(onClick = { isDrawingMode = !isDrawingMode }) {
-                    Text(if (isDrawingMode) "스크롤 모드로 전환" else "그리기 모드로 전환")
-                }
                 Button(onClick = {
                     isWarningDialogVisible = true
                 }) {
@@ -367,7 +380,6 @@ fun DiaryScreen(
                 }
             }
         }
-        // 선택된 스티커의 'X' 버튼 추가
 
         // 선택된 스티커의 'X' 버튼 추가
         selectedStickerIndex?.let { index ->
@@ -379,9 +391,8 @@ fun DiaryScreen(
                 selectedStickerIndex = null
             }
         }
-
-
     }
+
     if (isWarningDialogVisible) {
         Box(
             modifier = Modifier
@@ -474,6 +485,7 @@ fun DiaryScreen(
             }
         }
     }
+
     if (isLoading) {
         Box(
             modifier = Modifier
@@ -531,5 +543,3 @@ fun StickerWithDeleteButton(stickerSize: Int, position: Offset, onDelete: () -> 
         Text("X", color = Color.Red, fontSize = 10.sp)
     }
 }
-
-
