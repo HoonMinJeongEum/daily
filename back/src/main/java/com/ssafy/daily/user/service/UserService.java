@@ -106,8 +106,8 @@ public class UserService {
     }
 
     public void addProfile(CustomUserDetails userDetails, MultipartFile file, String memberName) {
-        if (memberName.length() > 20 || memberName.isEmpty()){
-            throw new IllegalArgumentException("이름은 20자 이내로 설정해야 합니다.");
+        if (memberName.length() > 5 || memberName.isEmpty()){
+            throw new IllegalArgumentException("이름은 5자 이내로 설정해야 합니다.");
         }
 
         int familyId = userDetails.getFamily().getId();
