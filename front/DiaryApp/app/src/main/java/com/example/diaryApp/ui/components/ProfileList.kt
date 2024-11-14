@@ -44,9 +44,8 @@ fun ProfileList(
     var showDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        if (profileViewModel.profileList.value.isEmpty()) {
             profileViewModel.loadProfiles()
-        }    }
+            }
 
     LazyColumn(
         modifier = modifier
