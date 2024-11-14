@@ -209,7 +209,7 @@ fun ToolSelectionRow(
     onStickerIconClick: () -> Unit
 ) {
     Row(
-        horizontalArrangement = Arrangement.SpaceEvenly,
+        horizontalArrangement = Arrangement.Center, // 중앙 정렬
         modifier = Modifier.fillMaxWidth()
     ) {
         ToolImage(
@@ -218,17 +218,23 @@ fun ToolSelectionRow(
             onClick = { onToolSelect(ToolType.PENCIL) }
         )
 
+        Spacer(modifier = Modifier.width(8.dp)) // 아이콘 간격
+
         ToolImage(
             imageRes = R.drawable.palette_eraser,
             selected = selectedTool == ToolType.ERASER,
             onClick = { onToolSelect(ToolType.ERASER) }
         )
 
+        Spacer(modifier = Modifier.width(8.dp)) // 아이콘 간격
+
         ToolImage(
             imageRes = R.drawable.palette_sticker,
             selected = false,
             onClick = { onStickerIconClick() }
         )
+
+        Spacer(modifier = Modifier.width(8.dp)) // 아이콘 간격
 
         ToolImage(
             imageRes = R.drawable.palette_finger,
@@ -241,12 +247,11 @@ fun ToolSelectionRow(
 
 @Composable
 fun ToolImage(imageRes: Int, selected: Boolean, onClick: () -> Unit) {
-    // 기본 크기와 선택된 경우 확대된 크기를 정의
-    val size by animateDpAsState(targetValue = if (selected) 50.dp else 30.dp)
+    val size by animateDpAsState(targetValue = if (selected) 40.dp else 30.dp)
 
     Box(
         modifier = Modifier
-            .size(80.dp)
+            .size(50.dp)
             .clickable(
                 onClick = onClick,
                 indication = null,
