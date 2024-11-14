@@ -505,7 +505,10 @@ fun DiaryScreen(
                     onClick = {
                         diaryViewModel.clearResponseMessage()
                         isPreviewDialogVisible = false // 다이얼로그 닫기
-                        navController.navigate("main") // 메인 화면으로 이동
+                        if (responseMessage == "그림일기 작성 완료!") {
+                            navController.navigate("main?origin=diary&isFinished=true"){
+                                popUpTo("diary") {inclusive = true}}
+                        }
                     }
                 ) {
                     Text("확인")
@@ -514,4 +517,3 @@ fun DiaryScreen(
         }
     }
 }
-
