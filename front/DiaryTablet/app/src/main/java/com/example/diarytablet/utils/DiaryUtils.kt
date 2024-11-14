@@ -50,6 +50,7 @@ import java.net.URL
 import android.graphics.Canvas as AndroidCanvas
 
 
+
 suspend fun loadBitmapFromUrl(url: String): Bitmap? = withContext(Dispatchers.IO) {
     try {
         val originalBitmap = BitmapFactory.decodeStream(URL(url).openStream())
@@ -196,26 +197,12 @@ fun saveBitmapToFile(bitmap: Bitmap, file: File): Boolean {
     }
 }
 
-
-//// 동영상 생성 함수
-//fun createVideoFromFrames(context: Context, framesDir: File, outputFile: File) {
-//    val command = "-y -framerate 30 -i ${framesDir.absolutePath}/frame_%d.png -c:v mpeg4 -qscale:v 2 -pix_fmt yuv420p ${outputFile.absolutePath}"
-//
-//    FFmpegKit.executeAsync(command) { session ->
-//        if (session.returnCode.isValueSuccess) {
-//            Log.d("DrawingPlaybackView", "Video created successfully at: ${outputFile.absolutePath}")
-//        } else {
-//            Log.e("DrawingPlaybackView", "Failed to create video: ${session.output}")
-//        }
-//    }
-//}
 fun createVideoFromFrames(context: Context, framesDir: File, outputFile: File, onComplete: () -> Unit) {
-    val command = "-y -framerate 30 -i ${framesDir.absolutePath}/frame_%d.png -c:v mpeg4 -qscale:v 2 -pix_fmt yuv420p ${outputFile.absolutePath}"
+    val command = "-y -framerate 20 -i ${framesDir.absolutePath}/frame_%d.png -c:v mpeg4 -qscale:v 2 -pix_fmt yuv420p ${outputFile.absolutePath}"
 
     FFmpegKit.executeAsync(command) { session ->
         if (session.returnCode.isValueSuccess) {
             Log.d("DrawingPlaybackView", "Video created successfully at: ${outputFile.absolutePath}")
-            // UI 스레드에서 안전하게 onVideoReady 호출
             Handler(Looper.getMainLooper()).post {
                 onComplete()
             }
@@ -224,16 +211,6 @@ fun createVideoFromFrames(context: Context, framesDir: File, outputFile: File, o
         }
     }
 }
-
-
-// 미디어 스캔을 수행하여 갤러리에 파일 추가
-fun scanFile(context: Context, videoFile: File) {
-    MediaScannerConnection.scanFile(context, arrayOf(videoFile.absolutePath), null) { path, uri ->
-        Log.d("DrawingPlaybackView", "Scanned $path:")
-        Log.d("DrawingPlaybackView", "-> uri=$uri")
-    }
-}
-
 
 data class DrawingStep(
     val path: Path,
