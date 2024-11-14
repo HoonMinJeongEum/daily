@@ -1,6 +1,7 @@
 package com.example.diarytablet.ui.components
 
 
+import android.util.Log
 import com.example.diarytablet.ui.components.modal.ProfileModal
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -8,7 +9,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
@@ -58,6 +58,10 @@ fun Navbar(
         viewModel.initializeData()
     }
 
+    LaunchedEffect(profileImageUrl) {
+        Log.d("Navbar", "profileImageUrl 변경 감지: $profileImageUrl")
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth(0.8f), // 여백 조정을 화면 비율에 맞춤
@@ -93,11 +97,12 @@ fun Navbar(
         onDismiss = { isProfileModalVisible = false },
         profileImageUrl = profileImageUrl,
         userName = userName,
-        onEditProfileClick = {file -> viewModel.updateUserName(file)} ,
+        onEditProfileClick = { file -> viewModel.updateProfileImage(file) },
         onEditNameClick = { newName -> viewModel.updateUserName(newName) },
         screenWidth = screenWidth,
         screenHeight = screenHeight
     )
+
 
     AlarmModal(
         isModalVisible = isAlarmModalVisible,

@@ -56,10 +56,19 @@ import com.example.diarytablet.domain.dto.response.diary.CommentDto
 import com.example.diarytablet.domain.dto.response.diary.Diary
 import com.example.diarytablet.ui.theme.DarkGray
 import com.example.diarytablet.ui.theme.GrayDetail
+import com.example.diarytablet.ui.theme.GrayText
 import com.example.diarytablet.ui.theme.MyTypography
 import com.example.diarytablet.ui.theme.PastelNavy
 import com.example.diarytablet.viewmodel.LogViewModel
+import com.google.android.exoplayer2.ExoPlayer
+import com.google.android.exoplayer2.MediaItem
+import com.google.android.exoplayer2.Player
+import com.google.android.exoplayer2.ui.PlayerView
+import java.text.SimpleDateFormat
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.Calendar
+import java.util.Locale
 
 @Composable
 fun MyDiaryDetail(
@@ -76,10 +85,13 @@ fun MyDiaryDetail(
     var isVideoOpen by remember { mutableStateOf(false) }
     val diary = diaryDetail.value
 
+    val monthYearText = diary?.createdAt?.toCalendarDateString() ?: ""
+
     if (isDialogOpen && diary != null) {
         Dialog(onDismissRequest = { isDialogOpen = false }) {
             MyDiaryComment(
-                comments = diary.comments,
+                diaryId = diaryId,
+                viewModel = viewModel,
                 onDismissRequest = { isDialogOpen = false }
             )
         }
@@ -93,38 +105,57 @@ fun MyDiaryDetail(
             )
         }
     }
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 10.dp)
-    ) {
-        Column(
+    ){
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier
-                .fillMaxHeight()
-                .padding(bottom = 24.dp),
-            verticalArrangement = Arrangement.SpaceBetween,
-            horizontalAlignment = Alignment.CenterHorizontally
+                .fillMaxWidth()
         ) {
-            DynamicColorButton(
-                onClick = onBackClick,
-                text = "< 날짜 선택",
-                isSelected = true,
-                textStyle = MyTypography.bodySmall
-            )
 
+            Spacer(modifier = Modifier.weight(2f))
             Row(
                 horizontalArrangement = Arrangement.spacedBy(14.dp), // 이미지 간 간격 설정
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.chat),
-                    contentDescription = "Open Dialog",
+                IconButton(onClick = onBackClick) {
+                    Image(
+                        painter = painterResource(R.drawable.calender_back),
+                        contentDescription = "Previous Month",
+                        modifier = Modifier.size(50.dp, 50.dp)
+                    )
+                }
+
+                Text(
+                    text = monthYearText,
+                    style = MyTypography.bodyMedium,
+                    color = GrayText,
                     modifier = Modifier
-                        .clickable {
-                            isDialogOpen = true
+                        .align(Alignment.CenterVertically)
+                        .clickable{
+                            onBackClick()
                         }
-                        .size(60.dp)
                 )
+
+                IconButton(onClick = onBackClick) {
+                    Image(
+                        painter = painterResource(R.drawable.calender_next),
+                        contentDescription = "Previous Month",
+                        modifier = Modifier.size(50.dp, 50.dp)
+                    )
+                }
+
+            }
+            Spacer(modifier = Modifier.weight(1f))
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(14.dp), // 이미지 간 간격 설정
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(end = 16.dp)
+            ) {
                 Image(
                     painter = painterResource(id = R.drawable.video),
                     contentDescription = "Open Video",
@@ -134,13 +165,22 @@ fun MyDiaryDetail(
                         }
                         .size(50.dp)
                 )
+                Image(
+                    painter = painterResource(id = R.drawable.chat),
+                    contentDescription = "Open Dialog",
+                    modifier = Modifier
+                        .clickable {
+                            isDialogOpen = true
+                        }
+                        .size(60.dp)
+                )
             }
         }
 
+        Spacer(modifier = Modifier.height(20.dp))
         diary?.let {
             MyDiaryContent(diary = it)
         } ?: CircularProgressIndicator()
-
     }
 }
 
@@ -186,17 +226,41 @@ fun MyDiaryVideo(
     video: String?,
     sound: String?,
     onDismissRequest: () -> Unit
-){
+) {
     val context = LocalContext.current
-    var mediaPlayer: MediaPlayer? = remember { MediaPlayer() }
 
-    DisposableEffect(Unit) {
-        onDispose {
-            // VideoView와 MediaPlayer 리소스 해제
-            mediaPlayer?.release()
-            mediaPlayer = null
+    val videoPlayer = remember {
+        ExoPlayer.Builder(context).build().apply {
+            video?.let {
+                val mediaItem = MediaItem.fromUri(it)
+                setMediaItem(mediaItem)
+                repeatMode = Player.REPEAT_MODE_ONE // 비디오 반복 재생 설정
+                prepare()
+                playWhenReady = true
+            }
         }
     }
+
+    val soundPlayer = remember {
+        ExoPlayer.Builder(context).build().apply {
+            sound?.let {
+                val mediaItem = MediaItem.fromUri(it)
+                setMediaItem(mediaItem)
+                repeatMode = Player.REPEAT_MODE_ONE // 사운드 반복 재생 설정
+                prepare()
+                playWhenReady = true
+            }
+        }
+    }
+
+    // Dispose of the ExoPlayer when the composable leaves the composition
+    DisposableEffect(Unit) {
+        onDispose {
+            videoPlayer.release() // ExoPlayer 해제
+            soundPlayer?.release()
+        }
+    }
+
     Surface(
         shape = RoundedCornerShape(16.dp),
         color = Color.White,
@@ -226,38 +290,26 @@ fun MyDiaryVideo(
                 }
             }
 
-            Text(
-                text = "저장된 영상이 없어요.",
-                style = MyTypography.bodyMedium,
-                color = PastelNavy,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 20.dp),
-                textAlign = TextAlign.Center
-            )
-
-            video?.let { videoUrl ->
-                sound?.let { soundUrl ->
-                    mediaPlayer?.apply {
-                        setDataSource(context, Uri.parse(soundUrl))
-                        setOnPreparedListener { start() }
-                        prepareAsync()
-                    }
-                }
-
+            if (video != null) {
                 AndroidView(
-                    factory = { context ->
-                        VideoView(context).apply {
-                            setVideoPath(videoUrl)
-                            setOnPreparedListener {
-                                it.isLooping = true
-                                start()
-                            }
+                    factory = {
+                        PlayerView(context).apply {
+                            player = videoPlayer
                         }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .aspectRatio(1808f / 1231f)
+                        .aspectRatio(1808 / 1231f) // 원하는 비율 설정
+                )
+            } else {
+                Text(
+                    text = "저장된 영상이 없어요.",
+                    style = MyTypography.bodyMedium,
+                    color = PastelNavy,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 20.dp),
+                    textAlign = TextAlign.Center
                 )
             }
         }
@@ -266,9 +318,18 @@ fun MyDiaryVideo(
 
 @Composable
 fun MyDiaryComment(
-    comments: List<CommentDto>,
+    diaryId: Int,
+    viewModel: LogViewModel,
     onDismissRequest: () -> Unit
 ) {
+    LaunchedEffect(diaryId) {
+        viewModel.fetchDiaryById(diaryId)
+    }
+
+    val diaryDetail = viewModel.diaryDetail.observeAsState()
+    val diary = diaryDetail.value
+
+    val comments = diary?.comments ?: emptyList()
     Surface(
         shape = RoundedCornerShape(16.dp),
         color = Color.White,
