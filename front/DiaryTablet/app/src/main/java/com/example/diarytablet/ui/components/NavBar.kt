@@ -35,11 +35,13 @@ import com.example.diarytablet.domain.RetrofitClient
 import com.example.diarytablet.ui.components.modal.AlarmModal
 import com.example.diarytablet.ui.theme.DeepPastelNavy
 import com.example.diarytablet.ui.theme.MyTypography
+import com.example.diarytablet.viewmodel.MainViewModel
 import com.example.diarytablet.viewmodel.NavBarViewModel
 
 @Composable
 fun Navbar(
     viewModel: NavBarViewModel = hiltViewModel(),
+    mainViewModel: MainViewModel,
     modifier: Modifier = Modifier,
     navController: NavController,
     screenWidth: Dp,
@@ -61,6 +63,7 @@ fun Navbar(
     LaunchedEffect(isProfileModalVisible) {
         if (!isProfileModalVisible) {
             viewModel.initializeData()
+            mainViewModel.loadStatus()
         }
     }
 
@@ -96,7 +99,9 @@ fun Navbar(
 
     ProfileModal(
         isModalVisible = isProfileModalVisible,
-        onDismiss = { isProfileModalVisible = false },
+        onDismiss = {
+            isProfileModalVisible = false
+        },
         profileImageUrl = profileImageUrl,
         userName = userName,
         onEditProfileClick = { file -> viewModel.updateProfileImage(file) },

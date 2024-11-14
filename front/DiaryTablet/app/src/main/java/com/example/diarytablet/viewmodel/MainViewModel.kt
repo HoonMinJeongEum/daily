@@ -16,6 +16,7 @@ import androidx.lifecycle.SavedStateHandle
 import com.example.diarytablet.datastore.UserStore
 import com.example.diarytablet.datastore.UserStore.Companion.KEY_PROFILE_IMAGE
 import com.example.diarytablet.domain.dto.request.CompleteMissionItemRequestDto
+import kotlinx.coroutines.flow.Flow
 
 
 @HiltViewModel
@@ -29,6 +30,8 @@ class MainViewModel @Inject constructor(
     val missions: List<MissionItem> get() = _missions
     private val _shellCount = mutableIntStateOf(0)
     val shellCount: State<Int> get() = _shellCount
+    private val _userName = mutableStateOf("")
+    val userName: State<String> get() = _userName
     private val _profileImageUrl = mutableStateOf("")
     val profileImageUrl: State<String> get() = _profileImageUrl
     val origin: String = savedStateHandle.get<String>("origin") ?: "Unknown"
@@ -40,7 +43,7 @@ class MainViewModel @Inject constructor(
         loadStatus()
     }
 
-    private fun loadStatus() {
+    fun loadStatus() {
         viewModelScope.launch {
             try {
                 Log.d("main","${userStore.getValue(UserStore.KEY_USER_NAME)}")
@@ -58,6 +61,9 @@ class MainViewModel @Inject constructor(
                 _missions.clear()
                 _missions.addAll(loadedMissions)
 
+                userStore.getValue(UserStore.KEY_PROFILE_NAME).collect { name ->
+                    _userName.value = name
+                }
                 _profileImageUrl.value = response.image
 
                 userStore.setValue(KEY_PROFILE_IMAGE, response.image)
