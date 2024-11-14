@@ -95,11 +95,10 @@ fun WordTap(
     modifier: Modifier = Modifier,
     wordList: List<WordResponseDto>,
     onValidate: suspend (Context, WordResponseDto, Bitmap) -> Int,
-    onFinish:suspend () -> Unit,
+    onFinish: suspend () -> Unit,
     learnedWordList: List<WordRequestDto>,
     navController: NavController,
     username: String
-
 ) {
     BoxWithConstraints(
         modifier = Modifier.fillMaxSize()
@@ -115,11 +114,9 @@ fun WordTap(
         var canvasHeight by remember { mutableStateOf(510) }
         var showPopup by remember { mutableStateOf(false) }
 
-        // Bitmap 생성
-        var writtenBitmap by remember {
-            mutableStateOf(
-                Bitmap.createBitmap(canvasWidth, canvasHeight, Bitmap.Config.ARGB_8888)
-            )
+        // 단어마다 독립적인 Bitmap 생성
+        val writtenBitmaps = remember(wordList) {
+            wordList.map { Bitmap.createBitmap(canvasWidth, canvasHeight, Bitmap.Config.ARGB_8888) }
         }
 
         val context = LocalContext.current
@@ -129,42 +126,71 @@ fun WordTap(
         var initialized by remember { mutableStateOf(false) }
         var popupAlpha by remember { mutableStateOf(1f) }
 
+        // 현재 단어의 비트맵 초기화 함수
         fun clearCanvas() {
-            writtenBitmap.eraseColor(android.graphics.Color.TRANSPARENT)
+            writtenBitmaps[currentIndex].eraseColor(android.graphics.Color.TRANSPARENT)
         }
 
+        // 팝업 메시지 목록
         val popupMessages = listOf(
-            "{}!\n잘하고 있어!",
-            "{}!\n조금만 더 힘내!",
-            "{}!\n정말 잘했어!",
-            "{}!\n아주 훌륭해!",
-            "{}!\n넌 단어 마스터!",
-            "{}!\n집중력 짱!",
-            "{}!\n끝까지 해보자!",
-            "{}!\n최고야 ~",
-            "{}!\n노력하는 모습이 멋져!",
-            "{}!\n글씨를 참 잘 적구나",
-            "{}!\n계속 이렇게 해보자!"
+            "{}!\n잘하고 있어!", "{}!\n조금만 더 힘내!", "{}!\n정말 잘했어!",
+            "{}!\n아주 훌륭해!", "{}!\n넌 단어 마스터!", "{}!\n집중력 짱!",
+            "{}!\n끝까지 해보자!", "{}!\n최고야 ~", "{}!\n노력하는 모습이 멋져!",
+            "{}!\n글씨를 참 잘 적구나", "{}!\n계속 이렇게 해보자!"
         )
 
         var popupMessage by remember { mutableStateOf("") }
+        var isButtonEnabled by remember { mutableStateOf(true) } // 버튼 활성화 상태 변수 추가
+
+        // 버튼 클릭 이벤트 처리
+        fun onButtonClick() {
+            if (isButtonEnabled && currentIndex == finishedIndex + 1 && !isCanvasEmpty(writtenBitmaps[currentIndex])) {
+                isButtonEnabled = false // 버튼 비활성화로 설정
+                coroutineScope.launch {
+                    val statusCode = onValidate(context, wordList[currentIndex], writtenBitmaps[currentIndex])
+                    Log.d("wordTap", "success $statusCode")
+
+                    when (statusCode) {
+                        200 -> {
+                            finishedIndex = currentIndex
+                            buttonText = "제출"
+                            buttonColor = Color.White
+                            initialized = false
+                            if (finishedIndex == 4) {
+                                onFinish()
+                                navController.navigate("main?origin=wordLearning&isFinished=true") {
+                                    popUpTo("wordLearning") { inclusive = true }
+                                }
+                            } else {
+                                listState.animateScrollToItem(++currentIndex)
+                                showPopup = true // Show popup on transition
+                            }
+                        }
+                        400, 422 -> {
+                            buttonText = "다시제출"
+                            buttonColor = Color(0xFFD27979) // Hex color D27979
+                        }
+                        else -> {
+                            // 다른 에러 처리
+                        }
+                    }
+                    clearCanvas()
+                    isButtonEnabled = true // 요청 완료 후 버튼 다시 활성화
+                }
+            }
+        }
 
         Column(modifier = modifier.fillMaxSize()) {
-
             if (showPopup) {
-                // alpha 애니메이션 추가
                 val alpha by animateFloatAsState(
                     targetValue = popupAlpha,
-                    animationSpec = tween(durationMillis = 1000, easing = LinearEasing) // 페이드 인/아웃 애니메이션 시간
+                    animationSpec = tween(durationMillis = 1000, easing = LinearEasing)
                 )
 
                 Popup(
                     alignment = Alignment.BottomStart,
                     onDismissRequest = {},
-                    properties = PopupProperties(
-                        focusable = false,
-                        dismissOnBackPress = false
-                    )
+                    properties = PopupProperties(focusable = false, dismissOnBackPress = false)
                 ) {
                     Row(
                         modifier = Modifier
@@ -176,15 +202,11 @@ fun WordTap(
                         Image(
                             painter = painterResource(id = R.drawable.main_char),
                             contentDescription = "Character",
-                            modifier = Modifier
-                                .width(screenWidth * 0.3f)
-                                .aspectRatio(1.67f)
+                            modifier = Modifier.width(screenWidth * 0.3f).aspectRatio(1.67f)
                         )
 
                         Box(
-                            modifier = Modifier
-                                .width(screenWidth * 0.3f)
-                                .aspectRatio(2.5f)
+                            modifier = Modifier.width(screenWidth * 0.3f).aspectRatio(2.5f)
                                 .offset(x = -screenWidth * 0.08f)
                                 .padding(bottom = screenHeight * 0.05f)
                         ) {
@@ -224,23 +246,17 @@ fun WordTap(
                 }
             }
 
-
-            LazyRow (
+            LazyRow(
                 state = listState,
-                modifier = Modifier
-                    .wrapContentHeight()
-                    .fillMaxWidth(),
+                modifier = Modifier.wrapContentHeight().fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(screenWidth * 0.09f),
                 verticalAlignment = Alignment.CenterVertically,
                 contentPadding = PaddingValues(start = screenWidth * 0.18f, end = screenWidth * 0.18f),
                 userScrollEnabled = false
-            ){
+            ) {
                 itemsIndexed(wordList) { index, word ->
-
                     Box(
-                        modifier = modifier
-                            .width(screenWidth * 0.64f)
-                            .height(screenHeight * 0.8f)
+                        modifier = modifier.width(screenWidth * 0.64f).height(screenHeight * 0.8f)
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.word_container),
@@ -254,15 +270,14 @@ fun WordTap(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.fillMaxSize()
                         ) {
-
-                            if (listState.firstVisibleItemIndex == index-1 && currentIndex != finishedIndex+1) {
+                            // 오른쪽 화살표
+                            if (listState.firstVisibleItemIndex == index - 1 && currentIndex != finishedIndex + 1) {
                                 Image(
                                     painter = painterResource(id = R.drawable.right_arrow),
                                     contentDescription = null,
-                                    modifier = Modifier
-                                        .size(screenHeight * 0.13f)
+                                    modifier = Modifier.size(screenHeight * 0.13f)
                                         .padding(start = screenWidth * 0.03f)
-                                        .clickable{
+                                        .clickable {
                                             coroutineScope.launch {
                                                 listState.animateScrollToItem(++currentIndex)
                                                 if (currentIndex > finishedIndex) {
@@ -274,153 +289,94 @@ fun WordTap(
                             }
 
                             Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxSize(),
+                                modifier = Modifier.weight(1f).fillMaxSize(),
                                 contentAlignment = Alignment.Center
                             ) {
-
                                 AsyncImage(
                                     model = ImageRequest.Builder(LocalContext.current)
                                         .data(word.imageUrl)
                                         .crossfade(true)
                                         .build(),
                                     contentDescription = null,
-                                    modifier = Modifier
-                                        .fillMaxSize(),
-                                    contentScale = ContentScale.FillBounds                                 )
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.FillBounds
+                                )
                             }
+
                             Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(end = screenWidth * 0.05f)
+                                modifier = Modifier.weight(1f).padding(end = screenWidth * 0.05f)
                                     .fillMaxHeight(),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Column(
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     verticalArrangement = Arrangement.Center,
-                                    modifier = Modifier
-                                        .fillMaxSize() // 크기 조정
+                                    modifier = Modifier.fillMaxSize()
                                 ) {
                                     Box(
-                                        modifier = Modifier
-                                            .wrapContentSize()
+                                        modifier = Modifier.wrapContentSize()
                                             .onSizeChanged { size ->
-                                                Log.d("wordtest","$${index} ${word}")
                                                 val characterCount = wordList[currentIndex].word.length
-                                                val targetWidth = characterCount * 200
-                                                val targetHeight = 200
+                                                val targetWidth = characterCount * 220
+                                                val targetHeight = 210
 
-                                                if (!initialized && ( canvasWidth != targetWidth || canvasHeight != targetHeight)) {
+                                                if (!initialized && (canvasWidth != targetWidth || canvasHeight != targetHeight)) {
                                                     canvasWidth = targetWidth
                                                     canvasHeight = targetHeight
-                                                    writtenBitmap = Bitmap.createBitmap(canvasWidth, canvasHeight, Bitmap.Config.ARGB_8888).apply {
-                                                        eraseColor(android.graphics.Color.TRANSPARENT)
-                                                    }
-                                                    Log.d("sizeTest", "Updated Bitmap size: $canvasWidth x $canvasHeight")
                                                     initialized = true
                                                 }
                                             },
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        // 각 글자를 개별 박스로 나누어 배치
                                         val characters = wordList[currentIndex].word.chunked(1)
                                         Row(
                                             horizontalArrangement = Arrangement.spacedBy(0.dp),
                                             verticalAlignment = Alignment.CenterVertically,
-                                            modifier = Modifier
-                                                .wrapContentSize()
+                                            modifier = Modifier.wrapContentSize()
                                         ) {
                                             characters.forEach { character ->
                                                 Box(
                                                     contentAlignment = Alignment.Center,
-                                                    modifier = Modifier
-                                                        .size(screenHeight * 0.15f)
+                                                    modifier = Modifier.size(screenHeight * 0.18f)
                                                         .border(screenHeight * 0.01f, Color.LightGray)
                                                 ) {
                                                     Text(
                                                         text = character,
-                                                        fontSize = (screenHeight.value * 0.1f).sp,
+                                                        fontSize = (screenHeight.value * 0.13f).sp,
                                                         style = MyTypography.bodyLarge, color = Color.LightGray
                                                     )
                                                 }
                                             }
                                         }
                                         DrawCanvas(
-                                            modifier = Modifier
-                                                .matchParentSize()
-                                                .align(Alignment.Center),
-                                            currentBitmap = writtenBitmap,
+                                            modifier = Modifier.matchParentSize().align(Alignment.Center),
+                                            currentBitmap = writtenBitmaps[currentIndex],
                                             isDrawingMode = isDrawingMode,
                                         )
                                     }
 
-
-
-                                    Spacer(
-                                        modifier = Modifier
-                                            .height(screenHeight * 0.1f)
-                                    )
+                                    Spacer(modifier = Modifier.height(screenHeight * 0.1f))
                                     BasicButton(
-                                        onClick = {
-                                            if (currentIndex == finishedIndex + 1) {
-                                                Log.d("gon", "Button clicked")
-                                                coroutineScope.launch {
-                                                    val statusCode = onValidate(context, wordList[currentIndex], writtenBitmap!!)
-                                                    Log.d("wordTap","success ${statusCode}")
-
-                                                    when (statusCode) {
-                                                        200 -> {
-                                                            // Success, proceed to the next item
-                                                            finishedIndex = currentIndex
-                                                            buttonText = "제출"
-                                                            buttonColor = Color.White
-                                                            initialized = false
-                                                            if (finishedIndex == 4) {
-                                                                onFinish()
-                                                                navController.navigate("main?origin=wordLearning&isFinished=true") {
-                                                                    popUpTo("wordLearning") { inclusive = true }
-                                                                }
-                                                            } else {
-                                                                listState.animateScrollToItem(++currentIndex)
-                                                                showPopup = true // Show popup on transition
-                                                            }
-                                                        }
-                                                        400, 422 -> {
-                                                            // Change button to "다시제출" with the specified color
-                                                            buttonText = "다시제출"
-                                                            buttonColor = Color(0xFFD27979) // Hex color D27979
-                                                        }
-                                                        else -> {
-                                                            // Handle other errors if needed
-                                                        }
-                                                    }
-                                                    clearCanvas()
-                                                }
-                                            }
-                                            Log.d("wordTap","f ${finishedIndex} , c ${currentIndex}")
-                                        },
+                                        onClick = { onButtonClick() }, // onClick에 위에서 정의한 함수 연결
                                         modifier = Modifier.clickable(enabled = currentIndex == finishedIndex + 1) {
                                             coroutineScope.launch {
                                                 listState.animateScrollToItem(currentIndex)
                                             }
                                         },
                                         text = if (currentIndex != finishedIndex + 1) "완료" else buttonText,
-                                        ButtonColor = if (currentIndex != finishedIndex + 1) Color.Gray else buttonColor,
+                                        ButtonColor = if (currentIndex == finishedIndex + 1) buttonColor else Color.Gray, // 비활성화 시 색상 변경
                                         imageResId = 11
                                     )
-
                                 }
                             }
-                            if (listState.firstVisibleItemIndex == index+1) {
+                            // 왼쪽 화살표
+                            if (listState.firstVisibleItemIndex == index + 1) {
                                 Image(
                                     painter = painterResource(id = R.drawable.left_arrow),
                                     contentDescription = null,
-                                    modifier = Modifier
-                                        .size(screenHeight * 0.13f)
+                                    modifier = Modifier.size(screenHeight * 0.13f)
                                         .padding(end = screenWidth * 0.03f)
-                                        .clickable{
+                                        .clickable {
                                             coroutineScope.launch {
                                                 listState.animateScrollToItem(--currentIndex)
                                             }
@@ -442,6 +398,7 @@ fun WordTap(
         }
     }
 }
+
 
 @Composable
 fun DrawCanvas(
@@ -508,7 +465,11 @@ fun DrawCanvas(
 
 
 
-
+fun isCanvasEmpty(bitmap: Bitmap): Boolean {
+    val pixels = IntArray(bitmap.width * bitmap.height)
+    bitmap.getPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
+    return pixels.all { it == android.graphics.Color.TRANSPARENT }
+}
 
 
 @Composable

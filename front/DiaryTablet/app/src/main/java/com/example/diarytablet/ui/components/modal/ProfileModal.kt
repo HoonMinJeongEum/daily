@@ -14,6 +14,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -36,12 +37,16 @@ import androidx.compose.ui.window.DialogProperties
 import coil3.compose.AsyncImage
 import com.example.diarytablet.R
 import com.example.diarytablet.ui.components.BasicButton
+import com.example.diarytablet.ui.theme.DarkRed
 import com.example.diarytablet.ui.theme.DeepPastelNavy
 import com.example.diarytablet.viewmodel.NavBarViewModel
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
 
+import androidx.compose.material3.TextFieldDefaults
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileModal(
     isModalVisible: Boolean,
@@ -56,37 +61,33 @@ fun ProfileModal(
     var isEditing by remember { mutableStateOf(false) }
     var editedName by remember { mutableStateOf(userName) }
     var croppedImageUri by remember { mutableStateOf<Uri?>(null) }
-
+    var showWarning by remember { mutableStateOf(false) } // 경고 문구 표시 여부
     val context = LocalContext.current
 
-    // 이미지 선택 및 크롭 작업을 수행하는 런처 설정
-    val cropImageLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        val uri = result.data?.data
-        if (uri != null) {
-            croppedImageUri = uri // 크롭된 이미지 URI로 업데이트
-            onEditProfileClick(uri.toString()) // 프로필 수정 콜백 호출
-        }
+    // 모달이 열릴 때 초기화
+    if (isModalVisible) {
+        isEditing = false
+        editedName = userName
+        showWarning = false
     }
 
+    // 이미지 선택 및 크롭 작업을 수행하는 런처 설정
     val imagePickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
-            croppedImageUri = it // 선택된 이미지 URI로 업데이트
-            val filePath = getFilePathFromUri(context, it) // Uri를 파일 경로로 변환
-            filePath?.let { path -> onEditProfileClick(path) } // 프로필 이미지 업데이트 콜백 호출
+            croppedImageUri = it
+            val filePath = getFilePathFromUri(context, it)
+            filePath?.let { path -> onEditProfileClick(path) }
         }
     }
-
 
     if (isModalVisible) {
         Dialog(
-            onDismissRequest = {
-                onDismiss()
-            },
+            onDismissRequest = { onDismiss() },
             properties = DialogProperties(dismissOnClickOutside = false)
         ) {
             Box(
                 modifier = Modifier
-                    .size(screenHeight * 0.6f)
+                    .size(screenHeight * 0.6f, screenHeight * 0.65f)
                     .background(Color.White, shape = RoundedCornerShape(screenWidth * 0.02f))
                     .padding(screenHeight * 0.04f)
             ) {
@@ -113,37 +114,63 @@ fun ProfileModal(
                         modifier = Modifier
                             .size(screenHeight * 0.25f)
                             .clip(CircleShape)
-                            .clickable {
-                                imagePickerLauncher.launch("image/*") // 이미지 선택 시작
-                            },
+                            .clickable { imagePickerLauncher.launch("image/*") },
                         contentScale = ContentScale.Crop
                     )
 
                     Spacer(modifier = Modifier.height(screenHeight * 0.03f))
 
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
+
                         if (isEditing) {
-                            TextField(
-                                value = editedName,
-                                onValueChange = { editedName = it },
-                                modifier = Modifier.width(screenHeight * 0.3f)
-                            )
-                            Spacer(modifier = Modifier.width(screenHeight * 0.02f))
-                            BasicButton(
-                                text = "완료",
-                                imageResId = 11,
-                                onClick = {
-                                    onEditNameClick(editedName)
-                                    isEditing = false
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                TextField(
+                                    value = editedName,
+                                    onValueChange = {
+                                        editedName = it
+                                        showWarning = it.length > 5
+                                    },
+                                    modifier = Modifier.width(screenWidth * 0.12f),
+
+                                    singleLine = true,
+                                    shape = RoundedCornerShape(8.dp)
+                                )
+
+                                Spacer(modifier = Modifier.width(screenHeight * 0.02f))
+
+                                BasicButton(
+                                    text = "완료",
+                                    imageResId = 11,
+                                    onClick = {
+                                        onEditNameClick(editedName)
+                                        isEditing = false
+                                    },
+                                    enabled = !showWarning // 5글자 초과 시 비활성화
+                                )
+                            }
+
+                                if (showWarning) {
+                                    Text(
+                                        text = "닉네임은 5글자 이하로 입력해주세요.",
+                                        color = DarkRed,
+                                        fontSize = (screenHeight.value * 0.025f).sp
+                                    )
                                 }
-                            )
+
+
+
+
+
                         } else {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
                             Text(
                                 text = userName,
-                                fontSize = (screenHeight.value * 0.05f).sp,
+                                fontSize = (screenHeight.value * 0.07f).sp,
                                 color = DeepPastelNavy
                             )
                             Spacer(modifier = Modifier.width(screenHeight * 0.025f))
@@ -151,7 +178,7 @@ fun ProfileModal(
                                 painter = painterResource(id = R.drawable.pencil),
                                 contentDescription = "Edit Name",
                                 modifier = Modifier
-                                    .size(screenHeight * 0.05f)
+                                    .size(screenHeight * 0.07f)
                                     .clickable { isEditing = true }
                             )
                         }
@@ -161,6 +188,10 @@ fun ProfileModal(
         }
     }
 }
+
+
+// 여기에 있는 getFilePathFromUri와 getFileName 함수는 그대로 사용
+
 
 private fun getFilePathFromUri(context: Context, uri: Uri): String? {
     val file = File(context.cacheDir, getFileName(context, uri))
