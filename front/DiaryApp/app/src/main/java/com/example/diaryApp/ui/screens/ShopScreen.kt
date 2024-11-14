@@ -106,16 +106,16 @@ fun ShoppingScreen(
                         DailyRegisterButton(
                             text = "쿠폰 등록",
                             backgroundColor = Color.Transparent,
-                            width = 140,
-                            height = 60,
+                            width = (screenWidth.value * 0.42f).toInt() ,
+                            height = (screenWidth.value * 0.2f).toInt(),
                             isSelected = selectedTab == "쿠폰 등록",
                             onClick = { selectedTab = "쿠폰 등록" },
                         )
                         DailyRegisterButton(
                             text = "쿠폰 내역",
                             backgroundColor = Color.Transparent,
-                            width = 140,
-                            height = 60,
+                            width = (screenWidth.value * 0.42f).toInt() ,
+                            height = (screenWidth.value * 0.2f).toInt(),
                             isSelected = selectedTab == "쿠폰 내역",
                             onClick = { selectedTab = "쿠폰 내역" },
                         )
