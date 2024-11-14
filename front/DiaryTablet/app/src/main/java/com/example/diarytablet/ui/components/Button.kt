@@ -1,5 +1,6 @@
 package com.example.diarytablet.ui.components
 
+import androidx.annotation.DrawableRes
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -30,19 +31,23 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.diarytablet.R
+import com.example.diarytablet.ui.theme.DeepPastelBlue
 import com.example.diarytablet.ui.theme.MyTypography
 import com.example.diarytablet.ui.theme.PastelNavy
 import com.example.diarytablet.ui.theme.PastelSkyBlue
+import com.example.diarytablet.ui.theme.SkyBlue
 import com.example.diarytablet.ui.theme.White
+import com.example.diarytablet.ui.theme.myFontFamily
 
 enum class BasicButtonColor {
     NORMAL, SEASHELL;
 
     fun getBackgroundColor(): Color = when (this) {
-        NORMAL -> PastelSkyBlue
+        NORMAL -> SkyBlue
         SEASHELL -> PastelNavy
     }
 
@@ -209,3 +214,77 @@ fun DynamicColorButton(
     }
 }
 
+
+@Composable
+fun DailyButton(
+    text: String,
+    fontSize: TextUnit = 16.sp,
+    textColor: Color = Color.White,
+    fontWeight: FontWeight = FontWeight.Normal,
+    backgroundColor: Color = PastelNavy,
+    shadowColor: Color = Color.LightGray,
+    shadowElevation: Dp = 0.dp,
+    cornerRadius: Int = 8,
+    @DrawableRes iconResId: Int? = null,
+    width: Dp = 200.dp, // Dp 타입으로 변경하고 기본값 설정
+    height: Dp = 50.dp,
+    onClick: () -> Unit
+) {
+    val isPressed = remember { mutableStateOf(false) }
+
+    val alpha by animateFloatAsState(
+        targetValue = if (isPressed.value) 0.8f else 1.0f,
+        label = "Button Press Alpha Animation" // label 추가
+    )
+    Box(
+        modifier = Modifier
+            .shadow(
+                elevation = shadowElevation, // 그림자 크기
+                shape = RoundedCornerShape(cornerRadius.dp), // 버튼 모서리에 맞춘 그림자 모양
+                ambientColor = shadowColor,
+                spotColor = shadowColor
+            )
+    ) {
+        Box(
+            modifier = Modifier
+                .size(width, height)
+                .background(color = backgroundColor, shape = RoundedCornerShape(cornerRadius.dp))
+                .alpha(alpha)
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onPress = {
+                            isPressed.value = true
+                            tryAwaitRelease() // 사용자가 터치에서 손을 뗄 때까지 대기
+                            isPressed.value = false
+                        },
+                        onTap = { onClick() }
+                    )
+                },
+            contentAlignment = Alignment.Center // 중앙 정렬 설정
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp), // 아이콘과 텍스트 사이의 간격 설정
+                modifier = Modifier.align(Alignment.Center)
+            ) {
+                iconResId?.let {
+                    Icon(
+                        painter = painterResource(id = it),
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp), // 아이콘 크기 조정
+                        tint = Color.Unspecified
+                    )
+                }
+                Text(
+                    text = text,
+                    style = TextStyle(
+                        fontSize = fontSize,
+                        color = textColor,
+                        fontWeight = fontWeight,
+                        fontFamily = myFontFamily
+                    )
+                )
+            }
+        }
+    }
+}

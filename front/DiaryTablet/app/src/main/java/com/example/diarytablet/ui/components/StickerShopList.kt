@@ -1,4 +1,3 @@
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -11,7 +10,6 @@ import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,6 +21,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.ImageLoader
 import coil3.compose.rememberAsyncImagePainter
 import coil3.request.CachePolicy
@@ -32,11 +31,21 @@ import coil3.request.error
 import coil3.request.placeholder
 import com.example.diarytablet.model.Sticker
 import com.example.diarytablet.R
+import com.example.diarytablet.ui.components.modal.CommonModal
+import com.example.diarytablet.ui.components.modal.CommonPopup
 import com.example.diarytablet.ui.theme.DarkGray
+import com.example.diarytablet.viewmodel.NavBarViewModel
 import com.example.diarytablet.viewmodel.ShopStockViewModel
 import kotlinx.coroutines.delay
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
+
+enum class StickerModalState {
+    NONE,
+    PURCHASE_CONFIRMATION,
+    INSUFFICIENT_SHELLS,
+    PURCHASE_SUCCESS
+}
 
 fun newImageLoader(context: android.content.Context): ImageLoader {
     val okHttpClient = OkHttpClient.Builder()
@@ -45,7 +54,6 @@ fun newImageLoader(context: android.content.Context): ImageLoader {
         .build()
 
     return ImageLoader.Builder(context)
-//        .okHttpClient(okHttpClient)
         .memoryCachePolicy(CachePolicy.ENABLED)
         .diskCachePolicy(CachePolicy.ENABLED)
         .crossfade(true)
@@ -53,10 +61,20 @@ fun newImageLoader(context: android.content.Context): ImageLoader {
 }
 
 @Composable
-fun StickerShopList(stickers: List<Sticker>, viewModel: ShopStockViewModel) {
+fun StickerShopList(
+    stickers: List<Sticker>,
+    shopViewModel: ShopStockViewModel,
+    navBarViewModel: NavBarViewModel
+) {
     var selectedSticker by remember { mutableStateOf<Sticker?>(null) }
     var isModalVisible by remember { mutableStateOf(false) }
+    var stickerModalState by remember { mutableStateOf(StickerModalState.NONE) }
 
+    val shellCount by navBarViewModel.shellCount
+
+    LaunchedEffect(Unit) {
+        navBarViewModel.initializeData()
+    }
     LazyVerticalGrid(
         columns = GridCells.Fixed(4),
         contentPadding = PaddingValues(start = 15.dp, end = 15.dp),
@@ -68,37 +86,72 @@ fun StickerShopList(stickers: List<Sticker>, viewModel: ShopStockViewModel) {
                 index = index,
                 onStickerClick = {
                     selectedSticker = sticker
+                    stickerModalState = StickerModalState.PURCHASE_CONFIRMATION
                     isModalVisible = true
                 },
-                viewModel = viewModel
+                viewModel = shopViewModel
             )
         }
     }
 
-    // Modal for purchase confirmation
     if (isModalVisible && selectedSticker != null) {
-        PurchaseConfirmationModal(
-            sticker = selectedSticker!!,
-            onConfirm = {
-                viewModel.buySticker(selectedSticker!!.id)
-                isModalVisible = false
-            },
-            onCancel = {
-                isModalVisible = false
+        when (stickerModalState) {
+            StickerModalState.PURCHASE_CONFIRMATION -> {
+                CommonModal(
+                    onDismissRequest = {
+                        isModalVisible = false
+                        stickerModalState = StickerModalState.NONE
+                    },
+                    titleText = "스티커를 구매하시겠습니까?",
+                    confirmText = "${selectedSticker!!.price}",
+                    confirmIconResId = R.drawable.jogae,
+                    onConfirm = {
+                        if (shellCount >= selectedSticker!!.price) {
+                            shopViewModel.buySticker(selectedSticker!!.id)
+                            stickerModalState = StickerModalState.PURCHASE_SUCCESS
+                        } else {
+                            stickerModalState = StickerModalState.INSUFFICIENT_SHELLS
+                        }
+                    }
+                )
             }
-        )
+
+            StickerModalState.INSUFFICIENT_SHELLS, StickerModalState.PURCHASE_SUCCESS -> {
+                val titleText = when (stickerModalState) {
+                    StickerModalState.INSUFFICIENT_SHELLS -> "조개를 조금 더 모아보아요!"
+                    StickerModalState.PURCHASE_SUCCESS -> "구매가 완료되었습니다!"
+                    else -> ""
+                }
+
+                CommonPopup(
+                    onDismissRequest = {
+                        isModalVisible = false
+                        stickerModalState = StickerModalState.NONE
+                    },
+                    titleText = titleText
+                )
+            }
+
+            else -> Unit
+        }
     }
 }
 
 @Composable
 fun StickerCard(sticker: Sticker, index: Int, onStickerClick: () -> Unit, viewModel: ShopStockViewModel) {
-    var isPressed by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val imageLoader = remember { newImageLoader(context) }
 
-    val backgroundImage = if (isPressed) {
-        if (index % 2 == 0) R.drawable.sticker_yellow_down else R.drawable.sticker_blue_down
-    } else {
-        if (index % 2 == 0) R.drawable.sticker_yellow_up else R.drawable.sticker_blue_up
-    }
+    val painter = rememberAsyncImagePainter(
+        model = ImageRequest.Builder(context)
+            .data(sticker.img)
+            .placeholder(R.drawable.loading)
+            .error(R.drawable.loading)
+            .build(),
+        imageLoader = imageLoader
+    )
+
+    val backgroundImage = if (index % 2 == 0) R.drawable.sticker_yellow_up else R.drawable.sticker_blue_up
 
     Box(
         modifier = Modifier
@@ -107,68 +160,51 @@ fun StickerCard(sticker: Sticker, index: Int, onStickerClick: () -> Unit, viewMo
             .aspectRatio(1f)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null
-            ) {
-                isPressed = true
-                onStickerClick() // 스티커 클릭 시 모달 표시
-            }
+                indication = null,
+                onClick = onStickerClick
+            )
     ) {
-        LaunchedEffect(isPressed) {
-            if (isPressed) {
-                delay(100L)
-                isPressed = false
-            }
-        }
-
-        // 배경 이미지
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .border(1.dp, Color.White.copy(alpha = 0.8f), RoundedCornerShape(16.dp))
+        ) {
             Image(
                 painter = painterResource(id = backgroundImage),
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize()
             )
 
-            // 상단에 스티커 이미지 배치
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = 48.dp), // 위쪽에 여백 추가
+                    .padding(top = 48.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                val context = LocalContext.current
-                val imageLoader = newImageLoader(context)
-                val painter = rememberAsyncImagePainter(
-                    model = ImageRequest.Builder(context)
-                        .data(sticker.img)
-                        .placeholder(R.drawable.loading)
-                        .error(R.drawable.loading)
-                        .build(),
-                    imageLoader = imageLoader,
-                )
-
                 Image(
                     painter = painter,
                     contentDescription = "Sticker Image",
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.size(64.dp)
+                    modifier = Modifier.size(80.dp)
                 )
 
-                Spacer(modifier = Modifier.weight(1f)) // 스티커 이미지와 하단 텍스트 사이에 공간 확보
+                Spacer(modifier = Modifier.weight(1f))
 
-                // 하단에 조개 아이콘과 가격 텍스트 배치
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center,
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
-                        .padding(bottom = 12.dp) // 아래쪽 여백
+                        .padding(bottom = 15.dp)
                 ) {
                     Image(
-                        painter = painterResource(id = R.drawable.jogae), // 조개 아이콘
+                        painter = painterResource(id = R.drawable.jogae),
                         contentDescription = null,
-                        modifier = Modifier.size(42.dp) // 아이콘 크기 확대
+                        modifier = Modifier
+                            .size(37.dp)
+                            .offset(y = (-3).dp)
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Spacer(modifier = Modifier.width(7.dp))
                     Text(
                         text = "${sticker.price}",
                         fontSize = 30.sp,
@@ -179,82 +215,3 @@ fun StickerCard(sticker: Sticker, index: Int, onStickerClick: () -> Unit, viewMo
         }
     }
 }
-
-
-@Composable
-fun PurchaseConfirmationModal(sticker: Sticker, onConfirm: () -> Unit, onCancel: () -> Unit) {
-    Dialog(onDismissRequest = onCancel) {
-        Box(
-            modifier = Modifier
-                .width(300.dp) // 모달 너비 설정
-                .clip(RoundedCornerShape(16.dp)) // 모서리를 둥글게 설정
-                .background(Color.White)
-                .padding(20.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                // 스티커 이미지 및 구매 질문 텍스트
-                Image(
-                    painter = rememberAsyncImagePainter(model = sticker.img),
-                    contentDescription = "Sticker Image",
-                    modifier = Modifier
-                        .size(64.dp)
-                        .padding(bottom = 16.dp)
-                )
-
-                Text(
-                    text = "스티커를 구매하시겠습니까?",
-                    fontSize = 18.sp,
-                    color = Color.Black
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Row(
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    // 구매 버튼 안에 조개 이미지와 가격 텍스트 배치
-                    Button(
-                        onClick = onConfirm,
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(48.dp),
-                        shape = RoundedCornerShape(50.dp), // 둥근 테두리 설정
-                        contentPadding = PaddingValues(horizontal = 16.dp)
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.jogae),
-                            contentDescription = null,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "${sticker.price} 조개",
-                            fontSize = 16.sp,
-                            color = Color.White
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    // 취소 버튼
-                    Button(
-                        onClick = onCancel,
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(48.dp),
-                        shape = RoundedCornerShape(50.dp) // 둥근 테두리 설정
-                    ) {
-                        Text("취소", fontSize = 16.sp)
-                    }
-                }
-            }
-        }
-    }
-}
-
-

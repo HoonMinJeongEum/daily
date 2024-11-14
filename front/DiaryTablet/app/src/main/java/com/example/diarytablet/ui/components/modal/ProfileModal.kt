@@ -37,6 +37,7 @@ import coil3.compose.AsyncImage
 import com.example.diarytablet.R
 import com.example.diarytablet.ui.components.BasicButton
 import com.example.diarytablet.ui.theme.DeepPastelNavy
+import com.example.diarytablet.viewmodel.NavBarViewModel
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
@@ -69,17 +70,18 @@ fun ProfileModal(
 
     val imagePickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
-            // 선택한 이미지를 크롭하기 위한 `CropActivity` 호출
-            val cropIntent = Intent(context, CropActivity::class.java).apply {
-                putExtra("imageUri", it.toString())
-            }
-            cropImageLauncher.launch(cropIntent)
+            croppedImageUri = it // 선택된 이미지 URI로 업데이트
+            val filePath = getFilePathFromUri(context, it) // Uri를 파일 경로로 변환
+            filePath?.let { path -> onEditProfileClick(path) } // 프로필 이미지 업데이트 콜백 호출
         }
     }
 
+
     if (isModalVisible) {
         Dialog(
-            onDismissRequest = { onDismiss() },
+            onDismissRequest = {
+                onDismiss()
+            },
             properties = DialogProperties(dismissOnClickOutside = false)
         ) {
             Box(
@@ -105,7 +107,6 @@ fun ProfileModal(
                         )
                     }
 
-                    // 크롭된 이미지가 있으면 해당 이미지를, 없으면 기존 프로필 이미지를 보여줌
                     AsyncImage(
                         model = croppedImageUri ?: profileImageUrl,
                         contentDescription = null,
@@ -128,7 +129,7 @@ fun ProfileModal(
                             TextField(
                                 value = editedName,
                                 onValueChange = { editedName = it },
-                                modifier = Modifier.width(screenHeight * 0.4f)
+                                modifier = Modifier.width(screenHeight * 0.3f)
                             )
                             Spacer(modifier = Modifier.width(screenHeight * 0.02f))
                             BasicButton(
@@ -161,3 +162,24 @@ fun ProfileModal(
     }
 }
 
+private fun getFilePathFromUri(context: Context, uri: Uri): String? {
+    val file = File(context.cacheDir, getFileName(context, uri))
+    context.contentResolver.openInputStream(uri)?.use { inputStream ->
+        FileOutputStream(file).use { outputStream ->
+            inputStream.copyTo(outputStream)
+        }
+    }
+    return file.absolutePath
+}
+
+private fun getFileName(context: Context, uri: Uri): String {
+    var name = "temp_image"
+    val cursor: Cursor? = context.contentResolver.query(uri, null, null, null, null)
+    cursor?.use {
+        val nameIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+        if (it.moveToFirst()) {
+            name = it.getString(nameIndex)
+        }
+    }
+    return name
+}

@@ -1,8 +1,10 @@
 package com.example.diarytablet.ui.screens
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -34,12 +36,12 @@ import com.example.diarytablet.ui.theme.BackgroundPlacement
 import com.example.diarytablet.ui.theme.BackgroundType
 import com.example.diarytablet.viewmodel.QuizViewModel
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalDensity
+ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -47,7 +49,13 @@ import androidx.compose.ui.unit.sp
 import com.example.diarytablet.R
 import com.example.diarytablet.ui.components.quiz.Alert
 import com.example.diarytablet.ui.components.BasicButton
+import com.example.diarytablet.ui.components.modal.CommonModal
+import com.example.diarytablet.ui.components.modal.CommonPopup
 import com.example.diarytablet.ui.components.quiz.Draw
+import com.example.diarytablet.ui.components.quiz.DrawingColorPalette
+import com.example.diarytablet.ui.components.quiz.DrawingRedoButton
+import com.example.diarytablet.ui.components.quiz.DrawingThicknessSelector
+import com.example.diarytablet.ui.components.quiz.DrawingUndoButton
 import com.example.diarytablet.ui.components.quiz.QuizAlert
 import com.example.diarytablet.ui.components.quiz.RecommendWordModal
 import com.example.diarytablet.ui.components.quiz.Video
@@ -65,7 +73,7 @@ enum class QuizModalState {
 fun QuizScreen(
     navController: NavController,
     viewModel: QuizViewModel = hiltViewModel(),
-    backgroundType: BackgroundType = BackgroundType.DEFAULT
+    backgroundType: BackgroundType = BackgroundType.DRAWING_QUIZ
 ) {
     BackgroundPlacement(backgroundType = backgroundType)
 
@@ -80,6 +88,9 @@ fun QuizScreen(
     var isQuizDisconnected by remember { mutableStateOf(false) }
     val isParentJoined by viewModel.parentJoinedEvent.observeAsState(false)
     var isQuizStartEnabled by remember { mutableStateOf(false) }
+    val pathStyle by viewModel.pathStyle.observeAsState()
+    var isQuizAlertVisible by remember { mutableStateOf(false) }
+    var selectedImage by remember { mutableStateOf("pen") }
 
     LaunchedEffect(isParentJoined) {
         if (isParentJoined) {
@@ -161,7 +172,7 @@ fun QuizScreen(
                         Image(
                             painter = painterResource(id = R.drawable.diary_box),
                             contentDescription = "배경 이미지",
-                            modifier = Modifier.fillMaxSize().alpha(0.8f),
+                            modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.FillBounds
                         )
                         Draw(
@@ -169,7 +180,7 @@ fun QuizScreen(
                                 .fillMaxSize(0.9f)
                                 .clipToBounds()
                                 .align(Alignment.Center),
-                            viewModel = viewModel
+                            viewModel = viewModel,
                         )
                         selectedWord?.let { word ->
                             BoxWithConstraints(
@@ -178,7 +189,7 @@ fun QuizScreen(
                                     .fillMaxHeight(0.9f)
                                     .align(Alignment.Center),
                             ) {
-                                val textSize = with(LocalDensity.current) { (maxHeight * 0.1f).toSp() } // 높이의 5%를 폰트 크기로 설정 (조절 가능)
+                                val textSize = with(LocalDensity.current) { (maxHeight * 0.1f).toSp() }
                                 Column(
                                     modifier = Modifier.align(Alignment.TopCenter),
                                     horizontalAlignment = Alignment.CenterHorizontally
@@ -220,10 +231,10 @@ fun QuizScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.weight(0.2f))
+                    Spacer(modifier = Modifier.weight(0.1f))
                     Box(
                         modifier = Modifier
-                            .weight(1f)
+                            .weight(1.1f)
                     ) {
                         Column (
                             verticalArrangement = Arrangement.SpaceBetween,
@@ -233,8 +244,7 @@ fun QuizScreen(
 
                             Box(
                                 modifier = Modifier
-                                    .fillMaxSize()
-                                    .weight(3f)
+                                    .weight(2.5f)
                                     .clip(RoundedCornerShape(32.dp))
                                     .background(color = Color.White.copy(alpha = 0.8f))
                             ){
@@ -247,16 +257,109 @@ fun QuizScreen(
                             Spacer(modifier = Modifier.weight(0.5f))
                             Box(
                                 modifier = Modifier
-                                    .fillMaxSize()
-                                    .weight(4f)
+                                    .weight(4.7f)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(color = Color.White.copy(alpha = 0.8f))
                             ){
-                                Image(
-                                    painter = painterResource(id = R.drawable.drawing),
-                                    contentDescription = "팔레트",
+                                Column (
                                     modifier = Modifier
-                                )
+                                        .fillMaxWidth(),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                ){
+                                    DrawingColorPalette(
+                                        modifier = Modifier
+                                            .weight(2f),
+                                        onColorChanged = { viewModel.updateColor(it) },
+                                        isPenSelected = (selectedImage == "pen")
+                                    )
+                                    DrawingThicknessSelector(
+                                        modifier = Modifier
+                                            .weight(1f),
+                                        onSizeChanged = { viewModel.updateWidth(it) },
+                                    )
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .weight(1.2f),
+                                        horizontalArrangement = Arrangement.SpaceEvenly,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ){
+                                        val penScale by animateFloatAsState(targetValue = if (selectedImage == "pen") 1.2f else 1f)
+                                        val eraserScale by animateFloatAsState(targetValue = if (selectedImage == "eraser") 1.2f else 1f)
+                                        val penColor = remember { mutableStateOf(Color.Black) }
+                                        Spacer(modifier = Modifier.weight(0.2f))
+                                        BoxWithConstraints(
+                                            modifier = Modifier
+                                                .fillMaxHeight(0.5f)
+                                                .weight(0.9f)
+                                        ) {
+                                            val buttonSize = minOf(maxWidth, maxHeight) // 가로와 세로 중 작은 값을 기준으로 크기 설정
+
+                                            DrawingUndoButton(
+                                                modifier = Modifier.size(buttonSize), // 버튼을 1:1 비율로 설정
+                                                onClick = { viewModel.undoPath() }
+                                            )
+                                        }
+
+                                        BoxWithConstraints(
+                                            modifier = Modifier
+                                                .fillMaxHeight(0.5f)
+                                                .weight(0.9f)
+                                        ) {
+                                            val buttonSize = minOf(maxWidth, maxHeight)
+
+                                            DrawingRedoButton(
+                                                modifier = Modifier.size(buttonSize),
+                                                onClick = { viewModel.redoPath() }
+                                            )
+                                        }
+                                        Image(
+                                            painter = painterResource(id = R.drawable.palette_pen),
+                                            contentDescription = "연필",
+                                            modifier = Modifier
+                                                .fillMaxHeight(0.8f)
+                                                .graphicsLayer(scaleX = penScale, scaleY = penScale)
+                                                .clickable(
+                                                    onClick = {
+                                                        if (selectedImage == "eraser") {
+                                                            viewModel.updateColor(penColor.value)
+                                                            selectedImage = "pen"
+                                                        }
+                                                    },
+                                                    indication = null,
+                                                    interactionSource = remember { MutableInteractionSource() }
+                                                )
+                                        )
+                                        Image(
+                                            painter = painterResource(id = R.drawable.palette_eraser),
+                                            contentDescription = "지우개",
+                                            modifier = Modifier
+                                                .fillMaxHeight(0.8f)
+                                                .graphicsLayer(
+                                                    scaleX = eraserScale,
+                                                    scaleY = eraserScale
+                                                )
+                                                .clickable(
+                                                    onClick = {
+                                                        if (selectedImage == "pen") {
+                                                            penColor.value =
+                                                                pathStyle?.color ?: Color.Black
+                                                            viewModel.updateColor(Color.White)
+                                                            selectedImage = "eraser"
+                                                        }
+
+                                                    },
+                                                    indication = null,
+                                                    interactionSource = remember { MutableInteractionSource() }
+                                                )
+
+                                        )
+                                        Spacer(modifier = Modifier.weight(0.2f))
+                                    }
+                                }
+
                             }
-                            Spacer(modifier = Modifier.weight(0.5f))
+                            Spacer(modifier = Modifier.weight(0.3f))
                             BasicButton(
                                 modifier = Modifier.align(Alignment.CenterHorizontally),
                                 onClick = {
@@ -283,26 +386,47 @@ fun QuizScreen(
 
         when (quizModalState) {
             QuizModalState.START_CONFIRM -> {
-                Alert(
-                    isVisible = true,
-                    onDismiss = { quizModalState = QuizModalState.NONE },
-                    onConfirm = {
+//                Alert(
+//                    isVisible = true,
+//                    onDismiss = { quizModalState = QuizModalState.NONE },
+//                    onConfirm = {
+//                        quizModalState = QuizModalState.WORD_SELECTION
+//                        isQuizStarted = true
+//                        viewModel.resetPath()
+//                        viewModel.sendQuizStart()
+//                    },
+//                    title = "그림퀴즈를 시작할까요?",
+//                    confirmText = "퀴즈시작"
+//                )
+                CommonModal(
+                    onDismissRequest = {quizModalState = QuizModalState.NONE},
+                    titleText= "그림퀴즈를 시작할까요?",
+                    confirmText= "퀴즈 시작",
+                    onConfirm= {
                         quizModalState = QuizModalState.WORD_SELECTION
                         isQuizStarted = true
                         viewModel.resetPath()
                         viewModel.sendQuizStart()
                     },
-                    title = "그림퀴즈를 시작할까요?",
-                    confirmText = "퀴즈시작"
                 )
+
             }
 
             QuizModalState.CORRECT_ANSWER -> {
                 if (currentRound < 3) {
-                    QuizAlert(
-                        title = "정답이에요!\n" +
-                                "다음 퀴즈로 넘어갑니다.",
-                        onDismiss = {
+//                    QuizAlert(
+//                        title = "정답이에요!\n" +
+//                                "다음 퀴즈로 넘어갑니다.",
+//                        onDismiss = {
+//                            quizModalState = QuizModalState.WORD_SELECTION
+//                            viewModel.resetIsCorrectAnswer()
+//                            currentRound++
+//                            viewModel.resetPath()
+//                        }
+//                    )
+                    CommonPopup(
+                        titleText = "정답이에요!\n다음 퀴즈로 넘어갑니다.",
+                        onDismissRequest = {
                             quizModalState = QuizModalState.WORD_SELECTION
                             viewModel.resetIsCorrectAnswer()
                             currentRound++
@@ -310,10 +434,9 @@ fun QuizScreen(
                         }
                     )
                 } else {
-                    QuizAlert(
-                        title = "정답입니다!\n" +
-                                "퀴즈가 끝났습니다.",
-                        onDismiss = {
+                    CommonPopup(
+                        titleText = "정답입니다!\n퀴즈가 끝났습니다.",
+                        onDismissRequest = {
                             quizModalState = QuizModalState.NONE
                             selectedWord = null
                             viewModel.resetIsCorrectAnswer()
@@ -324,10 +447,9 @@ fun QuizScreen(
             }
 
             QuizModalState.INCORRECT_ANSWER -> {
-                QuizAlert(
-                    title = "틀렸습니다.\n" +
-                            "다시 시도해보세요!",
-                    onDismiss = {
+                CommonPopup(
+                    titleText = "틀렸습니다.\n다시 시도해보세요!",
+                    onDismissRequest = {
                         quizModalState = QuizModalState.NONE
                         viewModel.resetIsCorrectAnswer()
                     }
@@ -341,37 +463,44 @@ fun QuizScreen(
             }
 
         }
-        Alert(
-            isVisible = isQuizEnded,
-            onDismiss = {
-                isQuizEnded = false
-            },
-            onConfirm = {
-                viewModel.leaveSession()
-                if (currentRound >= 3) {
-                    navController.navigate("main?origin=quiz&isFinished=true") {
-                        popUpTo("quiz") { inclusive = true }
-                    }
+        if (isQuizEnded){
+            CommonModal(
+                onDismissRequest = {isQuizEnded = false},
+                titleText= "퀴즈를 종료할까요?",
+                confirmText= "종료",
+                onConfirm= {
+                    viewModel.leaveSession()
+                    if (currentRound >= 3) {
+                        navController.navigate("main?origin=quiz&isFinished=true") {
+                            popUpTo("quiz") { inclusive = true }
+                        }
 
-                } else {
-                    navController.navigate("main") {
-                        popUpTo("quiz") { inclusive = true }
+                    } else {
+                        navController.navigate("main") {
+                            popUpTo("quiz") { inclusive = true }
+                        }
                     }
-                }
+                },
+            )
+        }
 
-            },
-            title = "퀴즈를 종료할까요?",
-            confirmText = "종료"
-        )
         if(isQuizDisconnected) {
-            QuizAlert(
-                onDismiss = {
+            CommonPopup(
+                titleText = "부모님이 방을 나갔어요.",
+                onDismissRequest = {
                     viewModel.leaveSession()
                     navController.navigate("main") {
                         popUpTo("quiz") { inclusive = true }
                     }
-                },
-                title = "부모님이 방을 나갔어요."
+                }
+            )
+        }
+        if(isQuizStartEnabled && !isQuizAlertVisible) {
+            CommonPopup(
+                titleText = "이제 그림 퀴즈를\n시작할 수 있어요!",
+                onDismissRequest = {
+                    isQuizAlertVisible = true
+                }
             )
         }
     }

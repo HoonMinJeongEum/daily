@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.diarytablet.domain.repository.DiaryRepository
 import com.example.diarytablet.model.StickerStock
+import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -24,6 +25,13 @@ class DiaryViewModel @Inject constructor(
 
     private val _userStickers = MutableLiveData<List<StickerStock>>()
     val userStickers: LiveData<List<StickerStock>> get() = _userStickers
+    // 에러 상태를 관리할 LiveData
+
+    private val _responseMessage = MutableLiveData<String?>()
+    val responseMessage: LiveData<String?> get() = _responseMessage
+
+    private val _isLoading = MutableLiveData(false)
+    val isLoading: LiveData<Boolean> get() = _isLoading
 
     fun fetchUserStickers() {
         viewModelScope.launch {
@@ -39,35 +47,68 @@ class DiaryViewModel @Inject constructor(
             }
         }
     }
-    /**
-     * 두 개의 이미지 파일을 서버에 업로드하는 함수.
-     *
-     * @param context Context - 파일 경로에 접근하기 위해 필요.
-     * @param drawUri Uri - 그림 파일의 URI.
-     * @param writeUri Uri - 작성 파일의 URI.
-     */
-    fun uploadDiary(context: Context, drawUri: Uri, writeUri: Uri) {
+
+    fun uploadDiary(context: Context, drawUri: Uri, writeUri: Uri, videoUri: Uri) {
         viewModelScope.launch {
+            _isLoading.value = true // 로딩 시작
             val drawFilePart = getFilePart(context, drawUri, "drawFile")
             val writeFilePart = getFilePart(context, writeUri, "writeFile")
+            val videoFilePart = getFilePart(context, videoUri, "videoFile", "video/mp4")
 
-            if (drawFilePart == null || writeFilePart == null) {
-                Log.e("DiaryViewModel", "File parts are null. Upload skipped.")
+            if (drawFilePart == null || writeFilePart == null || videoFilePart == null) {
+                Log.e("DiaryViewModel", "One or more file parts are null. Upload skipped.")
+                _isLoading.value = false // 로딩 종료
                 return@launch
             }
 
             try {
-                val response = diaryRepository.uploadDiary(drawFilePart, writeFilePart)
-                if (response.isSuccessful) {
-                    Log.d("DiaryViewModel", "Image upload successful")
+                val response = diaryRepository.uploadDiary(drawFilePart, writeFilePart, videoFilePart)
+                _isLoading.value = false // 로딩 종료
+                if (response.isSuccessful && response.code() == 200) {
+                    _responseMessage.postValue("그림일기 작성 완료!")
+                } else if (response.code() == 409) {
+                    _responseMessage.postValue("오늘의 일기 작성 완료 ㅜ")
                 } else {
-                    Log.e("DiaryViewModel", "Image upload failed: ${response.code()} - ${response.errorBody()}")
+                    val errorBody = response.errorBody()?.string()
+                    val errorResponse = errorBody?.let { parseErrorResponse(it) }
+                    _responseMessage.postValue(errorResponse?.msg ?: "알 수 없는 오류가 발생했습니다.")
                 }
             } catch (e: Exception) {
                 Log.e("DiaryViewModel", "Exception occurred during upload", e)
+                _isLoading.value = false // 로딩 종료
             }
         }
     }
+
+    // 에러 응답을 위한 데이터 클래스
+    data class ErrorResponse(val status: Int, val msg: String)
+
+    // JSON 에러 응답 파싱 함수
+    fun parseErrorResponse(errorBody: String): ErrorResponse? {
+        return try {
+            // JSON 파싱 (예: Gson 또는 kotlinx.serialization 사용 가능)
+            Gson().fromJson(errorBody, ErrorResponse::class.java)
+        } catch (e: Exception) {
+            Log.e("DiaryViewModel", "Error parsing error response: ${e.message}")
+            null
+        }
+    }
+    // 에러 상태 초기화 함수
+    fun clearResponseMessage() {
+        _responseMessage.postValue(null)
+    }
+
+    private fun getFilePart(context: Context, fileUri: Uri, partName: String, mimeType: String = "image/jpeg"): MultipartBody.Part? {
+        val inputStream = context.contentResolver.openInputStream(fileUri) ?: return null
+        val file = File.createTempFile("temp_", ".${mimeType.split("/")[1]}", context.cacheDir)
+        file.outputStream().use { outputStream ->
+            inputStream.copyTo(outputStream)
+        }
+
+        val requestFile = file.asRequestBody(mimeType.toMediaTypeOrNull())
+        return MultipartBody.Part.createFormData(partName, file.name, requestFile)
+    }
+}
 
     /**
      * Uri를 사용하여 MultipartBody.Part 객체를 생성하는 함수.
@@ -77,16 +118,14 @@ class DiaryViewModel @Inject constructor(
      * @param partName String - Multipart 파트의 이름.
      * @return MultipartBody.Part? - 파일이 존재하지 않으면 null을 반환.
      */
-    private fun getFilePart(context: Context, fileUri: Uri, partName: String): MultipartBody.Part? {
-        // Uri를 통해 InputStream을 열고, 이를 임시 파일로 저장
+    private fun getFilePart(context: Context, fileUri: Uri, partName: String, mimeType: String = "image/jpeg"): MultipartBody.Part? {
         val inputStream = context.contentResolver.openInputStream(fileUri) ?: return null
-        val file = File.createTempFile("temp_", ".jpg", context.cacheDir)
+        val file = File.createTempFile("temp_", ".${mimeType.split("/")[1]}", context.cacheDir)
         file.outputStream().use { outputStream ->
             inputStream.copyTo(outputStream)
         }
 
-        // 파일을 RequestBody로 변환하여 MultipartBody.Part로 생성
-        val requestFile = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
+        val requestFile = file.asRequestBody(mimeType.toMediaTypeOrNull())
         return MultipartBody.Part.createFormData(partName, file.name, requestFile)
     }
 
@@ -108,4 +147,4 @@ class DiaryViewModel @Inject constructor(
         }
         return filePath
     }
-}
+

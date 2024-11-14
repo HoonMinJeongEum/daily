@@ -1,5 +1,9 @@
 package com.example.diarytablet.viewmodel
 
+import android.content.Context
+import android.database.Cursor
+import android.net.Uri
+import android.provider.OpenableColumns
 import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableIntStateOf
@@ -26,6 +30,7 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
+import java.io.FileOutputStream
 import javax.inject.Inject
 
 @HiltViewModel
@@ -35,12 +40,11 @@ class NavBarViewModel @Inject constructor(
     private val alarmRepository: AlarmRepository
 ) : ViewModel() {
 
-    init {
+    fun initializeData() {
         loadStatus()
         observeAlarmState()
-        saveFcmToken() // 앱 초기화 시 FCM 토큰 저장
+        saveFcmToken()
     }
-
     private val _shellCount = mutableIntStateOf(0)
     val shellCount: State<Int> get() = _shellCount
 
@@ -166,24 +170,29 @@ class NavBarViewModel @Inject constructor(
     fun updateProfileImage(imageFilePath: String) {
         viewModelScope.launch {
             try {
-                val file = File(imageFilePath)
-                val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
-                val body = MultipartBody.Part.createFormData("file", file.name, requestFile)
-                val response = mainScreenRepository.updateProfileImage(body)
+                Log.d("NavBarViewModel", "updateProfileImage() - 호출됨, 파일 경로: $imageFilePath")
 
+                val file = File(imageFilePath)
+                val requestFile = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
+                val body = MultipartBody.Part.createFormData("file", file.name, requestFile)
+
+                val response = mainScreenRepository.updateProfileImage(body)
                 if (response.isSuccessful) {
+                    Log.d("NavBarViewModel", "updateProfileImage() - 이미지 업로드 성공")
+
+                    // 이미지 업로드 후 loadStatus() 호출
                     loadStatus()
-                    Log.d("NavBarViewModel", "프로필 이미지 업데이트 성공")
+                    Log.d("NavBarViewModel", "updateProfileImage() - loadStatus() 호출 완료 후 profileImageUrl: ${_profileImageUrl.value}")
                 } else {
-                    Log.e("NavBarViewModel", "프로필 이미지 업데이트 실패: ${response.message()}")
+                    val errorBody = response.errorBody()?.string() ?: "Unknown error"
+                    Log.e("NavBarViewModel", "updateProfileImage() - 프로필 이미지 업데이트 실패: $errorBody")
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                Log.e("NavBarViewModel", "프로필 이미지 업데이트 중 오류 발생")
+                Log.e("NavBarViewModel", "updateProfileImage() - 프로필 이미지 업데이트 중 오류 발생")
             }
         }
     }
-
 }
 
 

@@ -2,11 +2,17 @@ package com.example.diarytablet
 
 import DiaryScreen
 import LoginScreen
+import android.app.Activity
 import android.app.Application
 import android.util.Log
-import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -14,6 +20,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.diarytablet.datastore.UserStore
 import com.example.diarytablet.domain.RetrofitClient
+import com.example.diarytablet.ui.components.modal.CommonModal
+import com.example.diarytablet.ui.components.quiz.Alert
 import com.example.diarytablet.ui.screens.MainScreen
 import com.example.diarytablet.ui.screens.ProfileScreen
 import com.example.diarytablet.ui.screens.RecordScreen
@@ -22,18 +30,22 @@ import com.example.diarytablet.ui.screens.ShopScreen
 import com.example.diarytablet.ui.screens.StockScreen
 import com.example.diarytablet.ui.screens.WordLearningScreen
 import com.example.diarytablet.ui.theme.DiaryTabletTheme
-import com.example.diarytablet.viewmodel.SpenEventViewModel
 import com.samsung.android.sdk.penremote.SpenRemote
 import com.samsung.android.sdk.penremote.SpenUnitManager
 
 import dagger.hilt.android.HiltAndroidApp
-import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun DiaryTabletApp(startDestination: String = "login" , spenEventViewModel: SpenEventViewModel) {
+fun DiaryTabletApp(startDestination: String = "login") {
     val navController = rememberNavController()
+    var showExitDialog by remember { mutableStateOf(false) }
+    val activity = LocalContext.current as? Activity
+
+    BackHandler {
+        showExitDialog = true
+    }
 
     DiaryTabletTheme {
         NavHost(navController, startDestination = startDestination) {
@@ -73,12 +85,22 @@ fun DiaryTabletApp(startDestination: String = "login" , spenEventViewModel: Spen
                 DiaryScreen(navController = navController)
             }
             composable("wordLearning") {
-                WordLearningScreen(navController = navController, spenEventViewModel = spenEventViewModel)
+                WordLearningScreen(navController = navController)
             }
             composable("quiz") {
                 QuizScreen(navController = navController)
             }
         }
+    }
+    if (showExitDialog) {
+        CommonModal(
+            onDismissRequest = { showExitDialog = false },
+            titleText = "앱을 종료하시겠어요?",
+            confirmText= "종료",
+            onConfirm = {
+                activity?.finishAffinity()
+            }
+        )
     }
 }
 

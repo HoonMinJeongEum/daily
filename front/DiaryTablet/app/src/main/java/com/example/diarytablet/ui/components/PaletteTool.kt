@@ -1,25 +1,28 @@
 import android.graphics.Bitmap
 import android.graphics.BitmapShader
 import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.PorterDuff
-import android.graphics.PorterDuffXfermode
 import android.graphics.Shader
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Slider
-import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -27,6 +30,7 @@ import coil3.compose.rememberAsyncImagePainter
 import com.example.diarytablet.R
 import com.example.diarytablet.model.StickerStock
 import com.example.diarytablet.model.ToolType
+import com.example.diarytablet.model.ToolType.*
 
 @Composable
 fun PaletteTool(
@@ -36,98 +40,61 @@ fun PaletteTool(
     onThicknessChange: (Float) -> Unit,
     onToolSelect: (ToolType) -> Unit,
     stickerList: List<StickerStock>,
-    onStickerSelect: (StickerStock) -> Unit // 새로운 콜백 추가
+    onStickerSelect: (StickerStock) -> Unit,
+    onUndo: () -> Unit, // 되돌리기 콜백
+    onRedo: () -> Unit  // 다시하기 콜백 추가
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(10.dp),
+            .padding(10.dp)
+            .border(2.dp, Color.Gray, RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(16.dp)),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row(
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            ToolButton(
-                icon = painterResource(R.drawable.palette_pen),
-                selected = selectedTool == ToolType.PENCIL,
-                onClick = { onToolSelect(ToolType.PENCIL) }
-            )
-            ToolButton(
-                icon = painterResource(R.drawable.palette_eraser),
-                selected = selectedTool == ToolType.ERASER,
-                onClick = { onToolSelect(ToolType.ERASER) }
-            )
-        }
-
-        Spacer(modifier = Modifier.height(10.dp))
-
+        // 색상 팔레트
         ColorPalette(selectedColor = selectedColor, onColorChange = onColorChange)
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
-        Row(
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(10.dp)
-        ) {
-            Text(text = "두께")
-            Spacer(modifier = Modifier.width(8.dp))
+        // 두께 선택 버튼
+        ThicknessSelector(onThicknessChange = onThicknessChange)
 
-            var thickness by remember { mutableStateOf(5f) }
+        Spacer(modifier = Modifier.height(20.dp))
 
-            Slider(
-                value = thickness,
-                onValueChange = {
-                    thickness = it
-                    onThicknessChange(it)
-                },
-                valueRange = 1f..10f
-            )
-        }
-        Spacer(modifier = Modifier.height(10.dp))
+        // 도구 선택 섹션 (이미지 사용)
+        ToolSelectionRow(selectedTool = selectedTool, onToolSelect = onToolSelect)
 
-        // 스티커 목록 표시
-        Text(text = "보유 스티커")
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            stickerList.forEach { sticker ->
-                Image(
-                    painter = rememberAsyncImagePainter(
-                        model = sticker.img,
-                        placeholder = painterResource(R.drawable.loading),
-                        error = painterResource(R.drawable.loading)
-                    ),
-                    contentDescription = "스티커 이미지",
-                    modifier = Modifier
-                        .size(16.dp)
-                        .clickable { onStickerSelect(sticker) }
-                )
-            }
-        }
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // 되돌리기 및 다시하기 버튼 행
+        UndoRedoButtons(onUndo = onUndo, onRedo = onRedo)
     }
+    // 스티커 목록
+    StickerRow(stickerList = stickerList, onStickerSelect = onStickerSelect)
 }
 
 @Composable
-fun ToolButton(icon: Painter, selected: Boolean, onClick: () -> Unit) {
-    val iconSize by animateDpAsState(targetValue = if (selected) 50.dp else 40.dp, label = "")
-    val borderSize by animateDpAsState(targetValue = if (selected) 4.dp else 0.dp, label = "")
-
-    Box(
+fun UndoRedoButtons(onUndo: () -> Unit, onRedo: () -> Unit) {
+    Row(
         modifier = Modifier
-            .size(iconSize)
-            .background(if (selected) Color.Blue.copy(alpha = 0.2f) else Color.Transparent, CircleShape)
-            .padding(borderSize)
-            .clickable(onClick = onClick), // 클릭 이벤트
-        contentAlignment = Alignment.Center
+            .fillMaxWidth()
+            .padding(10.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly
     ) {
-        Icon(
-            painter = icon,
-            contentDescription = null,
-            tint = if (selected) Color.Blue else Color.Gray,
-            modifier = Modifier.size(iconSize - borderSize * 2)
+        Image(
+            painter = painterResource(id = R.drawable.ic_undo), // 되돌리기 아이콘 리소스 사용
+            contentDescription = "Undo",
+            modifier = Modifier
+                .size(40.dp)
+                .clickable { onUndo() }
+        )
+        Image(
+            painter = painterResource(id = R.drawable.ic_redo), // 다시하기 아이콘 리소스 사용
+            contentDescription = "Redo",
+            modifier = Modifier
+                .size(40.dp)
+                .clickable { onRedo() }
         )
     }
 }
@@ -135,95 +102,181 @@ fun ToolButton(icon: Painter, selected: Boolean, onClick: () -> Unit) {
 @Composable
 fun ColorPalette(selectedColor: Color, onColorChange: (Color) -> Unit) {
     val colors = listOf(
-        Color.Red, Color.Yellow, Color.Green, Color.Blue, Color.Cyan, Color.Black
+        Color.Red, Color(0xFFFFA500), Color.Yellow, Color(0xFFADFF2F),
+        Color.Green, Color(0xFF87CEEB), Color.Blue, Color(0xFF000080),
+        Color(0xFFFFC0CB), Color(0xFF800080), Color.Gray, Color.Black
     )
 
+    Column(modifier = Modifier.fillMaxWidth()) {
+        for (i in colors.indices step 4) {
+            Row(modifier = Modifier.fillMaxWidth()) {
+                colors.slice(i until i + 4).forEach { color ->
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .aspectRatio(1f)
+                            .background(color)
+                            .clickable { onColorChange(color) }
+                            .border(
+                                width = if (color == selectedColor) 2.dp else 0.dp,
+                                color = Color.White
+                            )
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ThicknessSelector(onThicknessChange: (Float) -> Unit) {
+    val thicknessOptions = listOf(4f, 8f, 16f, 20f)
     Row(
         horizontalArrangement = Arrangement.SpaceEvenly,
         modifier = Modifier.fillMaxWidth()
     ) {
-        colors.forEach { color ->
+        thicknessOptions.forEach { thickness ->
             Box(
                 modifier = Modifier
-                    .size(36.dp)
-                    .padding(4.dp)
-                    .background(color, CircleShape)
-                    .clickable { onColorChange(color) }
-                    .border(
-                        width = if (color == selectedColor) 4.dp else 0.dp,
-                        color = Color.White,
-                        shape = CircleShape
-                    )
+                    .size(thickness.dp)
+                    .background(Color.Gray, CircleShape)
+                    .clickable { onThicknessChange(thickness) }
             )
         }
     }
 }
 
-// Paint 객체 생성 함수
-fun createPaintForTool(toolType: ToolType, color: Color, strokeWidth: Float): Paint {
+@Composable
+fun ToolSelectionRow(
+    selectedTool: ToolType,
+    onToolSelect: (ToolType) -> Unit
+) {
+    Row(
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        ToolImage(
+            imageRes = R.drawable.palette_pen,
+            selected = selectedTool == ToolType.PENCIL,
+            onClick = { onToolSelect(ToolType.PENCIL) }
+        )
+        ToolImage(
+            imageRes = R.drawable.palette_crayon,
+            selected = selectedTool == ToolType.CRAYON,
+            onClick = { onToolSelect(ToolType.CRAYON) }
+        )
+        ToolImage(
+            imageRes = R.drawable.palette_eraser,
+            selected = selectedTool == ToolType.ERASER,
+            onClick = { onToolSelect(ToolType.ERASER) }
+        )
+    }
+}
+
+@Composable
+fun ToolImage(imageRes: Int, selected: Boolean, onClick: () -> Unit) {
+    val borderSize = if (selected) 4.dp else 0.dp
+
+    Box(
+        modifier = Modifier
+            .size(50.dp)
+            .padding(borderSize)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Image(
+            painter = painterResource(id = imageRes),
+            contentDescription = null,
+            modifier = Modifier.size(40.dp)
+        )
+    }
+}
+
+@Composable
+fun StickerRow(
+    stickerList: List<StickerStock>,
+    onStickerSelect: (StickerStock) -> Unit
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        stickerList.forEach { sticker ->
+            Image(
+                painter = rememberAsyncImagePainter(
+                    model = sticker.img,
+                    placeholder = painterResource(R.drawable.loading),
+                    error = painterResource(R.drawable.loading)
+                ),
+                contentDescription = "스티커 이미지",
+                modifier = Modifier
+                    .size(40.dp)
+                    .clickable { onStickerSelect(sticker) }
+            )
+        }
+    }
+}
+
+fun createPaintForTool(toolType: ToolType, color: androidx.compose.ui.graphics.Color, thickness: Float): android.graphics.Paint {
     return when (toolType) {
-        ToolType.CRAYON -> createCrayonPaint(color, strokeWidth)
-        ToolType.ERASER -> createEraserPaint(strokeWidth)
-        ToolType.BRUSH -> createBrushPaint(color, strokeWidth)
-        else -> createPencilPaint(color, strokeWidth)
+        ToolType.ERASER -> createEraserPaint(thickness) // 지우개 설정
+        ToolType.PENCIL -> createPencilPaint(color, thickness)
+        ToolType.CRAYON -> createCrayonPaint(color, thickness)
+        else -> throw IllegalArgumentException("Unsupported ToolType: $toolType")
     }
 }
 
-// PENCIL 도구용 Paint 생성 함수
-fun createPencilPaint(color: Color, strokeWidth: Float): Paint {
-    return Paint().apply {
-        this.color = color.toArgb()
+
+
+
+fun createPencilPaint(color: androidx.compose.ui.graphics.Color, strokeWidth: Float): android.graphics.Paint {
+    return android.graphics.Paint().apply {
+        this.color = color.toArgb() // Color를 Int로 변환
         this.strokeWidth = strokeWidth
-        this.style = Paint.Style.STROKE
-        this.strokeCap = Paint.Cap.ROUND
+        this.style = android.graphics.Paint.Style.STROKE
+        this.strokeCap = android.graphics.Paint.Cap.ROUND
     }
 }
 
-// CRAYON 도구용 Paint 생성 함수 (일정한 투명도 유지)
-fun createCrayonPaint(color: Color, strokeWidth: Float): Paint {
-    return Paint().apply {
+fun createCrayonPaint(color: androidx.compose.ui.graphics.Color, strokeWidth: Float): android.graphics.Paint {
+    return android.graphics.Paint().apply {
         this.color = color.toArgb()
         this.strokeWidth = strokeWidth
-        this.style = Paint.Style.STROKE
-        this.strokeCap = Paint.Cap.ROUND
-        alpha = 100 // 일정한 투명도 유지
+        this.style = android.graphics.Paint.Style.STROKE
+        this.strokeCap = android.graphics.Paint.Cap.ROUND
+        alpha = 200
 
-        // 크레파스 질감 생성
+        // 크레파스 질감 비트맵 생성
         val crayonBitmap = Bitmap.createBitmap(50, 50, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(crayonBitmap)
-        val paint = Paint().apply {
-            this.color = color.toArgb()
-            alpha = 50
+        val noisePaint = android.graphics.Paint().apply {
+            alpha = 200
         }
 
-        for (i in 0 until 500) {
+        // 랜덤 점 그리기: 한번만 랜덤 점을 그리도록 설정
+        // 여러 번 그리지 않도록 수정
+        for (i in 0 until 100) {  // 점을 한 번만 그리도록 제한
             val x = (Math.random() * crayonBitmap.width).toFloat()
             val y = (Math.random() * crayonBitmap.height).toFloat()
-            canvas.drawPoint(x, y, paint)
+            canvas.drawPoint(x, y, noisePaint)
         }
 
+        // BitmapShader를 사용하여 크레파스 질감 텍스처 적용
         shader = BitmapShader(crayonBitmap, Shader.TileMode.REPEAT, Shader.TileMode.REPEAT)
-
     }
 }
 
-// 붓 도구용 Paint 생성 함수
-fun createBrushPaint(color: Color, strokeWidth: Float): Paint {
-    return Paint().apply {
-        this.color = color.toArgb()
+
+
+
+fun createEraserPaint(strokeWidth: Float): android.graphics.Paint {
+    return android.graphics.Paint().apply {
+        this.color = android.graphics.Color.TRANSPARENT
         this.strokeWidth = strokeWidth
-        this.style = Paint.Style.STROKE
-        this.strokeCap = Paint.Cap.ROUND
+        this.style = android.graphics.Paint.Style.STROKE
+        this.strokeCap = android.graphics.Paint.Cap.ROUND
+        xfermode = android.graphics.PorterDuffXfermode(android.graphics.PorterDuff.Mode.CLEAR)
     }
 }
 
-// 지우개 도구용 Paint 생성 함수 (투명하게 처리)
-fun createEraserPaint(strokeWidth: Float): Paint {
-    return Paint().apply {
-        color = Color.Transparent.toArgb()
-        this.strokeWidth = strokeWidth
-        this.style = Paint.Style.STROKE
-        this.strokeCap = Paint.Cap.ROUND
-        xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR) // CLEAR 모드로 설정
-    }
-}
+
