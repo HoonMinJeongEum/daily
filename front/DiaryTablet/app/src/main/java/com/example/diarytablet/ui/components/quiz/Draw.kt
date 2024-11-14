@@ -164,7 +164,8 @@ fun DrawingRedoButton(
 @Composable
 fun DrawingColorPalette(
     modifier: Modifier,
-    onColorChanged: (Color) -> Unit
+    onColorChanged: (Color) -> Unit,
+    isPenSelected: Boolean
 ) {
     var selectedIndex by remember { mutableStateOf(11) }
     val colors = listOf(
@@ -185,8 +186,10 @@ fun DrawingColorPalette(
                         modifier = Modifier
                             .weight(1f)
                             .clickable {
-                                selectedIndex = rowIndex * 4 + index
-                                onColorChanged(color)
+                                if (isPenSelected) {
+                                    selectedIndex = rowIndex * 4 + index
+                                    onColorChanged(color)
+                                }
                             }
                     ) {
                         Box(
