@@ -76,7 +76,7 @@ fun WordDetail(
                             .fillMaxWidth()
                             .padding(top = screenHeight * 0.01f), // 화면 높이의 1%로 패딩 설정
                         textAlign = TextAlign.Center,
-                        fontSize = (screenWidth * 0.06f).value.sp // 화면 너비의 6%로 폰트 크기 설정
+                        fontSize = (screenWidth * 0.07f).value.sp // 화면 너비의 6%로 폰트 크기 설정
                     )
 
                     Spacer(modifier = Modifier.height(screenHeight * 0.02f)) // 화면 높이의 2% 간격
