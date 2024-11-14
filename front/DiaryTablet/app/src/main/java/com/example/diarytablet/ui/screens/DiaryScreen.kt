@@ -46,9 +46,12 @@ import com.example.diarytablet.viewmodel.DiaryViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import android.os.Environment
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.text.style.TextAlign
 import com.example.diarytablet.utils.DrawingPlaybackView
 import com.example.diarytablet.utils.DrawingStep
@@ -98,8 +101,8 @@ fun DiaryScreen(
     val boxHeight = contentHeight * 0.88f
 
     val density = LocalDensity.current
-    val bitmapWidthPx = with(density) { leftBoxWidth.roundToPx() }
-    val bitmapHeightPx = with(density) { boxHeight.roundToPx() }
+    val bitmapWidthPx = with(density) { (leftBoxWidth).roundToPx() }
+    val bitmapHeightPx = with(density) { (boxHeight).roundToPx() }
 
     val bitmapsList = remember {
         mutableStateListOf(
@@ -303,7 +306,7 @@ fun DiaryScreen(
                                     }
 
                                     if (selectedStickerIndex == index) {
-                                        // 선택된 스티커에 테두리 표시
+                                        // 선택된 스티커에 테두리와 'X' 버튼 추가
                                         val stickerPosition = stickerItem.position.value
                                         drawRect(
                                             color = Color.Red,
@@ -364,27 +367,20 @@ fun DiaryScreen(
                 }
             }
         }
-    }
+        // 선택된 스티커의 'X' 버튼 추가
 
-    // Canvas 바깥에 'X' 버튼을 위한 Box를 배치
-    selectedStickerIndex?.let { index ->
-        val stickerPosition = firstPageStickers[index].position.value
-        Box(
-            modifier = Modifier
-                .offset(
-                    x = with(LocalDensity.current) { stickerPosition.x.toDp() + 8.dp },
-                    y = with(LocalDensity.current) { stickerPosition.y.toDp() + 8.dp }
-                )
-                .size(24.dp)
-                .background(Color.White, shape = RoundedCornerShape(12.dp))
-                .clickable {
-                    firstPageStickers.removeAt(index)
-                    selectedStickerIndex = null
-                },
-            contentAlignment = Alignment.Center
-        ) {
-            Text("X", color = Color.Red, fontSize = 16.sp)
+        // 선택된 스티커의 'X' 버튼 추가
+        selectedStickerIndex?.let { index ->
+            val sticker = firstPageStickers[index]
+            val stickerPosition = sticker.position.value
+
+            StickerWithDeleteButton(stickerSize = 150, position = stickerPosition) {
+                firstPageStickers.removeAt(index)
+                selectedStickerIndex = null
+            }
         }
+
+
     }
     if (isWarningDialogVisible) {
         Box(
@@ -517,3 +513,23 @@ fun DiaryScreen(
         }
     }
 }
+
+@Composable
+fun StickerWithDeleteButton(stickerSize: Int, position: Offset, onDelete: () -> Unit) {
+    val density = LocalDensity.current
+    val xDp = with(density) { (position.x + stickerSize - 12).toDp() } // 스티커 우측 상단에 X 버튼 배치
+    val yDp = with(density) { (position.y - 12).toDp() } // Y 위치를 상단으로 약간 조정
+
+    Box(
+        modifier = Modifier
+            .offset(x = xDp, y = yDp)
+            .size(24.dp) // X 버튼 크기
+            .background(Color.White, shape = CircleShape)
+            .clickable { onDelete() },
+        contentAlignment = Alignment.Center
+    ) {
+        Text("X", color = Color.Red, fontSize = 10.sp)
+    }
+}
+
+

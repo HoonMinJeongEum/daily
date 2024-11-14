@@ -16,9 +16,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,11 +33,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import coil3.compose.rememberAsyncImagePainter
 import com.example.diarytablet.R
 import com.example.diarytablet.model.StickerStock
 import com.example.diarytablet.model.ToolType
-import com.example.diarytablet.model.ToolType.*
+import androidx.compose.foundation.lazy.items
 
 @Composable
 fun PaletteTool(
@@ -41,9 +50,11 @@ fun PaletteTool(
     onToolSelect: (ToolType) -> Unit,
     stickerList: List<StickerStock>,
     onStickerSelect: (StickerStock) -> Unit,
-    onUndo: () -> Unit, // 되돌리기 콜백
-    onRedo: () -> Unit  // 다시하기 콜백 추가
+    onUndo: () -> Unit,
+    onRedo: () -> Unit
 ) {
+    var isStickerModalVisible by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -52,27 +63,79 @@ fun PaletteTool(
             .clip(RoundedCornerShape(16.dp)),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // 색상 팔레트
         ColorPalette(selectedColor = selectedColor, onColorChange = onColorChange)
 
         Spacer(modifier = Modifier.height(20.dp))
-
-        // 두께 선택 버튼
         ThicknessSelector(onThicknessChange = onThicknessChange)
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // 도구 선택 섹션 (이미지 사용)
-        ToolSelectionRow(selectedTool = selectedTool, onToolSelect = onToolSelect)
+        ToolSelectionRow(
+            selectedTool = selectedTool,
+            onToolSelect = onToolSelect,
+            onStickerIconClick = { isStickerModalVisible = true } // 스티커 모달창 열기
+        )
 
         Spacer(modifier = Modifier.height(20.dp))
-
-        // 되돌리기 및 다시하기 버튼 행
-        UndoRedoButtons(onUndo = onUndo, onRedo = onRedo)
+//        UndoRedoButtons(onUndo = onUndo, onRedo = onRedo)
     }
-    // 스티커 목록
-    StickerRow(stickerList = stickerList, onStickerSelect = onStickerSelect)
+
+    // 스티커 모달창
+    if (isStickerModalVisible) {
+        StickerModal(
+            stickerList = stickerList,
+            onStickerSelect = { sticker ->
+                onStickerSelect(sticker)
+                isStickerModalVisible = false // 스티커 선택 후 모달창 닫기
+            },
+            onDismiss = { isStickerModalVisible = false } // 모달창 닫기
+        )
+    }
 }
+
+@Composable
+fun StickerModal(
+    stickerList: List<StickerStock>,
+    onStickerSelect: (StickerStock) -> Unit,
+    onDismiss: () -> Unit
+) {
+    Dialog(onDismissRequest = { onDismiss() }) {
+        Box(
+            modifier = Modifier
+                .wrapContentSize()
+                .clip(RoundedCornerShape(12.dp))
+                .background(Color.White)
+                .padding(16.dp)
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text("스티커 선택", color = Color.Black, fontSize = 18.sp)
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // 스티커 목록을 가로로 스크롤 가능하게 표시
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(stickerList) { sticker ->
+                        Image(
+                            painter = rememberAsyncImagePainter(
+                                model = sticker.img,
+                                placeholder = painterResource(R.drawable.loading),
+                                error = painterResource(R.drawable.loading)
+                            ),
+                            contentDescription = "스티커 이미지",
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clickable { onStickerSelect(sticker) }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+
 
 @Composable
 fun UndoRedoButtons(onUndo: () -> Unit, onRedo: () -> Unit) {
@@ -130,7 +193,7 @@ fun ColorPalette(selectedColor: Color, onColorChange: (Color) -> Unit) {
 
 @Composable
 fun ThicknessSelector(onThicknessChange: (Float) -> Unit) {
-    val thicknessOptions = listOf(4f, 8f, 16f, 20f)
+    val thicknessOptions = listOf(10f, 20f, 35f, 50f)
     Row(
         horizontalArrangement = Arrangement.SpaceEvenly,
         modifier = Modifier.fillMaxWidth()
@@ -138,6 +201,7 @@ fun ThicknessSelector(onThicknessChange: (Float) -> Unit) {
         thicknessOptions.forEach { thickness ->
             Box(
                 modifier = Modifier
+                    .align(alignment = Alignment.CenterVertically)
                     .size(thickness.dp)
                     .background(Color.Gray, CircleShape)
                     .clickable { onThicknessChange(thickness) }
@@ -149,7 +213,8 @@ fun ThicknessSelector(onThicknessChange: (Float) -> Unit) {
 @Composable
 fun ToolSelectionRow(
     selectedTool: ToolType,
-    onToolSelect: (ToolType) -> Unit
+    onToolSelect: (ToolType) -> Unit,
+    onStickerIconClick: () -> Unit
 ) {
     Row(
         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -160,11 +225,14 @@ fun ToolSelectionRow(
             selected = selectedTool == ToolType.PENCIL,
             onClick = { onToolSelect(ToolType.PENCIL) }
         )
+
+        // Sticker 아이콘
         ToolImage(
-            imageRes = R.drawable.palette_crayon,
-            selected = selectedTool == ToolType.CRAYON,
-            onClick = { onToolSelect(ToolType.CRAYON) }
+            imageRes = R.drawable.palette_sticker, // 스티커 아이콘 이미지 리소스
+            selected = false,
+            onClick = { onStickerIconClick() }
         )
+
         ToolImage(
             imageRes = R.drawable.palette_eraser,
             selected = selectedTool == ToolType.ERASER,

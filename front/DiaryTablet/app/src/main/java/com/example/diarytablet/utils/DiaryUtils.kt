@@ -50,6 +50,7 @@ import java.net.URL
 import android.graphics.Canvas as AndroidCanvas
 
 
+
 suspend fun loadBitmapFromUrl(url: String): Bitmap? = withContext(Dispatchers.IO) {
     try {
         val originalBitmap = BitmapFactory.decodeStream(URL(url).openStream())
