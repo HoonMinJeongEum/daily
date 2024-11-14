@@ -31,6 +31,8 @@ import coil3.request.error
 import coil3.request.placeholder
 import com.example.diarytablet.model.Sticker
 import com.example.diarytablet.R
+import com.example.diarytablet.ui.components.modal.CommonModal
+import com.example.diarytablet.ui.components.modal.CommonPopup
 import com.example.diarytablet.ui.theme.DarkGray
 import com.example.diarytablet.viewmodel.NavBarViewModel
 import com.example.diarytablet.viewmodel.ShopStockViewModel
@@ -60,17 +62,19 @@ fun newImageLoader(context: android.content.Context): ImageLoader {
 
 @Composable
 fun StickerShopList(
-    initialStickers: List<Sticker>,
+    stickers: List<Sticker>,
     shopViewModel: ShopStockViewModel,
-    navBarViewModel: NavBarViewModel = hiltViewModel()
+    navBarViewModel: NavBarViewModel
 ) {
-    var stickers by remember { mutableStateOf(initialStickers) }
     var selectedSticker by remember { mutableStateOf<Sticker?>(null) }
     var isModalVisible by remember { mutableStateOf(false) }
     var stickerModalState by remember { mutableStateOf(StickerModalState.NONE) }
 
     val shellCount by navBarViewModel.shellCount
 
+    LaunchedEffect(Unit) {
+        navBarViewModel.initializeData()
+    }
     LazyVerticalGrid(
         columns = GridCells.Fixed(4),
         contentPadding = PaddingValues(start = 15.dp, end = 15.dp),
@@ -91,35 +95,63 @@ fun StickerShopList(
     }
 
     if (isModalVisible && selectedSticker != null) {
-        PurchaseConfirmationModal(
-            sticker = selectedSticker!!,
-            stickerModalState = stickerModalState,
-            onConfirm = {
-                if (shellCount >= selectedSticker!!.price) {
-                    shopViewModel.buySticker(selectedSticker!!.id)
-                    stickers = stickers.filter { it.id != selectedSticker!!.id }
-                    stickerModalState = StickerModalState.PURCHASE_SUCCESS
-                } else {
-                    stickerModalState = StickerModalState.INSUFFICIENT_SHELLS
-                }
-            },
-            onCancel = {
-                isModalVisible = false
-                stickerModalState = StickerModalState.NONE
+        when (stickerModalState) {
+            StickerModalState.PURCHASE_CONFIRMATION -> {
+                CommonModal(
+                    onDismissRequest = {
+                        isModalVisible = false
+                        stickerModalState = StickerModalState.NONE
+                    },
+                    titleText = "스티커를 구매하시겠습니까?",
+                    confirmText = "${selectedSticker!!.price}",
+                    confirmIconResId = R.drawable.jogae,
+                    onConfirm = {
+                        if (shellCount >= selectedSticker!!.price) {
+                            shopViewModel.buySticker(selectedSticker!!.id)
+                            stickerModalState = StickerModalState.PURCHASE_SUCCESS
+                        } else {
+                            stickerModalState = StickerModalState.INSUFFICIENT_SHELLS
+                        }
+                    }
+                )
             }
-        )
+
+            StickerModalState.INSUFFICIENT_SHELLS, StickerModalState.PURCHASE_SUCCESS -> {
+                val titleText = when (stickerModalState) {
+                    StickerModalState.INSUFFICIENT_SHELLS -> "조개를 조금 더 모아보아요!"
+                    StickerModalState.PURCHASE_SUCCESS -> "구매가 완료되었습니다!"
+                    else -> ""
+                }
+
+                CommonPopup(
+                    onDismissRequest = {
+                        isModalVisible = false
+                        stickerModalState = StickerModalState.NONE
+                    },
+                    titleText = titleText
+                )
+            }
+
+            else -> Unit
+        }
     }
 }
 
 @Composable
 fun StickerCard(sticker: Sticker, index: Int, onStickerClick: () -> Unit, viewModel: ShopStockViewModel) {
-    var isPressed by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val imageLoader = remember { newImageLoader(context) }
 
-    val backgroundImage = if (isPressed) {
-        if (index % 2 == 0) R.drawable.sticker_yellow_down else R.drawable.sticker_blue_down
-    } else {
-        if (index % 2 == 0) R.drawable.sticker_yellow_up else R.drawable.sticker_blue_up
-    }
+    val painter = rememberAsyncImagePainter(
+        model = ImageRequest.Builder(context)
+            .data(sticker.img)
+            .placeholder(R.drawable.loading)
+            .error(R.drawable.loading)
+            .build(),
+        imageLoader = imageLoader
+    )
+
+    val backgroundImage = if (index % 2 == 0) R.drawable.sticker_yellow_up else R.drawable.sticker_blue_up
 
     Box(
         modifier = Modifier
@@ -128,19 +160,10 @@ fun StickerCard(sticker: Sticker, index: Int, onStickerClick: () -> Unit, viewMo
             .aspectRatio(1f)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null
-            ) {
-                isPressed = true
-                onStickerClick()
-            }
+                indication = null,
+                onClick = onStickerClick
+            )
     ) {
-        LaunchedEffect(isPressed) {
-            if (isPressed) {
-                delay(100L)
-                isPressed = false
-            }
-        }
-
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -158,17 +181,6 @@ fun StickerCard(sticker: Sticker, index: Int, onStickerClick: () -> Unit, viewMo
                     .padding(top = 48.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                val context = LocalContext.current
-                val imageLoader = newImageLoader(context)
-                val painter = rememberAsyncImagePainter(
-                    model = ImageRequest.Builder(context)
-                        .data(sticker.img)
-                        .placeholder(R.drawable.loading)
-                        .error(R.drawable.loading)
-                        .build(),
-                    imageLoader = imageLoader,
-                )
-
                 Image(
                     painter = painter,
                     contentDescription = "Sticker Image",
@@ -198,95 +210,6 @@ fun StickerCard(sticker: Sticker, index: Int, onStickerClick: () -> Unit, viewMo
                         fontSize = 30.sp,
                         color = DarkGray
                     )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun PurchaseConfirmationModal(
-    sticker: Sticker,
-    stickerModalState: StickerModalState,
-    onConfirm: () -> Unit,
-    onCancel: () -> Unit
-) {
-    Dialog(onDismissRequest = onCancel) {
-        Box(
-            modifier = Modifier
-                .width(300.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(Color.White)
-                .padding(20.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                val message = when (stickerModalState) {
-                    StickerModalState.PURCHASE_CONFIRMATION -> "스티커를 구매하시겠습니까?"
-                    StickerModalState.INSUFFICIENT_SHELLS -> "조개를 조금 더 모아볼까요?"
-                    StickerModalState.PURCHASE_SUCCESS -> "구매가 완료되었습니다!"
-                    else -> ""
-                }
-
-                Text(
-                    text = message,
-                    fontSize = 18.sp,
-                    color = Color.Black
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Row(
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    if (stickerModalState == StickerModalState.PURCHASE_CONFIRMATION) {
-                        Button(
-                            onClick = onConfirm,
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(48.dp),
-                            shape = RoundedCornerShape(50.dp),
-                            contentPadding = PaddingValues(horizontal = 16.dp)
-                        ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.jogae),
-                                contentDescription = null,
-                                modifier = Modifier.size(24.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "${sticker.price} 조개",
-                                fontSize = 16.sp,
-                                color = Color.White
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.width(8.dp))
-
-                        Button(
-                            onClick = onCancel,
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(48.dp),
-                            shape = RoundedCornerShape(50.dp)
-                        ) {
-                            Text("취소", fontSize = 16.sp)
-                        }
-                    } else {
-                        Button(
-                            onClick = onCancel,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(48.dp),
-                            shape = RoundedCornerShape(50.dp)
-                        ) {
-                            Text("확인", fontSize = 16.sp)
-                        }
-                    }
                 }
             }
         }

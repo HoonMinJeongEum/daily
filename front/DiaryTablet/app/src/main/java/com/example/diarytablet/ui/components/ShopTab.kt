@@ -1,19 +1,25 @@
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -22,13 +28,17 @@ import com.example.diarytablet.model.Coupon
 import com.example.diarytablet.model.Sticker
 import com.example.diarytablet.viewmodel.ShopStockViewModel
 import com.example.diarytablet.R
+import com.example.diarytablet.ui.theme.DarkGray
+import com.example.diarytablet.viewmodel.NavBarViewModel
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ShopTab(
     coupons: List<Coupon>,
     stickers: List<Sticker>,
     modifier: Modifier = Modifier,
-    viewModel: ShopStockViewModel
+    viewModel: ShopStockViewModel,
+    navBarViewModel: NavBarViewModel
 ) {
     // 화면 크기 가져오기
     val configuration = LocalConfiguration.current
@@ -42,7 +52,6 @@ fun ShopTab(
 
     Box(
         modifier = modifier
-            .offset(x = screenWidth * 0.02f, y = -screenHeight * 0.03f) // 오른쪽과 위로 이동
             .fillMaxSize()
             .background(Color.White, shape = RoundedCornerShape(16.dp))
             .padding(top = 30.dp)
@@ -114,81 +123,99 @@ fun ShopTab(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(start = 16.dp),
-                contentAlignment = Alignment.Center // 오른쪽 박스의 중앙 정렬
+                contentAlignment = Alignment.Center
             ) {
                 if (selectedTabIndex == 0) {
-                    CouponShopList(coupons, viewModel)
+                    CouponShopList(coupons, viewModel, navBarViewModel)
                 } else {
-                    StickerShopList(stickers, viewModel)
+                    StickerShopList(stickers, viewModel, navBarViewModel)
                 }
             }
         }
 
-        // 왼쪽 하단에 수달 캐릭터와 물음표 배치 (독립적 배치)
+        // 왼쪽 하단에 캐릭터와 물음표 배치 (독립적 배치)
         Box(
             modifier = Modifier
-                .fillMaxWidth(0.15f) // 왼쪽 영역의 너비를 동일하게 설정
+                .fillMaxWidth(0.15f)
                 .align(Alignment.BottomStart)
         ) {
-            // 수달 캐릭터 - 화면 높이의 12% 크기
+            // 캐릭터
             Image(
                 painter = painterResource(id = R.drawable.otter_character),
                 contentDescription = null,
                 modifier = Modifier
-                    .size(screenHeight * 0.3f) // 화면 높이의 12%로 설정
+                    .size(screenHeight * 0.3f)
                     .offset(x = -screenWidth * 0.01f, y = screenHeight * 0.03f)
+                    .combinedClickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() },
+                        onClick = {
+                            showInfo = !showInfo
+                        }
+                    )
                     .zIndex(0f)
             )
 
             // 물음표 또는 문구
             Box(
                 modifier = Modifier
-                    .offset(x = screenWidth * 0.08f, y = screenHeight * 0.05f) // 수달과 물음표 간격 조정
+                    .offset(x = screenWidth * 0.08f, y = screenHeight * 0.05f)
                     .width(if (showInfo) screenWidth * 0.4f else screenWidth * 0.07f)
                     .height(if (showInfo) screenHeight * 0.15f else screenHeight * 0.07f)
-                    .clickable { showInfo = !showInfo }
+                    .combinedClickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() },
+                        onClick = {
+                            showInfo = !showInfo
+                        }
+                    )
                     .zIndex(1f)
             ) {
                 if (showInfo) {
                     // 말풍선 이미지 안에 텍스트 배치
                     Box(
                         modifier = Modifier
-                            .offset(x = screenWidth * 0.005f, y = -screenHeight * 0.04f) // 오른쪽과 위로 이동
+                            .offset(x = screenWidth * 0.01f, y = -screenHeight * 0.08f) // 오른쪽과 위로 이동
                             .clickable { showInfo = !showInfo }
-                            .wrapContentSize()
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.popup_balloon),
                             contentDescription = "말풍선",
                             modifier = Modifier
                                 .fillMaxSize()
+                                .graphicsLayer {
+                                    scaleX = 1.6f
+                                    scaleY = 1.35f
+                                }
                         )
 
                         Text(
                             text = if (selectedTabIndex == 0) {
                                 buildAnnotatedString {
                                     append("구매한 쿠폰은 ")
-                                    withStyle(style = SpanStyle(color = Color(0xFF42A5F5))) { // 특정 부분에 색상 적용
+                                    withStyle(style = SpanStyle(color = Color(0xFF42A5F5))) {
                                         append("보관함")
                                     }
-                                    append("에서\n 확인할 수 있어요!")
+                                    append("에서\n확인할 수 있어요!")
                                 }
                             } else {
                                 buildAnnotatedString {
                                     append("구매한 스티커를\n")
-                                    withStyle(style = SpanStyle(color = Color(0xFF42A5F5))) { // 특정 부분에 색상 적용
+                                    withStyle(style = SpanStyle(color = Color(0xFF42A5F5))) {
                                         append("그림일기")
                                     }
                                     append("에 사용해 봐요!")
                                 }
                             },
-                            color = Color.Black,
-                            fontSize = 14.sp,
+                            color = DarkGray,
+                            fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center,
+                            softWrap = false,
+                            overflow = TextOverflow.Visible,
                             modifier = Modifier
+                                .fillMaxWidth()
                                 .align(Alignment.Center)
-                                .padding(8.dp)
                         )
                     }
                 } else {
@@ -196,7 +223,7 @@ fun ShopTab(
                         painter = painterResource(id = R.drawable.question_mark),
                         contentDescription = "도움말",
                         modifier = Modifier
-                            .size(screenHeight * 0.07f) // question_mark 크기 설정
+                            .size(screenHeight * 0.1f)
                     )
                 }
             }

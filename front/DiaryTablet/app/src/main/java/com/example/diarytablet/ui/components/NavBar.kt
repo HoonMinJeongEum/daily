@@ -8,11 +8,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,13 +53,15 @@ fun Navbar(
     var isProfileMenuVisible by remember { mutableStateOf(false) }
     var isProfileModalVisible by remember { mutableStateOf(false) }
     var isAlarmModalVisible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        viewModel.initializeData()
+    }
+
     Row(
         modifier = Modifier
-            .wrapContentSize()
-            .padding(screenWidth * 0.02f)
-            .padding(start = screenWidth * 0.03f)
-        , // 여백 조정을 화면 비율에 맞춤
-        horizontalArrangement = Arrangement.spacedBy(screenWidth * 0.015f), // 버튼 간 간격 조정
+            .fillMaxWidth(0.8f), // 여백 조정을 화면 비율에 맞춤
+        horizontalArrangement = Arrangement.SpaceBetween, // 버튼 간 간격 조정
         verticalAlignment = Alignment.CenterVertically
     ) {
         BasicButton(
@@ -65,6 +70,8 @@ fun Navbar(
             isOutlined = false
         )
         AlarmButton(
+            modifier = Modifier
+                .weight(1f),
             isAlarmOn = isAlarmOn,
             onClick = {
                 viewModel.getAlarms {
@@ -74,6 +81,8 @@ fun Navbar(
             }
         )
         Profile(
+            modifier = Modifier
+                .weight(1f),
             onProfileClick = { isProfileMenuVisible = true },
             imageUrl = profileImageUrl
         )

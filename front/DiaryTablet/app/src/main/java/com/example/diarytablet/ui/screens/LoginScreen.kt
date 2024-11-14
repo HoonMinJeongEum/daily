@@ -43,6 +43,7 @@ import com.example.diarytablet.ui.theme.BackgroundPlacement
 import com.example.diarytablet.ui.theme.BackgroundType
 import com.example.diarytablet.ui.theme.DarkGray
 import com.example.diarytablet.ui.theme.DarkRed
+import com.example.diarytablet.ui.theme.DeepPastelNavy
 import com.example.diarytablet.ui.theme.GrayText
 import com.example.diarytablet.ui.theme.MyTypography
 import com.example.diarytablet.viewmodel.LoginViewModel
@@ -177,8 +178,8 @@ fun LoginScreen(
                         unfocusedContainerColor = Color.Transparent,
                         focusedIndicatorColor = Color.Transparent, // Remove focused underline
                         unfocusedIndicatorColor = Color.Transparent,
-                        focusedTextColor = DarkGray,
-                        unfocusedTextColor = DarkGray
+                        focusedTextColor = DeepPastelNavy,
+                        unfocusedTextColor = DeepPastelNavy
                     )
                 )
             }
@@ -294,7 +295,7 @@ fun LoginScreen(
 
 
 
-            val buttonFontSize = screenHeight.value * 0.04f
+            val buttonFontSize = screenHeight.value * 0.035f
             // Login Button
             BasicButton(
                 modifier = Modifier

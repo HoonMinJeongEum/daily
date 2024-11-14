@@ -66,6 +66,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -80,6 +81,7 @@ import com.example.diarytablet.R
 import com.example.diarytablet.domain.dto.request.WordRequestDto
 import com.example.diarytablet.domain.dto.response.WordResponseDto
 import com.example.diarytablet.model.ToolType
+import com.example.diarytablet.ui.theme.DarkGray
 import com.example.diarytablet.ui.theme.DeepPastelBlue
 import com.example.diarytablet.ui.theme.MyTypography
 import com.example.diarytablet.ui.theme.PastelNavy
@@ -95,7 +97,8 @@ fun WordTap(
     onValidate: suspend (Context, WordResponseDto, Bitmap) -> Int,
     onFinish:suspend () -> Unit,
     learnedWordList: List<WordRequestDto>,
-    navController: NavController
+    navController: NavController,
+    username: String
 
 ) {
     BoxWithConstraints(
@@ -130,7 +133,21 @@ fun WordTap(
             writtenBitmap.eraseColor(android.graphics.Color.TRANSPARENT)
         }
 
+        val popupMessages = listOf(
+            "{}!\n잘하고 있어!",
+            "{}!\n조금만 더 힘내!",
+            "{}!\n정말 잘했어!",
+            "{}!\n아주 훌륭해!",
+            "{}!\n넌 단어 마스터!",
+            "{}!\n집중력 짱!",
+            "{}!\n끝까지 해보자!",
+            "{}!\n최고야 ~",
+            "{}!\n노력하는 모습이 멋져!",
+            "{}!\n글씨를 참 잘 적구나",
+            "{}!\n계속 이렇게 해보자!"
+        )
 
+        var popupMessage by remember { mutableStateOf("") }
 
         Column(modifier = modifier.fillMaxSize()) {
 
@@ -186,19 +203,20 @@ fun WordTap(
                                 verticalArrangement = Arrangement.Center
                             ) {
                                 Text(
-                                    text = "너 잘하고 있어!",
-                                    color = Color.Black,
+                                    text = popupMessage,
+                                    color = DarkGray,
                                     fontSize = 24.sp,
-                                    lineHeight = 26.sp
+                                    lineHeight = 30.sp,
+                                    textAlign = TextAlign.Center
                                 )
                             }
                         }
                     }
                 }
 
-                // 2초 후 showPopup을 false로 설정
                 LaunchedEffect(showPopup) {
-                    delay(1500)  // 1.2초 동안 유지
+                    popupMessage = popupMessages.random().replace("{}", username)
+                    delay(2000)
                     popupAlpha = 0f  // 투명도 점진적 감소 시작
                     delay(1000)  // 페이드 아웃 애니메이션 지속 시간
                     showPopup = false  // 완료 후 팝업 종료

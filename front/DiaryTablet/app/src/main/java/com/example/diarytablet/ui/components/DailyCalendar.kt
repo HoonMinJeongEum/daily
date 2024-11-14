@@ -19,9 +19,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.diarytablet.R
+import com.example.diarytablet.ui.theme.DeepPastelNavy
 import com.example.diarytablet.ui.theme.GrayText
 import com.example.diarytablet.ui.theme.MyTypography
 import com.example.diarytablet.ui.theme.SkyBlue
+import com.example.diarytablet.ui.theme.myFontFamily
 import com.example.diarytablet.viewmodel.LogViewModel
 import java.time.LocalDateTime
 import java.util.*
@@ -63,7 +65,7 @@ fun DailyCalendar(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 30.dp)
+            .padding(horizontal = 60.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -108,15 +110,19 @@ fun DailyCalendar(
                     fontSize = 30.sp,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.size(48.dp),
-                   style = MyTypography.bodyLarge
+                   style = MyTypography.bodyLarge,
+                    color = DeepPastelNavy
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
         Column {
             for (i in 0 until rows) {
+                if (i > 0) {
+                    Spacer(modifier = Modifier.height(3.dp))
+                }
                 Row(
                     modifier = Modifier
                         .fillMaxWidth(),
@@ -158,7 +164,7 @@ fun DateCell(
 ) {
     Box(
         modifier = Modifier
-            .size(52.dp)
+            .size(48.dp)
             .background(
                 if (isDiaryDate) SkyBlue else Color.Transparent,
                 shape = CircleShape
@@ -169,8 +175,8 @@ fun DateCell(
     ) {
         Text(
             text = "$date",
-            style = MyTypography.bodySmall,
-            fontSize = 30.sp,
+            fontFamily = myFontFamily,
+            fontSize = 26.sp,
             fontWeight = if (isDiaryDate) FontWeight.Bold else FontWeight.Normal,
             color = if (isDiaryDate) Color.White else GrayText
         )

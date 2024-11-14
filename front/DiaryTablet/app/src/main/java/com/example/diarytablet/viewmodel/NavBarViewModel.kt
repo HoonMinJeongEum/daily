@@ -35,12 +35,11 @@ class NavBarViewModel @Inject constructor(
     private val alarmRepository: AlarmRepository
 ) : ViewModel() {
 
-    init {
+    fun initializeData() {
         loadStatus()
         observeAlarmState()
-        saveFcmToken() // 앱 초기화 시 FCM 토큰 저장
+        saveFcmToken()
     }
-
     private val _shellCount = mutableIntStateOf(0)
     val shellCount: State<Int> get() = _shellCount
 
