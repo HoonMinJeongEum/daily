@@ -76,7 +76,9 @@ fun Navbar(
         BasicButton(
             onClick = {},
             text = shellCount.toString(),
-            isOutlined = false
+            isOutlined = false,
+            enabled = false,
+            useDisabledColor = true
         )
         AlarmButton(
             modifier = Modifier
