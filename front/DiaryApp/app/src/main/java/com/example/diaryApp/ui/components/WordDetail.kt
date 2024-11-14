@@ -32,84 +32,91 @@ fun WordDetail(
     onDismissRequest: () -> Unit
 ) {
     Dialog(onDismissRequest = onDismissRequest) {
-        Surface(
-            shape = RoundedCornerShape(screenWidth * 0.04f), // 화면 너비의 4%로 둥근 모서리 설정
-            color = Color.White,
-            modifier = Modifier.padding(screenWidth * 0.05f) // 화면 너비의 5%로 패딩 설정
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.fillMaxSize()
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White),
-                horizontalAlignment = Alignment.CenterHorizontally
+
+            Surface(
+                shape = RoundedCornerShape(screenWidth * 0.04f), // 화면 너비의 4%로 둥근 모서리 설정
+                color = Color.White,
+                modifier = Modifier.padding(screenWidth * 0.05f) // 화면 너비의 5%로 패딩 설정
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = screenHeight * 0.02f, end = screenWidth * 0.04f), // 화면 비율로 상단 패딩 설정
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Spacer(modifier = Modifier.weight(1f))
-                    IconButton(onClick = onDismissRequest) {
-                        Icon(
-                            imageVector = Icons.Filled.Close,
-                            contentDescription = "Close",
-                            tint = Color.Gray,
-                            modifier = Modifier.size(screenWidth * 0.08f) // 화면 너비의 8%로 아이콘 크기 설정
-                        )
-                    }
-                }
-                // 타이틀 부분
-                Text(
-                    text = word.word,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF5A72A0),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = screenHeight * 0.01f), // 화면 높이의 1%로 패딩 설정
-                    textAlign = TextAlign.Center,
-                    fontSize = (screenWidth * 0.06f).value.sp // 화면 너비의 6%로 폰트 크기 설정
-                )
-
-                Spacer(modifier = Modifier.height(screenHeight * 0.02f)) // 화면 높이의 2% 간격
-
-                // 콘텐츠 부분
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(Color.White),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(screenHeight * 0.005f) // 화면 높이의 0.5% 간격
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(
+                                top = screenHeight * 0.02f,
+                                end = screenWidth * 0.04f
+                            ), // 화면 비율로 상단 패딩 설정
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Spacer(modifier = Modifier.weight(1f))
+                        IconButton(onClick = onDismissRequest) {
+                            Icon(
+                                imageVector = Icons.Filled.Close,
+                                contentDescription = "Close",
+                                tint = Color.Gray,
+                                modifier = Modifier.size(screenWidth * 0.08f) // 화면 너비의 8%로 아이콘 크기 설정
+                            )
+                        }
+                    }
+                    // 타이틀 부분
                     Text(
-                        text = word.createdAt.toCalendarDateString(),
-                        color = Color(0xFF49566F),
-                        fontSize = (screenWidth * 0.05f).value.sp, // 화면 너비의 5%로 폰트 크기 설정
-                        textAlign = TextAlign.Center
-                    )
-
-                    Image(
-                        painter = rememberAsyncImagePainter(word.org),
-                        contentDescription = "Original Image",
+                        text = word.word,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF5A72A0),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(screenHeight * 0.2f)
-                        , // 화면 높이의 30%로 이미지 높이 설정
-                        contentScale = ContentScale.Fit
+                            .padding(top = screenHeight * 0.01f), // 화면 높이의 1%로 패딩 설정
+                        textAlign = TextAlign.Center,
+                        fontSize = (screenWidth * 0.06f).value.sp // 화면 너비의 6%로 폰트 크기 설정
                     )
 
-                    Image(
-                        painter = rememberAsyncImagePainter(word.url),
-                        contentDescription = "Transcription Image",
+                    Spacer(modifier = Modifier.height(screenHeight * 0.02f)) // 화면 높이의 2% 간격
+
+                    // 콘텐츠 부분
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(screenHeight * 0.2f)
-                        , // 화면 높이의 24%로 이미지 높이 설정
-                        contentScale = ContentScale.Fit
-                    )
+                            .background(Color.White),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(screenHeight * 0.005f) // 화면 높이의 0.5% 간격
+                    ) {
+                        Text(
+                            text = word.createdAt.toCalendarDateString(),
+                            color = Color(0xFF49566F),
+                            fontSize = (screenWidth * 0.05f).value.sp, // 화면 너비의 5%로 폰트 크기 설정
+                            textAlign = TextAlign.Center
+                        )
+
+                        Image(
+                            painter = rememberAsyncImagePainter(word.org),
+                            contentDescription = "Original Image",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(screenHeight * 0.2f), // 화면 높이의 30%로 이미지 높이 설정
+                            contentScale = ContentScale.Fit
+                        )
+
+                        Image(
+                            painter = rememberAsyncImagePainter(word.url),
+                            contentDescription = "Transcription Image",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(screenHeight * 0.2f), // 화면 높이의 24%로 이미지 높이 설정
+                            contentScale = ContentScale.Fit
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(screenHeight * 0.02f)) // 화면 높이의 2% 간격
                 }
-
-                Spacer(modifier = Modifier.height(screenHeight * 0.02f)) // 화면 높이의 2% 간격
             }
         }
     }
