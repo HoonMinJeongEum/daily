@@ -288,9 +288,6 @@ public class UserService {
         Member orgMember = memberRepository.findById(memberId)
                 .orElseThrow(() -> new EmptyResultDataAccessException("해당 프로필을 찾을 수 없습니다.", 1));
 
-        String orgImg = s3UploadService.getFileNameFromUrl(orgMember.getImg());
-        s3UploadService.deleteImage(orgImg);
-
         String imageUrl = null;
         try {
             imageUrl = s3UploadService.saveFile(file);
