@@ -51,6 +51,11 @@ import com.example.diaryApp.viewmodel.WordViewModel
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.LaunchedEffect
+import com.example.diaryApp.domain.RetrofitClient
+import com.example.diaryApp.ui.components.BasicModal
+import com.example.diaryApp.ui.theme.DeepPastelBlue
+import com.example.diaryApp.ui.theme.DeepPastelNavy
+import com.example.diaryApp.ui.theme.PastelNavy
 
 @Composable
 fun MainScreen(
@@ -72,6 +77,7 @@ fun MainScreen(
     var showQuizConfirmDialog by remember { mutableStateOf(false) }
     var sessionId by remember { mutableStateOf<String?>(null) }
     var childName by remember { mutableStateOf<String?>(null) }
+    var logoutModal by remember { mutableStateOf(false) }
 
     BoxWithConstraints(
         modifier = Modifier
@@ -93,7 +99,10 @@ fun MainScreen(
                 navController = navController,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .wrapContentHeight()
+                    .wrapContentHeight(),
+                onClick = {
+                    logoutModal = true
+                }
             )
         }
         Box(
@@ -149,6 +158,23 @@ fun MainScreen(
                 onDismiss = { showQuizAlert = false }
             )
         }
+
+
+        BasicModal(
+            screenWidth = screenWidth,
+            isDialogVisible = logoutModal,
+            onDismiss = { logoutModal = false },
+            onSuccessClick = {
+                RetrofitClient.logout()
+                navController.navigate("login") {
+                    popUpTo("main") { inclusive = true }
+                }
+            },
+            mainText = "로그아웃 하시겠습니까?",
+            buttonText = "로그아웃",
+            successButtonColor = PastelNavy
+        )
+
     }
 }
 

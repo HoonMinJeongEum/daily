@@ -40,6 +40,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -154,7 +155,25 @@ fun DiaryDetailScreen(
                         Spacer(modifier = Modifier.height(screenWidth * 0.04f))
 
                     }
-
+                    item {
+                        if (comments.value.isEmpty()) {
+                            Box(
+                                modifier = Modifier
+                                    .size(screenWidth * 0.4f)
+                                    .align(Alignment.Center),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "댓글이 없습니다.",
+                                    style = MyTypography.bodyLarge.copy(
+                                        fontSize = (screenWidth.value * 0.045f).sp,
+                                        color = Color.Gray // 색상 지정
+                                    ),
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
+                    }
                     items(comments.value.size) { index ->
                         val comment = comments.value[index]
                         Row(

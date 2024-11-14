@@ -80,12 +80,14 @@ fun TabletHeader(
                             containerColor = DeepPastelBlue, // 배경색
                             contentColor = Color.White //
                         ),
-                        onClick = {
-                        RetrofitClient.logout()
-                        navController.navigate("login") {
-                            popUpTo("main") { inclusive = true }
-                        }
-                    }) {
+//                        onClick = {
+//                        RetrofitClient.logout()
+//                        navController.navigate("login") {
+//                            popUpTo("main") { inclusive = true }
+//                        }
+//                }
+                        onClick = onClick
+                    ) {
                         Text( text = "로그아웃",
                             style = MyTypography.bodyMedium.copy(
                                 color = Color.White,

@@ -77,6 +77,7 @@ fun CreateProfile(
     var showWarning by remember { mutableStateOf(false) }
     var warningMessage by remember { mutableStateOf("") }
     var selectedImageUri by remember { mutableStateOf<android.net.Uri?>(null) }
+    val isLoading by profileViewModel.isLoading
 
     Dialog(onDismissRequest = { onCancel() }) {
         Surface(
@@ -207,35 +208,37 @@ fun CreateProfile(
                 Spacer(modifier = Modifier.height(screenHeight * 0.02f))
 
                 DailyButton(
-                    text = "추가",
+                    text = if (isLoading) "보내는 중..." else "추가",
                     fontSize = (screenWidth * 0.05f).value.toInt(),
                     textColor = Color.White,
                     fontWeight = FontWeight.Normal,
-                    backgroundColor = PastelSkyBlue,
+                    backgroundColor = if (isLoading) Color.Gray else PastelSkyBlue,
                     cornerRadius = 50,
                     width = (screenWidth * 0.25f).value.toInt(),
                     height = (screenHeight * 0.06f).value.toInt(),
                     onClick = {
-                        if (profileViewModel.memberName.value.isBlank()) {
-                            showWarning = true
-                            warningMessage = "이름을 입력해주세요."
-                        } else if (profileViewModel.memberImg.value == null) {
-                            showWarning = true
-                            warningMessage = "프로필 이미지를 선택해주세요."
-                        } else {
-                            profileViewModel.addProfile(
-                                onSuccess = {
-                                    Log.d("CreateProfile", "Profile creation successful")
-                                    onCancel()
-                                },
-                                onError = {
-                                    showWarning = true
-                                    warningMessage = "프로필 추가에 실패했습니다. 다시 시도해 주세요."
-                                }
-                            )
+                        if (!isLoading) {
+                            if (profileViewModel.memberName.value.isBlank()) {
+                                showWarning = true
+                                warningMessage = "이름을 입력해주세요."
+                            } else if (profileViewModel.memberImg.value == null) {
+                                showWarning = true
+                                warningMessage = "프로필 이미지를 선택해주세요."
+                            } else {
+                                profileViewModel.addProfile(
+                                    onSuccess = {
+                                        Log.d("CreateProfile", "Profile creation successful")
+                                        onCancel()
+                                    },
+                                    onError = {
+                                        showWarning = true
+                                        warningMessage = "프로필 추가에 실패했습니다. 다시 시도해 주세요."
+                                    }
+                                )
+                            }
                         }
                     },
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
                 )
                 Spacer(modifier = Modifier.height(screenHeight * 0.02f))
 

@@ -107,15 +107,6 @@ fun LoginScreen(
                 height = screenHeight,
                 imeAction = ImeAction.Done,
                 onImeAction = {
-                    loginViewModel.login(
-                        onSuccess = {
-                            navController.navigate("main") {
-                                popUpTo("login") { inclusive = true }
-                            }
-                        },
-                        onErrorPassword = { isError = true },
-                        onError = { isError = true }
-                    )
                     focusManager.clearFocus()
                 },
 

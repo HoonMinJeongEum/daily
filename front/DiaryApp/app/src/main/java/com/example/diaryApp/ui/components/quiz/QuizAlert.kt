@@ -34,8 +34,8 @@ fun QuizAlert(
     ) {
         BoxWithConstraints(
             modifier = Modifier
-                .fillMaxWidth(0.7f)
-                .fillMaxHeight(0.25f),
+                .fillMaxWidth(0.8f)
+                .fillMaxHeight(0.2f),
             contentAlignment = Alignment.Center
         ) {
             val boxHeight = with(LocalDensity.current) { maxHeight.toPx() }
