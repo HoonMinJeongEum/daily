@@ -94,7 +94,6 @@ io.on("connection", (socket) => {
     const { checkWord } = JSON.parse(data);
     const isCorrect =
       checkWord.trim().toLowerCase() === roomData[socket.roomId].word.trim().toLowerCase(); 
-    console.log(`방 ${socket.roomId}에서 단어 확인 요청: ${checkWord}, 정답 여부: ${isCorrect}`);
     io.to(socket.roomId).emit("checkWord", isCorrect);
   });
 
@@ -117,8 +116,6 @@ io.on("connection", (socket) => {
       delete roomData[socket.roomId];
     }
     socket.to(socket.roomId).emit("userDisconnected");
-
-    console.log("JWT 토큰을 수신하였습니다:", roomData[socket.roomId].jwtToken);
 
     try {
       await sendEndSessionRequest(roomData[socket.roomId].jwtToken); // 기존 JWT 토큰으로 요청 시도
