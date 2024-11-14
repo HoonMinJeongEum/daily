@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -153,8 +154,26 @@ public class CouponService {
     public List<ChildCouponResponse> getChildCoupons(CustomUserDetails userDetails) {
         int familyId = userDetails.getFamily().getId();
 
+//        return memberRepository.findByFamilyId(familyId).stream()
+//                .flatMap(member -> earnedCouponRepository.findByMemberIdWithSorting(member.getId()).stream())
+//                .map(ChildCouponResponse::new)
+//                .collect(Collectors.toList());
         return memberRepository.findByFamilyId(familyId).stream()
-                .flatMap(member -> earnedCouponRepository.findByMemberIdWithSorting(member.getId()).stream())
+                .flatMap(member -> earnedCouponRepository.findByMemberId(member.getId()).stream())
+                .sorted((ec1, ec2) -> {
+                    // usedAt이 null인 경우를 우선적으로 정렬
+                    if (ec1.getUsedAt() == null && ec2.getUsedAt() != null) {
+                        return -1;
+                    } else if (ec1.getUsedAt() != null && ec2.getUsedAt() == null) {
+                        return 1;
+                    } else if (ec1.getUsedAt() == null) {
+                        // 둘 다 usedAt이 null인 경우 createdAt 기준으로 최신 순으로 정렬
+                        return ec2.getCoupon().getCreatedAt().compareTo(ec1.getCoupon().getCreatedAt());
+                    } else {
+                        // 둘 다 usedAt이 있는 경우 최신 사용일 순으로 정렬
+                        return ec2.getUsedAt().compareTo(ec1.getUsedAt());
+                    }
+                })
                 .map(ChildCouponResponse::new)
                 .collect(Collectors.toList());
     }

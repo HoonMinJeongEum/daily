@@ -16,9 +16,9 @@ public interface EarnedCouponRepository extends JpaRepository<EarnedCoupon, Long
 
     List<EarnedCoupon> findByMemberIdAndUsedAtIsNull(int memberId);
 
-    @Query("SELECT ec FROM EarnedCoupon ec " +
-            "WHERE ec.member.id = :memberId " +
-            "ORDER BY ec.usedAt NULLS FIRST, " +
-            "COALESCE(ec.usedAt, ec.coupon.purchasedAt) DESC")
-    List<EarnedCoupon> findByMemberIdWithSorting(@Param("memberId") int memberId);
+//    @Query("SELECT ec FROM EarnedCoupon ec " +
+//            "WHERE ec.member.id = :memberId " +
+//            "ORDER BY ec.usedAt NULLS FIRST, " +
+//            "COALESCE(ec.usedAt, ec.coupon.purchasedAt) DESC")
+//    List<EarnedCoupon> findByMemberIdWithSorting(@Param("memberId") int memberId);
 }
