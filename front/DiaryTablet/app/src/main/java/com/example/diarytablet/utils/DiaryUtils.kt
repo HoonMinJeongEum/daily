@@ -9,6 +9,8 @@ import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
 import android.media.MediaScannerConnection
 import android.os.Environment
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -36,7 +38,10 @@ import com.arthenica.ffmpegkit.FFmpegKit
 import com.example.diarytablet.R
 import com.example.diarytablet.model.ToolType
 import createPaintForTool
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -57,7 +62,6 @@ suspend fun loadBitmapFromUrl(url: String): Bitmap? = withContext(Dispatchers.IO
     }
 }
 
-// DiaryScreen.kt의 일부
 @Composable
 fun DrawingPlaybackView(
     drawingSteps: List<DrawingStep>,
@@ -66,7 +70,7 @@ fun DrawingPlaybackView(
     templateWidth: Int,
     templateHeight: Int,
     onVideoReady: () -> Unit
-    ) {
+) {
     val overlayBitmap = remember {
         Bitmap.createBitmap(templateWidth, templateHeight, Bitmap.Config.ARGB_8888)
     }
@@ -84,7 +88,6 @@ fun DrawingPlaybackView(
     LaunchedEffect(drawingSteps) {
         overlayCanvas.drawColor(android.graphics.Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
 
-        // 한 번에 그릴 path의 개수
         val batchStepCount = 15
         var currentStepIndex = 0
         var frameCounter = 0
@@ -99,14 +102,11 @@ fun DrawingPlaybackView(
                     paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR)
                 }
 
-                // 각 step의 path를 overlayCanvas에 추가하여 그리기
                 currentPath.addPath(step.path)
                 overlayCanvas.drawPath(step.path.asAndroidPath(), paint)
-
                 currentStepIndex++
             }
 
-            // batchStepCount 만큼 그린 후, 프레임 비트맵을 저장
             val frameBitmap = Bitmap.createBitmap(templateWidth, templateHeight, Bitmap.Config.ARGB_8888)
             val frameCanvas = AndroidCanvas(frameBitmap)
             drawToBitmap(frameCanvas, overlayBitmap, templateWidth, templateHeight, context)
@@ -115,15 +115,17 @@ fun DrawingPlaybackView(
             saveBitmapToFile(frameBitmap, frameFile)
             frameCounter++
 
-            // 지연 시간을 두고 다시 그리기
-            delay(50) // 지연 시간 조정하여 속도 제어
+            delay(10)
         }
 
-        // 모든 프레임을 비디오로 결합
-        createVideoFromFrames(context, outputDir, videoFile)
-        scanFile(context, videoFile)
-        onVideoReady()
+        // createVideoFromFrames에 onVideoReady를 콜백으로 전달
+        createVideoFromFrames(context, outputDir, videoFile) {
+            onVideoReady() // 작업 완료 후 호출
+        }
     }
+
+
+
 
     // Box로 캔버스 및 템플릿과 그려진 경로를 포함한 UI 구성
     Box(
@@ -150,6 +152,8 @@ fun DrawingPlaybackView(
         }
     }
 }
+
+
 
 
 
@@ -193,13 +197,28 @@ fun saveBitmapToFile(bitmap: Bitmap, file: File): Boolean {
 }
 
 
-// 동영상 생성 함수
-fun createVideoFromFrames(context: Context, framesDir: File, outputFile: File) {
+//// 동영상 생성 함수
+//fun createVideoFromFrames(context: Context, framesDir: File, outputFile: File) {
+//    val command = "-y -framerate 30 -i ${framesDir.absolutePath}/frame_%d.png -c:v mpeg4 -qscale:v 2 -pix_fmt yuv420p ${outputFile.absolutePath}"
+//
+//    FFmpegKit.executeAsync(command) { session ->
+//        if (session.returnCode.isValueSuccess) {
+//            Log.d("DrawingPlaybackView", "Video created successfully at: ${outputFile.absolutePath}")
+//        } else {
+//            Log.e("DrawingPlaybackView", "Failed to create video: ${session.output}")
+//        }
+//    }
+//}
+fun createVideoFromFrames(context: Context, framesDir: File, outputFile: File, onComplete: () -> Unit) {
     val command = "-y -framerate 30 -i ${framesDir.absolutePath}/frame_%d.png -c:v mpeg4 -qscale:v 2 -pix_fmt yuv420p ${outputFile.absolutePath}"
 
     FFmpegKit.executeAsync(command) { session ->
         if (session.returnCode.isValueSuccess) {
             Log.d("DrawingPlaybackView", "Video created successfully at: ${outputFile.absolutePath}")
+            // UI 스레드에서 안전하게 onVideoReady 호출
+            Handler(Looper.getMainLooper()).post {
+                onComplete()
+            }
         } else {
             Log.e("DrawingPlaybackView", "Failed to create video: ${session.output}")
         }
