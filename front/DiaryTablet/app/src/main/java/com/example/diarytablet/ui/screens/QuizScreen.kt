@@ -90,6 +90,7 @@ fun QuizScreen(
     var isQuizStartEnabled by remember { mutableStateOf(false) }
     val pathStyle by viewModel.pathStyle.observeAsState()
     var isQuizAlertVisible by remember { mutableStateOf(false) }
+    var selectedImage by remember { mutableStateOf("pen") }
 
     LaunchedEffect(isParentJoined) {
         if (isParentJoined) {
@@ -268,7 +269,8 @@ fun QuizScreen(
                                     DrawingColorPalette(
                                         modifier = Modifier
                                             .weight(2f),
-                                        onColorChanged = { viewModel.updateColor(it) }
+                                        onColorChanged = { viewModel.updateColor(it) },
+                                        isPenSelected = (selectedImage == "pen")
                                     )
                                     DrawingThicknessSelector(
                                         modifier = Modifier
@@ -282,7 +284,6 @@ fun QuizScreen(
                                         horizontalArrangement = Arrangement.SpaceEvenly,
                                         verticalAlignment = Alignment.CenterVertically
                                     ){
-                                        var selectedImage by remember { mutableStateOf("pen") }
                                         val penScale by animateFloatAsState(targetValue = if (selectedImage == "pen") 1.2f else 1f)
                                         val eraserScale by animateFloatAsState(targetValue = if (selectedImage == "eraser") 1.2f else 1f)
                                         val penColor = remember { mutableStateOf(Color.Black) }
