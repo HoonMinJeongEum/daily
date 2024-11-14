@@ -36,6 +36,7 @@ import com.example.diarytablet.ui.components.modal.CommonModal
 import com.example.diarytablet.ui.theme.BackgroundPlacement
 import com.example.diarytablet.ui.theme.BackgroundType
 import com.example.diarytablet.viewmodel.MainViewModel
+import com.example.diarytablet.viewmodel.SpenEventViewModel
 import com.example.diarytablet.viewmodel.WordLearningViewModel
 import com.samsung.android.sdk.penremote.AirMotionEvent
 import com.samsung.android.sdk.penremote.ButtonEvent
@@ -104,7 +105,6 @@ fun WordLearningScreen(
 
             Spacer(modifier = Modifier.height(20.dp)) // 상단 텍스트와 WordTap 간격
 
-            // WordTap 수직 중앙 배치
             WordTap(
                 wordList = wordList,
                 modifier = Modifier.align(Alignment.CenterHorizontally),

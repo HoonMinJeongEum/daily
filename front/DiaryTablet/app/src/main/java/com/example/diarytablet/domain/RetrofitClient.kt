@@ -158,8 +158,10 @@ object RetrofitClient {
             // 로컬 토큰 삭제
             accessToken = null
             refreshToken = null
-            userStore.setValue(UserStore.KEY_ACCESS_TOKEN, "")
-            userStore.setValue(UserStore.KEY_REFRESH_TOKEN, "")
+            userStore.clearValue(UserStore.KEY_ACCESS_TOKEN)
+            userStore.clearValue(UserStore.KEY_REFRESH_TOKEN)
+            userStore.clearValue(UserStore.KEY_USER_NAME)
+            userStore.clearValue(UserStore.KEY_PASSWORD)
         }
     }
 

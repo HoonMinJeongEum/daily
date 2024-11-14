@@ -9,6 +9,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -29,6 +31,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -58,8 +61,11 @@ fun LoginScreen(
     loginViewModel: LoginViewModel = hiltViewModel(),
     backgroundType: BackgroundType = BackgroundType.DEFAULT
 ) {
+    var isPasswordVisible by remember { mutableStateOf(false) }
     var isError by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
+    val focusManager = LocalFocusManager.current
+
     BackgroundPlacement(backgroundType = backgroundType)
 
 
@@ -171,8 +177,25 @@ fun LoginScreen(
                             color = GrayText
                         )
                     },
+                    trailingIcon = {
+                        IconButton(
+                            modifier = Modifier
+                                .padding(end = screenWidth * 0.02f)
+                            ,
+                            onClick = { isPasswordVisible = !isPasswordVisible }) {
+
+                            Icon(
+
+                                painter = painterResource(
+                                    if (isPasswordVisible) R.drawable.ic_visibility else R.drawable.ic_visibility_off
+                                ),
+                                contentDescription = if (isPasswordVisible) "Hide Password" else "Show Password",
+                                tint = GrayText
+                            )
+                        }
+                    },
                     onValueChange = { loginViewModel.password.value = it },
-                    visualTransformation = PasswordVisualTransformation(),
+                    visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(start = screenWidth*0.06f), // Adjust padding for text alignment

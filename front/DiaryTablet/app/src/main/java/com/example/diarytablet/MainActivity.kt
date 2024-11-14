@@ -9,12 +9,14 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.diarytablet.datastore.UserStore
 import com.example.diarytablet.domain.RetrofitClient
 import com.example.diarytablet.domain.dto.request.LoginRequestDto
 import com.example.diarytablet.domain.repository.UserRepository
+//import com.example.diarytablet.utils.CustomGLView
 import com.example.diarytablet.viewmodel.SpenEventViewModel
 import com.samsung.android.sdk.SsdkVendorCheck.isSamsungDevice
 import com.samsung.android.sdk.penremote.ButtonEvent
@@ -39,6 +41,7 @@ class MainActivity : ComponentActivity() {
     private val spenEventViewModel: SpenEventViewModel by viewModels()
     private val TAG = "MainActivity"
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         askForPermissions()
@@ -61,9 +64,10 @@ class MainActivity : ComponentActivity() {
                 "login"
             }
         }
-
+//        val glView = CustomGLView(this)
+//        setContentView(glView)
         setContent {
-            DiaryTabletApp(startDestination = startDestination, spenEventViewModel = spenEventViewModel)
+            DiaryTabletApp(startDestination = startDestination, spenEventViewModel)
         }
     }
 
