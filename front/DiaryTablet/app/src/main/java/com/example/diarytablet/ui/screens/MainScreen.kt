@@ -260,7 +260,7 @@ fun MainScreen(
                 }
                 completedMission?.let { viewModel.completeMissionItem(it) }
             },
-            missionItems = missions
+            missionItems = missionItems
         )
     }
 }
