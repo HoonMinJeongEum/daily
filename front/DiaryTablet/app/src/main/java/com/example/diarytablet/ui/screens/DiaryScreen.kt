@@ -103,7 +103,7 @@ fun DiaryScreen(
     var isVideoReady by remember { mutableStateOf(false)}
 
     var selectedColor by remember { mutableStateOf(Color.Black) }
-    var brushSize by remember { mutableFloatStateOf(5f) }
+    var brushSize by remember { mutableFloatStateOf(10f) }
     var selectedTool by remember { mutableStateOf(ToolType.PENCIL) }
 
     val configuration = LocalConfiguration.current
