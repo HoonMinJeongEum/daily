@@ -93,8 +93,11 @@ fun AlarmItem(
                     Text(text = alarm.title, fontSize = (screenWidth.value * 0.045f).sp, color = DeepPastelBlue)
                     if (alarm.title == "그림 퀴즈") {
                         Text(text = " 요청", fontSize = (screenWidth.value * 0.04f).sp, color = DarkGray)
-                    } else {
+                    } else if(alarm.title == "그림 일기"){
                         Text(text = " 업로드", fontSize = (screenWidth.value * 0.04f).sp, color = DarkGray)
+                    }
+                    else {
+                        Text(text = " 구매", fontSize = (screenWidth.value * 0.04f).sp, color = DarkGray)
                     }
                 }
                 Spacer(modifier = Modifier.height(screenHeight * 0.015f))
@@ -108,12 +111,15 @@ fun AlarmItem(
                     .weight(0.3f)
                     .padding(end = screenWidth * 0.04f)
             ) {
+                
                 Button(
                     modifier = Modifier
                         .weight(0.2f),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = DeepPastelBlue, // 배경색
-                        contentColor = Color.White // 텍스트 색상 (필요에 따라 변경 가능)
+                        contentColor = Color.White, // 텍스트 색상 (필요에 따라 변경 가능)
+                        disabledContainerColor = Color.LightGray, // 비활성화 상태 배경색
+                        disabledContentColor = Color.White
                     ),
                     onClick = {
                         if (alarm.title == "그림 퀴즈") {
@@ -121,10 +127,16 @@ fun AlarmItem(
                                 quizViewModel.checkSession(
                                     alarm.name,
                                     onShowQuizAlert = { newSessionId ->
-                                    onShowQuizAlert(newSessionId, alarm.name)
-                                })
+                                        onShowQuizAlert(newSessionId, alarm.name)
+                                    })
                             }
-                        } else {
+                        }
+                        else if(alarm.title == "쿠폰") {
+                            // 상점 탭 전환
+                            alarmViewModel.checkAlarm(alarm.id)
+                            navController.navigate("shop")
+                        }
+                        else {
                             diaryViewModel.memberName.value = alarm.name
                             alarmViewModel.checkAlarm(alarm.id)
                             navController.navigate("diary/${alarm.titleId}")
@@ -141,11 +153,16 @@ fun AlarmItem(
                     } else {
                         if (alarm.title == "그림 퀴즈") {
                             Text(text = "수락", fontSize = (screenWidth.value * 0.04f).sp, fontFamily = myFontFamily)
-                        } else {
+                        }
+                        else if (alarm.title == "쿠폰"){
+                            Text(text = "확인", fontSize = (screenWidth.value * 0.04f).sp, fontFamily = myFontFamily)
+                        }
+                        else {
                             Text(text = "입장", fontSize = (screenWidth.value * 0.04f).sp, fontFamily = myFontFamily)
                         }
                     }
                 }
+
             }
         }
     }

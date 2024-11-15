@@ -65,6 +65,7 @@ import androidx.compose.ui.text.withStyle
 import com.example.diaryApp.ui.components.quiz.Alert
 import com.example.diaryApp.ui.components.quiz.ToggleAudioButton
 import com.example.diaryApp.ui.components.quiz.ToggleMicButton
+import com.example.diaryApp.ui.theme.DeepPastelBlue
 
 enum class QuizModalState {
     NONE,
@@ -330,6 +331,9 @@ fun CatchMindScreen(
                             },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color(0xFF5A72A0),
+                                contentColor = Color.White,
+                                disabledContainerColor = Color.LightGray, // 비활성화 상태 배경색
+                                disabledContentColor = Color.White
                             ),
                             enabled = isWordSelected && inputWord.isNotBlank(),
                             shape = RoundedCornerShape(5.dp),
