@@ -26,12 +26,14 @@ import com.example.diarytablet.ui.components.MissionBar
 import com.example.diarytablet.ui.components.MissionItem
 import com.example.diarytablet.ui.components.Navbar
 import com.example.diarytablet.ui.components.main.TypingText
+import com.example.diarytablet.ui.components.modal.CommonPopup
 import com.example.diarytablet.ui.theme.BackgroundPlacement
 import com.example.diarytablet.ui.theme.BackgroundType
 import com.example.diarytablet.viewmodel.MainViewModel
 import com.example.diarytablet.ui.components.modal.MissionModal
 import com.example.diarytablet.ui.theme.DarkGray
 import com.example.diarytablet.ui.theme.PastelNavy
+import com.example.diarytablet.viewmodel.DiaryViewModel
 
 
 @Composable
@@ -43,6 +45,7 @@ fun MainScreen(
     BackgroundPlacement(backgroundType = backgroundType)
 
     var isModalVisible by remember { mutableStateOf(false) }
+    var isPopupVisible by remember { mutableStateOf(false) }
     val isFinished by viewModel.isFinished
     val origin = viewModel.origin
     val missions = viewModel.missions
@@ -234,10 +237,18 @@ fun MainScreen(
                 isModalVisible = false
             },
             onDrawingDiaryClick = {
-                navController.navigate("diary") {
-                    popUpTo("main") { inclusive = true }
+                // "그림 일기" 미션 상태 확인
+                val diaryMission = missions.find { it.text == "그림 일기" }
+                if (diaryMission?.isSuccess == true) {
+                    // 일기 미션이 완료되었을 경우 팝업만 표시하고 이동 차단
+                    isPopupVisible = true
+                } else {
+                    // 미션이 완료되지 않았을 경우에만 DiaryScreen으로 이동
+                    navController.navigate("diary") {
+                        popUpTo("main") { inclusive = true }
+                    }
+                    isModalVisible = false
                 }
-                isModalVisible = false
             },
             onDrawingQuizClick = {
                 navController.navigate("quiz") {
@@ -246,7 +257,14 @@ fun MainScreen(
                 isModalVisible = false
             }
         )
-
+        if (isPopupVisible) {
+            CommonPopup(
+                onDismissRequest = {
+                    isPopupVisible = false
+                },
+                titleText = "일기는 하루에 한번 만 쓸수 있어요!!"
+            )
+        }
         // MissionModal
         MissionModal(
             isDialogVisible = isFinished,
