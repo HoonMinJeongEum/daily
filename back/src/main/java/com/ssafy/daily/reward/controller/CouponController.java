@@ -38,7 +38,7 @@ public class CouponController {
 
     // 쿠폰 구매
     @PostMapping("/buy")
-    public ResponseEntity<?> buyCoupon(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody BuyCouponRequest request) {
+    public ResponseEntity<?> buyCoupon(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody BuyCouponRequest request) throws Exception {
         return ResponseEntity.ok(couponService.buyCoupon(userDetails, request));
     }
 
