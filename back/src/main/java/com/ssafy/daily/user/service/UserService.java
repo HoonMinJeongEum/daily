@@ -270,7 +270,7 @@ public class UserService {
         shellRepository.deleteByMemberId(memberId);
         earnedStickerRepository.deleteByMemberId(memberId);
         quizRepository.deleteByMemberId(memberId);
-        memberRepository.deleteById(memberId);
+
         
         // 알림 삭제
         Member member = memberRepository.findById(memberId).orElseThrow(() -> new IllegalArgumentException("Member not found for id: " + memberId));
@@ -279,6 +279,7 @@ public class UserService {
         if (fcmToken != null) {
             alarmRepository.deleteByNameAndFcmToken_Id(member.getName(), fcmToken.getId());
         }
+        memberRepository.deleteById(memberId);
     }
 
     @Transactional
