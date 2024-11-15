@@ -115,10 +115,12 @@ class WordLearningViewModel @Inject constructor(
     private suspend fun mergeBitmapWithTemplate(
         context: Context,
         drawnBitmap: Bitmap,
-        width: Int = 1500,
-        height: Int = 800
+
     ): Bitmap = withContext(Dispatchers.IO) {
         // 템플릿 생성
+        val width = (drawnBitmap.width * 1.5).toInt() // 예: 드로잉 비트맵의 1.5배 크기
+        val height = (drawnBitmap.height * 1.2).toInt()
+
         val templateBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).apply {
             eraseColor(AndroidColor.WHITE) // 템플릿 배경을 흰색으로 설정
         }
@@ -154,23 +156,6 @@ class WordLearningViewModel @Inject constructor(
         MultipartBody.Part.createFormData("writeFile", file.name, requestFile)
     }
 
-//
-//    private suspend fun saveBitmapToFile(context: Context, bitmap: Bitmap, fileName: String): File {
-//        return withContext(Dispatchers.IO) {
-//            val file = File(context.cacheDir, fileName)
-//            file.outputStream().use { out ->
-//                bitmap.compress(Bitmap.CompressFormat.JPEG, 80, out)
-//                out.flush()
-//            }
-//            file
-//        }
-//    }
-//
-//    private fun createMultipartBodyPart(file: File, paramName: String): MultipartBody.Part {
-//        val requestFile = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
-//        return MultipartBody.Part.createFormData(paramName, file.name, requestFile)
-//    }
-//
 suspend fun finishWordLearning() {
     isLoading.value = true
     withContext(Dispatchers.IO) {
@@ -196,68 +181,5 @@ suspend fun finishWordLearning() {
     }
 }
 //
-//    suspend fun savePageImagesWithTemplate(bitmapsList: List<Bitmap>, context: Context): List<File> {
-//        return withContext(Dispatchers.IO) {
-//            bitmapsList.mapIndexed { index, drawingBitmap ->
-//                // 박스 배경, 템플릿, 그림판의 크기를 동일하게 설정
-//                val targetWidth = 2000
-//                val targetHeight = 1500
 //
-//                // 박스 배경 이미지 불러와서 크기 조정
-//                val boxBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.diary_box)
-//                val resizedBoxBitmap = Bitmap.createScaledBitmap(boxBitmap, targetWidth, targetHeight, true)
-//
-//                // 템플릿 이미지 불러와서 크기 조정
-//                val templateBitmap = if (index == 0) {
-//                    BitmapFactory.decodeResource(context.resources, R.drawable.draw_template)
-//                } else {
-//                    BitmapFactory.decodeResource(context.resources, R.drawable.write_template)
-//                }
-//                val resizedTemplateBitmap = Bitmap.createScaledBitmap(templateBitmap, targetWidth, targetHeight, true)
-//
-//                // 그림판 이미지 크기 조정
-//                val resizedDrawingBitmap = Bitmap.createScaledBitmap(drawingBitmap, targetWidth, targetHeight, true)
-//
-//                // 같은 크기의 새로운 비트맵 생성
-//                val combinedBitmap = Bitmap.createBitmap(targetWidth, targetHeight, Bitmap.Config.ARGB_8888)
-//                val canvas = Canvas(combinedBitmap)
-//
-//                // 박스 이미지 그리기
-//                canvas.drawBitmap(resizedBoxBitmap, 0f, 0f, null)
-//
-//                // 그림판 그리기
-//                canvas.drawBitmap(resizedDrawingBitmap, 0f, 0f, null)
-//
-//                // 템플릿 그리기
-//                canvas.drawBitmap(resizedTemplateBitmap, 0f, 0f, null)
-//
-//                // 이미지 크기 줄이기
-//                val finalBitmap = resizeBitmap(combinedBitmap, 1000, 750)
-//
-//                // 압축하여 파일로 저장
-//                val file = File(context.filesDir, "drawing_combined_$index.jpg")
-//                compressBitmap(finalBitmap, file, quality = 50)
-//
-//                if (file.exists()) {
-//                    Log.d("DiaryScreen", "File created successfully: ${file.absolutePath}")
-//                } else {
-//                    Log.e("DiaryScreen", "File creation failed: ${file.absolutePath}")
-//                }
-//
-//                file // 파일 반환
-//            }
-//        }
-//    }
-//
-//    // 해상도를 조절하는 함수
-//    fun resizeBitmap(bitmap: Bitmap, width: Int, height: Int): Bitmap {
-//        return Bitmap.createScaledBitmap(bitmap, width, height, true)
-//    }
-//
-//    // 품질을 낮춰서 압축하는 함수
-//    fun compressBitmap(bitmap: Bitmap, outputFile: File, quality: Int = 30) {
-//        FileOutputStream(outputFile).use { out ->
-//            bitmap.compress(Bitmap.CompressFormat.JPEG, quality, out)
-//        }
-//    }
 }

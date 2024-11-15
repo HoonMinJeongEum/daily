@@ -2,6 +2,8 @@ import android.util.Log
 import android.util.MutableBoolean
 import android.widget.Toast
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -256,11 +258,24 @@ fun LoginScreen(
                 }
                 Spacer(modifier = Modifier.weight(1f)) // Space between error message and checkbox
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(
-                        checked = loginViewModel.autoLogin.value,
-                        onCheckedChange = { isChecked ->
-                            loginViewModel.autoLogin.value = isChecked },
-                    )
+                    Box(
+                        modifier = Modifier
+                            .background(Color.White) // 흰색 배경
+                            .size(screenWidth * 0.02f)
+
+                    ) {
+                        Checkbox(
+                            checked = loginViewModel.autoLogin.value,
+                            onCheckedChange = { isChecked ->
+                                loginViewModel.autoLogin.value = isChecked
+                            },
+                            colors = CheckboxDefaults.colors(
+                                checkmarkColor = DeepPastelNavy, // 체크 표시 색상 (필요하면 변경)
+                                uncheckedColor = Color.White, // 체크되지 않은 상태의 색상
+                            )
+                        )
+                    }
+                    Spacer(modifier = Modifier.width( screenWidth *0.015f))
 
                     Text(
                         text = "자동 로그인",

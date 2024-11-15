@@ -417,7 +417,7 @@ fun DrawCanvas(
     var lastX by remember { mutableStateOf(0f) }
     var lastY by remember { mutableStateOf(0f) }
 
-    // Convert Bitmap to ImageBitmap to update UI
+    // Bitmap을 Compose에서 사용할 수 있는 ImageBitmap으로 변환
     val imageBitmap by rememberUpdatedState(currentBitmap.asImageBitmap())
 
     Canvas(
@@ -426,47 +426,55 @@ fun DrawCanvas(
             .clipToBounds()
             .pointerInput(isDrawingMode) {
                 if (isDrawingMode) {
-                    detectDragGestures(
-                        onDragStart = { offset ->
-                            path.reset()
-                            path.moveTo(offset.x, offset.y)
-                            lastX = offset.x
-                            lastY = offset.y
+                    awaitPointerEventScope {
+                        while (true) {
+                            // 첫 번째 터치 이벤트 대기
+                            val downEvent = awaitPointerEvent()
+                            val position = downEvent.changes.first().position
 
+                            // Path 초기화 및 시작점 설정
+                            path.moveTo(position.x, position.y)
+
+                            // Bitmap에 바로 시작점 그리기
                             val canvas = android.graphics.Canvas(currentBitmap)
                             val paint = createPaintForTool(
                                 ToolType.PENCIL,
                                 Color.Black,
-                                9f
+                                8f
                             )
-                            // 첫 위치에 바로 선을 그리도록 시작점을 추가
-                            canvas.drawPath(path.asAndroidPath(), paint)
-                        },
-                        onDrag = { change, _ ->
-                            path.lineTo(change.position.x, change.position.y)
+                            canvas.drawCircle(position.x, position.y, 2f, paint)
 
-                            // Draw directly on the bitmap
-                            val canvas = android.graphics.Canvas(currentBitmap)
-                            val paint = createPaintForTool(
-                                ToolType.PENCIL,
-                                Color.Black,
-                                9f
-                            )
-                            canvas.drawPath(path.asAndroidPath(), paint)
-                        },
-                        onDragEnd = {
+                            // 드래그 이벤트 추적
+                            var currentPosition = position
+                            while (true) {
+                                val dragEvent = awaitPointerEvent()
+                                val dragChange = dragEvent.changes.first()
+
+                                if (dragChange.pressed) {
+                                    // Path 업데이트
+                                    currentPosition = dragChange.position
+                                    path.lineTo(currentPosition.x, currentPosition.y)
+                                    canvas.drawPath(path.asAndroidPath(), paint)
+                                } else {
+                                    // 터치가 끝나면 루프 종료
+                                    break
+                                }
+                            }
+
+                            // Path 초기화
                             path.reset()
                         }
-                    )
+                    }
                 }
             }
     ) {
         drawIntoCanvas { canvas ->
-            // Draw ImageBitmap converted from the updated Bitmap
+            // Bitmap을 화면에 렌더링
             canvas.drawImage(imageBitmap, Offset(0f, 0f), Paint())
         }
     }
 }
+
 
 
 
