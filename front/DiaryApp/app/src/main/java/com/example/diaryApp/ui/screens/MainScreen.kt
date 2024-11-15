@@ -100,9 +100,7 @@ fun MainScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .wrapContentHeight(),
-                onClick = {
-                    logoutModal = true
-                }
+
             )
         }
         Box(

@@ -17,6 +17,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,15 +29,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.diaryApp.domain.RetrofitClient
+import com.example.diaryApp.ui.components.BasicModal
 import com.example.diaryApp.ui.components.TopLogoImg
 import com.example.diaryApp.ui.theme.BackgroundPlacement
 import com.example.diaryApp.ui.theme.BackgroundType
-import com.example.diaryApp.R
 import com.example.diaryApp.ui.components.DeleteProfileList
 import com.example.diaryApp.ui.components.NavMenu
 import com.example.diaryApp.ui.components.ProfileList
 import com.example.diaryApp.ui.components.TabletHeader
 import com.example.diaryApp.ui.theme.MyTypography
+import com.example.diaryApp.ui.theme.PastelNavy
 import com.example.diaryApp.viewmodel.ProfileViewModel
 
 @Composable
@@ -55,6 +60,8 @@ fun SettingScreen(
         val screenHeight = maxHeight
         val footerHeight = screenWidth / 4.5f
         val textFieldHeight = screenWidth / 5f
+        var logoutModal by remember { mutableStateOf(false) }
+
         Column(
             modifier = Modifier
                 .fillMaxSize(),
@@ -72,6 +79,9 @@ fun SettingScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .wrapContentHeight(),
+                    onClick = {
+                        logoutModal = true
+                    }
                 )
             }
 
@@ -99,5 +109,20 @@ fun SettingScreen(
         ) {
             NavMenu(navController, "setting", "setting")
         }
+        BasicModal(
+            screenWidth = screenWidth,
+            isDialogVisible = logoutModal,
+            onDismiss = { logoutModal = false },
+            onSuccessClick = {
+                RetrofitClient.logout()
+                navController.navigate("login") {
+                    popUpTo("main") { inclusive = true }
+                }
+            },
+            mainText = "로그아웃 하시겠습니까?",
+            buttonText = "로그아웃",
+            successButtonColor = PastelNavy
+        )
+
     }
 }
