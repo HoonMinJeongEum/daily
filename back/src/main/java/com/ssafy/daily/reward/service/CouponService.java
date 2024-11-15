@@ -1,6 +1,8 @@
 package com.ssafy.daily.reward.service;
 
+import com.ssafy.daily.alarm.service.AlarmService;
 import com.ssafy.daily.common.Content;
+import com.ssafy.daily.common.Role;
 import com.ssafy.daily.exception.AlreadyOwnedException;
 import com.ssafy.daily.exception.MyNotFoundException;
 import com.ssafy.daily.exception.InsufficientFundsException;
@@ -30,7 +32,7 @@ public class CouponService {
     private final MemberRepository memberRepository;
     private final FamilyRepository familyRepository;
     private final ShellService shellService;
-
+    private final AlarmService alarmService;
     // 쿠폰 등록
     @Transactional
     public void addCoupon(CustomUserDetails userDetails, AddCouponRequest request) {
@@ -81,7 +83,7 @@ public class CouponService {
 
     // 쿠폰 구매
     @Transactional
-    public int buyCoupon(CustomUserDetails userDetails, BuyCouponRequest request) {
+    public int buyCoupon(CustomUserDetails userDetails, BuyCouponRequest request) throws Exception {
         // 멤버 있는지 확인
         int memberId =  userDetails.getMember().getId();
         Member member = memberRepository.findById(memberId)
@@ -116,6 +118,8 @@ public class CouponService {
         // Shell 로그
         shellService.saveShellLog(member, (-coupon.getPrice()), Content.COUPON);
 
+        // 알림
+        alarmService.sendNotification(member.getName(), String.valueOf(coupon.getId()), userDetails.getFamily().getId(), Role.PARENT, "쿠폰", "구매");
         return shellService.getUserShell(memberId);
     }
 

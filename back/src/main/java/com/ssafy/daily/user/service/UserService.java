@@ -1,5 +1,9 @@
 package com.ssafy.daily.user.service;
 
+import com.ssafy.daily.alarm.entity.FCMToken;
+import com.ssafy.daily.alarm.repository.AlarmRepository;
+import com.ssafy.daily.alarm.service.AlarmService;
+import com.ssafy.daily.common.Role;
 import com.ssafy.daily.diary.entity.Diary;
 import com.ssafy.daily.diary.repository.DiaryCommentRepository;
 import com.ssafy.daily.diary.repository.DiaryRepository;
@@ -63,6 +67,8 @@ public class UserService {
     private final ShellRepository shellRepository;
     private final EarnedStickerRepository earnedStickerRepository;
     private final DiaryCommentRepository diaryCommentRepository;
+    private final AlarmService alarmService;
+    private final AlarmRepository alarmRepository;
 
     public void checkExist(String username){
         Boolean isExist = familyRepository.existsByUsername(username);
@@ -265,6 +271,16 @@ public class UserService {
         earnedStickerRepository.deleteByMemberId(memberId);
         quizRepository.deleteByMemberId(memberId);
         memberRepository.deleteById(memberId);
+        
+        // 알림 삭제
+        Member member = memberRepository.findById(memberId).orElseThrow(() -> new IllegalArgumentException("Member not found for id: " + memberId));
+        FCMToken fcmToken = alarmService.getToken(member.getFamily().getId(), Role.PARENT);
+
+        if (fcmToken != null) {
+            alarmRepository.deleteByNameAndFcmToken_Id(member.getName(), fcmToken.getId());
+        } else {
+            throw new IllegalArgumentException("FCMToken not found for family ID: " + member.getFamily().getId());
+        }
     }
 
     @Transactional

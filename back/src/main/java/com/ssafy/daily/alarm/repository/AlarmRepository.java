@@ -1,6 +1,7 @@
 package com.ssafy.daily.alarm.repository;
 
 import com.ssafy.daily.alarm.entity.Alarm;
+import com.ssafy.daily.alarm.entity.FCMToken;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -18,5 +19,5 @@ public interface AlarmRepository extends JpaRepository<Alarm, Long> {
             "CASE WHEN a.confirmedAt IS NULL THEN a.createdAt END DESC, " +
             "a.confirmedAt DESC")
     List<Alarm> findByFcmTokenIdWithSorting(@Param("fcmTokenId") int fcmTokenId);
-
+    void deleteByNameAndFcmToken_Id(String name, int fcmTokenId);
 }
