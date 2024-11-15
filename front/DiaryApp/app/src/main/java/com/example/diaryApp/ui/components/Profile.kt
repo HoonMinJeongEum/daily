@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -34,6 +35,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -210,113 +212,130 @@ fun DeleteProfileItem(profile: Profile) {
     val profileViewModel: ProfileViewModel = hiltViewModel()
     val coroutineScope = rememberCoroutineScope()
 
-    Box(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxWidth()  // 화면 너비에 맞춰 확장
-            .padding(horizontal = 18.dp, vertical = 10.dp)  // 양옆과 위아래에 여백 설정
-            .height(120.dp),
-        contentAlignment = Alignment.Center
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.setting_profile_container),
-            contentDescription = null,
-            contentScale = ContentScale.FillBounds,
-            modifier = Modifier.fillMaxSize()
-        )
+        val screenWidth = maxWidth
 
-        Row(
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically
+                .fillMaxWidth()  // 화면 너비에 맞춰 확장
+                .padding(horizontal = screenWidth * 0.06f, vertical = screenWidth * 0.04f)  // 양옆과 위아래에 여백 설정
+                .height(screenWidth * 0.3f),
+            contentAlignment = Alignment.Center
         ) {
             Image(
-                painter = rememberAsyncImagePainter(model = profile.img),
-                contentDescription = "Profile Image",
-                contentScale = ContentScale.Crop,
+                painter = painterResource(id = R.drawable.setting_profile_container),
+                contentDescription = null,
+                contentScale = ContentScale.FillBounds,
+                modifier = Modifier.fillMaxSize()
+            )
+
+            Row(
                 modifier = Modifier
-                    .size(80.dp)
-                    .clip(RoundedCornerShape(50.dp))
-                    .border(1.dp, Color.LightGray, RoundedCornerShape(50.dp))
-            )
-
-            Text(
-                text = profile.name,
-                fontSize = 24.sp,
-                color = PastelGreen
-            )
-
-
-            DailyButton(
-                text = "삭제",
-                fontSize = 17,
-                textColor = White,
-                fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
-                backgroundColor = PastelRed,
-                cornerRadius = 30,
-                width = 60,
-                height = 44,
-                shadowElevation = 8.dp,
-                onClick = {
-                    showDialog = true
-                },
-            )
-        }
-    }
-
-    if (showDialog) {
-        Dialog(onDismissRequest = { showDialog = false }) {
-            Surface(
-                shape = RoundedCornerShape(25.dp),
-                color = Color.White,
-                modifier = Modifier.padding(20.dp)
+                    .fillMaxWidth()
+                    .padding(screenWidth * 0.04f),
+                horizontalArrangement = Arrangement.SpaceAround,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(
+                Image(
+                    painter = rememberAsyncImagePainter(model = profile.img),
+                    contentDescription = "Profile Image",
+                    contentScale = ContentScale.Crop,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 36.dp, bottom = 24.dp, start = 18.dp, end = 18.dp)
-                        .background(Color.White),
-                    horizontalAlignment = Alignment.CenterHorizontally
+//                        .weight(1f)
+//                        .fillMaxSize()
+                        .size(screenWidth * 0.17f)
+                        .clip(RoundedCornerShape(50))
+                        .border(1.dp, Color.LightGray, RoundedCornerShape(50))
+                )
+
+                Text(
+                    text = profile.name,
+                    fontSize = (screenWidth.value * 0.06f).sp,
+                    color = PastelGreen,
+                    modifier = Modifier
+                        .weight(1f)
+                        .align(Alignment.CenterVertically),
+                    textAlign = TextAlign.Center
+                )
+
+
+                DailyButton(
+                    text = "삭제",
+                    fontSize = (screenWidth.value * 0.05f).toInt(),
+                    textColor = White,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                    backgroundColor = PastelRed,
+                    cornerRadius = 30,
+                    width = (screenWidth.value * 0.2f).toInt(),
+                    height =(screenWidth.value * 0.15f).toInt(),
+                    shadowElevation = 8.dp,
+                    onClick = {
+                        showDialog = true
+                    },
+                )
+            }
+        }
+
+        if (showDialog) {
+            Dialog(onDismissRequest = { showDialog = false }) {
+                Surface(
+                    shape = RoundedCornerShape(25),
+                    color = Color.White,
+                    modifier = Modifier.padding(screenWidth * 0.02f)
                 ) {
-                    Text(
-                        text = "정말 삭제하시겠습니까?",
-                        color = DeepPastelNavy,
-                        style = MyTypography.bodySmall,
-                        modifier = Modifier.padding(bottom = 24.dp)
-                    )
-
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(
+                                top = screenWidth * 0.12f,
+                                bottom = screenWidth * 0.08f,
+                                start = screenWidth * 0.06f,
+                                end = screenWidth * 0.06f
+                            )                            .background(Color.White),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        DailyButton(
-                            text = "취소",
-                            fontSize = 18,
-                            textColor = Color.White,
-                            fontWeight = FontWeight.SemiBold,
-                            backgroundColor = Gray,
-                            cornerRadius = 35,
-                            width = 80,
-                            height = 50,
-                            onClick = { showDialog = false }
+                        Text(
+                            text = "정말 삭제하시겠습니까?",
+                            color = DeepPastelNavy,
+                            style = MyTypography.bodySmall,
+                            modifier = Modifier.padding(bottom = screenWidth * 0.06f)
                         )
 
-                        DailyButton(
-                            text = "삭제",
-                            fontSize = 18,
-                            textColor = Color.White,
-                            fontWeight = FontWeight.SemiBold,
-                            backgroundColor = PastelRed,
-                            cornerRadius = 35,
-                            width = 80,
-                            height = 50,
-                            onClick = {
-                                coroutineScope.launch {
-                                    profileViewModel.deleteProfile(profile.id)
-                                    showDialog = false
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(screenWidth * 0.04f)
+                        ) {
+                            DailyButton(
+                                text = "취소",
+                                fontSize = (screenWidth.value * 0.06f).toInt(),
+                                textColor = Color.White,
+                                fontWeight = FontWeight.SemiBold,
+                                backgroundColor = Gray,
+                                cornerRadius = 35,
+                                width = (screenWidth.value * 0.2f).toInt(),
+                                height = (screenWidth.value * 0.14f).toInt(),
+                                onClick = { showDialog = false }
+                            )
+
+                            DailyButton(
+                                text = "삭제",
+                                fontSize = (screenWidth.value * 0.06f).toInt(),
+                                textColor = Color.White,
+                                fontWeight = FontWeight.SemiBold,
+                                backgroundColor = PastelRed,
+                                cornerRadius = 35,
+                                width = (screenWidth.value * 0.2f).toInt(),
+                                height = (screenWidth.value * 0.14f).toInt(),
+                                onClick = {
+                                    coroutineScope.launch {
+                                        profileViewModel.deleteProfile(profile.id)
+                                        showDialog = false
+                                    }
                                 }
-                            }
-                        )
+                            )
+                        }
                     }
                 }
             }

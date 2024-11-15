@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.Application
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -37,6 +38,7 @@ import com.example.diaryApp.ui.screens.ShoppingScreen
 import com.example.diaryApp.ui.screens.WordScreen
 import com.example.diaryApp.ui.theme.DeepPastelNavy
 import com.example.diaryApp.ui.theme.DiaryAppTheme
+import com.example.diaryApp.utils.clearFocusOnClick
 import com.example.diaryApp.viewmodel.ProfileViewModel
 import com.example.diaryApp.viewmodel.WordViewModel
 import dagger.hilt.android.HiltAndroidApp
@@ -59,71 +61,90 @@ fun DiaryMobileApp(
         showExitDialog = true
     }
 
-    DiaryAppTheme() {
-        NavHost(navController, startDestination = "landing") {
-            composable("landing") {
-                LandingScreen(startDestination = startDestination,navController = navController)
-            }
-            composable("login") {
-                LoginScreen(navController = navController)
-            }
-            composable("join") {
-                JoinScreen(navController = navController)
-            }
-            composable("main" ) {
-                MainScreen(navController = navController, profileViewModel, diaryViewModel, wordViewModel)
-            }
-            composable("catchMind/{sessionId}/{childName}") { backStackEntry ->
-                val sessionId = backStackEntry.arguments?.getString("sessionId")
-                val childName = backStackEntry.arguments?.getString("childName")
 
-                if (sessionId != null && childName != null) {
-                    CatchMindScreen(
+
+    DiaryAppTheme() {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clearFocusOnClick()
+        ) {
+            NavHost(navController, startDestination = "landing") {
+                composable("landing") {
+                    LandingScreen(
+                        startDestination = startDestination,
+                        navController = navController
+                    )
+                }
+                composable("login") {
+                    LoginScreen(navController = navController)
+                }
+                composable("join") {
+                    JoinScreen(navController = navController)
+                }
+                composable("main") {
+                    MainScreen(
                         navController = navController,
-                        sessionId = sessionId,
-                        childName = childName
+                        profileViewModel,
+                        diaryViewModel,
+                        wordViewModel
+                    )
+                }
+                composable("catchMind/{sessionId}/{childName}") { backStackEntry ->
+                    val sessionId = backStackEntry.arguments?.getString("sessionId")
+                    val childName = backStackEntry.arguments?.getString("childName")
+
+                    if (sessionId != null && childName != null) {
+                        CatchMindScreen(
+                            navController = navController,
+                            sessionId = sessionId,
+                            childName = childName
+                        )
+                    }
+                }
+                composable("diary") {
+                    DiaryScreen(navController = navController, diaryViewModel = diaryViewModel)
+                }
+                composable("notification") {
+                    NotificationScreen(navController = navController)
+                }
+                composable("shop") {
+                    ShoppingScreen(navController = navController)
+                }
+                composable("word") {
+                    WordScreen(navController = navController, wordViewModel = wordViewModel)
+                }
+                composable("setting") {
+                    SettingScreen(navController = navController)
+                }
+                composable("diary/{diaryId}") { backStackEntry ->
+                    val diaryId = backStackEntry.arguments?.getString("diaryId")
+                    DiaryDetailScreen(
+                        navController = navController,
+                        diaryId = diaryId,
+                        diaryViewModel = diaryViewModel
                     )
                 }
             }
-            composable("diary") {
-                DiaryScreen(navController = navController, diaryViewModel = diaryViewModel)
+            BoxWithConstraints(
+                modifier = Modifier
+                    .fillMaxSize()
+            ) {
+                val screenWidth = maxWidth
+                BasicModal(
+                    isDialogVisible = showExitDialog,
+                    screenWidth = screenWidth,
+                    onDismiss = { showExitDialog = false },
+                    mainText = "앱을 종료하시겠어요?",
+                    buttonText = "종료",
+                    successButtonColor = DeepPastelNavy,
+                    onSuccessClick = {
+                        activity?.finishAffinity()
+                    },
+                )
             }
-            composable("notification") {
-                NotificationScreen(navController = navController)
-            }
-            composable("shop") {
-                ShoppingScreen(navController = navController)
-            }
-            composable("word") {
-                WordScreen(navController = navController, wordViewModel = wordViewModel)
-            }
-            composable("setting") {
-                SettingScreen(navController = navController)
-            }
-            composable("diary/{diaryId}") { backStackEntry ->
-                val diaryId = backStackEntry.arguments?.getString("diaryId")
-                DiaryDetailScreen(navController = navController, diaryId = diaryId, diaryViewModel = diaryViewModel)
-            }
-        }
-        BoxWithConstraints(
-            modifier = Modifier
-                .fillMaxSize()
-        ) {
-            val screenWidth = maxWidth
-            BasicModal(
-                isDialogVisible = showExitDialog,
-                screenWidth = screenWidth,
-                onDismiss = { showExitDialog = false },
-                mainText = "앱을 종료하시겠어요?",
-                buttonText = "종료",
-                successButtonColor = DeepPastelNavy,
-                onSuccessClick = {
-                    activity?.finishAffinity()
-                },
-            )
         }
     }
-
 
 }
 

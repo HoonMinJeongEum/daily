@@ -1,6 +1,9 @@
 package com.example.diaryApp.ui.screens
 
+import android.media.MediaPlayer
+import android.net.Uri
 import android.util.Log
+import android.widget.VideoView
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -25,16 +28,21 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -43,6 +51,9 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
@@ -61,6 +72,10 @@ import com.example.diaryApp.ui.theme.BackgroundType
 import com.example.diaryApp.ui.theme.DeepPastelNavy
 import com.example.diaryApp.ui.theme.MyTypography
 import com.example.diaryApp.ui.theme.PastelNavy
+import com.google.android.exoplayer2.ExoPlayer
+import com.google.android.exoplayer2.MediaItem
+import com.google.android.exoplayer2.Player
+import com.google.android.exoplayer2.ui.PlayerView
 
 @Composable
 fun DiaryDetailScreen(
@@ -89,6 +104,7 @@ fun DiaryDetailScreen(
         val screenWidth = maxWidth
         val screenHeight = maxHeight
         val textFieldHeight = screenWidth / 7f
+        var isDialogVisible by remember { mutableStateOf(false) }
 
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -142,6 +158,13 @@ fun DiaryDetailScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                         )
+                        Button(
+                            onClick = { isDialogVisible = true },
+                            colors = ButtonDefaults.buttonColors(containerColor = PastelNavy),
+                            modifier = Modifier.padding(top = 16.dp)
+                        ) {
+                            Text("영상 보기", color = Color.White)
+                        }
                     }
 
                     item {
@@ -203,7 +226,7 @@ fun DiaryDetailScreen(
                                     color = DeepPastelNavy
                                 )
                                 Text(
-                                    text = "작성 시간: ${comment.createdAt}",
+                                    text = "작성 시간: ${comment.createdAt.substringBefore("T")}",
                                     fontSize = (screenWidth * 0.035f).value.sp,
                                     color = Color.Gray,
                                     modifier = Modifier.padding(top = screenWidth * 0.005f)
@@ -306,5 +329,116 @@ fun DiaryDetailScreen(
                 }
             }
         }
+        if (isDialogVisible) {
+            Dialog(
+                onDismissRequest = { isDialogVisible = false },
+                properties = DialogProperties(dismissOnClickOutside = true)
+            ) {
+                val context = LocalContext.current
+
+                // Video Player 설정
+                val videoPlayer = remember {
+                    ExoPlayer.Builder(context).build().apply {
+                        diaryDetail.value?.video?.let {
+                            val mediaItem = MediaItem.fromUri(Uri.parse(it))
+                            setMediaItem(mediaItem)
+                            repeatMode = Player.REPEAT_MODE_ONE // 비디오 반복 재생 설정
+                            prepare()
+                            playWhenReady = true
+                        }
+                    }
+                }
+
+                // Sound Player 설정
+                val soundPlayer = remember {
+                    ExoPlayer.Builder(context).build().apply {
+                        diaryDetail.value?.sound?.let {
+                            val mediaItem = MediaItem.fromUri(Uri.parse(it))
+                            setMediaItem(mediaItem)
+                            repeatMode = Player.REPEAT_MODE_ONE // 사운드 반복 재생 설정
+                            prepare()
+                            playWhenReady = false
+                        }
+                    }
+                }
+
+                DisposableEffect(Unit) {
+                    onDispose {
+                        videoPlayer.release() // ExoPlayer 해제
+                        soundPlayer.release()
+                    }
+                }
+
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth(0.9f) // 화면 너비의 80%
+                            .wrapContentHeight()
+                            .background(Color.White, shape = RoundedCornerShape(screenWidth * 0.03f))
+                            .padding(screenWidth * 0.04f)
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(screenWidth * 0.04f),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "${diaryViewModel.memberName.value}의 그림 일기",
+                                fontSize = (screenWidth * 0.05f).value.sp,
+                                color = DeepPastelNavy,
+                                modifier = Modifier.padding(bottom = screenWidth * 0.04f)
+                            )
+
+                            // ExoPlayer Video Player
+                            AndroidView(
+                                factory = {
+                                    PlayerView(context).apply {
+                                        player = videoPlayer
+                                    }
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .aspectRatio(16f / 9f)
+                                    .clip(RoundedCornerShape(screenWidth * 0.03f))
+                            )
+
+                            Spacer(modifier = Modifier.height(screenWidth * 0.02f))
+
+                            // Play Sound Button
+                            Button(
+                                onClick = { soundPlayer.playWhenReady = true },
+                                colors = ButtonDefaults.buttonColors(containerColor = DeepPastelNavy),
+                                modifier = Modifier
+                                    .fillMaxWidth(0.6f) // 너비의 60%
+                                    .height(screenWidth * 0.12f), // 버튼 높이 설정
+                                shape = RoundedCornerShape(screenWidth * 0.03f)
+                            ) {
+                                Text("소리 재생", color = Color.White, fontSize = (screenWidth * 0.045f).value.sp)
+                            }
+
+                            Spacer(modifier = Modifier.height(screenWidth * 0.02f))
+
+                            // Close Button
+                            Button(
+                                onClick = { isDialogVisible = false },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.Gray),
+                                modifier = Modifier
+                                    .fillMaxWidth(0.6f)
+                                    .height(screenWidth * 0.12f),
+                                shape = RoundedCornerShape(screenWidth * 0.03f)
+                            ) {
+                                Text("닫기", color = Color.White, fontSize = (screenWidth * 0.045f).value.sp)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
     }
 }
+

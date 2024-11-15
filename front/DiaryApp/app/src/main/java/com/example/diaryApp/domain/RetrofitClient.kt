@@ -56,7 +56,8 @@ object RetrofitClient {
             .addInterceptor { chain ->
                 val originalRequest = chain.request()
                 val isLoginRequest = originalRequest.url.encodedPath.contains("/login")
-                val isTokenRefreshRequest = originalRequest.url.encodedPath.contains("/user/reissue")
+                val isTokenRefreshRequest =
+                    originalRequest.url.encodedPath.contains("/user/reissue")
 
                 val requestBuilder = if (isLoginRequest || isTokenRefreshRequest) {
                     originalRequest.newBuilder()
@@ -82,8 +83,18 @@ object RetrofitClient {
                             accessToken = newTokens.first
                             refreshToken = newTokens.second
                             runBlocking {
-                                accessToken?.let { userStore.setValue(UserStore.KEY_ACCESS_TOKEN, it) }
-                                refreshToken?.let { userStore.setValue(UserStore.KEY_REFRESH_TOKEN, it) }
+                                accessToken?.let {
+                                    userStore.setValue(
+                                        UserStore.KEY_ACCESS_TOKEN,
+                                        it
+                                    )
+                                }
+                                refreshToken?.let {
+                                    userStore.setValue(
+                                        UserStore.KEY_REFRESH_TOKEN,
+                                        it
+                                    )
+                                }
                             }
 
                             val newRequest = requestBuilder
@@ -111,7 +122,8 @@ object RetrofitClient {
             val cleanedRefreshToken = refreshToken?.substringBefore(";")
             val response = runBlocking { authService.reissueToken(cleanedRefreshToken ?: "") }
             if (response.isSuccessful) {
-                val newAccessToken = response.headers()["Authorization"]?.removePrefix("Bearer ")?.trim()
+                val newAccessToken =
+                    response.headers()["Authorization"]?.removePrefix("Bearer ")?.trim()
                 val newRefreshToken = response.headers()["Set-Cookie"]
 
                 if (newAccessToken != null && newRefreshToken != null) {
@@ -175,36 +187,39 @@ object RetrofitClient {
             .registerTypeAdapter(
                 LocalDateTime::class.java,
                 JsonDeserializer<Any?> { json, _, _ ->
-                    LocalDateTime.parse(
-                        json.asString,
-                        when (json.asString.length) {
-                            26 -> DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
-                            25 -> DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSS")
-                            24 -> DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSS")
-                            23 -> DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")
-                            22 -> DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SS")
-                            21 -> DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.S")
-                            else -> DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
+                    val jsonString = json.asString
+                    try {
+                        LocalDateTime.parse(jsonString, DateTimeFormatter.ISO_DATE_TIME)
+                    } catch (e1: Exception) {
+                        try {
+                            // 예외 시 소수 자릿수별 포맷 적용
+                            when (jsonString.length) {
+                                26 -> LocalDateTime.parse(jsonString, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS"))
+                                25 -> LocalDateTime.parse(jsonString, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSS"))
+                                24 -> LocalDateTime.parse(jsonString, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSS"))
+                                23 -> LocalDateTime.parse(jsonString, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS"))
+                                22 -> LocalDateTime.parse(jsonString, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SS"))
+                                21 -> LocalDateTime.parse(jsonString, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.S"))
+                                else -> LocalDateTime.parse(jsonString, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"))
+                            }
+                        } catch (e2: Exception) {
+                            null // 파싱 실패 시 null 반환
                         }
-                    )
+                    }
                 })
             .registerTypeAdapter(
                 LocalDate::class.java,
                 JsonDeserializer<Any?> { json, _, _ ->
-                    LocalDate.parse(
-                        json.asString,
-                        DateTimeFormatter.ofPattern("yyyy-MM-dd")
-                    )
+                    LocalDate.parse(json.asString, DateTimeFormatter.ISO_LOCAL_DATE)
                 })
             .registerTypeAdapter(
                 LocalTime::class.java,
                 JsonDeserializer<Any?> { json, _, _ ->
-                    LocalTime.parse(
-                        json.asString,
-                        DateTimeFormatter.ofPattern("HH:mm:ss")
-                    )
+                    LocalTime.parse(json.asString, DateTimeFormatter.ISO_LOCAL_TIME)
                 })
             .create()
+
         return GsonConverterFactory.create(gson)
     }
+
 }

@@ -67,7 +67,7 @@ fun SettingScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 TabletHeader(
-                    pageName = "자녀 관리",
+                    pageName = "관리",
                     navController = navController,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -75,7 +75,6 @@ fun SettingScreen(
                 )
             }
 
-            // 가운데 흰색 박스 안에 DeleteProfileList 상단 정렬
             Box(
                 modifier = Modifier
                     .background(Color.White, shape = RoundedCornerShape(topEnd = 50.dp, topStart = 50.dp))
