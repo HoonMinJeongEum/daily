@@ -42,6 +42,10 @@ class QuizViewModel @Inject constructor(
     val remoteMediaStream: LiveData<MediaStream?> get() = _remoteMediaStream
     private val _leaveSessionTriggered = MutableLiveData<Boolean>()
     val leaveSessionTriggered: LiveData<Boolean> get() = _leaveSessionTriggered
+    private val _isMicMuted = MutableLiveData(true) // 마이크 상태
+    val isMicMuted: LiveData<Boolean> get() = _isMicMuted
+    private val _isRemoteAudioMuted = MutableLiveData(true) // 스피커 상태
+    val isRemoteAudioMuted: LiveData<Boolean> get() = _isRemoteAudioMuted
 
     // 단어
     lateinit var socket: Socket
@@ -70,6 +74,10 @@ class QuizViewModel @Inject constructor(
         get() = _paths
     val pathStyle: LiveData<PathStyle>
         get() = _pathStyle
+    private val _aspectRatio = MutableLiveData(1.1f) // 기본 비율로 초기화
+    val aspectRatio: LiveData<Float> = _aspectRatio
+    private val _canvasWidthRation = MutableLiveData<Int>()  // 부모 앱의 canvasWidth 저장
+    val canvasWidthRation: LiveData<Int> get() = _canvasWidthRation
 
 
     fun setCanvasSize(width: Int, height: Int) {
@@ -107,6 +115,14 @@ class QuizViewModel @Inject constructor(
 
             Log.e("QuizViewModel", "roomId : ${sessionId}")
             socket.emit("joinParents", sessionId)
+
+            socket.on("aspectRatio") { args ->
+                if (args.isNotEmpty()) {
+                    val aspectRatio = (args[0] as Double).toFloat()
+                    _aspectRatio.postValue(aspectRatio)// 부모 앱의 화면 비율 업데이트
+                    Log.d("ParentViewModel", "캔버스 비율 수신: $aspectRatio")
+                }
+            }
 
             socket.on("checkWord") { args ->
                 val isCorrect = args[0] as Boolean
@@ -158,7 +174,7 @@ class QuizViewModel @Inject constructor(
                 val json = JSONObject(widthData)
                 val width = json.getString("width").toFloat()
                 val style = _pathStyle.value
-                style.width = width
+                style.width = width * canvasWidth.value!!
 
                 _pathStyle.postValue(style)
             }
@@ -243,6 +259,18 @@ class QuizViewModel @Inject constructor(
         _remoteMediaStream.postValue(stream)
     }
 
+    // 마이크 제어
+    fun toggleMicMute() {
+        _isMicMuted.value = _isMicMuted.value?.not() ?: false
+        session.getLocalParticipant().audioTrack?.setEnabled(_isMicMuted.value!!)
+    }
+
+    // 스피커 제어
+    fun toggleRemoteAudioMute() {
+        _isRemoteAudioMuted.value = _isRemoteAudioMuted.value?.not() ?: false
+        session.muteAllRemoteParticipants(_isRemoteAudioMuted.value!!)
+    }
+
     // 그림 업데이트
     private fun updatePath(action: String, x: Float, y: Float) {
         _path.value = Path().apply {
@@ -262,6 +290,7 @@ class QuizViewModel @Inject constructor(
     private fun addPath(pair: Pair<Path, PathStyle>) {
         val list = _paths.value
         list.add(pair)
+        removedPaths.clear()
         _paths.postValue(list)
     }
 

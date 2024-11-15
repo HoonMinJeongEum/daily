@@ -21,6 +21,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -42,6 +44,7 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.style.TextAlign
@@ -57,8 +60,11 @@ import com.example.diaryApp.ui.theme.MyTypography
 import com.example.diaryApp.viewmodel.QuizViewModel
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.withStyle
 import com.example.diaryApp.ui.components.quiz.Alert
+import com.example.diaryApp.ui.components.quiz.ToggleAudioButton
+import com.example.diaryApp.ui.components.quiz.ToggleMicButton
 
 enum class QuizModalState {
     NONE,
@@ -85,13 +91,22 @@ fun CatchMindScreen(
     var isQuizDisconnected by remember { mutableStateOf(false) }
     var showQuizEnd by remember { mutableStateOf(false) }
     val isCorrectAnswer by viewModel.isCorrectAnswer.observeAsState()
+    val aspectRatio by viewModel.aspectRatio.observeAsState(1f)
 
     // 단어 선택 확인 변수
     val isWordSelected by viewModel.isWordSelected.observeAsState(false)
-    var isQuizNotStartedAlert by remember { mutableStateOf(false) }
+    var isQuizStartedAlert by remember { mutableStateOf(false) }
+
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     BackHandler {
         showQuizEnd = true
+    }
+
+    LaunchedEffect(isWordSelected) {
+        if (isWordSelected) {
+            isQuizStartedAlert = true
+        }
     }
 
     LaunchedEffect(Unit) {
@@ -200,10 +215,10 @@ fun CatchMindScreen(
                     Spacer(modifier = Modifier.weight(0.3f))
                     Box(
                         modifier = Modifier
-                            .weight(3.7f)
                             .fillMaxWidth(0.9f)
-                            .border(1.dp, Color.Black, RoundedCornerShape(32.dp))
-                            .clip(RoundedCornerShape(32.dp))
+                            .aspectRatio(aspectRatio)
+                            .border(1.dp, Color.Black, RoundedCornerShape(16.dp))
+                            .clip(RoundedCornerShape(16.dp))
                             .clipToBounds()
 
                     ) {
@@ -213,13 +228,6 @@ fun CatchMindScreen(
                         )
                     }
 
-                    Spacer(modifier = Modifier.weight(0.3f))
-                    HorizontalDivider(
-                        modifier = Modifier
-                            .fillMaxWidth(0.9f)
-                            .weight(0.01f),
-                        color = Color(0xFFB9B9B9)
-                    )
                     Row(
                         modifier = Modifier
                             .weight(0.7f)
@@ -236,7 +244,7 @@ fun CatchMindScreen(
                         Spacer(modifier = Modifier.width(4.dp))
                         BoxWithConstraints {
                             val rowHeight = with(LocalDensity.current) { maxHeight.toPx() }
-                            val textSize = rowHeight * 0.4f
+                            val textSize = rowHeight * 0.2f
 
                             Text(
                                 text = "정답",
@@ -245,8 +253,31 @@ fun CatchMindScreen(
                                 color = Color.Black,
                             )
                         }
-                    }
+                        Row(
+                            modifier = Modifier
+                                .weight(1f)  // 버튼들이 오른쪽으로 밀리게 하기 위해 여백을 추가
+                                .fillMaxHeight(),  // 버튼이 Row 높이를 채우도록 설정
+                            horizontalArrangement = Arrangement.End,  // 버튼들을 오른쪽 끝으로 정렬
+                            verticalAlignment = Alignment.CenterVertically
+                        ){
+                            ToggleMicButton(
+                                modifier = Modifier,
+                                viewModel = viewModel
+                            )
+                            ToggleAudioButton(
+                                modifier = Modifier,
+                                viewModel = viewModel
+                            )
+                        }
 
+                    }
+                    HorizontalDivider(
+                        modifier = Modifier
+                            .fillMaxWidth(0.9f)
+                            .weight(0.01f),
+                        color = Color(0xFFB9B9B9)
+                    )
+                    Spacer(modifier = Modifier.weight(0.3f))
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center,
@@ -271,7 +302,19 @@ fun CatchMindScreen(
                                 modifier = Modifier
                                     .fillMaxHeight(0.7f)
                                     .fillMaxWidth(0.9f),
-                                textStyle = TextStyle(color = Color.Black, fontSize = fontSize)
+                                textStyle = TextStyle(color = Color.Black, fontSize = fontSize),
+                                keyboardOptions = KeyboardOptions.Default.copy(
+                                    imeAction = ImeAction.Send
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onSend = {
+                                        if (isWordSelected && inputWord.isNotBlank()) {
+                                            viewModel.sendCheckWordAction(inputWord.trim())
+                                            inputWord = ""
+                                            keyboardController?.hide()
+                                        }
+                                    }
+                                )
                             )
 
                         }
@@ -282,16 +325,13 @@ fun CatchMindScreen(
                                 .align(Alignment.CenterVertically)
                                 .fillMaxHeight(),
                             onClick = {
-                                if (isWordSelected) {
-                                    viewModel.sendCheckWordAction(inputWord.trim())
-                                    inputWord = ""
-                                } else {
-                                    isQuizNotStartedAlert = true
-                                }
+                                viewModel.sendCheckWordAction(inputWord.trim())
+                                inputWord = ""
                             },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color(0xFF5A72A0),
                             ),
+                            enabled = isWordSelected && inputWord.isNotBlank(),
                             shape = RoundedCornerShape(5.dp),
                             contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp)
                         ){
@@ -383,10 +423,10 @@ fun CatchMindScreen(
         }
     }
 
-    if (isQuizNotStartedAlert) {
+    if (isQuizStartedAlert) {
         QuizAlert(
-            title = "퀴즈가 아직 시작되지 않았어요.",
-            onDismiss = { isQuizNotStartedAlert = false }
+            title = "퀴즈가 시작되었어요!",
+            onDismiss = { isQuizStartedAlert = false }
         )
     }
 

@@ -6,6 +6,8 @@ import android.view.View;
 import android.widget.LinearLayout;
 import com.example.diaryApp.MainActivity;
 import com.example.diaryApp.viewmodel.QuizViewModel;
+
+import org.webrtc.AudioTrack;
 import org.webrtc.EglBase;
 import org.webrtc.IceCandidate;
 import org.webrtc.MediaConstraints;
@@ -279,4 +281,17 @@ public class Session {
         this.views_container.removeView(view);
     }
 
+    public void muteAllRemoteParticipants(boolean sound) {
+        for (RemoteParticipant remoteParticipant : remoteParticipants.values()) {
+            // getReceivers()를 사용하여 모든 RtpReceiver를 가져옴
+            for (RtpReceiver receiver : remoteParticipant.getPeerConnection().getReceivers()) {
+                // RtpReceiver가 오디오 트랙을 가지고 있는지 확인
+                if (receiver.track() instanceof AudioTrack) {
+                    AudioTrack audioTrack = (AudioTrack) receiver.track();
+                    audioTrack.setEnabled(sound);  // 오디오 트랙 비활성화하여 음소거
+                    Log.d("Session", "Remote participant's audio track muted.");
+                }
+            }
+        }
+    }
 }
