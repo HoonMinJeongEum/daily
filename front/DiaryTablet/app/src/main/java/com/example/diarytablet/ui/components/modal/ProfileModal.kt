@@ -155,8 +155,12 @@ fun ProfileModal(
                             TextField(
                                 value = editedName,
                                 onValueChange = {
-                                    editedName = it
-                                    showWarning = it.length > 5
+                                    if (it.length <= 5) { // 5글자 이하로 제한
+                                        editedName = it
+                                        showWarning = false
+                                    } else {
+                                        showWarning = true
+                                    }
                                 },
                                 singleLine = true,
                                 modifier = Modifier
