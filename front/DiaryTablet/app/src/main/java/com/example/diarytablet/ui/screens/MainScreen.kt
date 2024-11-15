@@ -6,15 +6,14 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.sp
@@ -49,6 +48,7 @@ fun MainScreen(
     val isFinished by viewModel.isFinished
     val origin = viewModel.origin
     val missions = viewModel.missions
+    val username by viewModel.userName
 
     var currentIndex by remember { mutableStateOf(0) }
 
@@ -62,10 +62,10 @@ fun MainScreen(
     )
 
     val characterTexts = listOf(
-        "안녕! 나는 해꽁이야.\n다일리에 온 걸 환영해!\n나를 클릭해봐~",
-        "오늘 있었던 일을\n그림일기에 써보자!",
-        "단어를 학습해서\n조개를 모아보자!",
-        "부모님이랑 같이\n그림 퀴즈를 해볼까?",
+        "안녕, $username!\n나는 해꽁이야.\n나를 눌러봐~",
+        "$username~\n오늘 있었던 일을\n그림일기에 써보자!",
+        "$username~\n단어를 학습해서\n조개를 모아보자!",
+        "$username~\n부모님이랑 같이\n그림 퀴즈를 해볼까?",
         "조개를 모아서\n상점에서 쓸 수 있어!"
     )
 
@@ -116,6 +116,7 @@ fun MainScreen(
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 Navbar(
+                    mainViewModel = viewModel,
                     navController = navController,
                     screenWidth = screenWidth,
                     screenHeight = screenHeight

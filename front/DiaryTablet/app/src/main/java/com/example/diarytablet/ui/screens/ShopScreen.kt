@@ -93,7 +93,9 @@ fun ShopScreen(
                     .height(buttonHeight),
                 onClick = {},
                 text = shellCountToDisplay.toString(),
-                isOutlined = false
+                isOutlined = false,
+                enabled = false,
+                useDisabledColor = true
             )
         }
 

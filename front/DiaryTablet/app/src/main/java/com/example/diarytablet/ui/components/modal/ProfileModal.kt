@@ -1,8 +1,6 @@
 package com.example.diarytablet.ui.components.modal
 
-import CropActivity
 import android.content.Context
-import android.content.Intent
 import android.database.Cursor
 import android.net.Uri
 import android.provider.OpenableColumns
@@ -42,9 +40,13 @@ import com.example.diarytablet.ui.theme.DeepPastelNavy
 import com.example.diarytablet.viewmodel.NavBarViewModel
 import java.io.File
 import java.io.FileOutputStream
-import java.io.InputStream
-
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,9 +60,12 @@ fun ProfileModal(
     screenWidth: Dp,
     screenHeight: Dp
 ) {
-    var isEditing by remember { mutableStateOf(false) }
-    var editedName by remember { mutableStateOf(userName) }
-    var croppedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var isEditing by remember(key1 = isModalVisible) { mutableStateOf(false) }
+    var editedName by remember(key1 = isModalVisible) { mutableStateOf(userName) }
+    var imageUri by remember(key1 = isModalVisible) { mutableStateOf<Uri?>(null) }
+    val focusRequester = remember { FocusRequester() }
+    var isTextFieldFocused by remember(key1 = isModalVisible) { mutableStateOf(false) }
+
     var showWarning by remember { mutableStateOf(false) } // 경고 문구 표시 여부
     val context = LocalContext.current
 
@@ -72,17 +77,20 @@ fun ProfileModal(
     }
 
     // 이미지 선택 및 크롭 작업을 수행하는 런처 설정
-    val imagePickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        uri?.let {
-            croppedImageUri = it
-            val filePath = getFilePathFromUri(context, it)
-            filePath?.let { path -> onEditProfileClick(path) }
+    val imagePickerLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+            uri?.let {
+                imageUri = it
+                val filePath = getFilePathFromUri(context, it)
+                filePath?.let { path -> onEditProfileClick(path) }
+            }
         }
-    }
 
     if (isModalVisible) {
         Dialog(
-            onDismissRequest = { onDismiss() },
+            onDismissRequest = {
+                onDismiss()
+            },
             properties = DialogProperties(dismissOnClickOutside = false)
         ) {
             Box(
@@ -108,90 +116,118 @@ fun ProfileModal(
                         )
                     }
 
-                    AsyncImage(
-                        model = croppedImageUri ?: profileImageUrl,
-                        contentDescription = null,
+                    Box(
                         modifier = Modifier
                             .size(screenHeight * 0.25f)
                             .clip(CircleShape)
-                            .clickable { imagePickerLauncher.launch("image/*") },
-                        contentScale = ContentScale.Crop
-                    )
+                            .clickable {
+                                imagePickerLauncher.launch("image/*")
+                            }
+                    ) {
+                        AsyncImage(
+                            model = imageUri ?: profileImageUrl,
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color.Black.copy(alpha = 0.3f))
+                        )
+                        Icon(
+                            painter = painterResource(id = R.drawable.pencil),
+                            contentDescription = "Edit Profile",
+                            modifier = Modifier
+                                .size(screenHeight * 0.05f)
+                                .align(Alignment.Center),
+                            tint = Color.White
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(screenHeight * 0.03f))
 
-
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
                         if (isEditing) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                TextField(
-                                    value = editedName,
-                                    onValueChange = {
-                                        editedName = it
-                                        showWarning = it.length > 5
+                            TextField(
+                                value = editedName,
+                                onValueChange = {
+                                    editedName = it
+                                    showWarning = it.length > 5
+                                },
+                                singleLine = true,
+                                modifier = Modifier
+                                    .width(screenHeight * 0.3f)
+                                    .height(screenHeight * 0.1f)
+                                    .focusRequester(focusRequester)
+                                    .onFocusChanged { focusState ->
+                                        isTextFieldFocused = focusState.isFocused
+                                        if (focusState.isFocused && editedName == userName) {
+                                            editedName = ""
+                                        }
                                     },
-                                    modifier = Modifier.width(screenWidth * 0.12f),
-
-                                    singleLine = true,
-                                    shape = RoundedCornerShape(8.dp)
+                                placeholder = {
+                                    if (!isTextFieldFocused) {
+                                        Text(text = userName)
+                                    }
+                                },
+                                colors = TextFieldDefaults.textFieldColors(
+                                    containerColor = Color(0xFFF0F0F0),
+                                    focusedIndicatorColor = DeepPastelNavy,
+                                    unfocusedIndicatorColor = Color.Gray
+                                ),
+                                textStyle = MaterialTheme.typography.bodyMedium.copy(
+                                    fontSize = 38.sp
                                 )
+                            )
 
-                                Spacer(modifier = Modifier.width(screenHeight * 0.02f))
-
-                                BasicButton(
-                                    text = "완료",
-                                    imageResId = 11,
-                                    onClick = {
-                                        onEditNameClick(editedName)
-                                        isEditing = false
-                                    },
-                                    enabled = !showWarning // 5글자 초과 시 비활성화
-                                )
-                            }
-
-                                if (showWarning) {
-                                    Text(
-                                        text = "닉네임은 5글자 이하로 입력해주세요.",
-                                        color = DarkRed,
-                                        fontSize = (screenHeight.value * 0.025f).sp
-                                    )
-                                }
-
-
-
-
+                            Spacer(modifier = Modifier.width(screenHeight * 0.02f))
+                            BasicButton(
+                                text = "완료",
+                                imageResId = 11,
+                                onClick = {
+                                    onEditNameClick(editedName)
+                                    isEditing = false
+                                },
+                                enabled = !showWarning
+                            )
 
                         } else {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.Center
                             ) {
-                            Text(
-                                text = userName,
-                                fontSize = (screenHeight.value * 0.07f).sp,
-                                color = DeepPastelNavy
-                            )
-                            Spacer(modifier = Modifier.width(screenHeight * 0.025f))
-                            Image(
-                                painter = painterResource(id = R.drawable.pencil),
-                                contentDescription = "Edit Name",
-                                modifier = Modifier
-                                    .size(screenHeight * 0.07f)
-                                    .clickable { isEditing = true }
-                            )
+                                Text(
+                                    text = userName,
+                                    fontSize = (screenHeight.value * 0.07f).sp,
+                                    color = DeepPastelNavy
+                                )
+                                Spacer(modifier = Modifier.width(screenHeight * 0.025f))
+                                Image(
+                                    painter = painterResource(id = R.drawable.pencil),
+                                    contentDescription = "Edit Name",
+                                    modifier = Modifier
+                                        .size(screenHeight * 0.07f)
+                                        .clickable { isEditing = true }
+                                )
+                            }
                         }
+                    }
+                    if (showWarning) {
+                        Text(
+                            text = "닉네임은 5글자 이하로 입력해주세요.",
+                            color = DarkRed,
+                            fontSize = (screenHeight.value * 0.025f).sp
+                        )
                     }
                 }
             }
         }
     }
 }
-
-
-// 여기에 있는 getFilePathFromUri와 getFileName 함수는 그대로 사용
-
 
 private fun getFilePathFromUri(context: Context, uri: Uri): String? {
     val file = File(context.cacheDir, getFileName(context, uri))

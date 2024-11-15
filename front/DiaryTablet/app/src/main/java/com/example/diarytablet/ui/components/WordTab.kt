@@ -126,17 +126,22 @@ fun WordTap(
         var initialized by remember { mutableStateOf(false) }
         var popupAlpha by remember { mutableStateOf(1f) }
 
-        // 현재 단어의 비트맵 초기화 함수
         fun clearCanvas() {
             writtenBitmaps[currentIndex].eraseColor(android.graphics.Color.TRANSPARENT)
         }
 
-        // 팝업 메시지 목록
         val popupMessages = listOf(
-            "{}!\n잘하고 있어!", "{}!\n조금만 더 힘내!", "{}!\n정말 잘했어!",
-            "{}!\n아주 훌륭해!", "{}!\n넌 단어 마스터!", "{}!\n집중력 짱!",
-            "{}!\n끝까지 해보자!", "{}!\n최고야 ~", "{}!\n노력하는 모습이 멋져!",
-            "{}!\n글씨를 참 잘 적구나", "{}!\n계속 이렇게 해보자!"
+            "{}~\n잘하고 있어!",
+            "{}~\n조금만 더 힘내!",
+            "{}~\n정말 잘했어!",
+            "{}~\n아주 훌륭해!",
+            "{}~\n넌 단어 마스터!",
+            "{}~\n집중력 짱!",
+            "{}~\n끝까지 해보자!",
+            "{}~\n최고야 ~",
+            "{}~\n노력하는 모습이 멋져!",
+            "{}~\n글씨를 참 잘 적구나",
+            "{}~\n계속 이렇게 해보자!"
         )
 
         var popupMessage by remember { mutableStateOf("") }
@@ -181,7 +186,9 @@ fun WordTap(
         }
 
         Column(modifier = modifier.fillMaxSize()) {
+
             if (showPopup) {
+                // alpha 애니메이션 추가
                 val alpha by animateFloatAsState(
                     targetValue = popupAlpha,
                     animationSpec = tween(durationMillis = 1000, easing = LinearEasing)

@@ -72,7 +72,8 @@ fun BasicButton(
     isOutlined: Boolean = false,
     imageResId: Int? = null, // 이미지를 선택적으로 받음
     fontSize: Float = 24f,
-    ButtonColor: Color = Color.White
+    ButtonColor: Color = Color.White,
+    useDisabledColor: Boolean = false
 ) {
     val buttonShape = BasicButtonShape.ROUNDED
     val buttonColor = if (imageResId != null && imageResId != 11) BasicButtonColor.NORMAL else BasicButtonColor.SEASHELL
@@ -94,18 +95,24 @@ fun BasicButton(
         colors = if (isOutlined) {
             ButtonDefaults.outlinedButtonColors(
                 containerColor = Color.Transparent,
-                contentColor = contentColor
+                contentColor = contentColor,
+                disabledContainerColor = if (!enabled && useDisabledColor) Color.Transparent else Color.Gray,
+                disabledContentColor = if (!enabled && useDisabledColor) contentColor else Color.LightGray
             )
         } else {
             if (ButtonColor == Color.White) {
                 ButtonDefaults.buttonColors(
                     containerColor = backgroundColor,
-                    contentColor = contentColor
+                    contentColor = contentColor,
+                    disabledContainerColor = if (!enabled && useDisabledColor) backgroundColor else Color.Gray,
+                    disabledContentColor = if (!enabled && useDisabledColor) contentColor else Color.LightGray
                 )
             } else {
                 ButtonDefaults.buttonColors(
                     containerColor = ButtonColor,
-                    contentColor = contentColor
+                    contentColor = contentColor,
+                    disabledContainerColor = if (!enabled && useDisabledColor) backgroundColor else Color.Gray,
+                    disabledContentColor = if (!enabled && useDisabledColor) contentColor else Color.LightGray
                 )
             }
         },
