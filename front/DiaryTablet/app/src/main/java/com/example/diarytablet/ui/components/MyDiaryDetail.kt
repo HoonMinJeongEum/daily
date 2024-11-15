@@ -6,6 +6,7 @@ import android.widget.VideoView
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,11 +22,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
@@ -55,10 +59,12 @@ import com.example.diarytablet.R
 import com.example.diarytablet.domain.dto.response.diary.CommentDto
 import com.example.diarytablet.domain.dto.response.diary.Diary
 import com.example.diarytablet.ui.theme.DarkGray
+import com.example.diarytablet.ui.theme.DeepPastelNavy
 import com.example.diarytablet.ui.theme.GrayDetail
 import com.example.diarytablet.ui.theme.GrayText
 import com.example.diarytablet.ui.theme.MyTypography
 import com.example.diarytablet.ui.theme.PastelNavy
+import com.example.diarytablet.ui.theme.PastelSkyBlue
 import com.example.diarytablet.viewmodel.LogViewModel
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
@@ -119,36 +125,28 @@ fun MyDiaryDetail(
 
             Spacer(modifier = Modifier.weight(2f))
             Row(
-                horizontalArrangement = Arrangement.spacedBy(14.dp), // 이미지 간 간격 설정
+                horizontalArrangement = Arrangement.spacedBy(18.dp), // 이미지 간 간격 설정
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                IconButton(onClick = onBackClick) {
-                    Image(
-                        painter = painterResource(R.drawable.calender_back),
-                        contentDescription = "Previous Month",
-                        modifier = Modifier.size(50.dp, 50.dp)
-                    )
-                }
-
+                Image(
+                    painter = painterResource(id = R.drawable.calendar),
+                    contentDescription = "Open Video",
+                    modifier = Modifier
+                        .clickable {
+                            onBackClick()
+                        }
+                        .size(34.dp)
+                )
                 Text(
                     text = monthYearText,
-                    style = MyTypography.bodyMedium,
-                    color = GrayText,
+                    style = MyTypography.bodyLarge,
+                    color = DarkGray,
                     modifier = Modifier
                         .align(Alignment.CenterVertically)
                         .clickable{
                             onBackClick()
                         }
                 )
-
-                IconButton(onClick = onBackClick) {
-                    Image(
-                        painter = painterResource(R.drawable.calender_next),
-                        contentDescription = "Previous Month",
-                        modifier = Modifier.size(50.dp, 50.dp)
-                    )
-                }
-
             }
             Spacer(modifier = Modifier.weight(1f))
             Row(
@@ -156,11 +154,15 @@ fun MyDiaryDetail(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(end = 16.dp)
             ) {
+
                 Image(
                     painter = painterResource(id = R.drawable.video),
                     contentDescription = "Open Video",
                     modifier = Modifier
-                        .clickable {
+                        .clickable (
+                            indication = null,
+                            interactionSource = remember { MutableInteractionSource() }
+                        ){
                             isVideoOpen = true
                         }
                         .size(50.dp)
@@ -169,7 +171,10 @@ fun MyDiaryDetail(
                     painter = painterResource(id = R.drawable.chat),
                     contentDescription = "Open Dialog",
                     modifier = Modifier
-                        .clickable {
+                        .clickable (
+                            indication = null,
+                            interactionSource = remember { MutableInteractionSource() }
+                        ){
                             isDialogOpen = true
                         }
                         .size(60.dp)
@@ -177,7 +182,7 @@ fun MyDiaryDetail(
             }
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
         diary?.let {
             MyDiaryContent(diary = it)
         } ?: CircularProgressIndicator()
@@ -382,26 +387,49 @@ fun MyDiaryComment(
                         .padding(vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
-                    items(comments) { comment ->
-                        val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+                    itemsIndexed(comments) { index, comment ->
+                        val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy년 MM월 dd일 HH시 mm분")
                         val displayDate = comment.createdAt.format(dateTimeFormatter)
-                        Column(
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp)
+                                .padding(vertical = 10.dp, horizontal = 20.dp),
+                            verticalAlignment = Alignment.Top
                         ) {
-                            Text(
-                                text = displayDate,
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Thin,
-                                color = GrayDetail,
+                            Image(
+                                painter = painterResource(R.drawable.main_char),
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(56.dp)
+                                    .background(PastelSkyBlue, shape = CircleShape)
+                                    .padding(4.dp)
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = comment.comment,
-                                color = DarkGray,
-                                style = MyTypography.bodySmall,
-                                fontWeight = FontWeight.Normal
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = displayDate,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Thin,
+                                    color = GrayDetail,
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = comment.comment,
+                                    color = DeepPastelNavy,
+                                    style = MyTypography.bodySmall,
+                                    fontWeight = FontWeight.Normal
+                                )
+                            }
+                        }
+                        if (index < comments.size - 1) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            HorizontalDivider(
+                                modifier = Modifier.padding(horizontal = 18.dp),
+                                thickness = 1.dp,
+                                color = GrayDetail
                             )
                         }
                     }
