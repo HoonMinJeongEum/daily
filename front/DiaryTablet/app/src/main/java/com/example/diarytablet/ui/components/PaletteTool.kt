@@ -66,11 +66,12 @@ fun PaletteTool(
 
     Column(
         modifier = Modifier
-            .fillMaxWidth()
             .padding(10.dp)
-            .background(color = Color.White.copy(alpha = 0.8f))
-            .clip(RoundedCornerShape(16.dp))
-            .width(250.dp),  // 팔레트 툴 박스의 고정 너비
+            .width(250.dp)
+            .clip(RoundedCornerShape(16.dp))  // 배경을 둥글게 잘라냄
+            .background(Color.White.copy(alpha = 0.8f))  // 반투명 배경
+            .border(1.dp, Color.Gray, RoundedCornerShape(16.dp)) // 둥근 테두리 추가
+            .fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         ColorPalette(selectedColor = selectedColor, onColorChange = onColorChange)
@@ -84,7 +85,7 @@ fun PaletteTool(
         ToolSelectionRow(
             selectedTool = selectedTool,
             onToolSelect = { handleToolSelect(it) },
-            onStickerIconClick = { isStickerModalVisible = true } // 스티커 모달창 열기
+            onStickerIconClick = { isStickerModalVisible = true }
         )
 
         Spacer(modifier = Modifier.height(20.dp))

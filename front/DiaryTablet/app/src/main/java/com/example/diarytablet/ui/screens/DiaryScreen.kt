@@ -100,7 +100,9 @@ fun DiaryScreen(
     var isDrawingMode by remember { mutableStateOf(true) }
     var isPreviewDialogVisible by remember { mutableStateOf(false) }
     var isWarningDialogVisible by remember { mutableStateOf(false) }
+    var isFillWarningDialogVisible by remember { mutableStateOf(false) }
     var isVideoReady by remember { mutableStateOf(false)}
+    var isModalOpen by remember { mutableStateOf(false) }
 
     var selectedColor by remember { mutableStateOf(Color.Black) }
     var brushSize by remember { mutableFloatStateOf(10f) }
@@ -129,10 +131,6 @@ fun DiaryScreen(
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { 2 })
     val firstPageDrawingSteps = remember { mutableStateListOf<DrawingStep>() }
 
-    val undoStack = remember { mutableStateListOf<DrawingStep>() }
-    val redoStack = remember { mutableStateListOf<DrawingStep>() }
-    val redrawTrigger = remember { mutableStateOf(0) }
-
     val infiniteTransition = rememberInfiniteTransition()
     val rotation by infiniteTransition.animateFloat(
         initialValue = 0f,
@@ -143,28 +141,13 @@ fun DiaryScreen(
         ), label = ""
     )
 
-
-    fun undo() {
-        if (firstPageDrawingSteps.isNotEmpty()) {
-            val lastStroke = firstPageDrawingSteps.removeLast()
-            redoStack.add(lastStroke)
-            redrawTrigger.value++
-        } else {
-            Log.d("DiaryScreen", "Undo: No steps to undo.")
+    fun areBitmapsFilled(): Boolean {
+        return bitmapsList.all { bitmap ->
+            !bitmap.isRecycled && bitmap.width > 0 && bitmap.height > 0
         }
     }
-
-    fun redo() {
-        if (redoStack.isNotEmpty()) {
-            val lastUndoneStroke = redoStack.removeLast()
-            firstPageDrawingSteps.add(lastUndoneStroke)
-            redrawTrigger.value++
-        } else {
-            Log.d("DiaryScreen", "Redo: No steps to redo.")
-        }
-    }
-
     suspend fun saveAndUploadImages() {
+        // 비트맵을 저장하고 이미지 파일로 변환
         val imageFiles = savePageImagesWithTemplate(
             bitmapsList,
             context,
@@ -202,13 +185,11 @@ fun DiaryScreen(
         ) {
             Image(
                 painter = painterResource(id = R.drawable.cute_back),
-                contentDescription = "뒤로 가기 버튼",
+                contentDescription = "뒤로가기 버튼",
                 modifier = Modifier
                     .size(48.dp)
                     .clickable {
-                        navController.navigate("main") {
-                            popUpTo("diary") { inclusive = true }
-                        }
+                        isModalOpen = true
                     }
             )
             Spacer(modifier = Modifier.width(30.dp))
@@ -431,6 +412,19 @@ fun DiaryScreen(
             }
         }
     }
+    if (isModalOpen) {
+        CommonModal(
+            onDismissRequest = { isModalOpen = false },
+            titleText = "일기를 그만 쓸까요?",
+            confirmText= "종료",
+            onConfirm = {
+                isModalOpen = false
+                navController.navigate("main") {
+                    popUpTo("wordLearning") { inclusive = true }
+                }
+            }
+        )
+    }
 
     if (isWarningDialogVisible) {
         CommonModal(
@@ -438,16 +432,33 @@ fun DiaryScreen(
             titleText = "그림 일기를 다시 작성 할 수 없어요!",
             cancelText = "다시 쓰기",
             confirmText = "일기 완성",
-            confirmButtonColor = PastelNavy, // 확인 버튼 색상 지정
+            confirmButtonColor = PastelNavy,
             onConfirm = {
-                isWarningDialogVisible = false
-                isPreviewDialogVisible = true // 확인 버튼을 눌렀을 때 프리뷰 다이얼로그 표시
-                isVideoReady = false // 동영상 준비 상태 초기화
+                if (areBitmapsFilled()) {
+                    // All bitmaps are filled, proceed to preview
+                    isWarningDialogVisible = false
+                    isPreviewDialogVisible = true
+                    isVideoReady = false
+                } else {
+                    // One or more bitmaps are empty, show fill warning
+                    isWarningDialogVisible = false
+                    isFillWarningDialogVisible = true
+                }
             }
         )
     }
 
-
+    // Fill warning modal displayed if any bitmap is empty
+    if (isFillWarningDialogVisible) {
+        CommonModal(
+            onDismissRequest = { isFillWarningDialogVisible = false },
+            titleText = "비어 있는 그림을 채워 주세요!",
+            cancelText = "확인",
+            confirmText = "닫기",
+            confirmButtonColor = Color.Red,
+            onConfirm = { isFillWarningDialogVisible = false }
+        )
+    }
 
     if (isPreviewDialogVisible) {
         Box(
