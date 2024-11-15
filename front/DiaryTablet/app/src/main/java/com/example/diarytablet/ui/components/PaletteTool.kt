@@ -67,7 +67,7 @@ fun PaletteTool(
         modifier = Modifier
             .fillMaxWidth()
             .padding(10.dp)
-            .border(2.dp, Color.Gray, RoundedCornerShape(16.dp))
+            .background(color = Color.White.copy(alpha = 0.8f))
             .clip(RoundedCornerShape(16.dp))
             .width(250.dp),  // 팔레트 툴 박스의 고정 너비
         horizontalAlignment = Alignment.CenterHorizontally
@@ -163,10 +163,10 @@ fun ColorPalette(selectedColor: Color, onColorChange: (Color) -> Unit) {
                             .aspectRatio(1f)
                             .background(color)
                             .clickable { onColorChange(color) }
-                            .border(
-                                width = if (color == selectedColor) 2.dp else 0.dp,
-                                color = Color.White
-                            )
+//                            .border(
+//                                width = if (color == selectedColor) 2.dp else 0.dp,
+//                                color = Color.White
+//                            )
                     )
                 }
             }
