@@ -57,7 +57,7 @@ fun TabletHeader(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             when (pageName) {
-                "main" -> {
+                "관리" -> {
                     // 왼쪽 캐릭터 이미지
                     Image(
                         painter = painterResource(R.drawable.daily_character),
@@ -67,15 +67,20 @@ fun TabletHeader(
 
                     )
                     // 가운데 로고 텍스트
-                    Image(
-                        painter = painterResource(R.drawable.main_logo),
-                        contentDescription = "logo",
-                        modifier = Modifier.fillMaxHeight(0.5f)
-                            .aspectRatio(1.8f)
-                            .offset(x = screenWidth * 0.03f),
+                    Text(
+                            text = pageName,
+                    style = MyTypography.bodyLarge.copy(
+                        color = Color.White,
+                        fontSize = (screenWidth.value * 0.08f).sp
+                    ),
+                    textAlign = TextAlign.Center
                     )
                     // 오른쪽 로그아웃 버튼
                     Button(
+                        modifier = Modifier
+                            .fillMaxHeight(0.5f)
+                            .aspectRatio(2f)
+                        ,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = DeepPastelBlue, // 배경색
                             contentColor = Color.White //
@@ -91,12 +96,33 @@ fun TabletHeader(
                         Text( text = "로그아웃",
                             style = MyTypography.bodyMedium.copy(
                                 color = Color.White,
-                                fontSize = (screenWidth.value * 0.045f).sp
+                                fontSize = (screenWidth.value * 0.03f).sp
                             ),
                             textAlign = TextAlign.Center)
                     }
                 }
-                "상점", "알림", "자녀 관리" -> {
+                "main" -> {
+                    Image(
+                        painter = painterResource(R.drawable.daily_character),
+                        contentDescription = "Character Icon",
+                        modifier = Modifier.fillMaxHeight()
+                            .aspectRatio(0.85f),
+
+                        )
+                    // 가운데 로고 텍스트
+                    Image(
+                        painter = painterResource(R.drawable.main_logo),
+                        contentDescription = "logo",
+                        modifier = Modifier.fillMaxHeight(0.5f)
+                            .aspectRatio(1.8f)
+//                            .offset(x = screenWidth * 0.03f),
+                    )
+                    Spacer(modifier = Modifier
+                        .fillMaxHeight()
+                        .aspectRatio(0.85f)
+                    )
+                }
+                "상점", "알림" -> {
                     // 왼쪽 캐릭터 이미지
                     Image(
                         painter = painterResource(R.drawable.daily_character),

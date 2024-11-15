@@ -91,8 +91,7 @@ fun CreateProfile(
             Column(
                 modifier = Modifier
                     .padding(screenWidth * 0.04f)
-                    .fillMaxWidth()
-                ,
+                    .fillMaxWidth(),
                 verticalArrangement = Arrangement.SpaceBetween,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -156,7 +155,7 @@ fun CreateProfile(
                     Box(
                         modifier = Modifier
                             .width(screenWidth * 0.4f)
-                            .background(Color.White, RoundedCornerShape(8.dp)) // 배경색과 모서리 둥글게
+                            .background(Color.White, RoundedCornerShape(8.dp))
                             .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
                             .padding(horizontal = screenWidth * 0.02f, vertical = screenHeight * 0.01f)
                     ) {
@@ -175,15 +174,20 @@ fun CreateProfile(
                         BasicTextField(
                             value = profileViewModel.memberName.value,
                             onValueChange = {
-                                if (it.length <= 20) {
+                                if (it.length <= 5) {
                                     profileViewModel.memberName.value = it
+                                    showWarning = false
+                                } else {
+                                    showWarning = true
+                                    profileViewModel.memberName.value = it
+
+                                    warningMessage = "이름은 5글자 이하로 입력해주세요."
                                 }
-                                showWarning = false
                             },
                             modifier = Modifier
                                 .focusRequester(focusRequester)
                                 .onFocusChanged { focusState -> isFocused.value = focusState.isFocused }
-                                .background(Color.Transparent) // 배경 투명
+                                .background(Color.Transparent)
                                 .fillMaxWidth()
                                 .padding(vertical = screenHeight * 0.005f)
                         )
@@ -205,19 +209,21 @@ fun CreateProfile(
                             .height(screenWidth * 0.04f)
                     )
                 }
+
                 Spacer(modifier = Modifier.height(screenHeight * 0.02f))
 
+                // 비활성화 여부를 조건으로 설정
                 DailyButton(
                     text = if (isLoading) "보내는 중..." else "추가",
                     fontSize = (screenWidth * 0.05f).value.toInt(),
                     textColor = Color.White,
                     fontWeight = FontWeight.Normal,
-                    backgroundColor = if (isLoading) Color.Gray else PastelSkyBlue,
+                    backgroundColor = if (isLoading || showWarning) Color.Gray else PastelSkyBlue,
                     cornerRadius = 50,
                     width = (screenWidth * 0.25f).value.toInt(),
                     height = (screenHeight * 0.06f).value.toInt(),
                     onClick = {
-                        if (!isLoading) {
+                        if (!isLoading && !showWarning) {
                             if (profileViewModel.memberName.value.isBlank()) {
                                 showWarning = true
                                 warningMessage = "이름을 입력해주세요."
@@ -241,10 +247,10 @@ fun CreateProfile(
                     modifier = Modifier.align(Alignment.CenterHorizontally),
                 )
                 Spacer(modifier = Modifier.height(screenHeight * 0.02f))
-
             }
         }
     }
 }
+
 
 
