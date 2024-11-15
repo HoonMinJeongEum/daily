@@ -44,6 +44,7 @@ import com.example.diarytablet.R
 import com.example.diarytablet.model.StickerStock
 import com.example.diarytablet.model.ToolType
 import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.mutableFloatStateOf
 
 @Composable
 fun PaletteTool(
@@ -177,7 +178,7 @@ fun ColorPalette(selectedColor: Color, onColorChange: (Color) -> Unit) {
 @Composable
 fun ThicknessSelector(onThicknessChange: (Float) -> Unit) {
     val thicknessOptions = listOf(10f, 20f, 35f, 50f)
-    var selectedThickness by remember { mutableStateOf(10f) } // 선택된 굵기 상태 저장
+    var selectedThickness by remember { mutableFloatStateOf(10f) } // 선택된 굵기 상태 저장
 
     Row(
         horizontalArrangement = Arrangement.SpaceEvenly,
