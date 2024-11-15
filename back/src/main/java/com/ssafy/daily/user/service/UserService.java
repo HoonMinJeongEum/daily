@@ -278,8 +278,6 @@ public class UserService {
 
         if (fcmToken != null) {
             alarmRepository.deleteByNameAndFcmToken_Id(member.getName(), fcmToken.getId());
-        } else {
-            throw new IllegalArgumentException("FCMToken not found for family ID: " + member.getFamily().getId());
         }
     }
 
