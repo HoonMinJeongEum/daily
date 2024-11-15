@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -27,6 +28,8 @@ import com.example.diarytablet.ui.theme.MyTypography
 
 @Composable
 fun WordDetail(word: WordLearnedResponseDto, onDismissRequest: () -> Unit) {
+    val configuration = LocalConfiguration.current
+    val screenHeight = configuration.screenHeightDp.dp
     Dialog(onDismissRequest = onDismissRequest) {
         Surface(
             shape = RoundedCornerShape(30.dp),
@@ -80,9 +83,9 @@ fun WordDetail(word: WordLearnedResponseDto, onDismissRequest: () -> Unit) {
                     Text(
                         text = word.createdAt.toCalendarDateString(),
                         color = Color(0xFF49566F),
-                        fontSize = 30.sp,
+                        fontSize = 26.sp,
                         textAlign = TextAlign.Center,
-                        style = MyTypography.bodyMedium,
+                        style = MyTypography.bodySmall,
                     )
 
                     Image(
@@ -90,7 +93,7 @@ fun WordDetail(word: WordLearnedResponseDto, onDismissRequest: () -> Unit) {
                         contentDescription = "Original Image",
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(250.dp),
+                            .height(screenHeight * 0.4f),
                         contentScale = ContentScale.Crop
                     )
 
@@ -98,9 +101,8 @@ fun WordDetail(word: WordLearnedResponseDto, onDismissRequest: () -> Unit) {
                         painter = rememberAsyncImagePainter(word.imageUrl),
                         contentDescription = "Transcription Image",
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp),
-                        contentScale = ContentScale.Crop
+                            .fillMaxWidth(),
+                        contentScale = ContentScale.Inside
                     )
                 }
 

@@ -7,6 +7,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -116,7 +117,7 @@ fun DrawingThicknessSelector(
     onSizeChanged: (Float) -> Unit
 ) {
 
-    val thicknessOptions = listOf(10f, 15f, 20f, 25f)
+    val thicknessOptions = listOf(10f, 20f, 35f, 50f)
     var selectedSize by remember { mutableStateOf(thicknessOptions[0]) }
     Row(
         modifier.fillMaxSize(),
@@ -140,24 +141,38 @@ fun DrawingThicknessSelector(
 @Composable
 fun DrawingUndoButton(
     modifier: Modifier = Modifier,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    viewModel: QuizViewModel
 ) {
+    val isUndoAvailable by viewModel.isUndoAvailable.observeAsState(false)
+    val undoImage = if (isUndoAvailable) R.drawable.quiz_undo else R.drawable.quiz_undo_gray
+
     Image(
-        painter = painterResource(id = R.drawable.quiz_undo),
+        painter = painterResource(id = undoImage),
         contentDescription = "되돌리기",
-        modifier = Modifier.clickable { onClick() }
+        modifier = Modifier.clickable(
+            indication = null,
+            interactionSource = remember { MutableInteractionSource() }
+        ) { onClick() }
     )
 }
 
 @Composable
 fun DrawingRedoButton(
     modifier: Modifier = Modifier,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    viewModel: QuizViewModel
 ) {
+    val isRedoAvailable by viewModel.isRedoAvailable.observeAsState(false)
+    val redoImage = if (isRedoAvailable) R.drawable.quiz_redo else R.drawable.quiz_redo_gray
+
     Image(
-        painter = painterResource(id = R.drawable.quiz_redo),
+        painter = painterResource(id = redoImage),
         contentDescription = "다시하기",
-        modifier = Modifier.clickable { onClick() }
+        modifier = Modifier.clickable (
+            indication = null,
+            interactionSource = remember { MutableInteractionSource() }
+        ){ onClick() }
     )
 }
 

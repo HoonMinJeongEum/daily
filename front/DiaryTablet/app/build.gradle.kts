@@ -81,6 +81,8 @@ dependencies {
     implementation(libs.androidx.ui.test.android)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.foundation.android)
+    implementation(libs.androidx.graphics.core)
+    implementation(libs.androidx.input.motionprediction)
     kapt("com.google.dagger:hilt-compiler:2.51.1")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
     implementation("androidx.compose.runtime:runtime-livedata:1.5.1")
@@ -104,6 +106,7 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    implementation ("com.google.android.exoplayer:exoplayer:2.18.2")
 }
 
 kapt {

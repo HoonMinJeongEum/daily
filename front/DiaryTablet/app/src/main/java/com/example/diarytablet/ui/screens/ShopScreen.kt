@@ -4,15 +4,18 @@ import ShopTab
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -21,6 +24,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.diarytablet.R
 import com.example.diarytablet.ui.components.BasicButton
+import com.example.diarytablet.ui.components.DailyButton
 import com.example.diarytablet.ui.theme.BackgroundPlacement
 import com.example.diarytablet.ui.theme.BackgroundType
 import com.example.diarytablet.viewmodel.NavBarViewModel
@@ -40,6 +44,12 @@ fun ShopScreen(
     val shellCount by navBarViewModel.shellCount
     val remainingShells by viewModel.remainingShells.observeAsState()
 
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+    val buttonWidth = screenWidth * 0.15f
+    val buttonHeight = screenWidth * 0.07f
+    val buttonFontSize = (buttonHeight.value * 0.4f).sp
+
     LaunchedEffect(Unit) {
         viewModel.fetchCoupons()
         viewModel.fetchStickers()
@@ -53,7 +63,6 @@ fun ShopScreen(
             .background(Color.Transparent)
             .padding(40.dp)
     ) {
-        // 뒤로 가기 버튼과 제목을 표시하는 상단 Row
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -61,7 +70,7 @@ fun ShopScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
-                painter = painterResource(id = R.drawable.cute_back), // 뒤로 가기 이미지 리소스
+                painter = painterResource(id = R.drawable.cute_back),
                 contentDescription = "뒤로 가기 버튼",
                 modifier = Modifier
                     .size(60.dp)
@@ -73,13 +82,15 @@ fun ShopScreen(
             )
             Spacer(modifier = Modifier.width(30.dp))
             Text(
-                text = "상점", // 제목 텍스트
+                text = "상점",
                 fontSize = 40.sp,
                 color = Color.White,
                 textAlign = TextAlign.Start
             )
             Spacer(modifier = Modifier.weight(1f))
             BasicButton(
+                modifier = Modifier
+                    .height(buttonHeight),
                 onClick = {},
                 text = shellCountToDisplay.toString(),
                 isOutlined = false,
@@ -88,7 +99,6 @@ fun ShopScreen(
             )
         }
 
-        // ShopTab 구성 요소를 하단에 배치
         Box(
             modifier = Modifier
                 .fillMaxWidth()

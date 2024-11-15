@@ -9,6 +9,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -29,6 +31,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -58,50 +61,12 @@ fun LoginScreen(
     loginViewModel: LoginViewModel = hiltViewModel(),
     backgroundType: BackgroundType = BackgroundType.DEFAULT
 ) {
+    var isPasswordVisible by remember { mutableStateOf(false) }
     var isError by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
-    BackgroundPlacement(backgroundType = backgroundType)
-
-    val context = LocalContext.current
     val focusManager = LocalFocusManager.current
 
-    // S Pen Remote 연동 확인
-    LaunchedEffect(Unit) {
-        try {
-            // SpenRemote 인스턴스를 가져옵니다.
-            val spenRemote = SpenRemote.getInstance()
-            val isFeatureAvailable = spenRemote.isFeatureEnabled(SpenRemote.FEATURE_TYPE_BUTTON)
-
-            if (isFeatureAvailable) {
-                Log.d("LoginScreen", "S Pen Button feature is available.")
-
-                if (!spenRemote.isConnected) {
-                    spenRemote.connect(context, object : SpenRemote.ConnectionResultCallback {
-                        override fun onSuccess(manager: SpenUnitManager?) {
-                            Log.d("LoginScreen", "S Pen connected successfully.")
-                            Toast.makeText(context, "S Pen connected.", Toast.LENGTH_SHORT).show()
-                        }
-
-                        override fun onFailure(error: Int) {
-                            Log.e("LoginScreen", "S Pen connection failed with error code: $error")
-                            val errorMsg = when (error) {
-//                                SpenRemote.CONNECTION_FAILED -> "S Pen connection failed."
-//                                SpenRemote.UNSUPPORTED_DEVICE -> "Device does not support S Pen."
-                                else -> "Unknown error."
-                            }
-                            Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
-                        }
-                    })
-                }
-            } else {
-                Log.d("LoginScreen", "S Pen Button feature is not available.")
-                Toast.makeText(context, "S Pen feature not available on this device.", Toast.LENGTH_SHORT).show()
-            }
-        } catch (e: NoClassDefFoundError) {
-            Log.e("LoginScreen", "S Pen feature not supported on this device/emulator", e)
-            Toast.makeText(context, "S Pen feature not supported on this device/emulator.", Toast.LENGTH_SHORT).show()
-        }
-    }
+    BackgroundPlacement(backgroundType = backgroundType)
 
 
     BoxWithConstraints(
@@ -212,8 +177,25 @@ fun LoginScreen(
                             color = GrayText
                         )
                     },
+                    trailingIcon = {
+                        IconButton(
+                            modifier = Modifier
+                                .padding(end = screenWidth * 0.02f)
+                            ,
+                            onClick = { isPasswordVisible = !isPasswordVisible }) {
+
+                            Icon(
+
+                                painter = painterResource(
+                                    if (isPasswordVisible) R.drawable.ic_visibility else R.drawable.ic_visibility_off
+                                ),
+                                contentDescription = if (isPasswordVisible) "Hide Password" else "Show Password",
+                                tint = GrayText
+                            )
+                        }
+                    },
                     onValueChange = { loginViewModel.password.value = it },
-                    visualTransformation = PasswordVisualTransformation(),
+                    visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(start = screenWidth*0.06f), // Adjust padding for text alignment

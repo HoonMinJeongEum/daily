@@ -28,13 +28,16 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil3.compose.AsyncImage
 import com.example.diarytablet.R
 import com.example.diarytablet.ui.components.BasicButton
+import com.example.diarytablet.ui.theme.DarkRed
 import com.example.diarytablet.ui.theme.DeepPastelNavy
+import com.example.diarytablet.viewmodel.NavBarViewModel
 import java.io.File
 import java.io.FileOutputStream
 import androidx.compose.material3.Icon
@@ -43,6 +46,7 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,15 +66,25 @@ fun ProfileModal(
     val focusRequester = remember { FocusRequester() }
     var isTextFieldFocused by remember(key1 = isModalVisible) { mutableStateOf(false) }
 
+    var showWarning by remember { mutableStateOf(false) } // 경고 문구 표시 여부
     val context = LocalContext.current
 
-    val imagePickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        uri?.let {
-            imageUri = it
-            val filePath = getFilePathFromUri(context, it)
-            filePath?.let { path -> onEditProfileClick(path) }
-        }
+    // 모달이 열릴 때 초기화
+    if (isModalVisible) {
+        isEditing = false
+        editedName = userName
+        showWarning = false
     }
+
+    // 이미지 선택 및 크롭 작업을 수행하는 런처 설정
+    val imagePickerLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+            uri?.let {
+                imageUri = it
+                val filePath = getFilePathFromUri(context, it)
+                filePath?.let { path -> onEditProfileClick(path) }
+            }
+        }
 
     if (isModalVisible) {
         Dialog(
@@ -81,7 +95,7 @@ fun ProfileModal(
         ) {
             Box(
                 modifier = Modifier
-                    .size(screenHeight * 0.6f)
+                    .size(screenHeight * 0.6f, screenHeight * 0.65f)
                     .background(Color.White, shape = RoundedCornerShape(screenWidth * 0.02f))
                     .padding(screenHeight * 0.04f)
             ) {
@@ -140,7 +154,11 @@ fun ProfileModal(
                         if (isEditing) {
                             TextField(
                                 value = editedName,
-                                onValueChange = { editedName = it },
+                                onValueChange = {
+                                    editedName = it
+                                    showWarning = it.length > 5
+                                },
+                                singleLine = true,
                                 modifier = Modifier
                                     .width(screenHeight * 0.3f)
                                     .height(screenHeight * 0.1f)
@@ -173,23 +191,37 @@ fun ProfileModal(
                                 onClick = {
                                     onEditNameClick(editedName)
                                     isEditing = false
-                                }
+                                },
+                                enabled = !showWarning
                             )
+
                         } else {
-                            Text(
-                                text = userName,
-                                fontSize = (screenHeight.value * 0.05f).sp,
-                                color = DeepPastelNavy
-                            )
-                            Spacer(modifier = Modifier.width(screenHeight * 0.025f))
-                            Image(
-                                painter = painterResource(id = R.drawable.pencil),
-                                contentDescription = "Edit Name",
-                                modifier = Modifier
-                                    .size(screenHeight * 0.05f)
-                                    .clickable { isEditing = true }
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = userName,
+                                    fontSize = (screenHeight.value * 0.07f).sp,
+                                    color = DeepPastelNavy
+                                )
+                                Spacer(modifier = Modifier.width(screenHeight * 0.025f))
+                                Image(
+                                    painter = painterResource(id = R.drawable.pencil),
+                                    contentDescription = "Edit Name",
+                                    modifier = Modifier
+                                        .size(screenHeight * 0.07f)
+                                        .clickable { isEditing = true }
+                                )
+                            }
                         }
+                    }
+                    if (showWarning) {
+                        Text(
+                            text = "닉네임은 5글자 이하로 입력해주세요.",
+                            color = DarkRed,
+                            fontSize = (screenHeight.value * 0.025f).sp
+                        )
                     }
                 }
             }

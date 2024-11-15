@@ -46,14 +46,32 @@ import com.example.diarytablet.viewmodel.DiaryViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import android.os.Environment
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextAlign
+import com.canhub.cropper.CropImage.CancelledResult.rotation
+import com.example.diarytablet.ui.components.DailyButton
+import com.example.diarytablet.ui.components.modal.CommonModal
+import com.example.diarytablet.ui.components.modal.CommonPopup
+import com.example.diarytablet.ui.theme.PastelNavy
 import com.example.diarytablet.utils.DrawingPlaybackView
 import com.example.diarytablet.utils.DrawingStep
 import com.example.diarytablet.utils.loadBitmapFromUrl
 import com.example.diarytablet.utils.savePageImagesWithTemplate
+import kotlinx.coroutines.delay
 
 data class StickerItem(
     val bitmap: Bitmap,
@@ -82,10 +100,12 @@ fun DiaryScreen(
     var isDrawingMode by remember { mutableStateOf(true) }
     var isPreviewDialogVisible by remember { mutableStateOf(false) }
     var isWarningDialogVisible by remember { mutableStateOf(false) }
+    var isFillWarningDialogVisible by remember { mutableStateOf(false) }
     var isVideoReady by remember { mutableStateOf(false)}
+    var isModalOpen by remember { mutableStateOf(false) }
 
     var selectedColor by remember { mutableStateOf(Color.Black) }
-    var brushSize by remember { mutableFloatStateOf(5f) }
+    var brushSize by remember { mutableFloatStateOf(10f) }
     var selectedTool by remember { mutableStateOf(ToolType.PENCIL) }
 
     val configuration = LocalConfiguration.current
@@ -98,8 +118,8 @@ fun DiaryScreen(
     val boxHeight = contentHeight * 0.88f
 
     val density = LocalDensity.current
-    val bitmapWidthPx = with(density) { leftBoxWidth.roundToPx() }
-    val bitmapHeightPx = with(density) { boxHeight.roundToPx() }
+    val bitmapWidthPx = with(density) { (leftBoxWidth).roundToPx() }
+    val bitmapHeightPx = with(density) { (boxHeight).roundToPx() }
 
     val bitmapsList = remember {
         mutableStateListOf(
@@ -111,31 +131,23 @@ fun DiaryScreen(
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { 2 })
     val firstPageDrawingSteps = remember { mutableStateListOf<DrawingStep>() }
 
-    val undoStack = remember { mutableStateListOf<DrawingStep>() }
-    val redoStack = remember { mutableStateListOf<DrawingStep>() }
-    val redrawTrigger = remember { mutableStateOf(0) }
+    val infiniteTransition = rememberInfiniteTransition()
+    val rotation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ), label = ""
+    )
 
-    fun undo() {
-        if (firstPageDrawingSteps.isNotEmpty()) {
-            val lastStroke = firstPageDrawingSteps.removeLast()
-            redoStack.add(lastStroke)
-            redrawTrigger.value++
-        } else {
-            Log.d("DiaryScreen", "Undo: No steps to undo.")
+    fun areBitmapsFilled(): Boolean {
+        return bitmapsList.all { bitmap ->
+            !bitmap.isRecycled && bitmap.width > 0 && bitmap.height > 0
         }
     }
-
-    fun redo() {
-        if (redoStack.isNotEmpty()) {
-            val lastUndoneStroke = redoStack.removeLast()
-            firstPageDrawingSteps.add(lastUndoneStroke)
-            redrawTrigger.value++
-        } else {
-            Log.d("DiaryScreen", "Redo: No steps to redo.")
-        }
-    }
-
     suspend fun saveAndUploadImages() {
+        // 비트맵을 저장하고 이미지 파일로 변환
         val imageFiles = savePageImagesWithTemplate(
             bitmapsList,
             context,
@@ -173,13 +185,11 @@ fun DiaryScreen(
         ) {
             Image(
                 painter = painterResource(id = R.drawable.cute_back),
-                contentDescription = "뒤로 가기 버튼",
+                contentDescription = "뒤로가기 버튼",
                 modifier = Modifier
                     .size(48.dp)
                     .clickable {
-                        navController.navigate("main") {
-                            popUpTo("diary") { inclusive = true }
-                        }
+                        isModalOpen = true
                     }
             )
             Spacer(modifier = Modifier.width(30.dp))
@@ -212,6 +222,11 @@ fun DiaryScreen(
                                     tapOffset.x in (stickerPosition.x..stickerPosition.x + sticker.bitmap.width) &&
                                             tapOffset.y in (stickerPosition.y..stickerPosition.y + sticker.bitmap.height)
                                 }.takeIf { it >= 0 }
+
+                                if (selectedStickerIndex != null) {
+                                    isDrawingMode = false // 스크롤 모드로 전환
+                                    selectedTool = ToolType.FINGER // 손가락 도구 선택 상태
+                                }
                             }
                         )
                     }
@@ -303,7 +318,7 @@ fun DiaryScreen(
                                     }
 
                                     if (selectedStickerIndex == index) {
-                                        // 선택된 스티커에 테두리 표시
+                                        // 선택된 스티커에 테두리와 'X' 버튼 추가
                                         val stickerPosition = stickerItem.position.value
                                         drawRect(
                                             color = Color.Red,
@@ -333,93 +348,116 @@ fun DiaryScreen(
                     .width(contentWidth * 0.25f)
                     .fillMaxHeight()
                     .background(Color.Transparent),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
+                Spacer(modifier = Modifier.height(8.dp)) // 위쪽 여백
+
                 PaletteTool(
                     selectedTool = selectedTool,
                     selectedColor = selectedColor,
+                    onScrollModeChange = { isScrollMode ->
+                        isDrawingMode = !isScrollMode
+                        if (isScrollMode) selectedTool = ToolType.FINGER
+                    },
                     onColorChange = { selectedColor = it },
                     onThicknessChange = { brushSize = it },
-                    onToolSelect = { selectedTool = it },
+                    onToolSelect = { tool ->
+                        selectedTool = tool
+                        if (tool == ToolType.PENCIL || tool == ToolType.ERASER) {
+                            selectedStickerIndex = null
+                            isDrawingMode = true
+                        }
+                    },
                     stickerList = userStickers,
                     onStickerSelect = { sticker ->
                         CoroutineScope(Dispatchers.IO).launch {
                             val bitmap = loadBitmapFromUrl(sticker.img)
                             if (bitmap != null) {
-                                firstPageStickers.add(StickerItem(bitmap, mutableStateOf(centerPosition)))
+                                firstPageStickers.add(
+                                    StickerItem(
+                                        bitmap,
+                                        mutableStateOf(centerPosition)
+                                    )
+                                )
+                                selectedStickerIndex = firstPageStickers.size - 1
+                                isDrawingMode = false
+                                selectedTool = ToolType.FINGER
                             }
                         }
-                    },
-                    onUndo = { undo() },
-                    onRedo = { redo() }
+                    }
                 )
 
-                Button(onClick = { isDrawingMode = !isDrawingMode }) {
-                    Text(if (isDrawingMode) "스크롤 모드로 전환" else "그리기 모드로 전환")
-                }
-                Button(onClick = {
-                    isWarningDialogVisible = true
-                }) {
-                    Text("그림 일기 작성 완료")
-                }
+                DailyButton(
+                    text = "그림일기 만들러 가기",
+                    fontSize = 20.sp,
+                    onClick = { isWarningDialogVisible = true },
+                    cornerRadius = 50,
+                    width = 240.dp,
+                    height = 60.dp
+                )
+
+                Spacer(modifier = Modifier.height(8.dp)) // 아래쪽 여백
+            }
+        }
+
+            // 선택된 스티커의 'X' 버튼 추가
+        selectedStickerIndex?.let { index ->
+            val sticker = firstPageStickers[index]
+            val stickerPosition = sticker.position.value
+
+            StickerWithDeleteButton(stickerSize = 150, position = stickerPosition) {
+                firstPageStickers.removeAt(index)
+                selectedStickerIndex = null
             }
         }
     }
-
-    // Canvas 바깥에 'X' 버튼을 위한 Box를 배치
-    selectedStickerIndex?.let { index ->
-        val stickerPosition = firstPageStickers[index].position.value
-        Box(
-            modifier = Modifier
-                .offset(
-                    x = with(LocalDensity.current) { stickerPosition.x.toDp() + 8.dp },
-                    y = with(LocalDensity.current) { stickerPosition.y.toDp() + 8.dp }
-                )
-                .size(24.dp)
-                .background(Color.White, shape = RoundedCornerShape(12.dp))
-                .clickable {
-                    firstPageStickers.removeAt(index)
-                    selectedStickerIndex = null
-                },
-            contentAlignment = Alignment.Center
-        ) {
-            Text("X", color = Color.Red, fontSize = 16.sp)
-        }
+    if (isModalOpen) {
+        CommonModal(
+            onDismissRequest = { isModalOpen = false },
+            titleText = "일기를 그만 쓸까요?",
+            confirmText= "종료",
+            onConfirm = {
+                isModalOpen = false
+                navController.navigate("main") {
+                    popUpTo("wordLearning") { inclusive = true }
+                }
+            }
+        )
     }
+
     if (isWarningDialogVisible) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.7f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth(0.4f)
-                    .background(Color.White, shape = RoundedCornerShape(16.dp))
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Text("그림 일기를 다시 작성 할 수 없어요!", fontSize = 20.sp, color = Color.Black)
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    Button(onClick = { isWarningDialogVisible = false }) {
-                        Text("취소")
-                    }
-                    Button(onClick = {
-                        isWarningDialogVisible = false
-                        isPreviewDialogVisible = true // 확인 버튼을 눌렀을 때 프리뷰 다이얼로그 표시
-                        isVideoReady = false // 동영상 준비 상태 초기화
-                    }) {
-                        Text("확인")
-                    }
+        CommonModal(
+            onDismissRequest = { isWarningDialogVisible = false },
+            titleText = "그림 일기를 다시 작성 할 수 없어요!",
+            cancelText = "다시 쓰기",
+            confirmText = "일기 완성",
+            confirmButtonColor = PastelNavy,
+            onConfirm = {
+                if (areBitmapsFilled()) {
+                    // All bitmaps are filled, proceed to preview
+                    isWarningDialogVisible = false
+                    isPreviewDialogVisible = true
+                    isVideoReady = false
+                } else {
+                    // One or more bitmaps are empty, show fill warning
+                    isWarningDialogVisible = false
+                    isFillWarningDialogVisible = true
                 }
             }
-        }
+        )
+    }
+
+    // Fill warning modal displayed if any bitmap is empty
+    if (isFillWarningDialogVisible) {
+        CommonModal(
+            onDismissRequest = { isFillWarningDialogVisible = false },
+            titleText = "비어 있는 그림을 채워 주세요!",
+            cancelText = "확인",
+            confirmText = "닫기",
+            confirmButtonColor = Color.Red,
+            onConfirm = { isFillWarningDialogVisible = false }
+        )
     }
 
     if (isPreviewDialogVisible) {
@@ -457,39 +495,77 @@ fun DiaryScreen(
                 Column(
                     modifier = Modifier
                         .weight(0.2f)
-                        .fillMaxHeight(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.SpaceEvenly
+                        .fillMaxHeight()
+                        .padding(start = 30.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally, // 왼쪽 정렬로 시작
+                    verticalArrangement = Arrangement.Bottom
                 ) {
-                    Button(
-                        onClick = {
-                            if (isVideoReady) {
+                    if (isVideoReady && !isLoading) {
+                        DailyButton(
+                            text = "일기 저장",
+                            fontSize = 20.sp,
+                            onClick = {
                                 CoroutineScope(Dispatchers.IO).launch {
                                     diaryViewModel.clearResponseMessage() // 이전 응답 메시지 초기화
                                     saveAndUploadImages() // 이미지 저장 및 업로드 함수 호출
                                 }
-                            }
-                        },
-                        enabled = isVideoReady && !isLoading // 로딩 중이 아니고, 비디오 준비 완료 시 활성화
-                    ) {
-                        Text("일기 저장")
+                            },
+                            cornerRadius = 50,
+                            width = 200.dp,
+                            height = 60.dp
+                        )
+                    } else {
+                        val rotation by rememberInfiniteTransition().animateFloat(
+                            initialValue = 0f,
+                            targetValue = 360f,
+                            animationSpec = infiniteRepeatable(
+                                animation = tween(durationMillis = 1000, easing = LinearEasing)
+                            ), label = ""
+                        )
+
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "동영상을 만들고 있어요!\n잠시만 기다려 주세요!",
+                                color = Color.Gray,
+                                fontSize = 18.sp,
+                                textAlign = TextAlign.Center
+                            )
+
+                            // 빙글빙글 도는 로딩 아이콘
+                            Image(
+                                painter = painterResource(id = R.drawable.loading), // 로딩 아이콘 리소스
+                                contentDescription = "로딩 중 아이콘",
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .graphicsLayer { rotationZ = rotation }
+                            )
+                        }
                     }
+                    Spacer(modifier = Modifier.height(35.dp)) // 하단 여백 추가
                 }
             }
         }
     }
-    if (isLoading) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.5f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Text("일기가 생성중입니다. 잠시만 기다려주세요.", color = Color.White, fontSize = 18.sp)
-        }
-    }
 
-    responseMessage?.let { message ->
+    if (isLoading) {
+        // Animatable을 사용하여 회전 값을 애니메이션화
+        val rotation = remember { Animatable(0f) }
+
+        // 로딩 중일 때 반복 애니메이션 설정
+        LaunchedEffect(isLoading) {
+            rotation.animateTo(
+                targetValue = 10f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(durationMillis = 500),
+                    repeatMode = RepeatMode.Reverse
+                )
+            )
+        }
+
+        // 화면 전체를 차지하는 Box
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -497,23 +573,66 @@ fun DiaryScreen(
             contentAlignment = Alignment.Center
         ) {
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(message, color = Color.White, fontSize = 18.sp)
-                Spacer(modifier = Modifier.height(16.dp))
-                Button(
-                    onClick = {
-                        diaryViewModel.clearResponseMessage()
-                        isPreviewDialogVisible = false // 다이얼로그 닫기
-                        if (responseMessage == "그림일기 작성 완료!") {
-                            navController.navigate("main?origin=diary&isFinished=true"){
-                                popUpTo("diary") {inclusive = true}}
-                        }
-                    }
-                ) {
-                    Text("확인")
-                }
+                Text(
+                    "해꽁이가 노래를 만들고 있어요!!",
+                    color = Color.White,
+                    fontSize = 50.sp // 텍스트 크기
+                )
+                Image(
+                    painter = painterResource(id = R.drawable.main_char), // 이미지 리소스
+                    contentDescription = "로딩 중 이미지",
+                    modifier = Modifier
+                        .size(400.dp) // 이미지 크기
+                        .graphicsLayer { rotationZ = rotation.value } // 회전 값 적용
+                )
             }
         }
+    }
+
+
+    responseMessage?.let { message ->
+        LaunchedEffect(Unit) {
+            delay(1000)
+            diaryViewModel.clearResponseMessage()
+            isPreviewDialogVisible = false
+            navController.navigate("main?origin=diary&isFinished=true") {
+                popUpTo("diary") { inclusive = true }
+            }
+        }
+
+        CommonPopup(
+            onDismissRequest = {
+                diaryViewModel.clearResponseMessage()
+                isPreviewDialogVisible = false
+                navController.navigate("main?origin=diary&isFinished=true") {
+                    popUpTo("diary") { inclusive = true }
+                }
+            },
+            titleText = message
+        )
+    }
+
+
+
+}
+
+@Composable
+fun StickerWithDeleteButton(stickerSize: Int, position: Offset, onDelete: () -> Unit) {
+    val density = LocalDensity.current
+    val xDp = with(density) { (position.x + stickerSize - 12).toDp() } // 스티커 우측 상단에 X 버튼 배치
+    val yDp = with(density) { (position.y - 12).toDp() } // Y 위치를 상단으로 약간 조정
+
+    Box(
+        modifier = Modifier
+            .offset(x = xDp, y = yDp)
+            .size(24.dp) // X 버튼 크기
+            .background(Color.White, shape = CircleShape)
+            .clickable { onDelete() },
+        contentAlignment = Alignment.Center
+    ) {
+        Text("X", color = Color.Red, fontSize = 10.sp)
     }
 }

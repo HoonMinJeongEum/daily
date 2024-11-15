@@ -13,23 +13,15 @@ import javax.inject.Inject
 import org.json.JSONObject
 import androidx.compose.ui.graphics.Path
 import io.socket.client.IO
-import androidx.compose.runtime.State
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asAndroidPath
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.example.diarytablet.domain.dto.request.quest.UpdateQuestRequestDto
 import com.example.diarytablet.domain.dto.request.quiz.SessionRequestDto
 import com.example.diarytablet.domain.dto.response.quiz.SessionResponseDto
 import com.example.diarytablet.domain.repository.QuestRepository
 import com.example.diarytablet.utils.Const
 import com.example.diarytablet.utils.openvidu.Session
-import org.json.JSONArray
 import org.webrtc.MediaStream
 
 @HiltViewModel
@@ -51,6 +43,10 @@ class QuizViewModel @Inject constructor(
     val remoteMediaStream: LiveData<MediaStream?> get() = _remoteMediaStream
     private val _leaveSessionTriggered = MutableLiveData<Boolean>()
     val leaveSessionTriggered: LiveData<Boolean> get() = _leaveSessionTriggered
+    private val _isMicMuted = MutableLiveData(true) // 마이크 상태
+    val isMicMuted: LiveData<Boolean> get() = _isMicMuted
+    private val _isRemoteAudioMuted = MutableLiveData(true) // 스피커 상태
+    val isRemoteAudioMuted: LiveData<Boolean> get() = _isRemoteAudioMuted
 
     // 단어
     lateinit var socket: Socket
@@ -89,6 +85,7 @@ class QuizViewModel @Inject constructor(
     }
 
     private fun loadQuiz() {
+        isLoading.value = true
         recommendWord()
         initializeSession()
     }
@@ -96,7 +93,6 @@ class QuizViewModel @Inject constructor(
     // 세션 초기화 함수
     private fun initializeSession() {
         viewModelScope.launch {
-            isLoading.value = true
             errorMessage.value = null
             try {
                 var sessionId : String = ""
@@ -114,6 +110,7 @@ class QuizViewModel @Inject constructor(
             } catch (e: Exception) {
                 errorMessage.value = e.message
             } finally {
+                Log.d("QuizViewModel", "loading end")
                 isLoading.value = false
             }
         }
@@ -122,7 +119,6 @@ class QuizViewModel @Inject constructor(
     // 커넥션 생성 함수
     private fun createConnection(sessionId: String) {
         viewModelScope.launch {
-            isLoading.value = true
             errorMessage.value = null
             try {
                 Log.e("QuizViewModel", "Session ID: ${sessionId}")
@@ -131,8 +127,6 @@ class QuizViewModel @Inject constructor(
                 Log.d("QuizViewModel", "Token 얻음: ${_token.value}")
             } catch (e: Exception) {
                 errorMessage.value = e.message
-            } finally {
-                isLoading.value = false
             }
         }
     }
@@ -198,10 +192,12 @@ class QuizViewModel @Inject constructor(
                 recommendWords.value = response.body()?.map { it.word } ?: emptyList()
             } catch (e: Exception) {
                 errorMessage.value = e.message
-            } finally {
-                isLoading.value = false
             }
         }
+    }
+
+    fun sendAspectRatio(aspectRatio: Float) {
+        socket.emit("aspectRatio", aspectRatio)
     }
 
     // 단어 설정
@@ -244,6 +240,18 @@ class QuizViewModel @Inject constructor(
         _remoteMediaStream.postValue(stream)
     }
 
+    // 마이크 제어
+    fun toggleMicMute() {
+        _isMicMuted.value = _isMicMuted.value?.not() ?: false
+        session.getLocalParticipant().audioTrack?.setEnabled(_isMicMuted.value!!)
+    }
+
+    // 스피커 제어
+    fun toggleRemoteAudioMute() {
+        _isRemoteAudioMuted.value = _isRemoteAudioMuted.value?.not() ?: false
+        session.muteAllRemoteParticipants(_isRemoteAudioMuted.value!!)
+    }
+
     // 그림 초기화
     fun resetPath() {
         socket.emit("clear" )
@@ -262,7 +270,7 @@ class QuizViewModel @Inject constructor(
         _pathStyle.postValue(style)
 
         val widthData = JSONObject().apply {
-            put("width", width)
+            put("width", width / canvasWidth.value!!)
         }
         socket.emit("width", widthData.toString())
     }
@@ -290,11 +298,19 @@ class QuizViewModel @Inject constructor(
         }
         socket.emit("alpha", alphaData.toString())
     }
+    private val _isUndoAvailable = MutableLiveData(false)
+    val isUndoAvailable: LiveData<Boolean> get() = _isUndoAvailable
+
+    private val _isRedoAvailable = MutableLiveData(false)
+    val isRedoAvailable: LiveData<Boolean> get() = _isRedoAvailable
 
     fun addPath(pair: Pair<Path, PathStyle>) {
         val list = _paths.value
         list.add(pair)
+        removedPaths.clear()
         _paths.postValue(list)
+        _isUndoAvailable.value = list.isNotEmpty()
+        _isRedoAvailable.value = removedPaths.isNotEmpty()
         socket.emit("addPath")
     }
 
@@ -304,10 +320,10 @@ class QuizViewModel @Inject constructor(
             return
         val last = pathList.last()
         val size = pathList.size
-
         removedPaths.add(last)
         _paths.postValue(pathList.subList(0, size-1))
-
+        _isUndoAvailable.value = (pathList.size - 1) > 0
+        _isRedoAvailable.value = removedPaths.isNotEmpty()
         socket.emit("undoPath")
     }
 
@@ -315,9 +331,11 @@ class QuizViewModel @Inject constructor(
         if (removedPaths.isEmpty())
             return
         _paths.postValue((_paths.value + removedPaths.removeLast()) as MutableList<Pair<Path, PathStyle>>)
-
+        _isUndoAvailable.value = true
+        _isRedoAvailable.value = removedPaths.isNotEmpty()
         socket.emit("redoPath")
     }
+
 }
 
 class NonNullLiveData<T: Any>(defaultValue: T) : MutableLiveData<T>(defaultValue) {
