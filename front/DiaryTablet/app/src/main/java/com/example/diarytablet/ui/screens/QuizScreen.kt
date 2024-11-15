@@ -398,7 +398,7 @@ fun QuizScreen(
                                             .weight(2f),
                                         viewModel = viewModel
                                     )
-                                    val fontSize = (rowWidth.value * 0.03f)
+                                    val fontSize = (rowWidth.value * 0.028f)
                                     BasicButton(
                                         modifier = Modifier
                                             .weight(6f),
