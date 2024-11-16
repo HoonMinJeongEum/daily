@@ -69,28 +69,14 @@ fun MainScreen(
         "조개를 모아서\n상점에서 쓸 수 있어!"
     )
 
-
-    val missionItems = when (origin) {
-        "wordLearning" -> listOf(
-            MissionItem("단어 학습", isSuccess = true),
-            MissionItem("그림 일기", isSuccess = false),
-            MissionItem("그림 퀴즈", isSuccess = false)
-        )
-        "diary" -> listOf(
-            MissionItem("단어 학습", isSuccess = false),
-            MissionItem("그림 일기", isSuccess = true),
-            MissionItem("그림 퀴즈", isSuccess = false)
-        )
-        "quiz" -> listOf(
-            MissionItem("단어 학습", isSuccess = false),
-            MissionItem("그림 일기", isSuccess = false),
-            MissionItem("그림 퀴즈", isSuccess = true)
-        )
-        else -> listOf(
-            MissionItem("단어 학습", isSuccess = false),
-            MissionItem("그림 일기", isSuccess = false),
-            MissionItem("그림 퀴즈", isSuccess = false)
-        )
+    val missionItems = missions.map { mission ->
+        val isSuccessFromOrigin = when (origin) {
+            "wordLearning" -> mission.text == "단어 학습"
+            "diary" -> mission.text == "그림 일기"
+            "quiz" -> mission.text == "그림 퀴즈"
+            else -> false
+        }
+        mission.copy(isSuccess = mission.isSuccess || isSuccessFromOrigin)
     }
 
     BoxWithConstraints(
