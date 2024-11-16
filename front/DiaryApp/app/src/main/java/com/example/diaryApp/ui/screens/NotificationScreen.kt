@@ -1,5 +1,6 @@
 package com.example.diaryApp.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -40,6 +41,7 @@ import com.example.diaryApp.ui.components.NavMenu
 import com.example.diaryApp.ui.components.TabletHeader
 import com.example.diaryApp.ui.components.alarm.AlarmItem
 import com.example.diaryApp.ui.components.alarm.AlarmList
+import com.example.diaryApp.ui.components.quiz.Alert
 import com.example.diaryApp.ui.components.quiz.QuizAlert
 import com.example.diaryApp.ui.theme.MyTypography
 import com.example.diaryApp.viewmodel.AlarmViewModel
@@ -53,7 +55,10 @@ fun NotificationScreen(
     backgroundType: BackgroundType = BackgroundType.NORMAL
 ) {
 
-
+    var showQuizAlert by remember { mutableStateOf(false) }
+    var showQuizConfirmDialog by remember { mutableStateOf(false) }
+    var sessionId by remember { mutableStateOf<String?>(null) }
+    var childName by remember { mutableStateOf<String?>(null) }
     val alarms by viewModel.alarms
 
     BackgroundPlacement(backgroundType = backgroundType)
@@ -97,7 +102,16 @@ fun NotificationScreen(
                     alarmList = alarms,
                     quizViewModel = quizViewModel,
                     alarmViewModel = viewModel,
-                    navController = navController
+                    navController = navController,
+                    onShowQuizAlert = { newSessionId, newChildName ->
+                        if (newSessionId.isNotEmpty()) {
+                            sessionId = newSessionId
+                            childName = newChildName
+                            showQuizConfirmDialog = true
+                        } else {
+                            showQuizAlert = true
+                        }
+                    }
                 )
             }
         }
@@ -108,6 +122,26 @@ fun NotificationScreen(
         ) {
             NavMenu(navController, "notification", "notification")
         }
+    }
+    if (showQuizConfirmDialog && sessionId != null) {
+        Alert(
+            isVisible = true,
+            onDismiss = {
+                showQuizConfirmDialog = false
+            },
+            onConfirm = {
+                showQuizConfirmDialog = false
+                navController.navigate("catchMind/$sessionId/$childName")
+            },
+            title = "그림 퀴즈에 입장할까요?",
+        )
+    }
+
+    if (showQuizAlert) {
+        QuizAlert(
+            title = "아직 퀴즈가 준비되지 않았어요.",
+            onDismiss = { showQuizAlert = false }
+        )
     }
 
 }

@@ -38,14 +38,9 @@ fun AlarmList(
     alarmList: List<AlarmResponseDto>,
     quizViewModel: QuizViewModel,
     alarmViewModel: AlarmViewModel,
-    navController: NavController
+    navController: NavController,
+    onShowQuizAlert: (String, String) -> Unit
 ){
-    var showQuizAlert by remember { mutableStateOf(false) }
-    Log.d("AlarmList", "${alarmList}")
-    var showQuizConfirmDialog by remember { mutableStateOf(false) }
-    var sessionId by remember { mutableStateOf<String?>(null) }
-    var childName by remember { mutableStateOf<String?>(null) }
-
     LaunchedEffect(Unit) {
         alarmViewModel.getAlarms()
     }
@@ -64,13 +59,9 @@ fun AlarmList(
                 navController,
                 quizViewModel,
                 onShowQuizAlert = { newSessionId, newChildName ->
-                    if (newSessionId.isNotEmpty()) {
-                        sessionId = newSessionId
-                        childName = newChildName
-                        showQuizConfirmDialog = true
-                    } else {
-                        showQuizAlert = true
-                    }})
+                    onShowQuizAlert(newSessionId, newChildName)
+                }
+            )
             if (index < alarmList.size - 1) {
                 HorizontalDivider(
                     modifier = Modifier.padding(horizontal = screenWidth * 0.06f),
@@ -79,25 +70,5 @@ fun AlarmList(
                 )
             }
         }
-    }
-    if (showQuizConfirmDialog && sessionId != null) {
-        Alert(
-            isVisible = true,
-            onDismiss = {
-                showQuizConfirmDialog = false
-            },
-            onConfirm = {
-                showQuizConfirmDialog = false
-                navController.navigate("catchMind/$sessionId/$childName")
-            },
-            title = "그림 퀴즈에 입장할까요?",
-        )
-    }
-
-    if (showQuizAlert) {
-        QuizAlert(
-            title = "아직 퀴즈가 준비되지 않았어요.",
-            onDismiss = { showQuizAlert = false }
-        )
     }
 }

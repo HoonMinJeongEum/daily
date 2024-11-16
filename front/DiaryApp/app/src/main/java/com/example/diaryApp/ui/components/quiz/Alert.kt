@@ -32,19 +32,15 @@ fun Alert(
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.6f))
         ) {
             Box (
                 modifier = Modifier
                     .fillMaxWidth(0.7f)
                     .fillMaxHeight(0.25f)
                     .align(Alignment.Center)
+                    .background(color = Color.White, shape = RoundedCornerShape(15))
             ){
-                Image(
-                    painter = painterResource(id = R.drawable.quiz_pop_up),
-                    contentDescription = "퀴즈 팝업 이미지",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.FillBounds
-                )
                 Column(
                     modifier = Modifier
                         .fillMaxWidth(0.95f)
