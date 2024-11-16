@@ -80,7 +80,7 @@ public class QuizService {
         }
 
         // 알림
-        alarmService.sendNotification(childName, sessionId, userDetails.getFamily().getId(), Role.PARENT, "그림 퀴즈", "요청");
+        alarmService.sendNotification(childName, sessionId, userDetails.getFamily().getId(), Role.PARENT, "그림 퀴즈", childName + " - 그림 퀴즈를 요청 했어요");
         return new SessionResponse(sessionId);
     }
 

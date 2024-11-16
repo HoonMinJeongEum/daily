@@ -197,7 +197,7 @@ public class DiaryService {
         int toId = userDetails.getFamilyId();
         Role role = Role.PARENT;
         String title = "그림 일기";
-        String body = "업로드";
+        String body = name + " - 그림 일기를 업로드 했어요";
         try {
             alarmService.sendNotification(name, titleId, toId, role, title, body);
         } catch (Exception e) {
