@@ -98,9 +98,12 @@ io.on("connection", (socket) => {
   // 단어 확인
   socket.on("checkWord", (data) => {
     const { checkWord } = JSON.parse(data);
+
+    const processedWord = checkWord.trim().toLowerCase();
     const isCorrect =
-      checkWord.trim().toLowerCase() === roomData[socket.roomId].word.trim().toLowerCase(); 
-    io.to(socket.roomId).emit("checkWord", isCorrect);
+      processedWord === roomData[socket.roomId].word.trim().toLowerCase(); 
+    
+      io.to(socket.roomId).emit("checkWord", { isCorrect, processedWord });
   });
 
   // 그림 초기화
