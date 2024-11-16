@@ -74,6 +74,7 @@ public class AlarmService {
                         .setTitle(title)
                         .setBody(body)
                         .build())
+                .putData("title", title)
                 .putData("titleId", titleId)
                 .putData("name", name)
                 .build();
