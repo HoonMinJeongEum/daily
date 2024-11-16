@@ -1,7 +1,9 @@
 package com.example.diaryApp
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -40,6 +42,11 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         askForPermissions()
+        val name = intent?.getStringExtra("name")
+        val titleId = intent?.getStringExtra("titleId")
+        val title = intent?.getStringExtra("title")
+        val navigation = intent?.getStringExtra("navigation_target")
+        val path = navigation ?: createPath(name, titleId, title)
         val startDestination = runBlocking {
             val isAutoLoginEnabled = userStore.getAutoLoginState().firstOrNull() ?: false
             val username = userStore.getValue(UserStore.KEY_USER_NAME).firstOrNull()
@@ -48,7 +55,15 @@ class MainActivity : ComponentActivity() {
             if (isAutoLoginEnabled && !username.isNullOrEmpty() && !password.isNullOrEmpty()) {
                 val success = performLogin(username, password)
                 Log.d("start","${success}")
-                if (success) "main" else "login"
+                if (success) {
+                    if (path != "login") {
+                        path
+                    }
+                    else {
+                        "main"
+                    }
+
+                } else "login"
             } else {
                 "login"
             }
@@ -57,6 +72,24 @@ class MainActivity : ComponentActivity() {
         setContent {
             DiaryMobileApp(startDestination = startDestination, navController = rememberNavController())
         }
+    }
+
+    private fun createPath(name: String?, titleId: String?, title: String?): String {
+        return when (title) {
+            "그림 일기" -> titleId?.let { "diary/$it/$name" } ?: "login"
+            "그림 퀴즈" -> if (titleId != null && name != null) {
+                "catchMind/$titleId/$name"
+            } else {
+                "login"
+            }
+            "쿠폰" -> "shop"
+            else -> "login"
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
     }
 
     private suspend fun performLogin(username: String, password: String): Boolean {

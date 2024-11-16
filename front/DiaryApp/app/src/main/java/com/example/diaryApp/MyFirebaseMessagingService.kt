@@ -11,6 +11,7 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import android.Manifest
+import android.app.PendingIntent.FLAG_UPDATE_CURRENT
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
 
@@ -25,16 +26,19 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         super.onMessageReceived(remoteMessage)
         Log.d("FCM", "메시지 받음: ${remoteMessage.notification?.body}")
 
-        if (remoteMessage.notification != null) {
-            sendNotification(remoteMessage.notification?.title, remoteMessage.notification?.body)
-        } else if (remoteMessage.data.isNotEmpty()) {
-            val title = remoteMessage.data["title"]
-            val body = remoteMessage.data["body"]
-            sendNotification(title, body)
+        if (remoteMessage.data.isNotEmpty()) {
+            // `data` 필드에서 값 읽기
+            val title = remoteMessage.notification?.title
+            val body =remoteMessage.notification?.body
+            val titleId = remoteMessage.data["titleId"]           // `titleId` 읽기
+            val name = remoteMessage.data["name"]                 // `name` 읽기
+
+            // 읽어온 데이터로 알림 생성
+            sendNotification(title, body, titleId, name)
         }
     }
 
-    private fun sendNotification(title: String?, body: String?) {
+    private fun sendNotification(title: String?, body: String?, titleId: String?, childName: String?) {
         val channelId = "default_channel_id"
         val channelName = "Default Channel"
 
@@ -45,11 +49,25 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             notificationManager.createNotificationChannel(channel)
         }
 
+        val targetPath = when (title) {
+            "그림 퀴즈" -> "catchMind/$titleId/$childName" // 동적 경로
+            "그림 일기" -> "diary/$titleId"
+            "쿠폰" -> "shop"
+            else -> "main" // 기본 경로
+        }
+        val notificationMessage = when (title) {
+            "그림 퀴즈" -> "$childName - 그림 퀴즈를 요청 했어요"
+            "그림 일기" -> "$childName - 그림 일기를 업로드 했어요"
+            "쿠폰" -> "$childName - 쿠폰을 구매 했어요"
+            else -> "$childName - 새로운 활동을 했어요"
+        }
+        Log.d("alarm","targetPath: ${targetPath}")
         // 알림을 클릭했을 때 열릴 액티비티 설정
         val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            putExtra("navigation_target",targetPath)
         }
-        val pendingIntent: PendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+        val pendingIntent: PendingIntent = PendingIntent.getActivity(this, 0, intent, FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             Log.w("FCM", "알림 권한이 없습니다.")
@@ -60,7 +78,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.drawable.daily_logo)
             .setContentTitle(title)
-            .setContentText(body)
+            .setContentText(notificationMessage)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
