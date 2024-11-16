@@ -91,6 +91,7 @@ fun DiaryDetailScreen(
     diaryId: String?,
     diaryViewModel: DiaryViewModel,
     backgroundType: BackgroundType = BackgroundType.ACTIVE,
+    childName: String
 ) {
     LaunchedEffect(diaryId) {
         if (diaryId != null) {
@@ -121,7 +122,7 @@ fun DiaryDetailScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             TabletHeader(
-                pageName = "${diaryViewModel.memberName.value}의 그림 일기",
+                pageName = "${childName}의 그림 일기",
                 navController = navController,
                 modifier = Modifier
                     .fillMaxWidth()

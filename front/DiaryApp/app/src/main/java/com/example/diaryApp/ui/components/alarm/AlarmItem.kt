@@ -139,10 +139,7 @@ fun AlarmItem(
                         else {
                             diaryViewModel.memberName.value = alarm.name
                             alarmViewModel.checkAlarm(alarm.id)
-                            navController.navigate("diary/${alarm.titleId}")
-                            Log.e("alarm", diaryViewModel.memberName.value)
-                            Log.e("alarm", alarm.titleId)
-                            Log.e("alarm", "${alarm.id}")
+                            navController.navigate("diary/${alarm.titleId}/${alarm.name}")
                         }
 
                     },

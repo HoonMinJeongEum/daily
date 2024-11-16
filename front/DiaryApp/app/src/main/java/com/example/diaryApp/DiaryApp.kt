@@ -117,13 +117,17 @@ fun DiaryMobileApp(
                 composable("setting") {
                     SettingScreen(navController = navController)
                 }
-                composable("diary/{diaryId}") { backStackEntry ->
+                composable("diary/{diaryId}/{childName}") { backStackEntry ->
                     val diaryId = backStackEntry.arguments?.getString("diaryId")
-                    DiaryDetailScreen(
-                        navController = navController,
-                        diaryId = diaryId,
-                        diaryViewModel = diaryViewModel
-                    )
+                    val childName = backStackEntry.arguments?.getString("childName")
+                    if (childName != null) {
+                        DiaryDetailScreen(
+                            navController = navController,
+                            diaryId = diaryId,
+                            diaryViewModel = diaryViewModel,
+                            childName = childName
+                        )
+                    }
                 }
             }
             BoxWithConstraints(

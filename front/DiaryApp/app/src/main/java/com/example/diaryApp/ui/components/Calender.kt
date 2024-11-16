@@ -18,6 +18,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.diaryApp.R
 import com.example.diaryApp.domain.dto.response.diary.DiaryForList
@@ -26,6 +27,7 @@ import com.example.diaryApp.ui.theme.DeepPastelNavy
 import com.example.diaryApp.ui.theme.GrayText
 import com.example.diaryApp.ui.theme.MyTypography
 import com.example.diaryApp.ui.theme.SkyBlue
+import com.example.diaryApp.viewmodel.QuizViewModel
 import java.time.LocalDateTime
 import java.util.*
 
@@ -33,7 +35,8 @@ import java.util.*
 fun DailyCalendar(
     screenWidth : Dp,
     viewModel: DiaryViewModel,
-    navController: NavController
+    navController: NavController,
+    childName: String
 ) {
 
     val year by viewModel.year.collectAsState()
@@ -150,7 +153,8 @@ fun DailyCalendar(
                                     }
                                 },
                                 diaryId = diaryId,
-                                navController = navController
+                                navController = navController,
+                                childName = childName
                             )
                             day++
                         }
@@ -171,6 +175,7 @@ fun DateCell(
     diaryId: String,
     navController: NavController,
     onClick: () -> Unit,
+    childName: String
 ) {
     Box(
         modifier = Modifier
@@ -182,7 +187,7 @@ fun DateCell(
             .clickable {
                 onClick()
                 if (isDiaryDate && diaryId != null) {
-                    navController.navigate("diary/$diaryId")
+                    navController.navigate("diary/$diaryId/${childName}")
                 } },
         contentAlignment = Alignment.Center
     ) {

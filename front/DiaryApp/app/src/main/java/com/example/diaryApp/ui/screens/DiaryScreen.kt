@@ -70,7 +70,10 @@ fun DiaryScreen(
             ) {
                 DailyCalendar(
                     screenWidth = screenWidth,
-                    viewModel = diaryViewModel, navController = navController)
+                    viewModel = diaryViewModel,
+                    navController = navController,
+                    childName = diaryViewModel.memberName.value
+                )
             }
         }
 
