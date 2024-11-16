@@ -268,6 +268,8 @@ fun MainScreen(
         }
         // MissionModal
         MissionModal(
+            screenWidth = screenWidth,
+            screenHeight = screenHeight,
             isDialogVisible = isFinished,
             onDismiss = {
                 viewModel.setFinished(false)

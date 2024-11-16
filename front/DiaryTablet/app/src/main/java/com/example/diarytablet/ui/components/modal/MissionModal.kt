@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -21,6 +22,8 @@ import com.example.diarytablet.ui.components.MissionItem
 
 @Composable
 fun MissionModal(
+    screenWidth : Dp,
+    screenHeight : Dp,
     isDialogVisible: Boolean,
     onDismiss: () -> Unit,
     missionItems: List<MissionItem>
@@ -32,9 +35,9 @@ fun MissionModal(
         ) {
             Box(
                 modifier = Modifier
-                    .width(500.dp)
-                    .background(Color(0xFFDEE5D4), shape = RoundedCornerShape(30.dp)) // 모달 배경색 및 모서리
-                    .padding(24.dp)
+                    .width(screenHeight * 0.7f)
+                    .background(Color(0xFFDEE5D4), shape = RoundedCornerShape(10)) // 모달 배경색 및 모서리
+                    .padding(screenHeight * 0.03f)
             ) {
                 // 닫기 버튼
                 Box(
@@ -45,28 +48,28 @@ fun MissionModal(
                     Image(
                         painter = painterResource(id = R.drawable.mission_close),
                         contentDescription = null,
-                        modifier = Modifier.size(40.dp)
+                        modifier = Modifier.size(screenHeight * 0.06f)
                     )
                 }
 
                 Column(
                     modifier = Modifier
-                        .padding(vertical = 40.dp)
+                        .padding(vertical = screenHeight * 0.06f)
                         .fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(32.dp)
+                    verticalArrangement = Arrangement.spacedBy(screenHeight * 0.05f)
                 ) {
                     // "오늘의 미션" 제목
                     Text(
                         text = "오늘의 미션",
                         color = Color(0xFF49566F),
-                        fontSize = 30.sp,
-                        modifier = Modifier.padding(bottom = 10.dp)
+                        fontSize = (screenHeight * 0.045f).value.sp,
+                        modifier = Modifier.padding(bottom = screenHeight * 0.015f)
                     )
 
                     // 각 미션 항목을 반복하여 표시
                     missionItems.forEach { missionItem ->
-                        MissionItemRow(missionItem = missionItem)
+                        MissionItemRow(screenWidth, screenHeight, missionItem)
                     }
                 }
             }
@@ -76,11 +79,11 @@ fun MissionModal(
 
 
 @Composable
-fun MissionItemRow(missionItem: MissionItem) {
+fun MissionItemRow(screenWidth: Dp, screenHeight: Dp, missionItem: MissionItem) {
     Row(
         modifier = Modifier
-            .background(Color.White, shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
-            .padding(horizontal = 20.dp, vertical = 10.dp)
+            .background(Color.White, shape = androidx.compose.foundation.shape.RoundedCornerShape(12))
+            .padding(horizontal = screenHeight * 0.03f, vertical = screenHeight * 0.015f)
             .fillMaxWidth(0.8f),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
@@ -94,7 +97,7 @@ fun MissionItemRow(missionItem: MissionItem) {
         ) {
             Text(
                 text = missionItem.text,
-                fontSize = 20.sp,
+                fontSize = (screenHeight * 0.04f).value.sp,
                 color = Color(0xFF49566F)
             )
         }
@@ -112,20 +115,20 @@ fun MissionItemRow(missionItem: MissionItem) {
             Image(
                 painter = painterResource(id = imageRes),
                 contentDescription = null,
-                modifier = Modifier.size(40.dp)
+                modifier = Modifier.size(screenHeight * 0.06f)
             )
 
             if (missionItem.isSuccess) {
                 Text(
                     text = "+10",
                     color = Color(0xFF339900),
-                    fontSize = 24.sp
+                    fontSize = (screenHeight * 0.04f).value.sp
                 )
             } else {
                 Text(
                     text = "+10",
                     color = Color.White,
-                    fontSize = 24.sp
+                    fontSize = (screenHeight * 0.04f).value.sp
                 )
             }
         }
