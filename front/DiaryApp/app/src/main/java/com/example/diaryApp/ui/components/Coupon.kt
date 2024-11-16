@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -129,7 +130,7 @@ fun UsageCouponItem(
     usageCoupon: UsageCoupon,
     onClick: () -> Unit
 ) {
-    val boxColor = if (usageCoupon.usedAt != null) LightGray else LightSkyBlue
+    val boxColor = if (usageCoupon.usedAt != null) LightGray  else Color.Transparent
     val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
 
     val displayDate = if (usageCoupon.usedAt != null) {
@@ -137,24 +138,33 @@ fun UsageCouponItem(
     } else {
         usageCoupon.createdAt.format(dateTimeFormatter)
     }
-    Box (
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = screenWidth * 0.08f, vertical = screenWidth * 0.04f)
-            .height(screenWidth * 0.23f)
-            .background(boxColor, RoundedCornerShape(30))
-            .shadow(6.dp, RoundedCornerShape(30))
-            .clickable(
-                interactionSource = remember{ MutableInteractionSource() },
-                indication = null
-            ) { onClick() }
+    BoxWithConstraints (modifier = Modifier
+        .fillMaxWidth()
+
     ) {
+        val screenWidth = maxWidth
         Box(
             modifier = Modifier
-                .fillMaxSize()
-                .background(boxColor, RoundedCornerShape(30)),
+                .fillMaxWidth()
+                .padding(horizontal = screenWidth * 0.08f, vertical = screenWidth * 0.04f)
+                .height(screenWidth * 0.23f)
+                .background(boxColor, RoundedCornerShape(30))
+                .clickable(
+                    interactionSource = remember{ MutableInteractionSource() },
+                    indication = null
+                ) { onClick() }
+            ,
             contentAlignment = Alignment.Center
         ) {
+            if (usageCoupon.usedAt == null) {
+                Image(
+                    painter = painterResource(R.drawable.coupon_container),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentScale = ContentScale.FillBounds
+                )
+            }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceAround,

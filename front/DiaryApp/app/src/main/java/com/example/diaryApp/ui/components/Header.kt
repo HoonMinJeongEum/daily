@@ -35,6 +35,9 @@ import com.example.diaryApp.R
 import com.example.diaryApp.domain.RetrofitClient
 import com.example.diaryApp.ui.theme.DeepPastelBlue
 import com.example.diaryApp.ui.theme.MyTypography
+import com.example.diaryApp.ui.theme.PastelRed
+import com.example.diaryApp.ui.theme.White
+
 @Composable
 fun TabletHeader(
     pageName: String,
@@ -74,32 +77,21 @@ fun TabletHeader(
                         fontSize = (screenWidth.value * 0.08f).sp
                     ),
                     textAlign = TextAlign.Center
+
                     )
-                    // 오른쪽 로그아웃 버튼
-                    Button(
-                        modifier = Modifier
-                            .fillMaxHeight(0.5f)
-                            .aspectRatio(2f)
-                        ,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = DeepPastelBlue, // 배경색
-                            contentColor = Color.White //
-                        ),
-//                        onClick = {
-//                        RetrofitClient.logout()
-//                        navController.navigate("login") {
-//                            popUpTo("main") { inclusive = true }
-//                        }
-//                }
+//
+                    DailyButton(
+                        text = "로그아웃",
+                        fontSize = (screenWidth.value * 0.04f).toInt(),
+                        textColor = White,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                        backgroundColor = DeepPastelBlue,
+                        cornerRadius = 30,
+                        width = (screenWidth.value * 0.25f).toInt(),
+                        height =(screenWidth.value * 0.125f).toInt(),
+                        shadowElevation = 8.dp,
                         onClick = onClick
-                    ) {
-                        Text( text = "로그아웃",
-                            style = MyTypography.bodyMedium.copy(
-                                color = Color.White,
-                                fontSize = (screenWidth.value * 0.03f).sp
-                            ),
-                            textAlign = TextAlign.Center)
-                    }
+                    )
                 }
                 "main" -> {
                     Image(

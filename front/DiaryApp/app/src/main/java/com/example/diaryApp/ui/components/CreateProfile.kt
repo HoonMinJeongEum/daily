@@ -89,9 +89,14 @@ fun CreateProfile(
                 .padding(screenWidth * 0.04f)
         ) {
             Column(
+
                 modifier = Modifier
                     .padding(screenWidth * 0.04f)
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .background(
+                        color = Color.White,
+                    )
+                ,
                 verticalArrangement = Arrangement.SpaceBetween,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -179,7 +184,6 @@ fun CreateProfile(
                                     showWarning = false
                                 } else {
                                     showWarning = true
-                                    profileViewModel.memberName.value = it
 
                                     warningMessage = "이름은 5글자 이하로 입력해주세요."
                                 }
@@ -189,7 +193,8 @@ fun CreateProfile(
                                 .onFocusChanged { focusState -> isFocused.value = focusState.isFocused }
                                 .background(Color.Transparent)
                                 .fillMaxWidth()
-                                .padding(vertical = screenHeight * 0.005f)
+                                .padding(vertical = screenHeight * 0.005f),
+                            enabled = !isLoading
                         )
                     }
                 }

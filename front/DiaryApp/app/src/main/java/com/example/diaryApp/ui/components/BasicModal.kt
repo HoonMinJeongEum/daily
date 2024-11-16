@@ -48,7 +48,7 @@ fun BasicModal(
 
                 Surface(
                     modifier = Modifier
-                        .fillMaxWidth(0.8f)
+                        .fillMaxWidth()
                         .wrapContentHeight()
                         .background(Color.White, shape = RoundedCornerShape(15))
                         .padding(screenWidth * 0.08f)
@@ -57,6 +57,7 @@ fun BasicModal(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(screenWidth * 0.04f),
                         modifier = Modifier.fillMaxWidth()
+                            .background(Color.White)
                     ) {
                         Spacer(modifier = Modifier.height(screenWidth * 0.05f))
 
@@ -73,6 +74,17 @@ fun BasicModal(
                             horizontalArrangement = Arrangement.Center
                         ) {
                             DailyButton(
+                                text = "취소",
+                                onClick = { onDismiss() },
+                                backgroundColor = Color.LightGray,
+                                width = (screenWidth.value * 0.3f).toInt(),
+                                height = (screenWidth.value * 0.15f).toInt(),
+                                cornerRadius = 20,
+                                fontSize = (screenWidth.value * 0.05f).toInt()
+                            )
+                            Spacer(modifier = Modifier.width(screenWidth * 0.03f))
+
+                            DailyButton(
                                 text = buttonText,
                                 onClick = { onSuccessClick() },
                                 backgroundColor = successButtonColor,
@@ -82,16 +94,7 @@ fun BasicModal(
                                 fontSize = (screenWidth.value * 0.05f).toInt(),
 
                                 )
-                            Spacer(modifier = Modifier.width(screenWidth * 0.03f))
-                            DailyButton(
-                                text = "취소",
-                                onClick = { onDismiss() },
-                                backgroundColor = Color.LightGray,
-                                width = (screenWidth.value * 0.3f).toInt(),
-                                height = (screenWidth.value * 0.15f).toInt(),
-                                cornerRadius = 20,
-                                fontSize = (screenWidth.value * 0.05f).toInt()
-                            )
+
                         }
                     }
                 }
