@@ -72,7 +72,7 @@ class DiaryViewModel @Inject constructor(
 
                 _isLoading.value = false // 응답 도착 -> 로딩 종료
                 if (response.isSuccessful && response.code() == 200) {
-                    _responseMessage.postValue("그림일기 작성 완료!")
+                    _responseMessage.postValue("그림 일기 작성 완료!")
                 } else if (response.code() == 409) {
                     _responseMessage.postValue("일기는 하루에 하나씩!")
                 } else {
