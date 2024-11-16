@@ -56,13 +56,9 @@ fun Navbar(
     var isProfileModalVisible by remember { mutableStateOf(false) }
     var isAlarmModalVisible by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        viewModel.initializeData()
-    }
-
     LaunchedEffect(isProfileModalVisible) {
         if (!isProfileModalVisible) {
-            viewModel.initializeData()
+            viewModel.loadStatus()
             mainViewModel.loadStatus()
         }
     }
