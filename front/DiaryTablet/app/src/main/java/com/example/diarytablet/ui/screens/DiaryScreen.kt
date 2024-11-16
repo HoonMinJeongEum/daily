@@ -575,7 +575,7 @@ fun DiaryScreen(
                 diaryViewModel.clearResponseMessage()
 
                 // 응답 메시지에 따라 네비게이션 처리
-                if (message == "일기 작성 완료!") {
+                if (message == "그림 일기 작성 완료!") {
                     navController.navigate("main?origin=diary&isFinished=true") {
                         popUpTo("diary") { inclusive = true }
                     }
