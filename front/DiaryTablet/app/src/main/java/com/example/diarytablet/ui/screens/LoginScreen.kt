@@ -211,22 +211,23 @@ fun LoginScreen(
                     keyboardActions = KeyboardActions(
                         onDone = {
                             // 로그인 버튼 동작 호출
-                            loginViewModel.login(
-                                onSuccess = {
-                                    Log.d("LoginScreen", "onLoginSuccess called")
-                                    navController.navigate("profileList") {
-                                        popUpTo("login") { inclusive = true }
-                                    }
-                                },
-                                onErrorPassword = { message ->
-                                    isError = true
-                                    errorMessage = message
-                                },
-                                onError = { message ->
-                                    isError = true
-                                    errorMessage = message
-                                }
-                            )
+//                            loginViewModel.login(
+//                                onSuccess = {
+//                                    Log.d("LoginScreen", "onLoginSuccess called")
+//                                    navController.navigate("profileList") {
+//                                        popUpTo("login") { inclusive = true }
+//                                    }
+//                                },
+//                                onErrorPassword = { message ->
+//                                    isError = true
+//                                    errorMessage = message
+//                                },
+//                                onError = { message ->
+//                                    isError = true
+//                                    errorMessage = message
+//                                }
+//                            )
+                            focusManager.clearFocus()
                         }
                     ),
                     colors = TextFieldDefaults.colors(
@@ -270,8 +271,9 @@ fun LoginScreen(
                                 loginViewModel.autoLogin.value = isChecked
                             },
                             colors = CheckboxDefaults.colors(
-                                checkmarkColor = DeepPastelNavy, // 체크 표시 색상 (필요하면 변경)
-                                uncheckedColor = Color.White, // 체크되지 않은 상태의 색상
+                                checkmarkColor = DeepPastelNavy,
+                                checkedColor = Color.Transparent,
+                                uncheckedColor = Color.Transparent,
                             )
                         )
                     }

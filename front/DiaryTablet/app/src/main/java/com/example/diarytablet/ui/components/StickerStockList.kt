@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -15,16 +16,32 @@ import com.example.diarytablet.model.Sticker
 import kotlinx.coroutines.delay
 import coil3.compose.rememberAsyncImagePainter
 import com.example.diarytablet.model.StickerStock
+import com.example.diarytablet.ui.theme.DarkGray
+import com.example.diarytablet.ui.theme.MyTypography
 
 @Composable
 fun StickerStockList(stickers: List<StickerStock>) {
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(4),
-        contentPadding = PaddingValues(start = 15.dp, end = 15.dp),
-        modifier = Modifier.fillMaxSize()
-    ) {
-        itemsIndexed(stickers.reversed()) { index, sticker ->
-            StickerStockCard(sticker, index)
+    if (stickers.isEmpty()) {
+        // 리스트가 비어 있을 때 표시할 텍스트
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "아직 구매한 스티커가 없어요.",
+                style = MyTypography.bodyMedium,
+                color = DarkGray
+            )
+        }
+    } else {
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(4),
+            contentPadding = PaddingValues(start = 15.dp, end = 15.dp),
+            modifier = Modifier.fillMaxSize()
+        ) {
+            itemsIndexed(stickers.reversed()) { index, sticker ->
+                StickerStockCard(sticker, index)
+            }
         }
     }
 }

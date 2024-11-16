@@ -24,6 +24,8 @@ import com.example.diarytablet.model.Coupon
 import com.example.diarytablet.R
 import com.example.diarytablet.ui.components.modal.CommonModal
 import com.example.diarytablet.ui.components.modal.CommonPopup
+import com.example.diarytablet.ui.theme.DarkGray
+import com.example.diarytablet.ui.theme.MyTypography
 import com.example.diarytablet.ui.theme.PastelNavy
 import com.example.diarytablet.ui.theme.myFontFamily
 import com.example.diarytablet.viewmodel.NavBarViewModel
@@ -52,67 +54,82 @@ fun CouponShopList(
     LaunchedEffect(Unit) {
         navBarViewModel.initializeData()
     }
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        LazyColumn(
+    if (coupons.isEmpty()) {
+        // 리스트가 비어 있을 때 표시할 텍스트
+        Box(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(0.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top
+            contentAlignment = Alignment.Center
         ) {
-            itemsIndexed(coupons) { index, coupon ->
-                CouponBox(coupon, index) {
-                    selectedCoupon = coupon
-                    couponModalState = CouponModalState.PURCHASE_CONFIRMATION
-                    showDialog = true
+            Text(
+                text = "등록된 쿠폰이 없어요.",
+                style = MyTypography.bodyMedium,
+                color = DarkGray
+            )
+        }
+    } else {
+        Box(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(0.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Top
+            ) {
+                itemsIndexed(coupons) { index, coupon ->
+                    CouponBox(coupon, index) {
+                        selectedCoupon = coupon
+                        couponModalState = CouponModalState.PURCHASE_CONFIRMATION
+                        showDialog = true
+                    }
                 }
             }
         }
-    }
 
-    if (showDialog && selectedCoupon != null) {
-        when (couponModalState) {
-            CouponModalState.PURCHASE_CONFIRMATION -> {
-                val titleText = "${selectedCoupon!!.description}\n쿠폰을 구매할까요?"
-                val confirmText = "${selectedCoupon!!.price}"
-                val confirmIconResId = R.drawable.jogae
+        if (showDialog && selectedCoupon != null) {
+            when (couponModalState) {
+                CouponModalState.PURCHASE_CONFIRMATION -> {
+                    val titleText = "${selectedCoupon!!.description}\n쿠폰을 구매할까요?"
+                    val confirmText = "${selectedCoupon!!.price}"
+                    val confirmIconResId = R.drawable.jogae
 
-                CommonModal(
-                    onDismissRequest = {
-                        showDialog = false
-                        couponModalState = CouponModalState.NONE
-                    },
-                    titleText = titleText,
-                    confirmText = confirmText,
-                    confirmIconResId = confirmIconResId,
-                    onConfirm = {
-                        if (shellCount >= selectedCoupon!!.price) {
-                            viewModel.buyCoupon(selectedCoupon!!.id)
-                            couponModalState = CouponModalState.PURCHASE_SUCCESS
-                        } else {
-                            couponModalState = CouponModalState.INSUFFICIENT_SHELLS
+                    CommonModal(
+                        onDismissRequest = {
+                            showDialog = false
+                            couponModalState = CouponModalState.NONE
+                        },
+                        titleText = titleText,
+                        confirmText = confirmText,
+                        confirmIconResId = confirmIconResId,
+                        onConfirm = {
+                            if (shellCount >= selectedCoupon!!.price) {
+                                viewModel.buyCoupon(selectedCoupon!!.id)
+                                couponModalState = CouponModalState.PURCHASE_SUCCESS
+                            } else {
+                                couponModalState = CouponModalState.INSUFFICIENT_SHELLS
+                            }
                         }
-                    }
-                )
-            }
-
-            CouponModalState.INSUFFICIENT_SHELLS, CouponModalState.PURCHASE_SUCCESS -> {
-                val titleText = when (couponModalState) {
-                    CouponModalState.INSUFFICIENT_SHELLS -> "조개를 조금 더 모아보아요!"
-                    CouponModalState.PURCHASE_SUCCESS -> "구매가 완료되었습니다!"
-                    else -> ""
+                    )
                 }
 
-                CommonPopup(
-                    onDismissRequest = {
-                        showDialog = false
-                        couponModalState = CouponModalState.NONE
-                    },
-                    titleText = titleText
-                )
+                CouponModalState.INSUFFICIENT_SHELLS, CouponModalState.PURCHASE_SUCCESS -> {
+                    val titleText = when (couponModalState) {
+                        CouponModalState.INSUFFICIENT_SHELLS -> "조개를 조금 더 모아보아요!"
+                        CouponModalState.PURCHASE_SUCCESS -> "구매가 완료되었습니다!"
+                        else -> ""
+                    }
+
+                    CommonPopup(
+                        onDismissRequest = {
+                            showDialog = false
+                            couponModalState = CouponModalState.NONE
+                        },
+                        titleText = titleText
+                    )
+                }
+
+                else -> Unit
             }
-            else -> Unit
         }
     }
 }
@@ -173,7 +190,7 @@ fun CouponBox(coupon: Coupon, index: Int, onClick: (Coupon) -> Unit) {
                 Text(
                     text = coupon.description,
                     fontSize = 28.sp,
-                    color = Color.Black,
+                    color = DarkGray,
                     modifier = Modifier
                         .weight(0.6f)
                         .padding(start = 10.dp)

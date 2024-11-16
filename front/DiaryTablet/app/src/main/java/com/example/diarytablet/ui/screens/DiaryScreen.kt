@@ -62,7 +62,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextAlign
-import com.canhub.cropper.CropImage.CancelledResult.rotation
 import com.example.diarytablet.ui.components.DailyButton
 import com.example.diarytablet.ui.components.modal.CommonModal
 import com.example.diarytablet.ui.components.modal.CommonPopup
@@ -100,12 +99,10 @@ fun DiaryScreen(
     var isDrawingMode by remember { mutableStateOf(true) }
     var isPreviewDialogVisible by remember { mutableStateOf(false) }
     var isWarningDialogVisible by remember { mutableStateOf(false) }
-    var isFillWarningDialogVisible by remember { mutableStateOf(false) }
     var isVideoReady by remember { mutableStateOf(false)}
-    var isModalOpen by remember { mutableStateOf(false) }
 
     var selectedColor by remember { mutableStateOf(Color.Black) }
-    var brushSize by remember { mutableFloatStateOf(10f) }
+    var brushSize by remember { mutableFloatStateOf(5f) }
     var selectedTool by remember { mutableStateOf(ToolType.PENCIL) }
 
     val configuration = LocalConfiguration.current
@@ -131,23 +128,31 @@ fun DiaryScreen(
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { 2 })
     val firstPageDrawingSteps = remember { mutableStateListOf<DrawingStep>() }
 
-    val infiniteTransition = rememberInfiniteTransition()
-    val rotation by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 1000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ), label = ""
-    )
+    val undoStack = remember { mutableStateListOf<DrawingStep>() }
+    val redoStack = remember { mutableStateListOf<DrawingStep>() }
+    val redrawTrigger = remember { mutableStateOf(0) }
 
-    fun areBitmapsFilled(): Boolean {
-        return bitmapsList.all { bitmap ->
-            !bitmap.isRecycled && bitmap.width > 0 && bitmap.height > 0
+    fun undo() {
+        if (firstPageDrawingSteps.isNotEmpty()) {
+            val lastStroke = firstPageDrawingSteps.removeLast()
+            redoStack.add(lastStroke)
+            redrawTrigger.value++
+        } else {
+            Log.d("DiaryScreen", "Undo: No steps to undo.")
         }
     }
+
+    fun redo() {
+        if (redoStack.isNotEmpty()) {
+            val lastUndoneStroke = redoStack.removeLast()
+            firstPageDrawingSteps.add(lastUndoneStroke)
+            redrawTrigger.value++
+        } else {
+            Log.d("DiaryScreen", "Redo: No steps to redo.")
+        }
+    }
+
     suspend fun saveAndUploadImages() {
-        // 비트맵을 저장하고 이미지 파일로 변환
         val imageFiles = savePageImagesWithTemplate(
             bitmapsList,
             context,
@@ -185,11 +190,13 @@ fun DiaryScreen(
         ) {
             Image(
                 painter = painterResource(id = R.drawable.cute_back),
-                contentDescription = "뒤로가기 버튼",
+                contentDescription = "뒤로 가기 버튼",
                 modifier = Modifier
                     .size(48.dp)
                     .clickable {
-                        isModalOpen = true
+                        navController.navigate("main") {
+                            popUpTo("diary") { inclusive = true }
+                        }
                     }
             )
             Spacer(modifier = Modifier.width(30.dp))
@@ -401,7 +408,7 @@ fun DiaryScreen(
             }
         }
 
-            // 선택된 스티커의 'X' 버튼 추가
+        // 선택된 스티커의 'X' 버튼 추가
         selectedStickerIndex?.let { index ->
             val sticker = firstPageStickers[index]
             val stickerPosition = sticker.position.value
@@ -412,51 +419,19 @@ fun DiaryScreen(
             }
         }
     }
-    if (isModalOpen) {
-        CommonModal(
-            onDismissRequest = { isModalOpen = false },
-            titleText = "일기를 그만 쓸까요?",
-            confirmText= "종료",
-            onConfirm = {
-                isModalOpen = false
-                navController.navigate("main") {
-                    popUpTo("wordLearning") { inclusive = true }
-                }
-            }
-        )
-    }
 
     if (isWarningDialogVisible) {
         CommonModal(
             onDismissRequest = { isWarningDialogVisible = false },
-            titleText = "그림 일기를 다시 작성 할 수 없어요!",
+            titleText = "그림 일기를 다시 작성할 수 없어요!",
             cancelText = "다시 쓰기",
             confirmText = "일기 완성",
             confirmButtonColor = PastelNavy,
             onConfirm = {
-                if (areBitmapsFilled()) {
-                    // All bitmaps are filled, proceed to preview
-                    isWarningDialogVisible = false
-                    isPreviewDialogVisible = true
-                    isVideoReady = false
-                } else {
-                    // One or more bitmaps are empty, show fill warning
-                    isWarningDialogVisible = false
-                    isFillWarningDialogVisible = true
-                }
+                isWarningDialogVisible = false
+                isPreviewDialogVisible = true
+                isVideoReady = false
             }
-        )
-    }
-
-    // Fill warning modal displayed if any bitmap is empty
-    if (isFillWarningDialogVisible) {
-        CommonModal(
-            onDismissRequest = { isFillWarningDialogVisible = false },
-            titleText = "비어 있는 그림을 채워 주세요!",
-            cancelText = "확인",
-            confirmText = "닫기",
-            confirmButtonColor = Color.Red,
-            onConfirm = { isFillWarningDialogVisible = false }
         )
     }
 
@@ -550,6 +525,7 @@ fun DiaryScreen(
         }
     }
 
+
     if (isLoading) {
         // Animatable을 사용하여 회전 값을 애니메이션화
         val rotation = remember { Animatable(0f) }
@@ -594,29 +570,24 @@ fun DiaryScreen(
 
 
     responseMessage?.let { message ->
-        LaunchedEffect(Unit) {
-            delay(1000)
-            diaryViewModel.clearResponseMessage()
-            isPreviewDialogVisible = false
-            navController.navigate("main?origin=diary&isFinished=true") {
-                popUpTo("diary") { inclusive = true }
-            }
-        }
-
         CommonPopup(
             onDismissRequest = {
                 diaryViewModel.clearResponseMessage()
-                isPreviewDialogVisible = false
-                navController.navigate("main?origin=diary&isFinished=true") {
-                    popUpTo("diary") { inclusive = true }
+
+                // 응답 메시지에 따라 네비게이션 처리
+                if (message == "그림 일기 작성 완료!") {
+                    navController.navigate("main?origin=diary&isFinished=true") {
+                        popUpTo("diary") { inclusive = true }
+                    }
+                } else {
+                    navController.navigate("main") {
+                        popUpTo("diary") { inclusive = true }
+                    }
                 }
             },
             titleText = message
         )
     }
-
-
-
 }
 
 @Composable

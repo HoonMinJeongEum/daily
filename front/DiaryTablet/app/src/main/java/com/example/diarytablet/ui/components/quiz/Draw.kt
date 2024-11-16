@@ -104,7 +104,9 @@ fun Draw(
                 }
             },
     ) {
-        paths?.forEach { pair ->
+        val pathsCopy = paths?.toList()
+
+        pathsCopy?.forEach { pair ->
             drawPath(
                 path = pair.first,
                 style = pair.second
