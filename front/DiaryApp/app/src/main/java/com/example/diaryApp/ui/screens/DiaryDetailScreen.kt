@@ -346,10 +346,11 @@ fun DiaryDetailScreen(
                             ),
                             shape = RoundedCornerShape(10.dp),
                             onClick = {
+                                val now = LocalDateTime.now().toString() // 저장용 ISO 포맷
                                 diaryViewModel.fetchComment(commentText.value)
                                 val newComment = CommentDto(
                                     comment = commentText.value,
-                                    createdAt = "방금 전" // or use a formatted current timestamp
+                                    createdAt = now // or use a formatted current timestamp
                                 )
                                 comments.value = comments.value + newComment
                                 commentText.value = ""
