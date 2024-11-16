@@ -50,9 +50,9 @@ object RetrofitClient {
 
     private fun initInstance() {
         val client = OkHttpClient.Builder()
-            .connectTimeout(30, TimeUnit.SECONDS) // 연결 타임아웃 30초
-            .readTimeout(30, TimeUnit.SECONDS) // 읽기 타임아웃 30초
-            .writeTimeout(30, TimeUnit.SECONDS) // 쓰기 타임아웃 30초
+            .connectTimeout(60, TimeUnit.SECONDS) // 연결 타임아웃 30초
+            .readTimeout(60, TimeUnit.SECONDS) // 읽기 타임아웃 30초
+            .writeTimeout(60, TimeUnit.SECONDS) // 쓰기 타임아웃 30초
             .addInterceptor { chain ->
                 val originalRequest = chain.request()
                 val isLoginRequest = originalRequest.url.encodedPath.contains("/login")
