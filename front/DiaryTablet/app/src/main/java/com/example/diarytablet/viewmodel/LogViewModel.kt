@@ -1,13 +1,9 @@
 package com.example.diarytablet.viewmodel
 
 import android.app.Application
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.diarytablet.domain.dto.response.WordLearnedResponseDto
@@ -26,7 +22,6 @@ import javax.inject.Inject
 @HiltViewModel
 class LogViewModel @Inject constructor(
     application: Application,
-    private val savedStateHandle: SavedStateHandle,
     private val diaryRepository: DiaryRepository,
     private val wordRepository : WordRepository
 ) : ViewModel(){
@@ -39,9 +34,6 @@ class LogViewModel @Inject constructor(
             value = response.body()?.sortedByDescending { it.createdAt } ?: emptyList()
         }
     }
-
-    private val _titleId = mutableIntStateOf(savedStateHandle.get<Int>("titleId") ?: -1)
-    val titleId: State<Int> get() = _titleId
 
     private val _year = MutableStateFlow(Calendar.getInstance().get(Calendar.YEAR))
     val year: StateFlow<Int> get() = _year

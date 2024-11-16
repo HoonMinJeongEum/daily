@@ -127,7 +127,7 @@ fun AlarmItem(
         BasicButton(
             onClick = {
                 onConfirmClick(alarmItem.id)
-                navController.navigate("record?titleId=${alarmItem.titleId}") {
+                navController.navigate("record/${alarmItem.titleId}") {
                     popUpTo("main") { inclusive = false }
                 }
             },

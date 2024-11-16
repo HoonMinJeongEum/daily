@@ -18,15 +18,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider.NewInstanceFactory.Companion.instance
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.diarytablet.datastore.UserStore
 import com.example.diarytablet.domain.RetrofitClient
 import com.example.diarytablet.ui.components.modal.CommonModal
 import com.example.diarytablet.ui.components.quiz.Alert
+import com.example.diarytablet.ui.screens.LandingScreen
 import com.example.diarytablet.ui.screens.MainScreen
 import com.example.diarytablet.ui.screens.ProfileScreen
 import com.example.diarytablet.ui.screens.RecordScreen
@@ -45,64 +48,75 @@ import javax.inject.Inject
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun DiaryTabletApp(startDestination: String = "login", spentEventViewmodel : SpenEventViewModel) {
-    val navController = rememberNavController()
+fun DiaryTabletApp(
+    startDestination: String = "login",
+    spentEventViewmodel : SpenEventViewModel,
+    navController: NavHostController,
+) {
     var showExitDialog by remember { mutableStateOf(false) }
     val activity = LocalContext.current as? Activity
 
     BackHandler {
         showExitDialog = true
     }
-
     DiaryTabletTheme {
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .clearFocusOnClick()
         ) {
-        NavHost(navController, startDestination = startDestination) {
-            composable("login") {
-                LoginScreen(
-                    navController = navController)
+            NavHost(navController, startDestination = "landing") {
+                composable("landing") {
+                    LandingScreen(
+                        startDestination = startDestination,
+                        navController = navController
+                    )
+                }
+                composable("login") {
+                    LoginScreen(
+                        navController = navController)
+                }
+                composable("profileList") {
+                    ProfileScreen(
+                        navController = navController
+                    )
+                }
+                composable(
+                    "main?origin={origin}&isFinished={isFinished}",
+                    arguments = listOf(
+                        navArgument("origin") { type = NavType.StringType; defaultValue = "Unknown" },
+                        navArgument("isFinished") { type = NavType.BoolType; defaultValue = false }
+                    )
+                ) {
+                    MainScreen(navController = navController)
+                }
+                composable("shop"){
+                    ShopScreen(navController = navController)
+                }
+                composable("stock"){
+                    StockScreen(navController = navController)
+                }
+                composable("record/{titleId}") { backStackEntry ->
+                    val titleId = backStackEntry.arguments?.getString("titleId")?.toIntOrNull() ?: -1
+                    RecordScreen(navController = navController, titleId = titleId)
+                }
+
+                composable("record") {
+                    RecordScreen(
+                        navController = navController,
+                        titleId = -1
+                    )
+                }
+                composable("diary") {
+                    DiaryScreen(navController = navController)
+                }
+                composable("wordLearning") {
+                    WordLearningScreen(navController = navController, spenEventViewModel = spentEventViewmodel)
+                }
+                composable("quiz") {
+                    QuizScreen(navController = navController)
+                }
             }
-            composable("profileList") {
-                ProfileScreen(
-                    navController = navController
-                )
-            }
-            composable(
-                "main?origin={origin}&isFinished={isFinished}",
-                arguments = listOf(
-                    navArgument("origin") { type = NavType.StringType; defaultValue = "Unknown" },
-                    navArgument("isFinished") { type = NavType.BoolType; defaultValue = false }
-                )
-            ) {
-                MainScreen(navController = navController)
-            }
-            composable("shop"){
-                ShopScreen(navController = navController)
-            }
-            composable("stock"){
-                StockScreen(navController = navController)
-            }
-            composable(
-                "record?titleId={titleId}",
-                arguments = listOf(
-                    navArgument("titleId") { type = NavType.IntType; defaultValue = -1 },
-                )
-            ) {
-                RecordScreen(navController = navController)
-            }
-            composable("diary") {
-                DiaryScreen(navController = navController)
-            }
-            composable("wordLearning") {
-                WordLearningScreen(navController = navController, spenEventViewModel = spentEventViewmodel)
-            }
-            composable("quiz") {
-                QuizScreen(navController = navController)
-            }
-        }
     }
     if (showExitDialog) {
         CommonModal(

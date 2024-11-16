@@ -27,7 +27,8 @@ import com.example.diarytablet.viewmodel.ShopStockViewModel
 fun RecordScreen(
     navController: NavController,
     viewModel: LogViewModel = hiltViewModel(),
-    backgroundType: BackgroundType = BackgroundType.DEFAULT
+    backgroundType: BackgroundType = BackgroundType.DEFAULT,
+    titleId: Int
 ) {
     BackgroundPlacement(backgroundType = backgroundType)
 
@@ -53,9 +54,7 @@ fun RecordScreen(
                         indication = null, // 클릭 효과 제거
                         interactionSource = remember { MutableInteractionSource() }
                     ){
-                        navController.navigate("main") {
-                            popUpTo("record") { inclusive = true }
-                        }
+                        navController.navigate("main")
                     }
             )
             Spacer(modifier = Modifier.width(30.dp))
@@ -76,7 +75,8 @@ fun RecordScreen(
         ) {
             RecordTab(
                 modifier = Modifier.align(Alignment.Center),
-                viewModel = viewModel
+                viewModel = viewModel,
+                titleId = titleId
             )
         }
     }
