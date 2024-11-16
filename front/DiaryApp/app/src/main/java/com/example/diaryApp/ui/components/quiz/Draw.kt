@@ -30,7 +30,9 @@ fun Draw(
                 viewModel.setCanvasSize(coordinates.size.width, coordinates.size.height) // 뷰모델에 캔버스 크기 전달
             }
     ) {
-        paths?.forEach { pair ->
+        val pathsCopy = paths?.toList()
+
+        pathsCopy?.forEach { pair ->
             drawPath(
                 path = pair.first,
                 style = pair.second

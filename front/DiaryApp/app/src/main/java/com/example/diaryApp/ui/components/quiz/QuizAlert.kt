@@ -1,7 +1,9 @@
 package com.example.diaryApp.ui.components.quiz
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -29,35 +31,33 @@ fun QuizAlert(
     }
     Box(
         modifier = Modifier
-            .fillMaxSize(),
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.6f)),
         contentAlignment = Alignment.Center
     ) {
-        BoxWithConstraints(
+        Box(
             modifier = Modifier
                 .fillMaxWidth(0.8f)
-                .fillMaxHeight(0.2f),
-            contentAlignment = Alignment.Center
-        ) {
-            val boxHeight = with(LocalDensity.current) { maxHeight.toPx() }
-            val imageHeight = boxHeight * 0.8f
-            val imageWidth = with(LocalDensity.current) { maxWidth.toPx() } * 0.8f
-            val lineHeight = boxHeight * 0.1f
-
-            Image(
-                painter = painterResource(id = R.drawable.quiz_pop_up),
-                contentDescription = "퀴즈 팝업 이미지",
+                .fillMaxHeight(0.2f)
+                .background(color = Color.White, shape = RoundedCornerShape(15)),
+        ){
+            BoxWithConstraints(
                 modifier = Modifier
-                    .size(imageWidth.dp, imageHeight.dp),
-                contentScale = ContentScale.FillBounds
-            )
-            Text(
-                text = title,
-                fontSize = (boxHeight * 0.05f).sp,
-                style = MyTypography.bodyLarge,
-                color = Color(0xFF49566F),
-                textAlign = TextAlign.Center,
-                lineHeight = lineHeight.sp
-            )
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                val boxHeight = with(LocalDensity.current) { maxHeight.toPx() }
+                val lineHeight = boxHeight * 0.1f
+                Text(
+                    text = title,
+                    fontSize = (boxHeight * 0.05f).sp,
+                    style = MyTypography.bodyLarge,
+                    color = Color(0xFF49566F),
+                    textAlign = TextAlign.Center,
+                    lineHeight = lineHeight.sp
+                )
+            }
         }
+
     }
 }

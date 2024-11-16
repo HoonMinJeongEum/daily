@@ -66,6 +66,7 @@ import com.example.diaryApp.ui.components.quiz.Alert
 import com.example.diaryApp.ui.components.quiz.ToggleAudioButton
 import com.example.diaryApp.ui.components.quiz.ToggleMicButton
 import com.example.diaryApp.ui.theme.DeepPastelBlue
+import com.example.diaryApp.ui.theme.PastelRed
 
 enum class QuizModalState {
     NONE,
@@ -97,6 +98,8 @@ fun CatchMindScreen(
     // 단어 선택 확인 변수
     val isWordSelected by viewModel.isWordSelected.observeAsState(false)
     var isQuizStartedAlert by remember { mutableStateOf(false) }
+    val parentWord by viewModel.parentWord.observeAsState()
+    var errorMessage by remember { mutableStateOf("") }
 
     val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -278,7 +281,29 @@ fun CatchMindScreen(
                             .weight(0.01f),
                         color = Color(0xFFB9B9B9)
                     )
-                    Spacer(modifier = Modifier.weight(0.3f))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(0.9f)
+                            .weight(0.2f),
+                        contentAlignment = Alignment.CenterStart
+                    ){
+                        BoxWithConstraints(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                        ) {
+                            val errorFontSize = with(LocalDensity.current) { (maxHeight * 0.5f).toSp() } // 부모 높이의 10% 크기로 설정
+
+                            if (errorMessage.isNotEmpty()) {
+                                Text(
+                                    text = errorMessage,
+                                    color = PastelRed,
+                                    fontSize = errorFontSize,
+                                    modifier = Modifier.align(alignment = Alignment.Center)
+                                )
+
+                            }
+                        }
+                    }
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center,
@@ -299,7 +324,15 @@ fun CatchMindScreen(
 
                             BasicTextField(
                                 value = inputWord,
-                                onValueChange = { inputWord = it },
+                                onValueChange = {
+                                    if (it.length <= 10) {
+                                        inputWord = it
+                                        errorMessage = "" // 에러 메시지 초기화
+                                    } else {
+                                        inputWord = it.take(10)
+                                        errorMessage = "10글자까지만 입력 가능합니다."
+                                    }
+                                },
                                 modifier = Modifier
                                     .fillMaxHeight(0.7f)
                                     .fillMaxWidth(0.9f),
@@ -326,6 +359,7 @@ fun CatchMindScreen(
                                 .align(Alignment.CenterVertically)
                                 .fillMaxHeight(),
                             onClick = {
+                                keyboardController?.hide()
                                 viewModel.sendCheckWordAction(inputWord.trim())
                                 inputWord = ""
                             },
@@ -384,7 +418,7 @@ fun CatchMindScreen(
         QuizModalState.CORRECT_ANSWER -> {
             if (currentRound < 3) {
                 QuizAlert(
-                    title = "정답입니다!\n다음 퀴즈로 넘어갑니다.",
+                    title = "정답이에요!\n다음 퀴즈로 넘어갑니다.",
                     onDismiss = {
                         quizModalState = QuizModalState.NONE
                         viewModel.resetIsCorrectAnswer()
@@ -394,7 +428,7 @@ fun CatchMindScreen(
                 )
             } else {
                 QuizAlert(
-                    title = "정답입니다!\n퀴즈가 끝났습니다.",
+                    title = "정답이에요!\n퀴즈가 끝났습니다.",
                     onDismiss = {
                         quizModalState = QuizModalState.NONE
                         selectedWord = null

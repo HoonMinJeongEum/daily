@@ -78,7 +78,8 @@ class QuizViewModel @Inject constructor(
     val aspectRatio: LiveData<Float> = _aspectRatio
     private val _canvasWidthRation = MutableLiveData<Int>()  // 부모 앱의 canvasWidth 저장
     val canvasWidthRation: LiveData<Int> get() = _canvasWidthRation
-
+    private val _parentWord = MutableLiveData<String>()
+    val parentWord: LiveData<String> get() = _parentWord
 
     fun setCanvasSize(width: Int, height: Int) {
         _canvasWidth.value = width
@@ -125,8 +126,11 @@ class QuizViewModel @Inject constructor(
             }
 
             socket.on("checkWord") { args ->
-                val isCorrect = args[0] as Boolean
+                val json = args[0] as JSONObject
+                val isCorrect = json.getBoolean("isCorrect") // JSON 객체에서 Boolean 추출
+                val word = json.getString("processedWord")      // JSON 객체에서 String 추출
                 _isCorrectAnswer.postValue(isCorrect)
+                _parentWord.postValue(word)
 
                 if (isCorrect) {
                     _isWordSelected.postValue(false)
