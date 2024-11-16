@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
@@ -54,10 +56,14 @@ fun ShopTab(
     var shakeState by remember { mutableStateOf(false) }
     val rotation by animateFloatAsState(if (shakeState) 5f else 0f)
 
+    LaunchedEffect(selectedTabIndex) {
+        showInfo = false
+    }
+
     LaunchedEffect(Unit) {
         while (true) {
             // 5초 동안 대기
-            kotlinx.coroutines.delay(4000L)
+            kotlinx.coroutines.delay(3500L)
             // 흔들림 애니메이션 시작
             shakeState = true
             kotlinx.coroutines.delay(100L)  // 좌우 한 번씩 0.1초씩 흔들기
@@ -74,9 +80,16 @@ fun ShopTab(
     }
 
     Box(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .background(Color.White, shape = RoundedCornerShape(16.dp))
+            .pointerInput(showInfo) {
+                detectTapGestures {
+                    if (showInfo) {
+                        showInfo = false
+                    }
+                }
+            }
             .padding(top = 30.dp)
     ) {
         Row(
@@ -170,13 +183,12 @@ fun ShopTab(
                     .size(screenHeight * 0.3f)
                     .offset(x = -screenWidth * 0.01f, y = screenHeight * 0.03f)
                     .graphicsLayer(rotationZ = rotation)
-                    .combinedClickable(
+                    .clickable(
                         indication = null,
                         interactionSource = remember { MutableInteractionSource() },
-                        onClick = {
-                            showInfo = !showInfo
-                        }
-                    )
+                    ){
+                        showInfo = !showInfo
+                    }
                     .zIndex(0f)
             )
 
@@ -184,15 +196,14 @@ fun ShopTab(
             Box(
                 modifier = Modifier
                     .offset(x = screenWidth * 0.08f, y = screenHeight * 0.05f)
-                    .width(if (showInfo) screenWidth * 0.4f else screenWidth * 0.07f)
+                    .width(if (showInfo) screenWidth * 0.5f else screenWidth * 0.07f)
                     .height(if (showInfo) screenHeight * 0.15f else screenHeight * 0.07f)
-                    .combinedClickable(
+                    .clickable(
                         indication = null,
                         interactionSource = remember { MutableInteractionSource() },
-                        onClick = {
-                            showInfo = !showInfo
-                        }
-                    )
+                    ){
+                        showInfo = !showInfo
+                    }
                     .zIndex(1f)
             ) {
                 if (showInfo) {
@@ -220,7 +231,7 @@ fun ShopTab(
                                     withStyle(style = SpanStyle(color = Color(0xFF42A5F5))) {
                                         append("보관함")
                                     }
-                                    append("에서\n확인할 수 있어요!")
+                                    append("에서\n확인할 수 있어요 !")
                                 }
                             } else {
                                 buildAnnotatedString {
@@ -228,18 +239,19 @@ fun ShopTab(
                                     withStyle(style = SpanStyle(color = Color(0xFF42A5F5))) {
                                         append("그림일기")
                                     }
-                                    append("에 사용해 봐요!")
+                                    append("에 사용해 봐요 !")
                                 }
                             },
                             color = DarkGray,
                             fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.Normal,
                             textAlign = TextAlign.Center,
                             softWrap = false,
                             overflow = TextOverflow.Visible,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .align(Alignment.Center)
+                                .offset(x = (-10).dp)
                         )
                     }
                 } else {

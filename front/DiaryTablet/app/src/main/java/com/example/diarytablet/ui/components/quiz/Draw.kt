@@ -5,8 +5,10 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.drag
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -70,32 +72,36 @@ fun Draw(
                 viewModel.setCanvasSize(coordinates.size.width, coordinates.size.height)
             }
             .pointerInput(Unit) {
-                detectDragGestures(
-                    onDragStart = { offset ->
-                        point = offset
+                awaitPointerEventScope {
+                    while (true) {
+                        val down = awaitFirstDown() // 드래그 시작 시 즉시 감지
+                        point = down.position
                         points.add(point)
-                    },
-                    onDrag = { _, dragAmount ->
-                        point += dragAmount
-                        points.add(point)
-                        path = Path()
-                        points.forEachIndexed { index, point ->
-                            if (index == 0) {
-                                viewModel.sendDrawAction("DOWN", point.x, point.y)
-                                path.moveTo(point.x, point.y)
-                            } else {
-                                viewModel.sendDrawAction("MOVE", point.x, point.y)
-                                path.lineTo(point.x, point.y)
+                        path = Path().apply { moveTo(point.x, point.y) }
+
+                        viewModel.sendDrawAction("DOWN", point.x, point.y)
+
+                        drag(down.id) { change ->
+                            change.consume() // 이벤트 소비
+                            point = change.position
+                            points.add(point)
+
+                            path = Path().apply {
+                                points.forEachIndexed { index, point ->
+                                    if (index == 0) moveTo(point.x, point.y)
+                                    else lineTo(point.x, point.y)
+                                }
                             }
+
+                            viewModel.sendDrawAction("MOVE", point.x, point.y)
                         }
-                    },
-                    onDragEnd = {
+
+                        // 드래그가 끝난 후
                         viewModel.addPath(Pair(path, pathStyle!!.copy()))
                         points.clear()
-
                         path = Path()
                     }
-                )
+                }
             },
     ) {
         paths?.forEach { pair ->
