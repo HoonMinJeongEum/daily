@@ -283,7 +283,8 @@ fun MainScreen(
                 }
                 completedMission?.let { viewModel.completeMissionItem(it) }
             },
-            missionItems = missionItems
+            missionItems = missionItems,
+            lastMissions = missions
         )
     }
 }

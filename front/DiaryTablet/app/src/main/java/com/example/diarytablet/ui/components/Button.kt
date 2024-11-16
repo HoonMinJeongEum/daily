@@ -26,6 +26,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -42,6 +43,7 @@ import com.example.diarytablet.ui.theme.PastelSkyBlue
 import com.example.diarytablet.ui.theme.SkyBlue
 import com.example.diarytablet.ui.theme.White
 import com.example.diarytablet.ui.theme.myFontFamily
+import com.example.diarytablet.utils.playButtonSound
 
 enum class BasicButtonColor {
     NORMAL, SEASHELL;
@@ -75,6 +77,7 @@ fun BasicButton(
     ButtonColor: Color = Color.White,
     useDisabledColor: Boolean = false
 ) {
+    val context = LocalContext.current
     val buttonShape = BasicButtonShape.ROUNDED
     val buttonColor = if (imageResId != null && imageResId != 11) BasicButtonColor.NORMAL else BasicButtonColor.SEASHELL
     val backgroundColor = buttonColor.getBackgroundColor()
@@ -87,7 +90,10 @@ fun BasicButton(
 
 
     Button(
-        onClick = onClick,
+        onClick = {
+            playButtonSound(context,R.raw.all_button )
+            onClick()
+        },
         modifier = modifier
             .padding(4.dp),
         enabled = enabled,

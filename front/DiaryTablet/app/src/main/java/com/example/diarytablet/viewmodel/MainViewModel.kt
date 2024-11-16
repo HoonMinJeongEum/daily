@@ -54,9 +54,9 @@ class MainViewModel @Inject constructor(
 
                 // 서버 응답을 기반으로 미션 상태 설정
                 val loadedMissions = listOf(
+                    MissionItem("단어 학습", response.wordStatus),
                     MissionItem("그림 일기", response.diaryStatus),
-                    MissionItem("그림 퀴즈", response.quizStatus),
-                    MissionItem("단어 학습", response.wordStatus)
+                    MissionItem("그림 퀴즈", response.quizStatus)
                 )
                 _missions.clear()
                 _missions.addAll(loadedMissions)
