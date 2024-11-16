@@ -64,7 +64,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         Log.d("alarm","targetPath: ${targetPath}")
         // 알림을 클릭했을 때 열릴 액티비티 설정
         val intent = Intent(this, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
             putExtra("navigation_target",targetPath)
         }
         val pendingIntent: PendingIntent = PendingIntent.getActivity(this, 0, intent, FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)

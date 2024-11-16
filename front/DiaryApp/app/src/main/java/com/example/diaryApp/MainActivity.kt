@@ -13,6 +13,8 @@ import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.diaryApp.datastore.UserStore
 import com.example.diaryApp.domain.RetrofitClient
@@ -33,6 +35,7 @@ class MainActivity : ComponentActivity() {
     private val diaryViewModel: DiaryViewModel by viewModels()
     private val profileViewModel: ProfileViewModel by viewModels()
     private val wordViewModel : WordViewModel by viewModels()
+    private lateinit var navController: NavController
 
     @Inject
     lateinit var userStore: UserStore
@@ -45,8 +48,7 @@ class MainActivity : ComponentActivity() {
         val name = intent?.getStringExtra("name")
         val titleId = intent?.getStringExtra("titleId")
         val title = intent?.getStringExtra("title")
-        val navigation = intent?.getStringExtra("navigation_target")
-        val path = navigation ?: createPath(name, titleId, title)
+        val path = createPath(name, titleId, title)
         val startDestination = runBlocking {
             val isAutoLoginEnabled = userStore.getAutoLoginState().firstOrNull() ?: false
             val username = userStore.getValue(UserStore.KEY_USER_NAME).firstOrNull()
@@ -70,7 +72,8 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            DiaryMobileApp(startDestination = startDestination, navController = rememberNavController())
+            navController = rememberNavController()
+            DiaryMobileApp(startDestination = startDestination, navController = navController as NavHostController)
         }
     }
 
@@ -90,6 +93,11 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+
+        val navigationTarget = intent.getStringExtra("navigation_target")
+        if (!navigationTarget.isNullOrEmpty()) {
+            navController.navigate(navigationTarget)
+        }
     }
 
     private suspend fun performLogin(username: String, password: String): Boolean {

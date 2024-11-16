@@ -218,7 +218,7 @@ fun CreateCoupon(
                                 couponViewModel.couponDescription.value.isBlank()
                             val isPriceEmpty = couponViewModel.couponPrice.value == 0
 
-                            if (!isDescriptionEmpty && !isPriceEmpty) {
+                            if (isDescriptionEmpty || isPriceEmpty) {
                                 showAlertDescription = isDescriptionEmpty
                                 showAlertPrice = isPriceEmpty
                             } else {
