@@ -51,7 +51,7 @@ public class DiaryService {
     private final ObjectMapper objectMapper;
     private final S3UploadService s3UploadService;
     private final RestTemplate restTemplate;
-    private static final int DEFAULT_TOKENS = 750;
+    private static final int DEFAULT_TOKENS = 500;
 
     @Value(("${clova.ocr.apiUrl}"))
     private String apiUrl;
