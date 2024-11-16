@@ -74,6 +74,8 @@ public class AlarmService {
                         .setTitle(title)
                         .setBody(body)
                         .build())
+                .putData("titleId", titleId)
+                .putData("name", name)
                 .build();
 
         // 알림 전송
