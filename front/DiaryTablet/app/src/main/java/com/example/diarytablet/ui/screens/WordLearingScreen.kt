@@ -47,21 +47,21 @@ fun WordLearningScreen(
     backgroundType: BackgroundType = BackgroundType.DEFAULT,
     spenEventViewModel : SpenEventViewModel
 ) {
-    LaunchedEffect(spenEventViewModel) {
-        spenEventViewModel.spenEventFlow.collect { event ->
-            when (event) {
-                is ButtonEvent -> {
-                    when (event.action) {
-                        ButtonEvent.ACTION_DOWN -> Log.d("WordLearningScreen", "S Pen 버튼이 눌렸습니다.")
-                        ButtonEvent.ACTION_UP -> Log.d("WordLearningScreen", "S Pen 버튼이 해제되었습니다.")
-                    }
-                }
-                is AirMotionEvent -> {
-                    Log.d("WordLearningScreen", "에어 모션 움직임: X=${event.deltaX}, Y=${event.deltaY}")
-                }
-            }
-        }
-    }
+//    LaunchedEffect(spenEventViewModel) {
+//        spenEventViewModel.spenEventFlow.collect { event ->
+//            when (event) {
+//                is ButtonEvent -> {
+//                    when (event.action) {
+//                        ButtonEvent.ACTION_DOWN -> Log.d("WordLearningScreen", "S Pen 버튼이 눌렸습니다.")
+//                        ButtonEvent.ACTION_UP -> Log.d("WordLearningScreen", "S Pen 버튼이 해제되었습니다.")
+//                    }
+//                }
+//                is AirMotionEvent -> {
+//                    Log.d("WordLearningScreen", "에어 모션 움직임: X=${event.deltaX}, Y=${event.deltaY}")
+//                }
+//            }
+//        }
+//    }
     val wordList by viewModel.wordList
     val learnedWordList by viewModel.learnedWordList
     val username by viewModel.username.collectAsState(initial = "")
@@ -108,7 +108,7 @@ fun WordLearningScreen(
             WordTap(
                 wordList = wordList,
                 modifier = Modifier.align(Alignment.CenterHorizontally),
-                onValidate = { context, word, writtenBitmap ->  // 이 부분에서 타입이 맞아야 합니다.
+                onValidate = { context, word, writtenBitmap ->
                     viewModel.checkWordValidate(context, word, writtenBitmap) // String과 Bitmap 전달
                 },
                 onFinish = {
