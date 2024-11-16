@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -34,6 +35,7 @@ import com.example.diarytablet.R
 import com.example.diarytablet.ui.components.modal.CommonModal
 import com.example.diarytablet.ui.components.modal.CommonPopup
 import com.example.diarytablet.ui.theme.DarkGray
+import com.example.diarytablet.ui.theme.MyTypography
 import com.example.diarytablet.viewmodel.NavBarViewModel
 import com.example.diarytablet.viewmodel.ShopStockViewModel
 import kotlinx.coroutines.delay
@@ -75,64 +77,78 @@ fun StickerShopList(
     LaunchedEffect(Unit) {
         navBarViewModel.initializeData()
     }
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(4),
-        contentPadding = PaddingValues(start = 15.dp, end = 15.dp),
-        modifier = Modifier.fillMaxSize()
-    ) {
-        itemsIndexed(stickers) { index, sticker ->
-            StickerCard(
-                sticker = sticker,
-                index = index,
-                onStickerClick = {
-                    selectedSticker = sticker
-                    stickerModalState = StickerModalState.PURCHASE_CONFIRMATION
-                    isModalVisible = true
-                },
-                viewModel = shopViewModel
+    if (stickers.isEmpty()) {
+        // 리스트가 비어 있을 때 표시할 텍스트
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "등록된 스티커가 없어요.",
+                style = MyTypography.bodyMedium,
+                color = DarkGray
             )
         }
-    }
-
-    if (isModalVisible && selectedSticker != null) {
-        when (stickerModalState) {
-            StickerModalState.PURCHASE_CONFIRMATION -> {
-                CommonModal(
-                    onDismissRequest = {
-                        isModalVisible = false
-                        stickerModalState = StickerModalState.NONE
+    } else {
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(4),
+            contentPadding = PaddingValues(start = 15.dp, end = 15.dp),
+            modifier = Modifier.fillMaxSize()
+        ) {
+            itemsIndexed(stickers) { index, sticker ->
+                StickerCard(
+                    sticker = sticker,
+                    index = index,
+                    onStickerClick = {
+                        selectedSticker = sticker
+                        stickerModalState = StickerModalState.PURCHASE_CONFIRMATION
+                        isModalVisible = true
                     },
-                    titleText = "스티커를 구매하시겠습니까?",
-                    confirmText = "${selectedSticker!!.price}",
-                    confirmIconResId = R.drawable.jogae,
-                    onConfirm = {
-                        if (shellCount >= selectedSticker!!.price) {
-                            shopViewModel.buySticker(selectedSticker!!.id)
-                            stickerModalState = StickerModalState.PURCHASE_SUCCESS
-                        } else {
-                            stickerModalState = StickerModalState.INSUFFICIENT_SHELLS
-                        }
-                    }
+                    viewModel = shopViewModel
                 )
             }
+        }
 
-            StickerModalState.INSUFFICIENT_SHELLS, StickerModalState.PURCHASE_SUCCESS -> {
-                val titleText = when (stickerModalState) {
-                    StickerModalState.INSUFFICIENT_SHELLS -> "조개를 조금 더 모아보아요!"
-                    StickerModalState.PURCHASE_SUCCESS -> "구매가 완료되었습니다!"
-                    else -> ""
+        if (isModalVisible && selectedSticker != null) {
+            when (stickerModalState) {
+                StickerModalState.PURCHASE_CONFIRMATION -> {
+                    CommonModal(
+                        onDismissRequest = {
+                            isModalVisible = false
+                            stickerModalState = StickerModalState.NONE
+                        },
+                        titleText = "스티커를 구매하시겠습니까?",
+                        confirmText = "${selectedSticker!!.price}",
+                        confirmIconResId = R.drawable.jogae,
+                        onConfirm = {
+                            if (shellCount >= selectedSticker!!.price) {
+                                shopViewModel.buySticker(selectedSticker!!.id)
+                                stickerModalState = StickerModalState.PURCHASE_SUCCESS
+                            } else {
+                                stickerModalState = StickerModalState.INSUFFICIENT_SHELLS
+                            }
+                        }
+                    )
                 }
 
-                CommonPopup(
-                    onDismissRequest = {
-                        isModalVisible = false
-                        stickerModalState = StickerModalState.NONE
-                    },
-                    titleText = titleText
-                )
-            }
+                StickerModalState.INSUFFICIENT_SHELLS, StickerModalState.PURCHASE_SUCCESS -> {
+                    val titleText = when (stickerModalState) {
+                        StickerModalState.INSUFFICIENT_SHELLS -> "조개를 조금 더 모아보아요!"
+                        StickerModalState.PURCHASE_SUCCESS -> "구매가 완료되었습니다!"
+                        else -> ""
+                    }
 
-            else -> Unit
+                    CommonPopup(
+                        onDismissRequest = {
+                            isModalVisible = false
+                            stickerModalState = StickerModalState.NONE
+                        },
+                        titleText = titleText
+                    )
+                }
+
+                else -> Unit
+            }
         }
     }
 }
