@@ -425,7 +425,7 @@ fun DrawCanvas(
         // 지속적으로 펜 연결 상태를 확인
         while (true) {
             isStylusConnected.value = checkStylusConnection(context)
-            kotlinx.coroutines.delay(1000) // 1초마다 확인
+            kotlinx.coroutines.delay(2000) // 1초마다 확인
         }
     }
 
@@ -485,6 +485,11 @@ fun DrawCanvas(
 fun checkStylusConnection(context: Context): Boolean {
     val inputManager = context.getSystemService(Context.INPUT_SERVICE) as android.hardware.input.InputManager
     val deviceIds = inputManager.inputDeviceIds
+
+    if (isRunningOnEmulator()) {
+        return false
+    }
+
     for (deviceId in deviceIds) {
         val inputDevice = inputManager.getInputDevice(deviceId)
         if (inputDevice != null && inputDevice.sources and android.view.InputDevice.SOURCE_STYLUS == android.view.InputDevice.SOURCE_STYLUS) {
@@ -495,7 +500,17 @@ fun checkStylusConnection(context: Context): Boolean {
 }
 
 
+fun isRunningOnEmulator(): Boolean {
+    val fingerprint = android.os.Build.FINGERPRINT
+    val model = android.os.Build.MODEL
+    val product = android.os.Build.PRODUCT
+    val manufacturer = android.os.Build.MANUFACTURER
 
+    return (fingerprint.contains("generic") || fingerprint.contains("emulator") || fingerprint.contains("sdk_gphone")) ||
+            (model.contains("Emulator") || model.contains("Android SDK built for x86")) ||
+            (product.contains("sdk_gphone") || product.contains("sdk") || product.contains("google_sdk")) ||
+            manufacturer.contains("Genymotion")
+}
 
 
 
