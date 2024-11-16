@@ -33,6 +33,9 @@ class DiaryViewModel @Inject constructor(
     private val _isLoading = MutableLiveData(false)
     val isLoading: LiveData<Boolean> get() = _isLoading
 
+    private val _isError = MutableLiveData<Boolean>()
+    val isError: LiveData<Boolean> get() = _isError
+
     fun fetchUserStickers() {
         viewModelScope.launch {
             try {
@@ -51,19 +54,23 @@ class DiaryViewModel @Inject constructor(
     fun uploadDiary(context: Context, drawUri: Uri, writeUri: Uri, videoUri: Uri) {
         viewModelScope.launch {
             _isLoading.value = true // 로딩 시작
+            _responseMessage.postValue(null) // 이전 메시지 초기화
+
             val drawFilePart = getFilePart(context, drawUri, "drawFile")
             val writeFilePart = getFilePart(context, writeUri, "writeFile")
             val videoFilePart = getFilePart(context, videoUri, "videoFile", "video/mp4")
 
             if (drawFilePart == null || writeFilePart == null || videoFilePart == null) {
                 Log.e("DiaryViewModel", "One or more file parts are null. Upload skipped.")
-                _isLoading.value = false // 로딩 종료
+                _isLoading.value = false
+                _responseMessage.postValue("파일 생성 실패!")
                 return@launch
             }
 
             try {
                 val response = diaryRepository.uploadDiary(drawFilePart, writeFilePart, videoFilePart)
-                _isLoading.value = false // 로딩 종료
+
+                _isLoading.value = false // 응답 도착 -> 로딩 종료
                 if (response.isSuccessful && response.code() == 200) {
                     _responseMessage.postValue("그림일기 작성 완료!")
                 } else if (response.code() == 409) {
@@ -75,10 +82,12 @@ class DiaryViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 Log.e("DiaryViewModel", "Exception occurred during upload", e)
-                _isLoading.value = false // 로딩 종료
+                _isLoading.value = false
+                _responseMessage.postValue("업로드 중 오류가 발생했습니다.")
             }
         }
     }
+
 
     // 에러 응답을 위한 데이터 클래스
     data class ErrorResponse(val status: Int, val msg: String)
