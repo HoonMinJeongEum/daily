@@ -74,7 +74,10 @@ fun ShopScreen(
                 contentDescription = "뒤로 가기 버튼",
                 modifier = Modifier
                     .size(60.dp)
-                    .clickable {
+                    .clickable (
+                        indication = null, // 클릭 효과 제거
+                        interactionSource = remember { MutableInteractionSource() }
+                    ){
                         navController.navigate("main") {
                             popUpTo("shop") { inclusive = true }
                         }

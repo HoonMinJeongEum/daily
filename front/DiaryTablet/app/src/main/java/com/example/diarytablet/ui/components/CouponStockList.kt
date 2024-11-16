@@ -12,23 +12,39 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.diarytablet.R
 import com.example.diarytablet.model.CouponStock
+import com.example.diarytablet.ui.theme.DarkGray
+import com.example.diarytablet.ui.theme.MyTypography
 import com.example.diarytablet.viewmodel.ShopStockViewModel
 import kotlinx.coroutines.delay
 
 @Composable
 fun CouponStockList(coupons: List<CouponStock>, viewModel: ShopStockViewModel) {
-    Box(
-        modifier = Modifier.fillMaxSize() // 전체 화면을 채우도록 설정
-    ) {
-        LazyColumn(
+    if (coupons.isEmpty()) {
+        // 리스트가 비어 있을 때 표시할 텍스트
+        Box(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(0.dp), // 패딩 값을 0으로 설정
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top // 리스트가 위쪽부터 시작되도록 설정
+            contentAlignment = Alignment.Center
         ) {
-            itemsIndexed(coupons.reversed()) { index, coupon ->
-                CouponStockBox(coupon, index) { couponId ->
-                    viewModel.useCoupon(couponId)
+            Text(
+                text = "아직 구매한 쿠폰이 없어요.",
+                style = MyTypography.bodyMedium,
+                color = DarkGray
+            )
+        }
+    } else {
+        Box(
+            modifier = Modifier.fillMaxSize() // 전체 화면을 채우도록 설정
+        ) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(0.dp), // 패딩 값을 0으로 설정
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Top // 리스트가 위쪽부터 시작되도록 설정
+            ) {
+                itemsIndexed(coupons.reversed()) { index, coupon ->
+                    CouponStockBox(coupon, index) { couponId ->
+                        viewModel.useCoupon(couponId)
+                    }
                 }
             }
         }
@@ -86,7 +102,7 @@ fun CouponStockBox(coupon: CouponStock, index: Int, onClick: (Int) -> Unit) {
             Text(
                 text = coupon.description,
                 fontSize = 28.sp,
-                color = Color.Black,
+                color = DarkGray,
                 modifier = Modifier
                     .weight(0.6f)
                     .padding(start = 10.dp)
