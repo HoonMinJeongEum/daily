@@ -57,6 +57,8 @@ class QuizViewModel @Inject constructor(
     val userDisconnectedEvent: LiveData<Boolean?> get() = _userDisconnectedEvent
     private val _parentJoinedEvent = MutableLiveData<Boolean>()
     val parentJoinedEvent: LiveData<Boolean> get() = _parentJoinedEvent
+    private val _parentWord = MutableLiveData<String>()
+    val parentWord: LiveData<String> get() = _parentWord
 
     // 그림
     private val _canvasWidth = MutableLiveData<Int>()
@@ -158,8 +160,11 @@ class QuizViewModel @Inject constructor(
         }
 
         socket.on("checkWord") { args ->
-            val isCorrect = args[0] as Boolean
+            val json = args[0] as JSONObject
+            val isCorrect = json.getBoolean("isCorrect") // JSON 객체에서 Boolean 추출
+            val word = json.getString("processedWord")
             _isCorrectAnswer.postValue(isCorrect)
+            _parentWord.postValue(word)
         }
 
         socket.on("clear") {
