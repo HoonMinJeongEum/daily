@@ -28,12 +28,6 @@ class MainViewModel @Inject constructor(
 
     private val _missions = mutableStateListOf<MissionItem>()
     val missions: List<MissionItem> get() = _missions
-    private val _shellCount = mutableIntStateOf(0)
-    val shellCount: State<Int> get() = _shellCount
-    private val _userName = mutableStateOf("")
-    val userName: State<String> get() = _userName
-    private val _profileImageUrl = mutableStateOf("")
-    val profileImageUrl: State<String> get() = _profileImageUrl
     val origin: String = savedStateHandle.get<String>("origin") ?: "Unknown"
 //    val isFinished: Boolean = savedStateHandle.get<Boolean>("isFinished") ?: false
 
@@ -49,9 +43,6 @@ class MainViewModel @Inject constructor(
                 Log.d("main","${userStore.getValue(UserStore.KEY_USER_NAME)}")
                 val response = mainScreenRepository.getMainScreenStatus()
 
-                // shellCount 업데이트
-                _shellCount.value = response.shellCount
-
                 // 서버 응답을 기반으로 미션 상태 설정
                 val loadedMissions = listOf(
                     MissionItem("그림 일기", response.diaryStatus),
@@ -61,12 +52,6 @@ class MainViewModel @Inject constructor(
                 _missions.clear()
                 _missions.addAll(loadedMissions)
 
-                userStore.getValue(UserStore.KEY_PROFILE_NAME).collect { name ->
-                    _userName.value = name
-                }
-                _profileImageUrl.value = response.image
-
-                userStore.setValue(KEY_PROFILE_IMAGE, response.image)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -77,10 +62,9 @@ class MainViewModel @Inject constructor(
         _isFinished.value = value
     }
 
-    fun completeMissionItem(mission: MissionItem) {
+    fun completeMissionItem(mission: MissionItem, navbarViewModel: NavBarViewModel) {
         viewModelScope.launch {
             try {
-                // mission.text에 따라 questType 설정
                 val questType = when (mission.text) {
                     "그림 일기" -> "DIARY"
                     "그림 퀴즈" -> "QUIZ"
@@ -89,27 +73,19 @@ class MainViewModel @Inject constructor(
                 }
 
                 questType?.let {
-                    val requestDto = CompleteMissionItemRequestDto(questType = it)
+                    val requestDto = CompleteMissionItemRequestDto(questType)
                     val response = mainScreenRepository.completeMissionItem(requestDto)
 
                     if (response.isSuccessful) {
-                        loadStatus()
+                        loadStatus() // MainViewModel 상태 갱신
+                        navbarViewModel.loadStatus() // NavbarViewModel 상태 갱신
                     } else {
                         Log.e("MainViewModel", "Error updating mission status: ${response.message()}")
                     }
                 } ?: Log.e("MainViewModel", "Invalid mission type: ${mission.text}")
-
             } catch (e: Exception) {
                 Log.e("MainViewModel", "Exception updating mission status", e)
             }
-        }
-    }
-
-
-    fun updateMissionStatus(mission: MissionItem, isSuccess: Boolean) {
-        val index = _missions.indexOf(mission)
-        if (index != -1) {
-            _missions[index] = mission.copy(isSuccess = isSuccess)
         }
     }
 }

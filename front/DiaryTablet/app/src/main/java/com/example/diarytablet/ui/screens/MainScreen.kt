@@ -1,12 +1,18 @@
 package com.example.diarytablet.ui.screens
 
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import com.example.diarytablet.ui.components.modal.MainModal
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,16 +35,15 @@ import com.example.diarytablet.ui.components.modal.CommonPopup
 import com.example.diarytablet.ui.theme.BackgroundPlacement
 import com.example.diarytablet.ui.theme.BackgroundType
 import com.example.diarytablet.viewmodel.MainViewModel
+import com.example.diarytablet.viewmodel.NavBarViewModel
 import com.example.diarytablet.ui.components.modal.MissionModal
-import com.example.diarytablet.ui.theme.DarkGray
-import com.example.diarytablet.ui.theme.PastelNavy
-import com.example.diarytablet.viewmodel.DiaryViewModel
 
 
 @Composable
 fun MainScreen(
     navController: NavController,
     viewModel: MainViewModel = hiltViewModel(),
+    navbarViewModel: NavBarViewModel = hiltViewModel(),
     backgroundType: BackgroundType = BackgroundType.DEFAULT
 ) {
     BackgroundPlacement(backgroundType = backgroundType)
@@ -48,7 +53,7 @@ fun MainScreen(
     val isFinished by viewModel.isFinished
     val origin = viewModel.origin
     val missions = viewModel.missions
-    val username by viewModel.userName
+    val username by navbarViewModel.userName
 
     var currentIndex by remember { mutableStateOf(0) }
 
@@ -69,28 +74,14 @@ fun MainScreen(
         "조개를 모아서\n상점에서 쓸 수 있어!"
     )
 
-
-    val missionItems = when (origin) {
-        "wordLearning" -> listOf(
-            MissionItem("단어 학습", isSuccess = true),
-            MissionItem("그림 일기", isSuccess = false),
-            MissionItem("그림 퀴즈", isSuccess = false)
-        )
-        "diary" -> listOf(
-            MissionItem("단어 학습", isSuccess = false),
-            MissionItem("그림 일기", isSuccess = true),
-            MissionItem("그림 퀴즈", isSuccess = false)
-        )
-        "quiz" -> listOf(
-            MissionItem("단어 학습", isSuccess = false),
-            MissionItem("그림 일기", isSuccess = false),
-            MissionItem("그림 퀴즈", isSuccess = true)
-        )
-        else -> listOf(
-            MissionItem("단어 학습", isSuccess = false),
-            MissionItem("그림 일기", isSuccess = false),
-            MissionItem("그림 퀴즈", isSuccess = false)
-        )
+    val missionItems = missions.map { mission ->
+        val isSuccessFromOrigin = when (origin) {
+            "wordLearning" -> mission.text == "단어 학습"
+            "diary" -> mission.text == "그림 일기"
+            "quiz" -> mission.text == "그림 퀴즈"
+            else -> false
+        }
+        mission.copy(isSuccess = mission.isSuccess || isSuccessFromOrigin)
     }
 
     BoxWithConstraints(
@@ -267,20 +258,28 @@ fun MainScreen(
             )
         }
         // MissionModal
-        MissionModal(
-            isDialogVisible = isFinished,
-            onDismiss = {
-                viewModel.setFinished(false)
-                val completedMission = when (origin) {
-                    "wordLearning" -> MissionItem("단어 학습", isSuccess = true)
-                    "diary" -> MissionItem("그림 일기", isSuccess = true)
-                    "quiz" -> MissionItem("그림 퀴즈", isSuccess = true)
-                    else -> null
-                }
-                completedMission?.let { viewModel.completeMissionItem(it) }
-            },
-            missionItems = missionItems
-        )
+        AnimatedVisibility(
+            visible = isFinished,
+            enter = fadeIn() + scaleIn(initialScale = 0.8f),
+            exit = fadeOut() + scaleOut(targetScale = 0.8f)
+        ) {
+            MissionModal(
+                isDialogVisible = isFinished,
+                onDismiss = {
+                    viewModel.setFinished(false)
+                    val completedMission = when (origin) {
+                        "wordLearning" -> MissionItem("단어 학습", isSuccess = true)
+                        "diary" -> MissionItem("그림 일기", isSuccess = true)
+                        "quiz" -> MissionItem("그림 퀴즈", isSuccess = true)
+                        else -> null
+                    }
+                    completedMission?.let {
+                        viewModel.completeMissionItem(it, navbarViewModel) // NavbarViewModel 전달
+                    }
+                },
+                missionItems = missionItems
+            )
+        }
     }
 }
 
