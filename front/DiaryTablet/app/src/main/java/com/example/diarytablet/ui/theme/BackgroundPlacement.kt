@@ -24,12 +24,12 @@ fun BackgroundPlacement(backgroundType: BackgroundType) {
 
     // 이미지 배치 좌표
     val placements = mapOf(
-        "sora" to Point(517, 632),
-        "big-sora" to Point(1083, 481),
-        "big-jogae" to Point(293, 546),
-        "jogae" to Point(64, 482),
+        "coral" to Point(650, 632),
+        "big-sora" to Point(1083, 450),
+        "big-jogae" to Point(293, 510),
+        "jogae" to Point(64, 360),
         "duck" to Point(1023, 150),
-        "tube" to Point(306, 69)
+        "tube" to Point(306, 100)
     )
 
     Image(
@@ -41,7 +41,7 @@ fun BackgroundPlacement(backgroundType: BackgroundType) {
 
     placements.forEach { (name, point) ->
         val drawableId = when (name) {
-            "sora" -> R.drawable.sora
+            "coral" -> R.drawable.coral
             "big-sora" -> R.drawable.big_sora
             "big-jogae" -> R.drawable.big_jogae
             "jogae" -> R.drawable.jogae
@@ -52,26 +52,46 @@ fun BackgroundPlacement(backgroundType: BackgroundType) {
 
         drawableId?.let {
             val size = when (name) {
-                "sora" -> 82.dp
-                "big-sora" -> 75.dp
-                "big-jogae" -> 83.dp
-                "jogae" -> 75.dp
-                "duck" -> 55.dp
+                "coral" -> 80.dp
+                "big-sora" -> 80.dp
+                "big-jogae" -> 70.dp
+                "jogae" -> 60.dp
+                "duck" -> 70.dp
                 "tube" -> 100.dp
                 else -> 50.dp
             }
 
             val rotationState = remember { Animatable(0f) }
-//요소 별로 에니메이션 효과 따로 적용 예정
+            // 요소별 애니메이션 시간과 각도 설정
+            val duration = when (name) {
+                "coral" -> 2000
+                "big-sora" -> 2000
+                "big-jogae" -> 1900
+                "jogae" -> 2000
+                "duck" -> 1900
+                "tube" -> 2000
+                else -> 2000
+            }
+
+            val maxRotation = when (name) {
+                "coral" -> 3f
+                "big-sora" -> 5f
+                "big-jogae" -> 4f
+                "jogae" -> 5f
+                "duck" -> 5f
+                "tube" -> 4f
+                else -> 3f
+            }
             LaunchedEffect(name) {
                 rotationState.animateTo(
                     targetValue = 1f,
                     animationSpec = infiniteRepeatable(
                         animation = keyframes {
-                            durationMillis = 2000 // 전체 애니메이션 기간
+                            durationMillis = duration // 전체 애니메이션 기간
                             0f at 0 with LinearEasing // 시작 각도
-                            5f at 800 with LinearEasing // 오른쪽으로 회전
-                            0f at 1600 // 다시 원래 위치로
+//                            5f at 800 with LinearEasing // 오른쪽으로 회전
+                            maxRotation at duration / 2 with LinearEasing
+                            0f at duration // 다시 원래 위치로
                         },
                         repeatMode = RepeatMode.Reverse // 애니메이션이 끝나면 반전
                     )
@@ -86,7 +106,7 @@ fun BackgroundPlacement(backgroundType: BackgroundType) {
                     .size(size) // 크기 설정
                     .offset(x = point.x.dp, y = point.y.dp) // 각 캐릭터의 위치에 따라 배치
                     .graphicsLayer(
-                        rotationZ = rotationState.value * 5f // 회전 각도 조정 (조정 가능)
+                        rotationZ = rotationState.value * maxRotation  // 회전 각도 조정 (조정 가능)
                     )
             )
         }
