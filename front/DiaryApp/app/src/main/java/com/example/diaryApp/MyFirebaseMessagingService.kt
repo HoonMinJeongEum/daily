@@ -51,7 +51,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
         val targetPath = when (title) {
             "그림 퀴즈" -> "catchMind/$titleId/$childName" // 동적 경로
-            "그림 일기" -> "diary/$titleId"
+            "그림 일기" -> "diary/$titleId/$childName"
             "쿠폰" -> "shop"
             else -> "main" // 기본 경로
         }
