@@ -61,6 +61,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.input.pointer.PointerType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
@@ -413,55 +414,61 @@ fun DrawCanvas(
     currentBitmap: Bitmap,
     isDrawingMode: Boolean
 ) {
+    val context = LocalContext.current
     val path = remember { androidx.compose.ui.graphics.Path() }
-    var lastX by remember { mutableStateOf(0f) }
-    var lastY by remember { mutableStateOf(0f) }
-
-    // Bitmap을 Compose에서 사용할 수 있는 ImageBitmap으로 변환
     val imageBitmap by rememberUpdatedState(currentBitmap.asImageBitmap())
+
+    // 상태 관리: 펜 연결 여부
+    val isStylusConnected = remember { mutableStateOf(checkStylusConnection(context)) }
+
+    LaunchedEffect(Unit) {
+        // 지속적으로 펜 연결 상태를 확인
+        while (true) {
+            isStylusConnected.value = checkStylusConnection(context)
+            kotlinx.coroutines.delay(1000) // 1초마다 확인
+        }
+    }
 
     Canvas(
         modifier = modifier
             .fillMaxSize()
             .clipToBounds()
-            .pointerInput(isDrawingMode) {
+            .pointerInput(isDrawingMode && (!isStylusConnected.value || isStylusConnected.value)) {
                 if (isDrawingMode) {
                     awaitPointerEventScope {
                         while (true) {
-                            // 첫 번째 터치 이벤트 대기
                             val downEvent = awaitPointerEvent()
                             val position = downEvent.changes.first().position
+                            val inputType = downEvent.changes.first().type
 
-                            // Path 초기화 및 시작점 설정
+                            if (isStylusConnected.value && inputType != PointerType.Stylus) {
+                                // 펜이 연결된 경우, 터치 입력 무시
+                                continue
+                            }
+
                             path.moveTo(position.x, position.y)
 
-                            // Bitmap에 바로 시작점 그리기
                             val canvas = android.graphics.Canvas(currentBitmap)
                             val paint = createPaintForTool(
                                 ToolType.PENCIL,
                                 Color.Black,
-                                8f
+                                9f
                             )
-                            canvas.drawCircle(position.x, position.y, 2f, paint)
 
-                            // 드래그 이벤트 추적
                             var currentPosition = position
                             while (true) {
                                 val dragEvent = awaitPointerEvent()
                                 val dragChange = dragEvent.changes.first()
 
                                 if (dragChange.pressed) {
-                                    // Path 업데이트
                                     currentPosition = dragChange.position
                                     path.lineTo(currentPosition.x, currentPosition.y)
                                     canvas.drawPath(path.asAndroidPath(), paint)
                                 } else {
-                                    // 터치가 끝나면 루프 종료
                                     break
                                 }
                             }
 
-                            // Path 초기화
                             path.reset()
                         }
                     }
@@ -469,11 +476,24 @@ fun DrawCanvas(
             }
     ) {
         drawIntoCanvas { canvas ->
-            // Bitmap을 화면에 렌더링
             canvas.drawImage(imageBitmap, Offset(0f, 0f), Paint())
         }
     }
 }
+
+
+fun checkStylusConnection(context: Context): Boolean {
+    val inputManager = context.getSystemService(Context.INPUT_SERVICE) as android.hardware.input.InputManager
+    val deviceIds = inputManager.inputDeviceIds
+    for (deviceId in deviceIds) {
+        val inputDevice = inputManager.getInputDevice(deviceId)
+        if (inputDevice != null && inputDevice.sources and android.view.InputDevice.SOURCE_STYLUS == android.view.InputDevice.SOURCE_STYLUS) {
+            return true // 스타일러스 입력 장치가 연결됨
+        }
+    }
+    return false // 스타일러스 입력 장치가 없음
+}
+
 
 
 
