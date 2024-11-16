@@ -17,6 +17,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -30,6 +31,8 @@ enum class ButtonType {
 
 @Composable
 fun BlockButton(
+    screenWidth : Dp,
+    screenHeight : Dp,
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
     buttonType: ButtonType,
@@ -47,9 +50,8 @@ fun BlockButton(
 
     Box(
         modifier = modifier
-            .width(330.dp)
-            .height(429.dp)
-            .padding(8.dp)
+            .width(screenHeight * 0.4f) // 높이에 비례한 너비
+            .height(screenHeight * 0.5f) // 비율 기반 높이
             .pointerInput(Unit) {
                 detectTapGestures(
                     onPress = {
@@ -70,7 +72,7 @@ fun BlockButton(
 
         Card(
             colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-            shape = RoundedCornerShape(8.dp),
+            shape = RoundedCornerShape(8),
             modifier = Modifier.fillMaxSize()
         ) {
             Column(
@@ -81,14 +83,16 @@ fun BlockButton(
                 Image(
                     painter = painterResource(id = imageResId),
                     contentDescription = null,
-                    modifier = Modifier.size(162.dp, 154.dp)
+                    modifier = Modifier
+                        .width(screenHeight * 0.24f)
+                        .height(screenHeight * 0.2f)
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(screenHeight * 0.024f))
                 Text(
                     text = text,
                     color = PastelNavy,
                     style = TextStyle(
-                        fontSize = 40.sp,
+                        fontSize = (screenHeight * 0.05f).value.sp,
                         fontFamily = MyTypography.bodyLarge.fontFamily,
                         fontWeight = MyTypography.bodyLarge.fontWeight
                     )

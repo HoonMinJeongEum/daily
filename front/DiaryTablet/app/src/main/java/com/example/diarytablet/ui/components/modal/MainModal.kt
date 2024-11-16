@@ -11,13 +11,16 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.diarytablet.R
@@ -26,6 +29,8 @@ import com.example.diarytablet.ui.components.ButtonType
 
 @Composable
 fun MainModal(
+    screenWidth : Dp,
+    screenHeight : Dp,
     isModalVisible: Boolean,
     onDismiss: () -> Unit,
     navController: NavController,
@@ -47,8 +52,10 @@ fun MainModal(
             ) {
                 Box(
                     modifier = Modifier
-                        .weight(1f)
                         .fillMaxWidth()
+                        .height(screenHeight * 0.16f)
+                    ,
+                    contentAlignment = Alignment.TopStart
                 ){
                     Image(
                         modifier = Modifier
@@ -64,10 +71,12 @@ fun MainModal(
                         .fillMaxWidth(0.95f)
                         .weight(4f),
                     horizontalArrangement = Arrangement.SpaceBetween, // 버튼 간 간격 조정
+                    verticalAlignment = Alignment.CenterVertically
+
                 ) {
-                    BlockButton(modifier = Modifier.weight(1f), onClick = onDrawingDiaryClick, buttonType = ButtonType.DRAWING_DIARY, navController = navController)
-                    BlockButton(modifier = Modifier.weight(1f), onClick = onDrawingQuizClick, buttonType = ButtonType.DRAWING_QUIZ, navController = navController)
-                    BlockButton(modifier = Modifier.weight(1f), onClick = onWordLearningClick, buttonType = ButtonType.WORD_LEARNING, navController = navController)
+                    BlockButton(screenWidth = screenWidth, screenHeight = screenHeight,modifier = Modifier.weight(1f), onClick = onDrawingDiaryClick, buttonType = ButtonType.DRAWING_DIARY, navController = navController)
+                    BlockButton(screenWidth = screenWidth, screenHeight = screenHeight,modifier = Modifier.weight(1f), onClick = onDrawingQuizClick, buttonType = ButtonType.DRAWING_QUIZ, navController = navController)
+                    BlockButton(screenWidth = screenWidth, screenHeight = screenHeight,modifier = Modifier.weight(1f), onClick = onWordLearningClick, buttonType = ButtonType.WORD_LEARNING, navController = navController)
                 }
             }
         }

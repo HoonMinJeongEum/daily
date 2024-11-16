@@ -228,6 +228,8 @@ fun MainScreen(
         }
         // MainModal
         MainModal(
+            screenWidth = screenWidth,
+            screenHeight = screenHeight,
             isModalVisible = isModalVisible,
             onDismiss = { isModalVisible = false },
             navController = navController,
