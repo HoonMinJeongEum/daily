@@ -22,8 +22,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -39,6 +42,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,6 +51,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -76,6 +81,9 @@ import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ui.PlayerView
+import kotlinx.coroutines.launch
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun DiaryDetailScreen(
@@ -95,6 +103,8 @@ fun DiaryDetailScreen(
     val diaryDetail = diaryViewModel.diaryDetail.observeAsState()
     val comments = remember(diaryDetail.value?.comments) { mutableStateOf(diaryDetail.value?.comments ?: emptyList()) }
     val commentText = remember { mutableStateOf("") }
+    val listState = rememberLazyListState() // LazyColumn 상태 관리
+    val coroutineScope = rememberCoroutineScope()
 
     BackgroundPlacement(backgroundType = backgroundType)
 
@@ -126,6 +136,7 @@ fun DiaryDetailScreen(
             ) {
 
                 LazyColumn(
+                    state = listState,
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -199,6 +210,12 @@ fun DiaryDetailScreen(
                     }
                     items(comments.value.size) { index ->
                         val comment = comments.value[index]
+                        val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+
+                        val localDateTime = LocalDateTime.parse(comment.createdAt)
+                        val displayDate = localDateTime.format(dateTimeFormatter)
+                        Log.d("diaryDetail","${comment.createdAt} ${displayDate}")
+
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -220,17 +237,20 @@ fun DiaryDetailScreen(
 
                             // Comment Text and Date
                             Column {
+
+                                Text(
+                                    text = "작성 시간: ${displayDate}",
+                                    fontSize = (screenWidth * 0.03f).value.sp,
+                                    color = Color.Gray,
+                                    modifier = Modifier.padding(bottom = screenWidth * 0.005f)
+                                )
+
                                 Text(
                                     text = comment.comment,
                                     style = MyTypography.bodyLarge.copy(fontSize = (screenWidth * 0.04f).value.sp),
                                     color = DeepPastelNavy
                                 )
-                                Text(
-                                    text = "작성 시간: ${comment.createdAt.substringBefore("T")}",
-                                    fontSize = (screenWidth * 0.035f).value.sp,
-                                    color = Color.Gray,
-                                    modifier = Modifier.padding(top = screenWidth * 0.005f)
-                                )
+
                             }
                         }
                 }}
@@ -283,6 +303,7 @@ fun DiaryDetailScreen(
                                     color = PastelNavy,
                                     shape = RoundedCornerShape(15.dp)
                                 ),
+                            singleLine = true,
                             placeholder = {
                                 Text(
                                     "댓글을 입력하세요",
@@ -298,7 +319,20 @@ fun DiaryDetailScreen(
                                 focusedIndicatorColor = Color.Transparent,
                                 unfocusedIndicatorColor = Color.Transparent
                             ),
-                            textStyle = MyTypography.bodyMedium.copy(fontSize = (screenWidth.value * 0.04f).sp)
+                            textStyle = MyTypography.bodyMedium.copy(fontSize = (screenWidth.value * 0.04f).sp),
+                            keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
+                                    if (commentText.value.isNotBlank()) {
+                                        val newComment = CommentDto(comment = commentText.value, createdAt = "방금 전")
+                                        comments.value = comments.value + newComment
+                                        commentText.value = ""
+                                        coroutineScope.launch {
+                                            listState.animateScrollToItem(comments.value.size - 1)
+                                        }
+                                    }
+                                }
+                            )
                         )
 
                         Spacer(modifier = Modifier.width(screenWidth * 0.02f))
@@ -318,8 +352,13 @@ fun DiaryDetailScreen(
                                 )
                                 comments.value = comments.value + newComment
                                 commentText.value = ""
+
+                                coroutineScope.launch {
+                                    listState.animateScrollToItem(comments.value.size - 1)
+                                }
                             }
-                        ) {
+                        )
+                         {
                             Text(
                                 "등록",
                                 style = MyTypography.bodyLarge.copy(fontSize = (screenWidth.value * 0.05f).sp)
@@ -335,6 +374,7 @@ fun DiaryDetailScreen(
                 properties = DialogProperties(dismissOnClickOutside = true)
             ) {
                 val context = LocalContext.current
+                var isLoading by remember { mutableStateOf(true) } // 로딩 상태 관리
 
                 // Video Player 설정
                 val videoPlayer = remember {
@@ -346,26 +386,18 @@ fun DiaryDetailScreen(
                             prepare()
                             playWhenReady = true
                         }
-                    }
-                }
 
-                // Sound Player 설정
-                val soundPlayer = remember {
-                    ExoPlayer.Builder(context).build().apply {
-                        diaryDetail.value?.sound?.let {
-                            val mediaItem = MediaItem.fromUri(Uri.parse(it))
-                            setMediaItem(mediaItem)
-                            repeatMode = Player.REPEAT_MODE_ONE // 사운드 반복 재생 설정
-                            prepare()
-                            playWhenReady = false
-                        }
+                        addListener(object : Player.Listener {
+                            override fun onIsLoadingChanged(isLoadingNow: Boolean) {
+                                isLoading = isLoadingNow // 로딩 상태 업데이트
+                            }
+                        })
                     }
                 }
 
                 DisposableEffect(Unit) {
                     onDispose {
                         videoPlayer.release() // ExoPlayer 해제
-                        soundPlayer.release()
                     }
                 }
 
@@ -377,66 +409,67 @@ fun DiaryDetailScreen(
                         modifier = Modifier
                             .fillMaxWidth(0.9f) // 화면 너비의 80%
                             .wrapContentHeight()
-                            .background(Color.White, shape = RoundedCornerShape(screenWidth * 0.03f))
-                            .padding(screenWidth * 0.04f)
+                            .background(Color.White, shape = RoundedCornerShape(16.dp))
+                            .padding(16.dp)
                     ) {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(screenWidth * 0.04f),
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
                             modifier = Modifier.fillMaxWidth()
+                                .background(Color.White)
                         ) {
                             Text(
                                 text = "${diaryViewModel.memberName.value}의 그림 일기",
-                                fontSize = (screenWidth * 0.05f).value.sp,
+                                fontSize = 18.sp,
                                 color = DeepPastelNavy,
-                                modifier = Modifier.padding(bottom = screenWidth * 0.04f)
+                                modifier = Modifier.padding(bottom = 16.dp)
                             )
 
-                            // ExoPlayer Video Player
-                            AndroidView(
-                                factory = {
-                                    PlayerView(context).apply {
-                                        player = videoPlayer
-                                    }
-                                },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .aspectRatio(16f / 9f)
-                                    .clip(RoundedCornerShape(screenWidth * 0.03f))
-                            )
-
-                            Spacer(modifier = Modifier.height(screenWidth * 0.02f))
-
-                            // Play Sound Button
-                            Button(
-                                onClick = { soundPlayer.playWhenReady = true },
-                                colors = ButtonDefaults.buttonColors(containerColor = DeepPastelNavy),
-                                modifier = Modifier
-                                    .fillMaxWidth(0.6f) // 너비의 60%
-                                    .height(screenWidth * 0.12f), // 버튼 높이 설정
-                                shape = RoundedCornerShape(screenWidth * 0.03f)
-                            ) {
-                                Text("소리 재생", color = Color.White, fontSize = (screenWidth * 0.045f).value.sp)
+                            // 로딩 상태 표시 또는 비디오 플레이어
+                            if (isLoading) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .aspectRatio(16f / 9f)
+                                        .clip(RoundedCornerShape(16.dp))
+                                        .background(Color.LightGray), // 로딩 중 배경색
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator() // 로딩 표시
+                                }
+                            } else {
+                                AndroidView(
+                                    factory = {
+                                        PlayerView(context).apply {
+                                            player = videoPlayer
+                                        }
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .aspectRatio(16f / 9f)
+                                        .clip(RoundedCornerShape(16.dp))
+                                )
                             }
 
-                            Spacer(modifier = Modifier.height(screenWidth * 0.02f))
+                            Spacer(modifier = Modifier.height(16.dp))
 
                             // Close Button
                             Button(
                                 onClick = { isDialogVisible = false },
-                                colors = ButtonDefaults.buttonColors(containerColor = Color.Gray),
+                                colors = ButtonDefaults.buttonColors(containerColor = DeepPastelNavy),
                                 modifier = Modifier
-                                    .fillMaxWidth(0.6f)
-                                    .height(screenWidth * 0.12f),
-                                shape = RoundedCornerShape(screenWidth * 0.03f)
+                                    .fillMaxWidth(0.5f)
+                                    .height(48.dp),
+                                shape = RoundedCornerShape(16.dp)
                             ) {
-                                Text("닫기", color = Color.White, fontSize = (screenWidth * 0.045f).value.sp)
+                                Text("닫기", color = Color.White, fontSize = 16.sp)
                             }
                         }
                     }
                 }
             }
         }
+
 
 
     }

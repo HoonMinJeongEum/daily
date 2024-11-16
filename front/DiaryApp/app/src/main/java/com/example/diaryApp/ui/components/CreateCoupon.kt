@@ -80,7 +80,6 @@ fun CreateCoupon(
                 shape = RoundedCornerShape(screenWidth * 0.08f),
                 color = Color.White,
                 modifier = Modifier
-                    .padding(screenWidth * 0.05f)
                     .fillMaxWidth()
                     .wrapContentHeight()
             ) {
@@ -119,18 +118,34 @@ fun CreateCoupon(
                     )
 
                     Spacer(modifier = Modifier.height(screenWidth * 0.06f))
-
+                    Text(
+                        text = "소원명",
+                        style = MyTypography.bodySmall.copy(
+                            fontSize = (screenWidth.value * 0.05f).sp,
+                            color = DeepPastelNavy
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = screenWidth * 0.02f, bottom = screenWidth * 0.02f)
+                    )
                     MyTextField(
                         value = couponViewModel.couponDescription.value,
                         placeholder = "소원명",
-                        onValueChange = { couponViewModel.couponDescription.value = it },
+                        onValueChange = {
+                            if (it.length <= 12) {
+                                couponViewModel.couponDescription.value = it
+                                showAlertDescription = false
+                            } else {
+                                showAlertDescription = true
+                            }
+                        },
                         width = screenWidth,
                         height = screenWidth * 1.9f
                     )
 
                     if (showAlertDescription) {
                         Text(
-                            text = "소원명을 입력해주세요.",
+                            text = "소원명은 최대 12글자까지 입력할 수 있습니다.",
                             color = Color.Red,
                             style = MyTypography.bodySmall.copy(
                                 fontSize = (screenWidth.value * 0.03f).sp
@@ -145,21 +160,34 @@ fun CreateCoupon(
 
                     Spacer(modifier = Modifier.height(screenWidth * 0.05f))
 
+                    Text(
+                        text = "가격",
+                        style = MyTypography.bodySmall.copy(
+                            fontSize = (screenWidth.value * 0.05f).sp,
+                            color = DeepPastelNavy
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = screenWidth * 0.02f, bottom = screenWidth * 0.02f)
+                    )
                     MyTextField(
                         value = if (couponViewModel.couponPrice.value == 0) "" else couponViewModel.couponPrice.value.toString(),
                         placeholder = "가격",
                         width = screenWidth,
                         height = screenWidth * 1.9f,
                         onValueChange = {
-                            if (it.all { char -> char.isDigit() } || it.isEmpty()) {
+                            if (it.all { char -> char.isDigit() } && it.length <= 3) {
                                 couponViewModel.couponPrice.value = it.toIntOrNull() ?: 0
+                                showAlertPrice = false
+                            } else if (it.length > 3) {
+                                showAlertPrice = true
                             }
                         }
                     )
 
                     if (showAlertPrice) {
                         Text(
-                            text = "가격을 입력해주세요.",
+                            text = "가격은 최대 세 자리까지만 입력할 수 있습니다.",
                             color = Color.Red,
                             style = MyTypography.bodySmall.copy(
                                 fontSize = (screenWidth.value * 0.03f).sp
@@ -179,7 +207,9 @@ fun CreateCoupon(
                         textColor = White,
                         cornerRadius = 16,
                         fontWeight = FontWeight.Bold,
-                        backgroundColor = PastelNavy,
+                        backgroundColor = if (
+                            couponViewModel.couponDescription.value.isBlank() || couponViewModel.couponPrice.value == 0
+                            ) Gray else PastelNavy,
                         width = (screenWidth * 0.5f).value.toInt(),
                         height = (screenWidth * 0.13f).value.toInt(),
                         onClick = {
@@ -188,7 +218,7 @@ fun CreateCoupon(
                                 couponViewModel.couponDescription.value.isBlank()
                             val isPriceEmpty = couponViewModel.couponPrice.value == 0
 
-                            if (isDescriptionEmpty || isPriceEmpty) {
+                            if (!isDescriptionEmpty && !isPriceEmpty) {
                                 showAlertDescription = isDescriptionEmpty
                                 showAlertPrice = isPriceEmpty
                             } else {
@@ -208,7 +238,7 @@ fun CreateCoupon(
                         },
                     )
 
-                    Spacer(modifier = Modifier.height(screenWidth * 0.02f))
+                    Spacer(modifier = Modifier.height(screenWidth * 0.04f))
                 }
             }
         }

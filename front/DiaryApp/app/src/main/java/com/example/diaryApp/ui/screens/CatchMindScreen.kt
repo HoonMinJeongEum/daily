@@ -315,8 +315,9 @@ fun CatchMindScreen(
                                             keyboardController?.hide()
                                         }
                                     }
+                                ),
+                                singleLine = true,
                                 )
-                            )
 
                         }
                         Spacer(modifier = Modifier.weight(0.1f))

@@ -138,10 +138,12 @@ fun JoinScreen(
                     value = joinViewModel.username.value,
                     placeholder = "아이디",
                     onValueChange = {
-                        joinViewModel.username.value = it
-                        if (isUsernameTouched) validateUsername()
-                        joinViewModel.usernameErrorMessage.value = ""
-                        isCheckUsername = false
+                        if (it.length <= 20) { // 글자 수 제한 확인
+                            joinViewModel.username.value = it
+                            if (isUsernameTouched) validateUsername()
+                            joinViewModel.usernameErrorMessage.value = ""
+                            isCheckUsername = false
+                        }
                     },
                     modifier = Modifier.weight(1f),
                     width = screenWidth,
@@ -187,10 +189,12 @@ fun JoinScreen(
                 placeholder = "비밀번호",
                 isPassword = true,
                 onValueChange = {
-                    joinViewModel.password.value = it
-                    isPasswordTouched = true
-                    validatePassword()
-                    validatePasswordCheck()
+                    if (it.length <= 20) { // 글자 수 제한 확인
+                        joinViewModel.password.value = it
+                        isPasswordTouched = true
+                        validatePassword()
+                        validatePasswordCheck()
+                    }
                 },
                 width = screenWidth,
                 height = screenHeight * 0.9f,
@@ -223,9 +227,11 @@ fun JoinScreen(
                 placeholder = "비밀번호 확인",
                 isPassword = true,
                 onValueChange = {
-                    joinViewModel.passwordCheck.value = it
-                    validatePasswordCheck()
-                    isPasswordCheckTouched = true
+                    if (it.length <= 20) { // 글자 수 제한 확인
+                        joinViewModel.passwordCheck.value = it
+                        validatePasswordCheck()
+                        isPasswordCheckTouched = true
+                    }
 
                 },
                 width = screenWidth,

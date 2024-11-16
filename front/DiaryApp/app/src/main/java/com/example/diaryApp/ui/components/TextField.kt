@@ -32,6 +32,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -93,6 +94,7 @@ fun MyTextField(
                     )
                 }
             },
+            singleLine = true,
             trailingIcon = {
                 if (isPassword) {
                     IconButton(
@@ -114,7 +116,10 @@ fun MyTextField(
                     }
                 }
             },
-            keyboardOptions = KeyboardOptions.Default.copy(imeAction = imeAction),
+            keyboardOptions = KeyboardOptions.Default.copy(
+                imeAction = imeAction,
+                keyboardType = if (placeholder == "가격") KeyboardType.Number else KeyboardType.Text
+            ),
             keyboardActions = KeyboardActions(onNext = { onImeAction() }, onDone = { onImeAction() }),
             colors = TextFieldDefaults.textFieldColors(
                 containerColor = Color.Transparent,
