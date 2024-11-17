@@ -1,5 +1,6 @@
 package com.example.diarytablet.ui.components.quiz
 
+import android.content.Context
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -29,6 +30,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -43,12 +45,15 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.painter.ColorPainter
+import androidx.compose.ui.input.pointer.PointerType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.diarytablet.R
+import com.example.diarytablet.ui.components.checkStylusConnection
 import com.example.diarytablet.viewmodel.PathStyle
 import com.example.diarytablet.viewmodel.QuizViewModel
 
@@ -65,38 +70,67 @@ fun Draw(
     val paths by viewModel.paths.observeAsState()
     val pathStyle by viewModel.pathStyle.observeAsState()
 
+    // S펜
+    val context = LocalContext.current
+    val isStylusConnected = remember { mutableStateOf(checkStylusConnection(context)) }
+
+    LaunchedEffect(Unit) {
+        // 지속적으로 펜 연결 상태를 확인
+        while (true) {
+            isStylusConnected.value = checkStylusConnection(context)
+            kotlinx.coroutines.delay(1000) // 1초마다 확인
+        }
+    }
+
     Canvas(
         modifier = modifier
             .fillMaxSize()
             .onGloballyPositioned { coordinates ->
                 viewModel.setCanvasSize(coordinates.size.width, coordinates.size.height)
             }
-            .pointerInput(Unit) {
+            .pointerInput(isStylusConnected.value) {
                 awaitPointerEventScope {
                     while (true) {
-                        val down = awaitFirstDown() // 드래그 시작 시 즉시 감지
-                        point = down.position
+                        val down = awaitPointerEvent() // 첫 입력 이벤트 대기
+                        val input = down.changes.first() // 첫 입력 변화
+                        val inputType = input.type// 드래그 시작 시 즉시 감지
+
+                        if (isStylusConnected.value && inputType != PointerType.Stylus) {
+                            // 펜이 연결된 경우, 터치 입력 무시
+                            continue
+                        }
+
+                        point = input.position
                         points.add(point)
                         path = Path().apply { moveTo(point.x, point.y) }
 
                         viewModel.sendDrawAction("DOWN", point.x, point.y)
 
-                        drag(down.id) { change ->
-                            change.consume() // 이벤트 소비
-                            point = change.position
-                            points.add(point)
+                        input.consume() // 이벤트 소비
 
-                            path = Path().apply {
-                                points.forEachIndexed { index, point ->
-                                    if (index == 0) moveTo(point.x, point.y)
-                                    else lineTo(point.x, point.y)
+                        while (true) {
+                            val dragEvent = awaitPointerEvent()
+                            val dragChange = dragEvent.changes.first()
+
+                            if (dragChange.pressed) {
+                                point = dragChange.position
+                                points.add(point)
+
+                                path = Path().apply {
+                                    points.forEachIndexed { index, point ->
+                                        if (index == 0) moveTo(point.x, point.y)
+                                        else lineTo(point.x, point.y)
+                                    }
                                 }
-                            }
 
-                            viewModel.sendDrawAction("MOVE", point.x, point.y)
+                                viewModel.sendDrawAction("MOVE", point.x, point.y)
+                                dragChange.consume() // 이벤트 소비
+                            } else {
+                                break
+                            }
                         }
 
-                        // 드래그가 끝난 후
+                        // 드래그 종료 시
                         viewModel.addPath(Pair(path, pathStyle!!.copy()))
                         points.clear()
                         path = Path()
@@ -118,6 +152,8 @@ fun Draw(
             style = pathStyle!!
         )
     }
+
+
 }
 @Composable
 fun DrawingThicknessSelector(
