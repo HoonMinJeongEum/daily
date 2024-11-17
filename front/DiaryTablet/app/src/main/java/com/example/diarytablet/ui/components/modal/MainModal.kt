@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -26,6 +27,7 @@ import androidx.navigation.NavController
 import com.example.diarytablet.R
 import com.example.diarytablet.ui.components.BlockButton
 import com.example.diarytablet.ui.components.ButtonType
+import com.example.diarytablet.utils.playButtonSound
 
 @Composable
 fun MainModal(
@@ -38,6 +40,7 @@ fun MainModal(
     onDrawingDiaryClick: () -> Unit,
     onDrawingQuizClick: () -> Unit
 ) {
+    val context = LocalContext.current
     if (isModalVisible) {
         Box(
             modifier = Modifier
@@ -61,7 +64,12 @@ fun MainModal(
                         modifier = Modifier
                             .aspectRatio(0.6f)
                             .align(Alignment.CenterStart)
-                            .clickable(onClick = onDismiss),
+                            .clickable(onClick = {
+                                onDismiss()
+                                playButtonSound(context, R.raw.all_button )
+
+                            }
+                            ),
                         painter = painterResource(id = R.drawable.back_button), // 취소 버튼 아이콘
                         contentDescription = "Close",
                     )

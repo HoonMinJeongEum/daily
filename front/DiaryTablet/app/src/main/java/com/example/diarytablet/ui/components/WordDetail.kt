@@ -17,19 +17,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import coil3.compose.rememberAsyncImagePainter
+import com.example.diarytablet.R
 import com.example.diarytablet.domain.dto.response.WordLearnedResponseDto
 import com.example.diarytablet.ui.theme.MyTypography
+import com.example.diarytablet.utils.playButtonSound
 
 @Composable
 fun WordDetail(word: WordLearnedResponseDto, onDismissRequest: () -> Unit) {
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
+    val context = LocalContext.current
     Dialog(onDismissRequest = onDismissRequest) {
         Surface(
             shape = RoundedCornerShape(30.dp),
@@ -49,7 +53,10 @@ fun WordDetail(word: WordLearnedResponseDto, onDismissRequest: () -> Unit) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Spacer(modifier = Modifier.weight(1f)) // 타이틀 왼쪽에 빈 공간을 추가
-                    IconButton(onClick = onDismissRequest) {
+                    IconButton(onClick = {
+                        onDismissRequest()
+                        playButtonSound(context, R.raw.all_button )
+                    }) {
                         Icon(
                             imageVector = Icons.Filled.Close,
                             contentDescription = "Close",

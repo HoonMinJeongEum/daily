@@ -11,6 +11,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -20,6 +21,7 @@ import com.example.diarytablet.R
 import com.example.diarytablet.ui.components.RecordTab
 import com.example.diarytablet.ui.theme.BackgroundPlacement
 import com.example.diarytablet.ui.theme.BackgroundType
+import com.example.diarytablet.utils.playButtonSound
 import com.example.diarytablet.viewmodel.LogViewModel
 import com.example.diarytablet.viewmodel.ShopStockViewModel
 
@@ -29,6 +31,8 @@ fun RecordScreen(
     viewModel: LogViewModel = hiltViewModel(),
     backgroundType: BackgroundType = BackgroundType.DEFAULT
 ) {
+
+    val context = LocalContext.current
     BackgroundPlacement(backgroundType = backgroundType)
 
     Box(
@@ -53,6 +57,7 @@ fun RecordScreen(
                         indication = null, // 클릭 효과 제거
                         interactionSource = remember { MutableInteractionSource() }
                     ){
+                        playButtonSound(context, R.raw.all_button)
                         navController.navigate("main") {
                             popUpTo("record") { inclusive = true }
                         }

@@ -171,6 +171,7 @@ fun CouponBox(coupon: Coupon, index: Int, onClick: (Coupon) -> Unit) {
                 indication = null,
                 onClick = {
                     isPressed = true
+                    playButtonSound(context, R.raw.shop_buy )
                     onClick(coupon)
                 }
             )
