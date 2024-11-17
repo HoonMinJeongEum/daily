@@ -8,6 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.painterResource
 import com.example.diarytablet.R
 import com.example.diarytablet.viewmodel.QuizViewModel
@@ -16,7 +17,8 @@ import com.example.diarytablet.viewmodel.QuizViewModel
 @Composable
 fun ToggleMicButton(
     viewModel: QuizViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enable: Boolean
 ) {
     val isMicMuted by viewModel.isMicMuted.observeAsState(true)
 
@@ -25,9 +27,11 @@ fun ToggleMicButton(
         contentDescription = if (isMicMuted) "Muted" else "Unmuted",
         modifier = modifier
             .clickable(
+                enabled = enable,
                 onClick = { viewModel.toggleMicMute() },
                 indication = null,
                 interactionSource = remember { MutableInteractionSource() }
             )
+            .alpha(if (enable) 1f else 0.5f)
     )
 }
