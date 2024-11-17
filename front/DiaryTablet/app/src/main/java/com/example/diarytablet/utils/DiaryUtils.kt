@@ -190,7 +190,7 @@ fun saveBitmapToFile(bitmap: Bitmap, file: File): Boolean {
 }
 
 fun createVideoFromFrames(context: Context, framesDir: File, outputFile: File, onComplete: () -> Unit) {
-    val command = "-y -framerate 20 -i ${framesDir.absolutePath}/frame_%d.png -c:v mpeg4 -qscale:v 2 -pix_fmt yuv420p ${outputFile.absolutePath}"
+    val command = "-y -framerate 10 -i ${framesDir.absolutePath}/frame_%d.png -c:v mpeg4 -qscale:v 2 -pix_fmt yuv420p ${outputFile.absolutePath}"
 
     FFmpegKit.executeAsync(command) { session ->
         if (session.returnCode.isValueSuccess) {
@@ -241,11 +241,11 @@ suspend fun savePageImagesWithTemplate(
             } else {
                 BitmapFactory.decodeResource(context.resources, R.drawable.write_template)
             }
-            val resizedTemplateBitmap = Bitmap.createScaledBitmap(templateBitmap, targetWidth - padding * 4, targetHeight - padding * 4, true)
+            val resizedTemplateBitmap = Bitmap.createScaledBitmap(templateBitmap, targetWidth, targetHeight, true)
             val resizedDrawingBitmap = Bitmap.createScaledBitmap(drawingBitmap, targetWidth, targetHeight, true)
             // 중앙 위치 계산
-            val centerX = (outerBoxWidthPx - targetWidth + padding*4) / 2f
-            val centerY = (outerBoxHeightPx - targetHeight + padding*4) / 2f
+            val centerX = (outerBoxWidthPx - targetWidth) / 2f
+            val centerY = (outerBoxHeightPx - targetHeight) / 2f
             // 바깥 박스의 중앙에 템플릿 및 비트맵을 그리기
             outerCanvas.drawBitmap(resizedTemplateBitmap, centerX, centerY, null)
             outerCanvas.drawBitmap(resizedDrawingBitmap, centerX, centerY, null)
