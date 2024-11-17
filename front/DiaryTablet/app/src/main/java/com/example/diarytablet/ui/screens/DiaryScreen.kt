@@ -120,8 +120,8 @@ fun DiaryScreen(
     val leftBoxWidth = contentWidth * 0.75f
     val boxHeight = contentHeight * 0.88f
     val density = LocalDensity.current
-    val bitmapWidthPx = with(density) { (leftBoxWidth).roundToPx() }
-    val bitmapHeightPx = with(density) { (boxHeight).roundToPx() }
+    val bitmapWidthPx = with(density) { (leftBoxWidth-padding*2).roundToPx() }
+    val bitmapHeightPx = with(density) { (boxHeight-padding*2).roundToPx() }
 
     val bitmapsList = remember {
         mutableStateListOf(
