@@ -84,7 +84,7 @@ data class StickerItem(
 @Composable
 fun DiaryScreen(
     navController: NavController,
-    backgroundType: BackgroundType = BackgroundType.DEFAULT,
+    backgroundType: BackgroundType = BackgroundType.DRAWING_DIARY,
     diaryViewModel: DiaryViewModel = hiltViewModel()
 ) {
     BackgroundPlacement(backgroundType = backgroundType)
@@ -107,7 +107,7 @@ fun DiaryScreen(
     var isModalOpen by remember { mutableStateOf(false) }
 
     var selectedColor by remember { mutableStateOf(Color.Black) }
-    var brushSize by remember { mutableFloatStateOf(5f) }
+    var brushSize by remember { mutableFloatStateOf(10f) }
     var selectedTool by remember { mutableStateOf(ToolType.PENCIL) }
 
     val configuration = LocalConfiguration.current
@@ -473,6 +473,10 @@ fun DiaryScreen(
                                 selectedStickerIndex = firstPageStickers.size - 1
                                 isDrawingMode = false
                                 selectedTool = ToolType.FINGER
+
+                                CoroutineScope(Dispatchers.Main).launch {
+                                    pagerState.scrollToPage(0)
+                                }
                             }
                         }
                     }

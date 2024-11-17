@@ -148,7 +148,7 @@ fun StickerModal(
                     ) {
                         items(stickerList.chunked(3)) { rowItems ->
                             Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp) // 한 줄 아이템 간격
+                                horizontalArrangement = Arrangement.spacedBy(12.dp) // 한 줄 아이템 간격
                             ) {
                                 rowItems.forEach { sticker ->
                                     Image(
@@ -274,7 +274,7 @@ fun ToolSelectionRow(
 
 @Composable
 fun ToolImage(imageRes: Int, selected: Boolean, onClick: () -> Unit) {
-    val size by animateDpAsState(targetValue = if (selected) 40.dp else 30.dp)
+    val size by animateDpAsState(targetValue = if (selected) 50.dp else 40.dp)
 
     Box(
         modifier = Modifier
