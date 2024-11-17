@@ -429,7 +429,7 @@ fun DiaryDetailScreen(
                                 .background(Color.White)
                         ) {
                             Text(
-                                text = "${diaryViewModel.memberName.value}의 그림 일기",
+                                text = "${childName}의 그림 일기",
                                 fontSize = 18.sp,
                                 color = DeepPastelNavy,
                                 modifier = Modifier.padding(bottom = 16.dp)
