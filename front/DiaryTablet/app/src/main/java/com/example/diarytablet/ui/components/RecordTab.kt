@@ -52,7 +52,8 @@ import com.example.diarytablet.viewmodel.LogViewModel
 @Composable
 fun RecordTab(
     modifier: Modifier = Modifier,
-    viewModel: LogViewModel
+    viewModel: LogViewModel,
+    titleId: Int
 ) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
@@ -63,7 +64,6 @@ fun RecordTab(
     val tabTitles = listOf("단어장", "일기장")
     var isDiaryDetailVisible by remember { mutableStateOf(false) }
     var selectedDiaryId by remember { mutableStateOf<Int?>(null) }
-    val titleId by viewModel.titleId
     // 전체 박스 (탭 + 내용물)
 
     var showInfo by remember { mutableStateOf(false) } // 물음표 클릭 시 표시할 문구 상태

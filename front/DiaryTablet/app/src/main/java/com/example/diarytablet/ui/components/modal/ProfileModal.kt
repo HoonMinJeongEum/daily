@@ -189,7 +189,7 @@ fun ProfileModal(
                                     unfocusedIndicatorColor = Color.Gray
                                 ),
                                 textStyle = MaterialTheme.typography.bodyMedium.copy(
-                                    fontSize = 38.sp
+                                    fontSize = 36.sp
                                 )
                             )
 

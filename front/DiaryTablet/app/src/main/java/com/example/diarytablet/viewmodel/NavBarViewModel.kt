@@ -45,6 +45,11 @@ class NavBarViewModel @Inject constructor(
         observeAlarmState()
         saveFcmToken()
     }
+
+    init {
+        initializeData()
+    }
+
     private val _shellCount = mutableIntStateOf(0)
     val shellCount: State<Int> get() = _shellCount
 
@@ -66,18 +71,18 @@ class NavBarViewModel @Inject constructor(
     private val _checkAlarmStatus = mutableStateOf("")
     val checkAlarmStatus: State<String> get() = _checkAlarmStatus
 
-    private fun loadStatus() {
+    fun loadStatus() {
         viewModelScope.launch {
             try {
                 val response = mainScreenRepository.getMainScreenStatus()
 
                 // shellCount 업데이트
                 _shellCount.value = response.shellCount
-                _profileImageUrl.value = response.image
 
                 userStore.getValue(UserStore.KEY_PROFILE_IMAGE).collect { url ->
                     _profileImageUrl.value = url
                 }
+                _profileImageUrl.value = response.image
                 userStore.getValue(UserStore.KEY_PROFILE_NAME).collect { name ->
                     _userName.value = name
                 }

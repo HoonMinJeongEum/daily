@@ -57,6 +57,8 @@ class QuizViewModel @Inject constructor(
     val userDisconnectedEvent: LiveData<Boolean?> get() = _userDisconnectedEvent
     private val _parentJoinedEvent = MutableLiveData<Boolean>()
     val parentJoinedEvent: LiveData<Boolean> get() = _parentJoinedEvent
+    private val _parentWord = MutableLiveData<String>()
+    val parentWord: LiveData<String> get() = _parentWord
 
     // 그림
     private val _canvasWidth = MutableLiveData<Int>()
@@ -158,13 +160,18 @@ class QuizViewModel @Inject constructor(
         }
 
         socket.on("checkWord") { args ->
-            val isCorrect = args[0] as Boolean
+            val json = args[0] as JSONObject
+            val isCorrect = json.getBoolean("isCorrect") // JSON 객체에서 Boolean 추출
+            val word = json.getString("processedWord")
             _isCorrectAnswer.postValue(isCorrect)
+            _parentWord.postValue(word)
         }
 
         socket.on("clear") {
             _paths.postValue(mutableListOf())
             removedPaths.clear()
+            _isUndoAvailable.postValue(false)
+            _isRedoAvailable.postValue(false)
         }
 
         socket.on("userDisconnected") {
@@ -309,8 +316,8 @@ class QuizViewModel @Inject constructor(
         list.add(pair)
         removedPaths.clear()
         _paths.postValue(list)
-        _isUndoAvailable.value = list.isNotEmpty()
-        _isRedoAvailable.value = removedPaths.isNotEmpty()
+        _isUndoAvailable.postValue(list.isNotEmpty())
+        _isRedoAvailable.postValue(removedPaths.isNotEmpty())
         socket.emit("addPath")
     }
 
@@ -322,8 +329,8 @@ class QuizViewModel @Inject constructor(
         val size = pathList.size
         removedPaths.add(last)
         _paths.postValue(pathList.subList(0, size-1))
-        _isUndoAvailable.value = (pathList.size - 1) > 0
-        _isRedoAvailable.value = removedPaths.isNotEmpty()
+        _isUndoAvailable.postValue((pathList.size - 1) > 0)
+        _isRedoAvailable.postValue(removedPaths.isNotEmpty())
         socket.emit("undoPath")
     }
 
@@ -331,8 +338,8 @@ class QuizViewModel @Inject constructor(
         if (removedPaths.isEmpty())
             return
         _paths.postValue((_paths.value + removedPaths.removeLast()) as MutableList<Pair<Path, PathStyle>>)
-        _isUndoAvailable.value = true
-        _isRedoAvailable.value = removedPaths.isNotEmpty()
+        _isUndoAvailable.postValue(true)
+        _isRedoAvailable.postValue(removedPaths.isNotEmpty())
         socket.emit("redoPath")
     }
 

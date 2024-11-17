@@ -29,7 +29,8 @@ import com.example.diarytablet.viewmodel.ShopStockViewModel
 fun RecordScreen(
     navController: NavController,
     viewModel: LogViewModel = hiltViewModel(),
-    backgroundType: BackgroundType = BackgroundType.DEFAULT
+    backgroundType: BackgroundType = BackgroundType.DEFAULT,
+    titleId: Int
 ) {
 
     val context = LocalContext.current
@@ -58,9 +59,7 @@ fun RecordScreen(
                         interactionSource = remember { MutableInteractionSource() }
                     ){
                         playButtonSound(context, R.raw.all_button)
-                        navController.navigate("main") {
-                            popUpTo("record") { inclusive = true }
-                        }
+                        navController.navigate("main")
                     }
             )
             Spacer(modifier = Modifier.width(30.dp))
@@ -81,7 +80,8 @@ fun RecordScreen(
         ) {
             RecordTab(
                 modifier = Modifier.align(Alignment.Center),
-                viewModel = viewModel
+                viewModel = viewModel,
+                titleId = titleId
             )
         }
     }

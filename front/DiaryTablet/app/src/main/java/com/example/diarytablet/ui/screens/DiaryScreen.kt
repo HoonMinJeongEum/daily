@@ -56,13 +56,16 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.DragInteraction
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
-import com.canhub.cropper.CropImage.CancelledResult.rotation
 import com.example.diarytablet.ui.components.DailyButton
 import com.example.diarytablet.ui.components.modal.CommonModal
 import com.example.diarytablet.ui.components.modal.CommonPopup
@@ -82,7 +85,7 @@ data class StickerItem(
 @Composable
 fun DiaryScreen(
     navController: NavController,
-    backgroundType: BackgroundType = BackgroundType.DEFAULT,
+    backgroundType: BackgroundType = BackgroundType.DRAWING_DIARY,
     diaryViewModel: DiaryViewModel = hiltViewModel()
 ) {
     BackgroundPlacement(backgroundType = backgroundType)
@@ -101,7 +104,6 @@ fun DiaryScreen(
     var isDrawingMode by remember { mutableStateOf(true) }
     var isPreviewDialogVisible by remember { mutableStateOf(false) }
     var isWarningDialogVisible by remember { mutableStateOf(false) }
-    var isFillWarningDialogVisible by remember { mutableStateOf(false) }
     var isVideoReady by remember { mutableStateOf(false)}
     var isModalOpen by remember { mutableStateOf(false) }
 
@@ -129,25 +131,34 @@ fun DiaryScreen(
     }
 
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { 2 })
+    val interactionSource = remember { pagerState.interactionSource }
     val firstPageDrawingSteps = remember { mutableStateListOf<DrawingStep>() }
 
-    val infiniteTransition = rememberInfiniteTransition()
-    val rotation by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 1000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ), label = ""
-    )
+    val undoStack = remember { mutableStateListOf<DrawingStep>() }
+    val redoStack = remember { mutableStateListOf<DrawingStep>() }
+    val redrawTrigger = remember { mutableStateOf(0) }
 
-    fun areBitmapsFilled(): Boolean {
-        return bitmapsList.all { bitmap ->
-            !bitmap.isRecycled && bitmap.width > 0 && bitmap.height > 0
+    fun undo() {
+        if (firstPageDrawingSteps.isNotEmpty()) {
+            val lastStroke = firstPageDrawingSteps.removeLast()
+            redoStack.add(lastStroke)
+            redrawTrigger.value++
+        } else {
+            Log.d("DiaryScreen", "Undo: No steps to undo.")
         }
     }
+
+    fun redo() {
+        if (redoStack.isNotEmpty()) {
+            val lastUndoneStroke = redoStack.removeLast()
+            firstPageDrawingSteps.add(lastUndoneStroke)
+            redrawTrigger.value++
+        } else {
+            Log.d("DiaryScreen", "Redo: No steps to redo.")
+        }
+    }
+
     suspend fun saveAndUploadImages() {
-        // 비트맵을 저장하고 이미지 파일로 변환
         val imageFiles = savePageImagesWithTemplate(
             bitmapsList,
             context,
@@ -195,7 +206,7 @@ fun DiaryScreen(
             )
             Spacer(modifier = Modifier.width(30.dp))
             Text(
-                text = "그림일기",
+                text = "그림 일기",
                 fontSize = 32.sp,
                 color = Color.White,
                 textAlign = TextAlign.Start
@@ -218,6 +229,7 @@ fun DiaryScreen(
                     .pointerInput(Unit) {
                         detectTapGestures(
                             onTap = { tapOffset ->
+                                // 클릭한 좌표가 스티커 내부인지 확인
                                 selectedStickerIndex = firstPageStickers.indexOfFirst { sticker ->
                                     val stickerPosition = sticker.position.value
                                     tapOffset.x in (stickerPosition.x..stickerPosition.x + sticker.bitmap.width) &&
@@ -225,8 +237,14 @@ fun DiaryScreen(
                                 }.takeIf { it >= 0 }
 
                                 if (selectedStickerIndex != null) {
+                                    // 스티커를 클릭한 경우
                                     isDrawingMode = false // 스크롤 모드로 전환
                                     selectedTool = ToolType.FINGER // 손가락 도구 선택 상태
+                                } else {
+                                    // 스티커 외부를 클릭한 경우
+                                    selectedStickerIndex = null // 선택 해제
+                                    isDrawingMode = true // 드로잉 모드로 전환
+                                    selectedTool = ToolType.PENCIL // 기본 도구 선택
                                 }
                             }
                         )
@@ -242,6 +260,19 @@ fun DiaryScreen(
                         )
                     }
             ) {
+                // 페이지 전환 시 스티커 선택 해제
+                LaunchedEffect(interactionSource) {
+                    interactionSource.interactions.collect { interaction ->
+                        if (interaction is PressInteraction.Press || interaction is DragInteraction.Start) {
+                            // 페이지 이동 시작 시 스티커 선택 해제
+                            if (selectedStickerIndex != null) {
+                                selectedStickerIndex = null
+                                isDrawingMode = true // 드로잉 모드로 전환
+                                selectedTool = ToolType.PENCIL // 기본 도구 설정
+                            }
+                        }
+                    }
+                }
                 VerticalPager(
                     state = pagerState,
                     modifier = Modifier
@@ -256,35 +287,86 @@ fun DiaryScreen(
                             .fillMaxSize()
                             .clipToBounds()
                             .pointerInput(isDrawingMode) {
-                                if (isDrawingMode) {
-                                    detectDragGestures(
-                                        onDragStart = { offset ->
-                                            path.value = Path().apply { moveTo(offset.x, offset.y) }
-                                        },
-                                        onDrag = { change, _ ->
-                                            path.value.lineTo(
-                                                change.position.x,
-                                                change.position.y
-                                            )
-
+                                detectTapGestures(
+                                    onTap = { offset ->
+                                        if (isDrawingMode) {
                                             val canvas = AndroidCanvas(currentBitmap)
                                             val paint = createPaintForTool(
-                                                selectedTool,
-                                                selectedColor,
-                                                brushSize
+                                                toolType = selectedTool,
+                                                color = selectedColor,
+                                                thickness = brushSize
                                             )
-                                            canvas.drawPath(path.value.asAndroidPath(), paint)
 
-                                            if (page == 0) {
+                                            // 점을 그림
+                                            canvas.drawCircle(offset.x, offset.y, brushSize / 2, paint)
+
+                                            // 드로잉 스텝 저장
+                                            if (pagerState.currentPage == 0) {
                                                 firstPageDrawingSteps.add(
                                                     DrawingStep(
-                                                        path = Path().apply { addPath(path.value) },
+                                                        path = Path().apply {
+                                                            addOval(
+                                                                Rect(
+                                                                    offset.x - brushSize / 2,
+                                                                    offset.y - brushSize / 2,
+                                                                    offset.x + brushSize / 2,
+                                                                    offset.y + brushSize / 2
+                                                                )
+                                                            )
+                                                        },
                                                         color = selectedColor,
                                                         thickness = brushSize,
                                                         toolType = selectedTool
                                                     )
                                                 )
                                             }
+                                        }
+                                    }
+                                )
+                            }
+                            .pointerInput(isDrawingMode) {
+                                if (isDrawingMode) {
+                                    detectDragGestures(
+                                        onDragStart = { offset ->
+                                            path.value = Path().apply { moveTo(offset.x, offset.y) }
+
+                                            if (selectedTool == ToolType.ERASER) {
+                                                val canvas = AndroidCanvas(currentBitmap)
+                                                val eraserPaint = createPaintForTool(
+                                                    toolType = selectedTool,
+                                                    color = Color.Transparent,
+                                                    thickness = brushSize
+                                                )
+//                                                canvas.drawCircle(offset.x, offset.y, brushSize / 2, eraserPaint)
+                                            }
+                                        },
+                                        onDrag = { change, _ ->
+                                            path.value.lineTo(change.position.x, change.position.y)
+
+                                            val canvas = AndroidCanvas(currentBitmap)
+                                            val paint = createPaintForTool(
+                                                toolType = selectedTool,
+                                                color = selectedColor,
+                                                thickness = brushSize
+                                            )
+
+                                            if (selectedTool == ToolType.ERASER) {
+                                                paint.xfermode = android.graphics.PorterDuffXfermode(android.graphics.PorterDuff.Mode.CLEAR)
+                                            }
+
+                                            canvas.drawPath(path.value.asAndroidPath(), paint)
+
+                                            if (pagerState.currentPage == 0) {
+                                                firstPageDrawingSteps.add(
+                                                    DrawingStep(
+                                                        path = Path().apply { addPath(path.value) },
+                                                        color = if (selectedTool == ToolType.ERASER) Color.Transparent else selectedColor,
+                                                        thickness = brushSize,
+                                                        toolType = selectedTool
+                                                    )
+                                                )
+                                            }
+                                            change.consume()
                                         },
                                         onDragEnd = {
                                             path.value = Path()
@@ -338,6 +420,7 @@ fun DiaryScreen(
                         Image(
                             painter = painterResource(if (page == 0) R.drawable.draw_template else R.drawable.write_template),
                             contentDescription = null,
+                            contentScale = ContentScale.FillBounds,
                             modifier = Modifier.size(leftBoxWidth, boxHeight)
                         )
                     }
@@ -368,6 +451,13 @@ fun DiaryScreen(
                         if (tool == ToolType.PENCIL || tool == ToolType.ERASER) {
                             selectedStickerIndex = null
                             isDrawingMode = true
+                            selectedColor = Color.Black
+                            if (tool == ToolType.ERASER) {
+                                selectedStickerIndex = null
+                                isDrawingMode = true
+                                selectedColor = Color.Transparent
+                            } else {
+                            }
                         }
                     },
                     stickerList = userStickers,
@@ -384,6 +474,10 @@ fun DiaryScreen(
                                 selectedStickerIndex = firstPageStickers.size - 1
                                 isDrawingMode = false
                                 selectedTool = ToolType.FINGER
+
+                                CoroutineScope(Dispatchers.Main).launch {
+                                    pagerState.scrollToPage(0)
+                                }
                             }
                         }
                     }
@@ -402,7 +496,7 @@ fun DiaryScreen(
             }
         }
 
-            // 선택된 스티커의 'X' 버튼 추가
+        // 선택된 스티커의 'X' 버튼 추가
         selectedStickerIndex?.let { index ->
             val sticker = firstPageStickers[index]
             val stickerPosition = sticker.position.value
@@ -413,15 +507,16 @@ fun DiaryScreen(
             }
         }
     }
+
     if (isModalOpen) {
         CommonModal(
             onDismissRequest = { isModalOpen = false },
-            titleText = "일기를 그만 쓸까요?",
+            titleText = "그림 일기를 그만 그릴까요?",
             confirmText= "종료",
             onConfirm = {
                 isModalOpen = false
                 navController.navigate("main") {
-                    popUpTo("wordLearning") { inclusive = true }
+                    popUpTo("diary") { inclusive = true }
                 }
             }
         )
@@ -430,34 +525,15 @@ fun DiaryScreen(
     if (isWarningDialogVisible) {
         CommonModal(
             onDismissRequest = { isWarningDialogVisible = false },
-            titleText = "그림 일기를 다시 작성 할 수 없어요!",
+            titleText = "그림 일기를 다시 작성할 수 없어요!",
             cancelText = "다시 쓰기",
             confirmText = "일기 완성",
             confirmButtonColor = PastelNavy,
             onConfirm = {
-                if (areBitmapsFilled()) {
-                    // All bitmaps are filled, proceed to preview
-                    isWarningDialogVisible = false
-                    isPreviewDialogVisible = true
-                    isVideoReady = false
-                } else {
-                    // One or more bitmaps are empty, show fill warning
-                    isWarningDialogVisible = false
-                    isFillWarningDialogVisible = true
-                }
+                isWarningDialogVisible = false
+                isPreviewDialogVisible = true
+                isVideoReady = false
             }
-        )
-    }
-
-    // Fill warning modal displayed if any bitmap is empty
-    if (isFillWarningDialogVisible) {
-        CommonModal(
-            onDismissRequest = { isFillWarningDialogVisible = false },
-            titleText = "비어 있는 그림을 채워 주세요!",
-            cancelText = "확인",
-            confirmText = "닫기",
-            confirmButtonColor = Color.Red,
-            onConfirm = { isFillWarningDialogVisible = false }
         )
     }
 
@@ -551,6 +627,7 @@ fun DiaryScreen(
         }
     }
 
+
     if (isLoading) {
         // Animatable을 사용하여 회전 값을 애니메이션화
         val rotation = remember { Animatable(0f) }
@@ -595,36 +672,31 @@ fun DiaryScreen(
 
 
     responseMessage?.let { message ->
-        LaunchedEffect(Unit) {
-            delay(1000)
-            diaryViewModel.clearResponseMessage()
-            isPreviewDialogVisible = false
-            navController.navigate("main?origin=diary&isFinished=true") {
-                popUpTo("diary") { inclusive = true }
-            }
-        }
-
         CommonPopup(
             onDismissRequest = {
                 diaryViewModel.clearResponseMessage()
-                isPreviewDialogVisible = false
-                navController.navigate("main?origin=diary&isFinished=true") {
-                    popUpTo("diary") { inclusive = true }
+
+                // 응답 메시지에 따라 네비게이션 처리
+                if (message == "그림 일기 작성 완료!") {
+                    navController.navigate("main?origin=diary&isFinished=true") {
+                        popUpTo("diary") { inclusive = true }
+                    }
+                } else {
+                    navController.navigate("main") {
+                        popUpTo("diary") { inclusive = true }
+                    }
                 }
             },
             titleText = message
         )
     }
-
-
-
 }
 
 @Composable
 fun StickerWithDeleteButton(stickerSize: Int, position: Offset, onDelete: () -> Unit) {
     val density = LocalDensity.current
-    val xDp = with(density) { (position.x + stickerSize - 12).toDp() } // 스티커 우측 상단에 X 버튼 배치
-    val yDp = with(density) { (position.y - 12).toDp() } // Y 위치를 상단으로 약간 조정
+    val xDp = with(density) { (position.x).toDp() }
+    val yDp = with(density) { (position.y + 120).toDp() }
 
     Box(
         modifier = Modifier

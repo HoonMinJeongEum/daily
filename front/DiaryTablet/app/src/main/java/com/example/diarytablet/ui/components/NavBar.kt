@@ -72,7 +72,7 @@ fun Navbar(
 
     LaunchedEffect(isProfileModalVisible) {
         if (!isProfileModalVisible) {
-            viewModel.initializeData()
+            viewModel.loadStatus()
             mainViewModel.loadStatus()
         }
     }

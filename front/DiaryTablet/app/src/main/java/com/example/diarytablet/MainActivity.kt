@@ -2,6 +2,7 @@ package com.example.diarytablet
 
 import DiaryScreen
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -12,6 +13,9 @@ import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.example.diarytablet.datastore.UserStore
 import com.example.diarytablet.domain.RetrofitClient
 import com.example.diarytablet.domain.dto.request.LoginRequestDto
@@ -40,6 +44,7 @@ class MainActivity : ComponentActivity() {
     private var spenUnitManager: SpenUnitManager? = null
     private val spenEventViewModel: SpenEventViewModel by viewModels()
     private val TAG = "MainActivity"
+    private lateinit var navController: NavController
 
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -59,7 +64,9 @@ class MainActivity : ComponentActivity() {
             if (isAutoLoginEnabled && !username.isNullOrEmpty() && !password.isNullOrEmpty()) {
                 val success = performLogin(username, password)
                 Log.d("start","${success}")
-                if (success) "profileList" else "login"
+                if (success) {
+                    "profileList"
+                } else "login"
             } else {
                 "login"
             }
@@ -67,7 +74,18 @@ class MainActivity : ComponentActivity() {
 //        val glView = CustomGLView(this)
 //        setContentView(glView)
         setContent {
-            DiaryTabletApp(startDestination = startDestination, spenEventViewModel)
+            navController = rememberNavController()
+            DiaryTabletApp(startDestination = startDestination, spenEventViewModel, navController = navController as NavHostController)
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+
+        val navigationTarget = intent.getStringExtra("navigation_target")
+        if (!navigationTarget.isNullOrEmpty()) {
+            navController.navigate(navigationTarget)
         }
     }
 

@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -55,6 +56,7 @@ import com.example.diarytablet.R
 import com.example.diarytablet.ui.components.BasicButton
 import com.example.diarytablet.ui.components.modal.CommonModal
 import com.example.diarytablet.ui.components.modal.CommonPopup
+import com.example.diarytablet.ui.components.quiz.CorrectQuizPopup
 import com.example.diarytablet.ui.components.quiz.Draw
 import com.example.diarytablet.ui.components.quiz.DrawingColorPalette
 import com.example.diarytablet.ui.components.quiz.DrawingRedoButton
@@ -98,6 +100,8 @@ fun QuizScreen(
     val pathStyle by viewModel.pathStyle.observeAsState()
     var isQuizAlertVisible by remember { mutableStateOf(false) }
     var selectedImage by remember { mutableStateOf("pen") }
+    val parentWord by viewModel.parentWord.observeAsState()
+
     val context = LocalContext.current
     LaunchedEffect(isParentJoined) {
         if (isParentJoined) {
@@ -203,7 +207,6 @@ fun QuizScreen(
                                 )
                             }
 
-                            selectedWord?.let { word ->
                                 BoxWithConstraints(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -215,29 +218,38 @@ fun QuizScreen(
                                         modifier = Modifier.align(Alignment.TopCenter),
                                         horizontalAlignment = Alignment.CenterHorizontally
                                     ) {
+                                        Spacer(modifier = Modifier.height(7.dp))
                                         Box(
                                             modifier = Modifier.width(IntrinsicSize.Max)
                                         ) {
-                                            Text(
-                                                text = word,
-                                                fontSize = textSize,
-                                                color = Color(0xFF5A72A0),
-                                                textAlign = TextAlign.Center,
-                                                style = MyTypography.bodyLarge,
-                                                modifier = Modifier.align(Alignment.Center)
-                                            )
-                                            HorizontalDivider(
-                                                color = Color(0xFF5A72A0),
-                                                thickness = 3.dp,
-                                                modifier = Modifier
-                                                    .align(Alignment.BottomCenter)
-                                                    .padding(top = 4.dp)
-                                                    .fillMaxWidth()
-                                            )
+                                            val (text, textColor) = when {
+                                                !isQuizStarted -> "퀴즈를 시작해 보세요!" to Color.LightGray // 연한 회색
+                                                currentRound > 3 -> "퀴즈 종료" to Color.LightGray // 연한 회색
+                                                else -> selectedWord to Color(0xFF5A72A0) // 진행 중일 때의 기본 색상
+                                            }
+
+                                            text?.let {
+                                                Text(
+                                                    text = it,
+                                                    fontSize = textSize,
+                                                    color = textColor,
+                                                    textAlign = TextAlign.Center,
+                                                    style = MyTypography.bodyLarge,
+                                                    modifier = Modifier.align(Alignment.Center)
+                                                )
+                                                HorizontalDivider(
+                                                    color = textColor,
+                                                    thickness = 3.dp,
+                                                    modifier = Modifier
+                                                        .align(Alignment.BottomCenter)
+                                                        .padding(top = 4.dp)
+                                                        .fillMaxWidth()
+                                                )
+                                            }
+
                                         }
                                     }
 
-                                }
                             }
 
                             if (quizModalState == QuizModalState.WORD_SELECTION) {
@@ -460,10 +472,11 @@ fun QuizScreen(
                         )
                     } else {
                         CommonPopup(
-                            titleText = "정답입니다!\n퀴즈가 끝났습니다.",
+                            titleText = "정답이에요!\n퀴즈가 끝났습니다.",
                             onDismissRequest = {
                                 quizModalState = QuizModalState.NONE
                                 selectedWord = null
+                                currentRound++
                                 viewModel.resetIsCorrectAnswer()
                                 viewModel.resetPath()
                             }
@@ -474,15 +487,18 @@ fun QuizScreen(
                 }
 
                 QuizModalState.INCORRECT_ANSWER -> {
-                    CommonPopup(
-                        titleText = "틀렸습니다.\n다시 시도해보세요!",
-                        onDismissRequest = {
-                            quizModalState = QuizModalState.NONE
-                            viewModel.resetIsCorrectAnswer()
-                        }
-                    )
-                    playButtonSound(context, R.raw.quiz_fail)
+                    parentWord?.let {
+                        CorrectQuizPopup(
+                            answer = it,
+                            titleText = "틀렸습니다.\n다시 시도해보세요!",
+                            onDismissRequest = {
+                                quizModalState = QuizModalState.NONE
+                                viewModel.resetIsCorrectAnswer()
+                            }
+                        )
+                        playButtonSound(context, R.raw.quiz_fail)
 
+                    }
                 }
 
                 QuizModalState.NONE -> {
@@ -499,7 +515,7 @@ fun QuizScreen(
                     confirmText= "종료",
                     onConfirm= {
                         viewModel.leaveSession()
-                        if (currentRound >= 3) {
+                        if (currentRound > 3) {
                             navController.navigate("main?origin=quiz&isFinished=true") {
                                 popUpTo("quiz") { inclusive = true }
                             }
@@ -518,8 +534,15 @@ fun QuizScreen(
                     titleText = "부모님이 방을 나갔어요.",
                     onDismissRequest = {
                         viewModel.leaveSession()
-                        navController.navigate("main") {
-                            popUpTo("quiz") { inclusive = true }
+                        if (currentRound > 3) {
+                            navController.navigate("main?origin=quiz&isFinished=true") {
+                                popUpTo("quiz") { inclusive = true }
+                            }
+
+                        } else {
+                            navController.navigate("main") {
+                                popUpTo("quiz") { inclusive = true }
+                            }
                         }
                     }
                 )
