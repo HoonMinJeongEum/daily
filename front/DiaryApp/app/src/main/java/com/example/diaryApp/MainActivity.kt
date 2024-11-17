@@ -80,11 +80,7 @@ class MainActivity : ComponentActivity() {
     private fun createPath(name: String?, titleId: String?, title: String?): String {
         return when (title) {
             "그림 일기" -> titleId?.let { "diary/$it/$name" } ?: "login"
-            "그림 퀴즈" -> if (titleId != null && name != null) {
-                "catchMind/$titleId/$name"
-            } else {
-                "login"
-            }
+            "그림 퀴즈" -> "notification"
             "쿠폰" -> "shop"
             else -> "login"
         }
