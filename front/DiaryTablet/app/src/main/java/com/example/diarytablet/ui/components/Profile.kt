@@ -15,12 +15,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil3.compose.rememberAsyncImagePainter
 import com.example.diarytablet.R
 import com.example.diarytablet.ui.theme.MyTypography
+import com.example.diarytablet.utils.playButtonSound
 
 @Composable
 fun Profile(
@@ -29,6 +31,8 @@ fun Profile(
     modifier: Modifier = Modifier
 ) {
     // 프로필 사진을 위한 Box
+    val context = LocalContext.current
+
     Box(
         modifier = modifier
             .size(75.dp) // 크기 설정
@@ -36,7 +40,9 @@ fun Profile(
             .clickable(
                 indication = null, // 클릭 효과 제거
                 interactionSource = remember { MutableInteractionSource() }
-            ) { onProfileClick() }, // 클릭 이벤트 처리
+            ) {
+                playButtonSound(context,R.raw.all_button )
+                onProfileClick() }, // 클릭 이벤트 처리
         contentAlignment = Alignment.Center
     ) {
         Surface(

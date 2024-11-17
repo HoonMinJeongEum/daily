@@ -1,3 +1,4 @@
+import android.media.MediaPlayer
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -28,6 +30,7 @@ import com.example.diarytablet.ui.theme.DarkGray
 import com.example.diarytablet.ui.theme.MyTypography
 import com.example.diarytablet.ui.theme.PastelNavy
 import com.example.diarytablet.ui.theme.myFontFamily
+import com.example.diarytablet.utils.playButtonSound
 import com.example.diarytablet.viewmodel.NavBarViewModel
 import com.example.diarytablet.viewmodel.ShopStockViewModel
 import kotlinx.coroutines.delay
@@ -50,7 +53,7 @@ fun CouponShopList(
     var couponModalState by remember { mutableStateOf(CouponModalState.NONE) }
 
     val shellCount by navBarViewModel.shellCount
-
+    val context = LocalContext.current
     LaunchedEffect(Unit) {
         navBarViewModel.initializeData()
     }
@@ -112,11 +115,10 @@ fun CouponShopList(
                     )
                 }
 
-                CouponModalState.INSUFFICIENT_SHELLS, CouponModalState.PURCHASE_SUCCESS -> {
-                    val titleText = when (couponModalState) {
-                        CouponModalState.INSUFFICIENT_SHELLS -> "조개를 조금 더 모아보아요!"
-                        CouponModalState.PURCHASE_SUCCESS -> "구매가 완료되었습니다!"
-                        else -> ""
+                CouponModalState.INSUFFICIENT_SHELLS -> {
+                    // 소리 재생
+                    LaunchedEffect(couponModalState) {
+                        playButtonSound(context,R.raw.warning)
                     }
 
                     CommonPopup(
@@ -124,7 +126,21 @@ fun CouponShopList(
                             showDialog = false
                             couponModalState = CouponModalState.NONE
                         },
-                        titleText = titleText
+                        titleText = "조개를 조금 더 모아보아요!"
+                    )
+                }
+
+                CouponModalState.PURCHASE_SUCCESS -> {
+                    LaunchedEffect(couponModalState) {
+                        playButtonSound(context,R.raw.main_clear)
+                    }
+
+                    CommonPopup(
+                        onDismissRequest = {
+                            showDialog = false
+                            couponModalState = CouponModalState.NONE
+                        },
+                        titleText = "구매가 완료되었습니다!"
                     )
                 }
 
@@ -137,6 +153,7 @@ fun CouponShopList(
 @Composable
 fun CouponBox(coupon: Coupon, index: Int, onClick: (Coupon) -> Unit) {
     var isPressed by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     val backgroundImage = if (isPressed) {
         if (index % 2 == 0) R.drawable.coupon_yellow_down else R.drawable.coupon_blue_down
@@ -154,6 +171,7 @@ fun CouponBox(coupon: Coupon, index: Int, onClick: (Coupon) -> Unit) {
                 indication = null,
                 onClick = {
                     isPressed = true
+                    playButtonSound(context, R.raw.shop_buy )
                     onClick(coupon)
                 }
             )
@@ -197,7 +215,10 @@ fun CouponBox(coupon: Coupon, index: Int, onClick: (Coupon) -> Unit) {
                 )
 
                 Button(
-                    onClick = { onClick(coupon) },
+                    onClick = {
+                        playButtonSound(context, R.raw.shop_buy )
+                        onClick(coupon)
+                              },
                     modifier = Modifier
                         .weight(0.15f)
                         .height(64.dp),

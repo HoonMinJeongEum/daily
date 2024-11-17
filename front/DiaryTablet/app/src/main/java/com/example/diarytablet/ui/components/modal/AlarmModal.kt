@@ -53,11 +53,18 @@ fun AlarmModal(
                 ) {
                     if (alarmItems.isEmpty()) {
                         // 알림이 없는 경우 표시
-                        Text(
-                            text = "알림이 없습니다",
-                            fontSize = (screenWidth.value * 0.025f).sp,
-                            color = Color.Gray
-                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(screenHeight * 0.3f), // 높이를 적절히 설정
+                            contentAlignment = Alignment.Center // 중앙 정렬 설정
+                        ) {
+                            Text(
+                                text = "알림이 없습니다",
+                                fontSize = (screenWidth.value * 0.025f).sp,
+                                color = Color.Gray
+                            )
+                        }
                     } else {
                         LazyColumn(
                             verticalArrangement = Arrangement.spacedBy(screenHeight * 0.02f),

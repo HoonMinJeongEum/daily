@@ -73,6 +73,7 @@ import com.example.diarytablet.ui.theme.PastelNavy
 import com.example.diarytablet.utils.DrawingPlaybackView
 import com.example.diarytablet.utils.DrawingStep
 import com.example.diarytablet.utils.loadBitmapFromUrl
+import com.example.diarytablet.utils.playButtonSound
 import com.example.diarytablet.utils.savePageImagesWithTemplate
 import kotlinx.coroutines.delay
 
@@ -118,7 +119,6 @@ fun DiaryScreen(
     val contentHeight = screenHeightDp - (padding * 2)
     val leftBoxWidth = contentWidth * 0.75f
     val boxHeight = contentHeight * 0.88f
-
     val density = LocalDensity.current
     val bitmapWidthPx = with(density) { (leftBoxWidth).roundToPx() }
     val bitmapHeightPx = with(density) { (boxHeight).roundToPx() }
@@ -200,6 +200,7 @@ fun DiaryScreen(
                 modifier = Modifier
                     .size(48.dp)
                     .clickable {
+                        playButtonSound(context, R.raw.all_button)
                         isModalOpen = true
                     }
             )

@@ -14,15 +14,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.diarytablet.R
 import com.example.diarytablet.ui.theme.MyTypography
 import com.example.diarytablet.ui.theme.PastelNavy
+import com.example.diarytablet.utils.playButtonSound
 
 enum class ButtonType {
     DRAWING_DIARY, WORD_LEARNING, DRAWING_QUIZ
@@ -30,6 +33,8 @@ enum class ButtonType {
 
 @Composable
 fun BlockButton(
+    screenWidth : Dp,
+    screenHeight : Dp,
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
     buttonType: ButtonType,
@@ -42,19 +47,20 @@ fun BlockButton(
     }
 
     // Hover 상태를 기억하는 변수
+    val context = LocalContext.current
     var isHovered by remember { mutableStateOf(false) }
     val backgroundResId = if (isHovered) R.drawable.clicked_container_shadow else R.drawable.container_shadow
 
     Box(
         modifier = modifier
-            .width(330.dp)
-            .height(429.dp)
-            .padding(8.dp)
+            .width(screenHeight * 0.4f) // 높이에 비례한 너비
+            .height(screenHeight * 0.5f) // 비율 기반 높이
             .pointerInput(Unit) {
                 detectTapGestures(
                     onPress = {
                         isHovered = true
                         tryAwaitRelease() // 사용자가 손을 뗄 때까지 대기
+                        playButtonSound(context,R.raw.all_button )
                         onClick()
                         isHovered = false
                     }
@@ -70,7 +76,7 @@ fun BlockButton(
 
         Card(
             colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-            shape = RoundedCornerShape(8.dp),
+            shape = RoundedCornerShape(8),
             modifier = Modifier.fillMaxSize()
         ) {
             Column(
@@ -81,14 +87,16 @@ fun BlockButton(
                 Image(
                     painter = painterResource(id = imageResId),
                     contentDescription = null,
-                    modifier = Modifier.size(162.dp, 154.dp)
+                    modifier = Modifier
+                        .width(screenHeight * 0.24f)
+                        .height(screenHeight * 0.2f)
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(screenHeight * 0.024f))
                 Text(
                     text = text,
                     color = PastelNavy,
                     style = TextStyle(
-                        fontSize = 40.sp,
+                        fontSize = (screenHeight * 0.05f).value.sp,
                         fontFamily = MyTypography.bodyLarge.fontFamily,
                         fontWeight = MyTypography.bodyLarge.fontWeight
                     )

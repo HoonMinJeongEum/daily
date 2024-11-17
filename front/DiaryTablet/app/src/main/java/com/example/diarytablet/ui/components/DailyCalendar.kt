@@ -13,6 +13,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -24,6 +25,7 @@ import com.example.diarytablet.ui.theme.GrayText
 import com.example.diarytablet.ui.theme.MyTypography
 import com.example.diarytablet.ui.theme.SkyBlue
 import com.example.diarytablet.ui.theme.myFontFamily
+import com.example.diarytablet.utils.playButtonSound
 import com.example.diarytablet.viewmodel.LogViewModel
 import java.time.LocalDateTime
 import java.util.*
@@ -61,7 +63,7 @@ fun DailyCalendar(
     var day = 1
     val totalCells = startDayOfWeek + daysInMonth
     val rows = (totalCells + 6) / 7
-
+    val context = LocalContext.current
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -141,6 +143,7 @@ fun DailyCalendar(
                                 diaryId = diaryId ?: -1, // diaryId가 null인 경우 빈 문자열을 전달
                                 onClick = {
                                     if (isDiaryDate && diaryId != null) {
+                                        playButtonSound(context, R.raw.all_button )
                                         onDateCellClick(diaryId) // 클릭 시 diaryId 전달
                                     }
                                 }

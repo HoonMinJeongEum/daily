@@ -46,6 +46,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -66,6 +67,7 @@ import com.example.diarytablet.ui.components.quiz.ToggleAudioButton
 import com.example.diarytablet.ui.components.quiz.ToggleMicButton
 import com.example.diarytablet.ui.components.quiz.Video
 import com.example.diarytablet.ui.theme.MyTypography
+import com.example.diarytablet.utils.playButtonSound
 
 enum class QuizModalState {
     NONE,
@@ -100,6 +102,7 @@ fun QuizScreen(
     var selectedImage by remember { mutableStateOf("pen") }
     val parentWord by viewModel.parentWord.observeAsState()
 
+    val context = LocalContext.current
     LaunchedEffect(isParentJoined) {
         if (isParentJoined) {
             isQuizStartEnabled = true
@@ -148,6 +151,7 @@ fun QuizScreen(
                             modifier = Modifier
                                 .size(60.dp)
                                 .clickable {
+                                    playButtonSound(context, R.raw.all_button)
                                     isQuizEnded = true
                                 }
                         )
@@ -448,6 +452,8 @@ fun QuizScreen(
                             isQuizStarted = true
                             viewModel.resetPath()
                             viewModel.sendQuizStart()
+                            playButtonSound(context, R.raw.quiz_start)
+
                         },
                     )
 
@@ -476,6 +482,8 @@ fun QuizScreen(
                             }
                         )
                     }
+                    playButtonSound(context, R.raw.quiz_pass)
+
                 }
 
                 QuizModalState.INCORRECT_ANSWER -> {
@@ -488,6 +496,8 @@ fun QuizScreen(
                                 viewModel.resetIsCorrectAnswer()
                             }
                         )
+                        playButtonSound(context, R.raw.quiz_fail)
+
                     }
                 }
 

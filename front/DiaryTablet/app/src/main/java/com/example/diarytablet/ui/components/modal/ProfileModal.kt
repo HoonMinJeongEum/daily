@@ -46,6 +46,7 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import com.example.diarytablet.utils.playButtonSound
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -107,7 +108,10 @@ fun ProfileModal(
                     Box(
                         modifier = Modifier
                             .align(Alignment.End)
-                            .clickable { onDismiss() }
+                            .clickable {
+                                onDismiss()
+                                playButtonSound(context, R.raw.all_button )
+                            }
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.mission_close),
@@ -121,6 +125,7 @@ fun ProfileModal(
                             .size(screenHeight * 0.25f)
                             .clip(CircleShape)
                             .clickable {
+                                playButtonSound(context, R.raw.all_button )
                                 imagePickerLauncher.launch("image/*")
                             }
                     ) {

@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -27,6 +28,7 @@ import com.example.diarytablet.ui.components.BasicButton
 import com.example.diarytablet.ui.components.DailyButton
 import com.example.diarytablet.ui.theme.BackgroundPlacement
 import com.example.diarytablet.ui.theme.BackgroundType
+import com.example.diarytablet.utils.playButtonSound
 import com.example.diarytablet.viewmodel.NavBarViewModel
 import com.example.diarytablet.viewmodel.ShopStockViewModel
 
@@ -49,7 +51,7 @@ fun ShopScreen(
     val buttonWidth = screenWidth * 0.15f
     val buttonHeight = screenWidth * 0.07f
     val buttonFontSize = (buttonHeight.value * 0.4f).sp
-
+    val context = LocalContext.current
     LaunchedEffect(Unit) {
         viewModel.fetchCoupons()
         viewModel.fetchStickers()
@@ -78,6 +80,7 @@ fun ShopScreen(
                         indication = null, // 클릭 효과 제거
                         interactionSource = remember { MutableInteractionSource() }
                     ){
+                        playButtonSound(context, R.raw.all_button)
                         navController.navigate("main") {
                             popUpTo("shop") { inclusive = true }
                         }

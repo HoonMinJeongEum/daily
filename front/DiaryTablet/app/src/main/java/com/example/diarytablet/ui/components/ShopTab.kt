@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -32,6 +33,7 @@ import com.example.diarytablet.model.Sticker
 import com.example.diarytablet.viewmodel.ShopStockViewModel
 import com.example.diarytablet.R
 import com.example.diarytablet.ui.theme.DarkGray
+import com.example.diarytablet.utils.playButtonSound
 import com.example.diarytablet.viewmodel.NavBarViewModel
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -55,7 +57,7 @@ fun ShopTab(
 
     var shakeState by remember { mutableStateOf(false) }
     val rotation by animateFloatAsState(if (shakeState) 5f else 0f)
-
+    val context = LocalContext.current
     LaunchedEffect(selectedTabIndex) {
         showInfo = false
     }
@@ -108,7 +110,9 @@ fun ShopTab(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { selectedTabIndex = index }
+                            .clickable {
+                                playButtonSound(context,R.raw.all_button )
+                                selectedTabIndex = index }
                             .padding(vertical = 1.dp)
                     ) {
                         Row(

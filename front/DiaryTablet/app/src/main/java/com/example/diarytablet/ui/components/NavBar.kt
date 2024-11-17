@@ -23,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -31,10 +32,12 @@ import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.diarytablet.R
 import com.example.diarytablet.domain.RetrofitClient
 import com.example.diarytablet.ui.components.modal.AlarmModal
 import com.example.diarytablet.ui.theme.DeepPastelNavy
 import com.example.diarytablet.ui.theme.MyTypography
+import com.example.diarytablet.utils.playButtonSound
 import com.example.diarytablet.viewmodel.MainViewModel
 import com.example.diarytablet.viewmodel.NavBarViewModel
 
@@ -55,6 +58,17 @@ fun Navbar(
     var isProfileMenuVisible by remember { mutableStateOf(false) }
     var isProfileModalVisible by remember { mutableStateOf(false) }
     var isAlarmModalVisible by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    LaunchedEffect(isAlarmOn) {
+        if (isAlarmOn) {
+            playButtonSound(context, R.raw.alarm )
+
+        }
+    }
+    LaunchedEffect(Unit) {
+        viewModel.initializeData()
+    }
 
     LaunchedEffect(isProfileModalVisible) {
         if (!isProfileModalVisible) {
@@ -144,6 +158,7 @@ fun Navbar(
                         ),
                         modifier = Modifier
                             .clickable {
+                                playButtonSound(context, R.raw.all_button )
                                 isProfileModalVisible = true
                                 isProfileMenuVisible = false
                             }
@@ -157,6 +172,7 @@ fun Navbar(
                         ),
                         modifier = Modifier
                             .clickable {
+                                playButtonSound(context, R.raw.all_button )
                                 navController.navigate("profileList") {
                                     popUpTo("main") { inclusive = true }
                                 }
@@ -172,6 +188,7 @@ fun Navbar(
                         ),
                         modifier = Modifier
                             .clickable {
+                                playButtonSound(context, R.raw.all_button )
                                 RetrofitClient.logout()
                                 isProfileMenuVisible = false
                                 navController.navigate("login") {

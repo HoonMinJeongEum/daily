@@ -219,6 +219,8 @@ fun MainScreen(
         }
         // MainModal
         MainModal(
+            screenWidth = screenWidth,
+            screenHeight = screenHeight,
             isModalVisible = isModalVisible,
             onDismiss = { isModalVisible = false },
             navController = navController,
@@ -264,6 +266,8 @@ fun MainScreen(
             exit = fadeOut() + scaleOut(targetScale = 0.8f)
         ) {
             MissionModal(
+                screenWidth = screenWidth,
+                screenHeight = screenHeight,
                 isDialogVisible = isFinished,
                 onDismiss = {
                     viewModel.setFinished(false)
@@ -277,7 +281,9 @@ fun MainScreen(
                         viewModel.completeMissionItem(it, navbarViewModel) // NavbarViewModel 전달
                     }
                 },
-                missionItems = missionItems
+                missionItems = missionItems,
+                lastMissions = missions
+
             )
         }
     }

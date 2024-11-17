@@ -65,6 +65,7 @@ import com.example.diarytablet.ui.theme.GrayText
 import com.example.diarytablet.ui.theme.MyTypography
 import com.example.diarytablet.ui.theme.PastelNavy
 import com.example.diarytablet.ui.theme.PastelSkyBlue
+import com.example.diarytablet.utils.playButtonSound
 import com.example.diarytablet.viewmodel.LogViewModel
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
@@ -92,7 +93,7 @@ fun MyDiaryDetail(
     val diary = diaryDetail.value
 
     val monthYearText = diary?.createdAt?.toCalendarDateString() ?: ""
-
+    val context = LocalContext.current
     if (isDialogOpen && diary != null) {
         Dialog(onDismissRequest = { isDialogOpen = false }) {
             MyDiaryComment(
@@ -101,6 +102,7 @@ fun MyDiaryDetail(
                 onDismissRequest = { isDialogOpen = false }
             )
         }
+
     }
     if (isVideoOpen) {
         Dialog(onDismissRequest = { isVideoOpen = false }) {
@@ -163,6 +165,7 @@ fun MyDiaryDetail(
                             indication = null,
                             interactionSource = remember { MutableInteractionSource() }
                         ){
+                            playButtonSound(context, R.raw.all_button )
                             isVideoOpen = true
                         }
                         .size(50.dp)
@@ -175,6 +178,7 @@ fun MyDiaryDetail(
                             indication = null,
                             interactionSource = remember { MutableInteractionSource() }
                         ){
+                            playButtonSound(context, R.raw.all_button )
                             isDialogOpen = true
                         }
                         .size(60.dp)
