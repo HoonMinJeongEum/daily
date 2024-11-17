@@ -74,16 +74,16 @@ class DiaryViewModel @Inject constructor(
                 if (response.isSuccessful && response.code() == 200) {
                     _responseMessage.postValue("그림 일기 작성 완료!")
                 } else if (response.code() == 409) {
-                    _responseMessage.postValue("일기는 하루에 하나씩!")
+                    _responseMessage.postValue("일기는 하루에\n한 번만 쓸 수 있어요!")
                 } else {
                     val errorBody = response.errorBody()?.string()
                     val errorResponse = errorBody?.let { parseErrorResponse(it) }
-                    _responseMessage.postValue(errorResponse?.msg ?: "알 수 없는 오류가 발생했습니다.")
+                    _responseMessage.postValue(errorResponse?.msg ?: "그림일기를 다시 그려주세요!")
                 }
             } catch (e: Exception) {
                 Log.e("DiaryViewModel", "Exception occurred during upload", e)
                 _isLoading.value = false
-                _responseMessage.postValue("업로드 중 오류가 발생했습니다.")
+                _responseMessage.postValue("그림일기를 다시 그려주세요!")
             }
         }
     }

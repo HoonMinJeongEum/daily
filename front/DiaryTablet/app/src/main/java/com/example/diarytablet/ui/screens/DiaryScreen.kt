@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -50,11 +49,9 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.interaction.PressInteraction
@@ -62,7 +59,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
@@ -96,7 +92,7 @@ fun DiaryScreen(
     LaunchedEffect(Unit) {
         diaryViewModel.fetchUserStickers()
     }
-
+    var isError by remember { mutableStateOf(false) }
     val isLoading by diaryViewModel.isLoading.observeAsState(false)
     val responseMessage by diaryViewModel.responseMessage.observeAsState()
 
@@ -218,9 +214,12 @@ fun DiaryScreen(
                                     selectedTool = ToolType.FINGER // 손가락 도구 선택 상태
                                 } else {
                                     // 스티커 외부를 클릭한 경우
-                                    selectedStickerIndex = null // 선택 해제
-                                    isDrawingMode = true // 드로잉 모드로 전환
-                                    selectedTool = ToolType.PENCIL // 기본 도구 선택
+                                    if (selectedTool != ToolType.ERASER ){
+                                        selectedStickerIndex = null // 선택 해제
+                                        isDrawingMode = true // 드로잉 모드로 전환
+                                        selectedTool = ToolType.PENCIL // 기본 도구 선택
+                                        selectedColor = selectedColor
+                                    }
                                 }
                             }
                         )
@@ -229,12 +228,21 @@ fun DiaryScreen(
                         detectDragGestures(
                             onDrag = { change, dragAmount ->
                                 selectedStickerIndex?.let { index ->
-                                    firstPageStickers[index].position.value += dragAmount
+                                    val sticker = firstPageStickers[index]
+                                    val newPosition = sticker.position.value + dragAmount
+
+                                    // 비트맵의 경계 내로 제한
+                                    val clampedX = newPosition.x.coerceIn(0f, bitmapWidthPx - sticker.bitmap.width.toFloat())
+                                    val clampedY = newPosition.y.coerceIn(0f, bitmapHeightPx - sticker.bitmap.height.toFloat())
+
+                                    // 스티커 위치 업데이트
+                                    sticker.position.value = Offset(clampedX, clampedY)
                                     change.consume()
                                 }
                             }
                         )
                     }
+
             ) {
                 // 페이지 전환 시 스티커 선택 해제
                 LaunchedEffect(interactionSource) {
@@ -278,9 +286,12 @@ fun DiaryScreen(
                                             selectedTool = ToolType.FINGER
                                         } else {
                                             // 스티커 외부를 클릭한 경우
-                                            selectedStickerIndex = null
-                                            isDrawingMode = true // 드로잉 모드로 전환
-                                            selectedTool = ToolType.PENCIL
+                                            if (selectedTool != ToolType.ERASER ){
+                                                selectedStickerIndex = null // 선택 해제
+                                                isDrawingMode = true // 드로잉 모드로 전환
+                                                selectedTool = ToolType.PENCIL // 기본 도구 선택
+                                                selectedColor = selectedColor
+                                            }
 
                                             // 드로잉 모드일 경우 점 찍기
                                             if (isDrawingMode) {
@@ -385,6 +396,7 @@ fun DiaryScreen(
                                 color = selectedColor,
                                 style = Stroke(width = brushSize, cap = StrokeCap.Round)
                             )
+
                             if (pagerState.currentPage == 0) {
                                 firstPageStickers.forEachIndexed { index, stickerItem ->
                                     drawIntoCanvas { canvas ->
@@ -451,8 +463,7 @@ fun DiaryScreen(
                             if (tool == ToolType.ERASER) {
                                 selectedStickerIndex = null
                                 isDrawingMode = true
-                                selectedColor = Color.Transparent
-                            } else {
+//                                selectedColor = Color.Transparent
                             }
                         }
                     },
@@ -537,87 +548,121 @@ fun DiaryScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.7f)),
+                .background(Color.Black.copy(alpha = 0.7f))
+                .pointerInput(Unit) {
+                    detectTapGestures { /* 터치 이벤트를 소비하여 아무 동작도 하지 않음 */ }
+                },
             contentAlignment = Alignment.Center
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxSize(0.9f)
-                    .background(Color.White, shape = RoundedCornerShape(16.dp))
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .weight(0.8f)
-                        .fillMaxHeight()
-                        .padding(end = 8.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    DrawingPlaybackView(
-                        drawingSteps = firstPageDrawingSteps,
-                        firstPageStickers = firstPageStickers,
-                        context = context,
-                        templateWidth = with(LocalDensity.current) { (leftBoxWidth - padding * 2).toPx().toInt() },
-                        templateHeight = with(LocalDensity.current) { (boxHeight - padding * 2).toPx().toInt() },
-                        onVideoReady = { isVideoReady = true }
-                    )
-                }
-
+            if (isError) {
+                // 에러 발생 시 모달 표시
                 Column(
                     modifier = Modifier
-                        .weight(0.2f)
-                        .fillMaxHeight()
-                        .padding(start = 30.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally, // 왼쪽 정렬로 시작
-                    verticalArrangement = Arrangement.Bottom
+                        .fillMaxWidth(0.8f)
+                        .background(Color.White, shape = RoundedCornerShape(16.dp))
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    if (isVideoReady && !isLoading) {
-                        DailyButton(
-                            text = "일기 저장",
-                            fontSize = 20.sp,
-                            onClick = {
-                                CoroutineScope(Dispatchers.IO).launch {
-                                    diaryViewModel.clearResponseMessage() // 이전 응답 메시지 초기화
-                                    saveAndUploadImages() // 이미지 저장 및 업로드 함수 호출
-                                }
-                            },
-                            cornerRadius = 50,
-                            width = 200.dp,
-                            height = 60.dp
+                    Text(
+                        text = "비디오 생성 중 오류가 발생했습니다.\n메인 화면으로 이동합니다.",
+                        color = Color.Black,
+                        fontSize = 18.sp,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    DailyButton(
+                        text = "확인",
+                        fontSize = 20.sp,
+                        onClick = {
+                            CoroutineScope(Dispatchers.IO).launch {
+                                diaryViewModel.clearResponseMessage()
+                                saveAndUploadImages()
+                            }
+                        },
+                        cornerRadius = 50,
+                        width = 200.dp,
+                        height = 60.dp
+                    )
+                }
+            } else {
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize(0.9f)
+                        .background(Color.White, shape = RoundedCornerShape(16.dp))
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .weight(0.8f)
+                            .fillMaxHeight()
+                            .padding(end = 8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        DrawingPlaybackView(
+                            drawingSteps = firstPageDrawingSteps,
+                            firstPageStickers = firstPageStickers,
+                            context = context,
+                            templateWidth = with(LocalDensity.current) { (leftBoxWidth - padding * 2).toPx().toInt() },
+                            templateHeight = with(LocalDensity.current) { (boxHeight - padding * 2).toPx().toInt() },
+                            onVideoReady = { isVideoReady = true }
                         )
-                    } else {
-                        val rotation by rememberInfiniteTransition().animateFloat(
-                            initialValue = 0f,
-                            targetValue = 360f,
-                            animationSpec = infiniteRepeatable(
-                                animation = tween(durationMillis = 1000, easing = LinearEasing)
-                            ), label = ""
-                        )
-
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Text(
-                                text = "동영상을 만들고 있어요!\n잠시만 기다려 주세요!",
-                                color = Color.Gray,
-                                fontSize = 18.sp,
-                                textAlign = TextAlign.Center
-                            )
-
-                            // 빙글빙글 도는 로딩 아이콘
-                            Image(
-                                painter = painterResource(id = R.drawable.loading), // 로딩 아이콘 리소스
-                                contentDescription = "로딩 중 아이콘",
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .graphicsLayer { rotationZ = rotation }
-                            )
-                        }
                     }
-                    Spacer(modifier = Modifier.height(35.dp)) // 하단 여백 추가
+
+                    Column(
+                        modifier = Modifier
+                            .weight(0.2f)
+                            .fillMaxHeight()
+                            .padding(start = 30.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Bottom
+                    ) {
+                        if (isVideoReady && !isLoading) {
+                            DailyButton(
+                                text = "일기 저장",
+                                fontSize = 20.sp,
+                                onClick = {
+                                    CoroutineScope(Dispatchers.IO).launch {
+                                        diaryViewModel.clearResponseMessage()
+                                        saveAndUploadImages()
+                                    }
+                                },
+                                cornerRadius = 50,
+                                width = 200.dp,
+                                height = 60.dp
+                            )
+                        } else {
+                            val rotation by rememberInfiniteTransition().animateFloat(
+                                initialValue = 0f,
+                                targetValue = 360f,
+                                animationSpec = infiniteRepeatable(
+                                    animation = tween(durationMillis = 1000, easing = LinearEasing)
+                                ), label = ""
+                            )
+
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    text = "화면 녹화중이에요.\n잠시만 기다려 주세요!",
+                                    color = Color.Gray,
+                                    fontSize = 18.sp,
+                                    textAlign = TextAlign.Center
+                                )
+
+                                Image(
+                                    painter = painterResource(id = R.drawable.loading),
+                                    contentDescription = "로딩 중 아이콘",
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .graphicsLayer { rotationZ = rotation }
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(35.dp)) // 하단 여백 추가
+                    }
                 }
             }
         }
@@ -626,7 +671,6 @@ fun DiaryScreen(
         val message: String,
         val imageResId: Int
     )
-
     if (isLoading) {
         // Animatable을 사용하여 흔들림 애니메이션 설정
         val rotation = remember { Animatable(0f) }
