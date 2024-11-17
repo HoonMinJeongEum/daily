@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,6 +22,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
@@ -101,6 +103,7 @@ fun QuizScreen(
     var isQuizAlertVisible by remember { mutableStateOf(false) }
     var selectedImage by remember { mutableStateOf("pen") }
     val parentWord by viewModel.parentWord.observeAsState()
+    var isExitInProgress by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
     LaunchedEffect(isParentJoined) {
@@ -352,8 +355,13 @@ fun QuizScreen(
                                                 painter = painterResource(id = R.drawable.palette_pen),
                                                 contentDescription = "연필",
                                                 modifier = Modifier
-                                                    .fillMaxHeight(0.8f)
+                                                    .fillMaxHeight(0.6f)
+                                                    .aspectRatio(1f)
                                                     .graphicsLayer(scaleX = penScale, scaleY = penScale)
+                                                    .background(
+                                                        color = if (selectedImage == "pen") Color.LightGray else Color.Transparent,
+                                                        shape = CircleShape
+                                                    ) // 선택 시 배경 색 강조
                                                     .clickable(
                                                         onClick = {
                                                             if (selectedImage == "eraser") {
@@ -369,11 +377,16 @@ fun QuizScreen(
                                                 painter = painterResource(id = R.drawable.palette_eraser),
                                                 contentDescription = "지우개",
                                                 modifier = Modifier
-                                                    .fillMaxHeight(0.8f)
+                                                    .fillMaxHeight(0.6f)
+                                                    .aspectRatio(1f)
                                                     .graphicsLayer(
                                                         scaleX = eraserScale,
                                                         scaleY = eraserScale
                                                     )
+                                                    .background(
+                                                        color = if (selectedImage == "eraser") Color.LightGray else Color.Transparent,
+                                                        shape = CircleShape
+                                                    ) // 선택 시 배경 색 강조
                                                     .clickable(
                                                         onClick = {
                                                             if (selectedImage == "pen") {
@@ -406,12 +419,14 @@ fun QuizScreen(
                                     ToggleMicButton(
                                         modifier = Modifier
                                             .weight(2f),
-                                        viewModel = viewModel
+                                        viewModel = viewModel,
+                                        enable = isQuizStartEnabled
                                     )
                                     ToggleAudioButton(
                                         modifier = Modifier
                                             .weight(2f),
-                                        viewModel = viewModel
+                                        viewModel = viewModel,
+                                        enable = isQuizStartEnabled
                                     )
                                     val fontSize = (rowWidth.value * 0.028f)
                                     BasicButton(
@@ -514,15 +529,18 @@ fun QuizScreen(
                     titleText= "퀴즈를 종료할까요?",
                     confirmText= "종료",
                     onConfirm= {
-                        viewModel.leaveSession()
-                        if (currentRound > 3) {
-                            navController.navigate("main?origin=quiz&isFinished=true") {
-                                popUpTo("quiz") { inclusive = true }
-                            }
+                        if (!isExitInProgress) {
+                            isExitInProgress = true
+                            viewModel.leaveSession()
+                            if (currentRound > 3) {
+                                navController.navigate("main?origin=quiz&isFinished=true") {
+                                    popUpTo("quiz") { inclusive = true }
+                                }
 
-                        } else {
-                            navController.navigate("main") {
-                                popUpTo("quiz") { inclusive = true }
+                            } else {
+                                navController.navigate("main") {
+                                    popUpTo("quiz") { inclusive = true }
+                                }
                             }
                         }
                     },
@@ -548,6 +566,7 @@ fun QuizScreen(
                 )
             }
             if(isQuizStartEnabled && !isQuizAlertVisible) {
+                playButtonSound(context, R.raw.quiz_start)
                 CommonPopup(
                     titleText = "이제 그림 퀴즈를\n시작할 수 있어요!",
                     onDismissRequest = {
