@@ -325,9 +325,15 @@ fun DiaryDetailScreen(
                             keyboardActions = KeyboardActions(
                                 onDone = {
                                     if (commentText.value.isNotBlank()) {
-                                        val newComment = CommentDto(comment = commentText.value, createdAt = "방금 전")
+                                        val now = LocalDateTime.now().toString() // 저장용 ISO 포맷
+                                        diaryViewModel.fetchComment(commentText.value)
+                                        val newComment = CommentDto(
+                                            comment = commentText.value,
+                                            createdAt = now // or use a formatted current timestamp
+                                        )
                                         comments.value = comments.value + newComment
                                         commentText.value = ""
+
                                         coroutineScope.launch {
                                             listState.animateScrollToItem(comments.value.size - 1)
                                         }
@@ -346,17 +352,19 @@ fun DiaryDetailScreen(
                             ),
                             shape = RoundedCornerShape(10.dp),
                             onClick = {
-                                val now = LocalDateTime.now().toString() // 저장용 ISO 포맷
-                                diaryViewModel.fetchComment(commentText.value)
-                                val newComment = CommentDto(
-                                    comment = commentText.value,
-                                    createdAt = now // or use a formatted current timestamp
-                                )
-                                comments.value = comments.value + newComment
-                                commentText.value = ""
+                                if (commentText.value.isNotBlank()) {
+                                    val now = LocalDateTime.now().toString() // 저장용 ISO 포맷
+                                    diaryViewModel.fetchComment(commentText.value)
+                                    val newComment = CommentDto(
+                                        comment = commentText.value,
+                                        createdAt = now // or use a formatted current timestamp
+                                    )
+                                    comments.value = comments.value + newComment
+                                    commentText.value = ""
 
-                                coroutineScope.launch {
-                                    listState.animateScrollToItem(comments.value.size - 1)
+                                    coroutineScope.launch {
+                                        listState.animateScrollToItem(comments.value.size - 1)
+                                    }
                                 }
                             }
                         )
@@ -437,7 +445,7 @@ fun DiaryDetailScreen(
                                 .background(Color.White)
                         ) {
                             Text(
-                                text = "${diaryViewModel.memberName.value}의 그림 일기",
+                                text = "${childName}의 그림 일기",
                                 fontSize = 18.sp,
                                 color = DeepPastelNavy,
                                 modifier = Modifier.padding(bottom = 16.dp)
