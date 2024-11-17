@@ -170,6 +170,8 @@ class QuizViewModel @Inject constructor(
         socket.on("clear") {
             _paths.postValue(mutableListOf())
             removedPaths.clear()
+            _isUndoAvailable.postValue(false)
+            _isRedoAvailable.postValue(false)
         }
 
         socket.on("userDisconnected") {
@@ -314,8 +316,8 @@ class QuizViewModel @Inject constructor(
         list.add(pair)
         removedPaths.clear()
         _paths.postValue(list)
-        _isUndoAvailable.value = list.isNotEmpty()
-        _isRedoAvailable.value = removedPaths.isNotEmpty()
+        _isUndoAvailable.postValue(list.isNotEmpty())
+        _isRedoAvailable.postValue(removedPaths.isNotEmpty())
         socket.emit("addPath")
     }
 
@@ -327,8 +329,8 @@ class QuizViewModel @Inject constructor(
         val size = pathList.size
         removedPaths.add(last)
         _paths.postValue(pathList.subList(0, size-1))
-        _isUndoAvailable.value = (pathList.size - 1) > 0
-        _isRedoAvailable.value = removedPaths.isNotEmpty()
+        _isUndoAvailable.postValue((pathList.size - 1) > 0)
+        _isRedoAvailable.postValue(removedPaths.isNotEmpty())
         socket.emit("undoPath")
     }
 
@@ -336,8 +338,8 @@ class QuizViewModel @Inject constructor(
         if (removedPaths.isEmpty())
             return
         _paths.postValue((_paths.value + removedPaths.removeLast()) as MutableList<Pair<Path, PathStyle>>)
-        _isUndoAvailable.value = true
-        _isRedoAvailable.value = removedPaths.isNotEmpty()
+        _isUndoAvailable.postValue(true)
+        _isRedoAvailable.postValue(removedPaths.isNotEmpty())
         socket.emit("redoPath")
     }
 
