@@ -121,19 +121,18 @@ fun StickerModal(
         ) {
             Column(
                 modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally, // 텍스트와 LazyColumn을 가운데 정렬
+                horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                // 항상 상단에 위치
+                // 상단 텍스트
                 Text("나의 스티커", color = Color.Black, fontSize = 18.sp)
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // 스티커 리스트가 비었는지 여부에 따라 다른 콘텐츠 표시
                 if (stickerList.isEmpty()) {
-                    // 스티커가 없을 때 중앙에 메시지 표시
+                    // 스티커가 없을 때
                     Box(
                         modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center // 다이얼로그 중앙 정렬
+                        contentAlignment = Alignment.Center
                     ) {
                         Text("아무것도 없어요", color = Color.Gray, fontSize = 16.sp)
                     }
@@ -142,14 +141,14 @@ fun StickerModal(
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .weight(1f), // LazyColumn이 공간을 채우도록 설정
-                        horizontalAlignment = Alignment.CenterHorizontally, // 가로 중앙 정렬
-                        verticalArrangement = Arrangement.spacedBy(8.dp) // 세로 간격 추가
+                            .weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(stickerList.chunked(3)) { rowItems ->
                             Row(
-                                horizontalArrangement = Arrangement.spacedBy(12.dp) // 한 줄 아이템 간격
+                                modifier = Modifier.fillMaxWidth()
                             ) {
+                                // 스티커 아이템
                                 rowItems.forEach { sticker ->
                                     Image(
                                         painter = rememberAsyncImagePainter(
@@ -159,9 +158,15 @@ fun StickerModal(
                                         ),
                                         contentDescription = "스티커 이미지",
                                         modifier = Modifier
-                                            .size(60.dp) // 스티커 크기
+                                            .size(60.dp)
+                                            .weight(1f) // 스티커 크기 일정
                                             .clickable { onStickerSelect(sticker) }
                                     )
+                                }
+
+                                // 빈 공간에 대한 Weight 추가
+                                repeat(3 - rowItems.size) {
+                                    Spacer(modifier = Modifier.weight(1f))
                                 }
                             }
                         }
@@ -171,9 +176,6 @@ fun StickerModal(
         }
     }
 }
-
-
-
 
 @Composable
 fun ColorPalette(selectedColor: Color, onColorChange: (Color) -> Unit) {
