@@ -187,11 +187,16 @@ fun ColorPalette(selectedColor: Color, onColorChange: (Color) -> Unit) {
         for (i in colors.indices step 4) {
             Row(modifier = Modifier.fillMaxWidth()) {
                 colors.slice(i until i + 4).forEach { color ->
+                    val isSelected = color == selectedColor
                     Box(
                         modifier = Modifier
                             .weight(1f)
                             .aspectRatio(1f)
                             .background(color)
+                            .border(
+                                width = if (isSelected) 1.dp else 0.dp,
+                                color = if (isSelected) Color.White else Color.Transparent,
+                            )
                             .clickable { onColorChange(color) }
                     )
                 }

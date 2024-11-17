@@ -189,20 +189,25 @@ fun saveBitmapToFile(bitmap: Bitmap, file: File): Boolean {
     }
 }
 
-fun createVideoFromFrames(context: Context, framesDir: File, outputFile: File, onComplete: () -> Unit) {
+fun createVideoFromFrames(
+    context: Context,
+    framesDir: File,
+    outputFile: File,
+    onComplete: (Boolean) -> Unit // 성공 여부를 콜백으로 반환
+) {
     val command = "-y -framerate 10 -i ${framesDir.absolutePath}/frame_%d.png -c:v mpeg4 -qscale:v 2 -pix_fmt yuv420p ${outputFile.absolutePath}"
 
     FFmpegKit.executeAsync(command) { session ->
         if (session.returnCode.isValueSuccess) {
             Log.d("DrawingPlaybackView", "Video created successfully at: ${outputFile.absolutePath}")
-            Handler(Looper.getMainLooper()).post {
-                onComplete()
-            }
+            Handler(Looper.getMainLooper()).post { onComplete(true) }
         } else {
             Log.e("DrawingPlaybackView", "Failed to create video: ${session.output}")
+            Handler(Looper.getMainLooper()).post { onComplete(false) }
         }
     }
 }
+
 
 data class DrawingStep(
     val path: Path,
@@ -229,7 +234,7 @@ suspend fun savePageImagesWithTemplate(
             val targetWidth = outerBoxWidthPx - padding * 2
             val targetHeight = outerBoxHeightPx - padding * 2
 
-            // 바깥 박스 배경용 흰색 Bitma
+            // 바깥 박스 배경용 흰색 Bitmap
             val outerBoxBackground = Bitmap.createBitmap(outerBoxWidthPx, outerBoxHeightPx, Bitmap.Config.ARGB_8888)
             val outerCanvas = Canvas(outerBoxBackground)
             val paint = android.graphics.Paint().apply { color = android.graphics.Color.WHITE }
@@ -247,8 +252,8 @@ suspend fun savePageImagesWithTemplate(
             val centerX = (outerBoxWidthPx - targetWidth) / 2f
             val centerY = (outerBoxHeightPx - targetHeight) / 2f
             // 바깥 박스의 중앙에 템플릿 및 비트맵을 그리기
-            outerCanvas.drawBitmap(resizedTemplateBitmap, centerX, centerY, null)
             outerCanvas.drawBitmap(resizedDrawingBitmap, centerX, centerY, null)
+            outerCanvas.drawBitmap(resizedTemplateBitmap, centerX, centerY, null)
             // 스티커 추가 (첫 번째 페이지에만 스티커 표시)
             if (index == 0) {
                 firstPageStickers.forEach { sticker ->
