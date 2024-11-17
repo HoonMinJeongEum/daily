@@ -42,7 +42,6 @@ class NavBarViewModel @Inject constructor(
 
     fun initializeData() {
         loadStatus()
-        observeAlarmState()
         saveFcmToken()
     }
 
