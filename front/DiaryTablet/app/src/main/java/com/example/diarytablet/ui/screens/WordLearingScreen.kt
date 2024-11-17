@@ -24,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -35,6 +36,7 @@ import com.example.diarytablet.ui.components.WordTap
 import com.example.diarytablet.ui.components.modal.CommonModal
 import com.example.diarytablet.ui.theme.BackgroundPlacement
 import com.example.diarytablet.ui.theme.BackgroundType
+import com.example.diarytablet.utils.playButtonSound
 import com.example.diarytablet.viewmodel.MainViewModel
 import com.example.diarytablet.viewmodel.SpenEventViewModel
 import com.example.diarytablet.viewmodel.WordLearningViewModel
@@ -66,7 +68,7 @@ fun WordLearningScreen(
     val learnedWordList by viewModel.learnedWordList
     val username by viewModel.username.collectAsState(initial = "")
     var isModalOpen by remember { mutableStateOf(false) }
-
+    val context = LocalContext.current
     BackgroundPlacement(backgroundType = backgroundType)
 
     Box(
@@ -91,6 +93,7 @@ fun WordLearningScreen(
                     modifier = Modifier
                         .size(60.dp)
                         .clickable {
+                            playButtonSound(context, R.raw.all_button)
                             isModalOpen = true
                         }
                 )
