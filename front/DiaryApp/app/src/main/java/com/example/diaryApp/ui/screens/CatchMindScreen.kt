@@ -66,6 +66,7 @@ import com.example.diaryApp.ui.components.quiz.Alert
 import com.example.diaryApp.ui.components.quiz.ToggleAudioButton
 import com.example.diaryApp.ui.components.quiz.ToggleMicButton
 import com.example.diaryApp.ui.theme.DeepPastelBlue
+import com.example.diaryApp.ui.theme.PastelNavy
 import com.example.diaryApp.ui.theme.PastelRed
 
 enum class QuizModalState {
@@ -243,18 +244,21 @@ fun CatchMindScreen(
                             painter = painterResource(id = R.drawable.quiz_chat),
                             contentDescription = "퀴즈 챗 이미지",
                             modifier = Modifier
-                                .fillMaxHeight(0.9f)
+                                .fillMaxHeight(0.3f).aspectRatio(1f)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-                        BoxWithConstraints {
+                        BoxWithConstraints(
+                            modifier = Modifier.fillMaxHeight()
+                        ) {
                             val rowHeight = with(LocalDensity.current) { maxHeight.toPx() }
-                            val textSize = rowHeight * 0.2f
+                            val textSize = rowHeight * 0.3f
 
                             Text(
                                 text = "정답",
                                 fontSize = with(LocalDensity.current) { textSize.toSp() },
                                 style = MyTypography.bodyLarge,
-                                color = Color.Black,
+                                color = PastelNavy,
+                                modifier = Modifier.align(alignment = Alignment.Center)
                             )
                         }
                         Row(
@@ -365,7 +369,7 @@ fun CatchMindScreen(
                                 inputWord = ""
                             },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF5A72A0),
+                                containerColor = PastelNavy,
                                 contentColor = Color.White,
                                 disabledContainerColor = Color.LightGray, // 비활성화 상태 배경색
                                 disabledContentColor = Color.White
