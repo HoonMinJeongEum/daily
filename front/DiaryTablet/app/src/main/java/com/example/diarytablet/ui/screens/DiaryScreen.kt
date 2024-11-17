@@ -56,11 +56,14 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.DragInteraction
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import com.example.diarytablet.ui.components.DailyButton
 import com.example.diarytablet.ui.components.modal.CommonModal
@@ -100,6 +103,7 @@ fun DiaryScreen(
     var isPreviewDialogVisible by remember { mutableStateOf(false) }
     var isWarningDialogVisible by remember { mutableStateOf(false) }
     var isVideoReady by remember { mutableStateOf(false)}
+    var isModalOpen by remember { mutableStateOf(false) }
 
     var selectedColor by remember { mutableStateOf(Color.Black) }
     var brushSize by remember { mutableFloatStateOf(5f) }
@@ -126,6 +130,7 @@ fun DiaryScreen(
     }
 
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { 2 })
+    val interactionSource = remember { pagerState.interactionSource }
     val firstPageDrawingSteps = remember { mutableStateListOf<DrawingStep>() }
 
     val undoStack = remember { mutableStateListOf<DrawingStep>() }
@@ -190,18 +195,16 @@ fun DiaryScreen(
         ) {
             Image(
                 painter = painterResource(id = R.drawable.cute_back),
-                contentDescription = "뒤로 가기 버튼",
+                contentDescription = "뒤로가기 버튼",
                 modifier = Modifier
                     .size(48.dp)
                     .clickable {
-                        navController.navigate("main") {
-                            popUpTo("diary") { inclusive = true }
-                        }
+                        isModalOpen = true
                     }
             )
             Spacer(modifier = Modifier.width(30.dp))
             Text(
-                text = "그림일기",
+                text = "그림 일기",
                 fontSize = 32.sp,
                 color = Color.White,
                 textAlign = TextAlign.Start
@@ -224,6 +227,7 @@ fun DiaryScreen(
                     .pointerInput(Unit) {
                         detectTapGestures(
                             onTap = { tapOffset ->
+                                // 클릭한 좌표가 스티커 내부인지 확인
                                 selectedStickerIndex = firstPageStickers.indexOfFirst { sticker ->
                                     val stickerPosition = sticker.position.value
                                     tapOffset.x in (stickerPosition.x..stickerPosition.x + sticker.bitmap.width) &&
@@ -231,8 +235,14 @@ fun DiaryScreen(
                                 }.takeIf { it >= 0 }
 
                                 if (selectedStickerIndex != null) {
+                                    // 스티커를 클릭한 경우
                                     isDrawingMode = false // 스크롤 모드로 전환
                                     selectedTool = ToolType.FINGER // 손가락 도구 선택 상태
+                                } else {
+                                    // 스티커 외부를 클릭한 경우
+                                    selectedStickerIndex = null // 선택 해제
+                                    isDrawingMode = true // 드로잉 모드로 전환
+                                    selectedTool = ToolType.PENCIL // 기본 도구 선택
                                 }
                             }
                         )
@@ -248,6 +258,19 @@ fun DiaryScreen(
                         )
                     }
             ) {
+                // 페이지 전환 시 스티커 선택 해제
+                LaunchedEffect(interactionSource) {
+                    interactionSource.interactions.collect { interaction ->
+                        if (interaction is PressInteraction.Press || interaction is DragInteraction.Start) {
+                            // 페이지 이동 시작 시 스티커 선택 해제
+                            if (selectedStickerIndex != null) {
+                                selectedStickerIndex = null
+                                isDrawingMode = true // 드로잉 모드로 전환
+                                selectedTool = ToolType.PENCIL // 기본 도구 설정
+                            }
+                        }
+                    }
+                }
                 VerticalPager(
                     state = pagerState,
                     modifier = Modifier
@@ -266,31 +289,44 @@ fun DiaryScreen(
                                     detectDragGestures(
                                         onDragStart = { offset ->
                                             path.value = Path().apply { moveTo(offset.x, offset.y) }
+
+                                            if (selectedTool == ToolType.ERASER) {
+                                                val canvas = AndroidCanvas(currentBitmap)
+                                                val eraserPaint = createPaintForTool(
+                                                    toolType = selectedTool,
+                                                    color = Color.Transparent,
+                                                    thickness = brushSize
+                                                )
+//                                                canvas.drawCircle(offset.x, offset.y, brushSize / 2, eraserPaint)
+                                            }
                                         },
                                         onDrag = { change, _ ->
-                                            path.value.lineTo(
-                                                change.position.x,
-                                                change.position.y
-                                            )
+                                            path.value.lineTo(change.position.x, change.position.y)
 
                                             val canvas = AndroidCanvas(currentBitmap)
                                             val paint = createPaintForTool(
-                                                selectedTool,
-                                                selectedColor,
-                                                brushSize
+                                                toolType = selectedTool,
+                                                color = selectedColor,
+                                                thickness = brushSize
                                             )
+
+                                            if (selectedTool == ToolType.ERASER) {
+                                                paint.xfermode = android.graphics.PorterDuffXfermode(android.graphics.PorterDuff.Mode.CLEAR)
+                                            }
+
                                             canvas.drawPath(path.value.asAndroidPath(), paint)
 
-                                            if (page == 0) {
+                                            if (pagerState.currentPage == 0) {
                                                 firstPageDrawingSteps.add(
                                                     DrawingStep(
                                                         path = Path().apply { addPath(path.value) },
-                                                        color = selectedColor,
+                                                        color = if (selectedTool == ToolType.ERASER) Color.Transparent else selectedColor,
                                                         thickness = brushSize,
                                                         toolType = selectedTool
                                                     )
                                                 )
                                             }
+                                            change.consume()
                                         },
                                         onDragEnd = {
                                             path.value = Path()
@@ -344,6 +380,7 @@ fun DiaryScreen(
                         Image(
                             painter = painterResource(if (page == 0) R.drawable.draw_template else R.drawable.write_template),
                             contentDescription = null,
+                            contentScale = ContentScale.FillBounds,
                             modifier = Modifier.size(leftBoxWidth, boxHeight)
                         )
                     }
@@ -374,6 +411,10 @@ fun DiaryScreen(
                         if (tool == ToolType.PENCIL || tool == ToolType.ERASER) {
                             selectedStickerIndex = null
                             isDrawingMode = true
+                            if (tool == ToolType.ERASER) {
+                                selectedColor = Color.Transparent
+                            } else {
+                            }
                         }
                     },
                     stickerList = userStickers,
@@ -418,6 +459,20 @@ fun DiaryScreen(
                 selectedStickerIndex = null
             }
         }
+    }
+
+    if (isModalOpen) {
+        CommonModal(
+            onDismissRequest = { isModalOpen = false },
+            titleText = "그림 일기를 그만 그릴까요?",
+            confirmText= "종료",
+            onConfirm = {
+                isModalOpen = false
+                navController.navigate("main") {
+                    popUpTo("diary") { inclusive = true }
+                }
+            }
+        )
     }
 
     if (isWarningDialogVisible) {
@@ -593,8 +648,8 @@ fun DiaryScreen(
 @Composable
 fun StickerWithDeleteButton(stickerSize: Int, position: Offset, onDelete: () -> Unit) {
     val density = LocalDensity.current
-    val xDp = with(density) { (position.x + stickerSize - 12).toDp() } // 스티커 우측 상단에 X 버튼 배치
-    val yDp = with(density) { (position.y - 12).toDp() } // Y 위치를 상단으로 약간 조정
+    val xDp = with(density) { (position.x).toDp() }
+    val yDp = with(density) { (position.y + 120).toDp() }
 
     Box(
         modifier = Modifier

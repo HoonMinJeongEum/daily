@@ -15,13 +15,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -114,38 +114,66 @@ fun StickerModal(
     Dialog(onDismissRequest = { onDismiss() }) {
         Box(
             modifier = Modifier
-                .wrapContentSize()
+                .size(250.dp, 350.dp) // 모달 크기 고정
                 .clip(RoundedCornerShape(12.dp))
                 .background(Color.White)
                 .padding(16.dp)
         ) {
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally, // 텍스트와 LazyColumn을 가운데 정렬
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Text("스티커 선택", color = Color.Black, fontSize = 18.sp)
+                // 항상 상단에 위치
+                Text("나의 스티커", color = Color.Black, fontSize = 18.sp)
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // 스티커 목록을 가로로 스크롤 가능하게 표시
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(stickerList) { sticker ->
-                        Image(
-                            painter = rememberAsyncImagePainter(
-                                model = sticker.img,
-                                placeholder = painterResource(R.drawable.loading),
-                                error = painterResource(R.drawable.loading)
-                            ),
-                            contentDescription = "스티커 이미지",
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clickable { onStickerSelect(sticker) }
-                        )
+                // 스티커 리스트가 비었는지 여부에 따라 다른 콘텐츠 표시
+                if (stickerList.isEmpty()) {
+                    // 스티커가 없을 때 중앙에 메시지 표시
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center // 다이얼로그 중앙 정렬
+                    ) {
+                        Text("아무것도 없어요", color = Color.Gray, fontSize = 16.sp)
+                    }
+                } else {
+                    // 스티커가 있을 때
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f), // LazyColumn이 공간을 채우도록 설정
+                        horizontalAlignment = Alignment.CenterHorizontally, // 가로 중앙 정렬
+                        verticalArrangement = Arrangement.spacedBy(8.dp) // 세로 간격 추가
+                    ) {
+                        items(stickerList.chunked(3)) { rowItems ->
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp) // 한 줄 아이템 간격
+                            ) {
+                                rowItems.forEach { sticker ->
+                                    Image(
+                                        painter = rememberAsyncImagePainter(
+                                            model = sticker.img,
+                                            placeholder = painterResource(R.drawable.loading),
+                                            error = painterResource(R.drawable.loading)
+                                        ),
+                                        contentDescription = "스티커 이미지",
+                                        modifier = Modifier
+                                            .size(60.dp) // 스티커 크기
+                                            .clickable { onStickerSelect(sticker) }
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
     }
 }
+
+
+
 
 @Composable
 fun ColorPalette(selectedColor: Color, onColorChange: (Color) -> Unit) {
@@ -165,10 +193,6 @@ fun ColorPalette(selectedColor: Color, onColorChange: (Color) -> Unit) {
                             .aspectRatio(1f)
                             .background(color)
                             .clickable { onColorChange(color) }
-//                            .border(
-//                                width = if (color == selectedColor) 2.dp else 0.dp,
-//                                color = Color.White
-//                            )
                     )
                 }
             }
@@ -278,7 +302,13 @@ fun ToolImage(imageRes: Int, selected: Boolean, onClick: () -> Unit) {
 
 fun createPaintForTool(toolType: ToolType, color: androidx.compose.ui.graphics.Color, thickness: Float): android.graphics.Paint {
     return when (toolType) {
-        ToolType.ERASER -> createEraserPaint(thickness) // 지우개 설정
+        ToolType.ERASER -> android.graphics.Paint().apply {
+            isAntiAlias = true
+            strokeWidth = thickness
+            style = android.graphics.Paint.Style.STROKE
+            strokeCap = android.graphics.Paint.Cap.ROUND
+            xfermode = android.graphics.PorterDuffXfermode(android.graphics.PorterDuff.Mode.CLEAR) // 투명 설정
+        }
         ToolType.PENCIL -> createPencilPaint(color, thickness)
         ToolType.CRAYON -> createCrayonPaint(color, thickness)
         else -> throw IllegalArgumentException("Unsupported ToolType: $toolType")
@@ -322,12 +352,12 @@ fun createCrayonPaint(color: androidx.compose.ui.graphics.Color, strokeWidth: Fl
     }
 }
 
-fun createEraserPaint(strokeWidth: Float): android.graphics.Paint {
+fun createEraserPaint(thickness: Float): android.graphics.Paint {
     return android.graphics.Paint().apply {
-        this.color = android.graphics.Color.TRANSPARENT
-        this.strokeWidth = strokeWidth
-        this.style = android.graphics.Paint.Style.STROKE
-        this.strokeCap = android.graphics.Paint.Cap.ROUND
-        xfermode = android.graphics.PorterDuffXfermode(android.graphics.PorterDuff.Mode.CLEAR)
+        isAntiAlias = true
+        strokeWidth = thickness
+        style = android.graphics.Paint.Style.STROKE
+        strokeCap = android.graphics.Paint.Cap.ROUND
+        xfermode = android.graphics.PorterDuffXfermode(android.graphics.PorterDuff.Mode.CLEAR) // 투명 처리
     }
 }

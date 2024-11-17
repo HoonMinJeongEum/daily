@@ -48,7 +48,7 @@ suspend fun loadBitmapFromUrl(url: String): Bitmap? = withContext(Dispatchers.IO
     try {
         val originalBitmap = BitmapFactory.decodeStream(URL(url).openStream())
         originalBitmap?.let {
-            Bitmap.createScaledBitmap(it, 150, 150, true) // 고정된 크기로 리사이즈
+            Bitmap.createScaledBitmap(it, 100, 100, true) // 고정된 크기로 리사이즈
         }
     } catch (e: Exception) {
         e.printStackTrace()
@@ -132,16 +132,15 @@ fun DrawingPlaybackView(
         Canvas(
             modifier = Modifier.fillMaxSize()
         ) {
+            // 현재 overlayBitmap (경로 및 지우개 효과가 포함된 비트맵) 그리기
+            drawIntoCanvas { canvas ->
+                canvas.nativeCanvas.drawBitmap(overlayBitmap, 0f, 0f, null)
+            }
             // 템플릿 비트맵을 배경에 그림
             drawIntoCanvas { canvas ->
                 val templateBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.draw_template)
                 val resizedTemplateBitmap = Bitmap.createScaledBitmap(templateBitmap, templateWidth, templateHeight, true)
                 canvas.nativeCanvas.drawBitmap(resizedTemplateBitmap, 0f, 0f, null)
-            }
-
-            // 현재 overlayBitmap (경로 및 지우개 효과가 포함된 비트맵) 그리기
-            drawIntoCanvas { canvas ->
-                canvas.nativeCanvas.drawBitmap(overlayBitmap, 0f, 0f, null)
             }
         }
     }
