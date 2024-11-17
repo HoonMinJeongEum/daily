@@ -146,7 +146,7 @@ fun TabletHeader(
                             val currentDestination = navController.currentDestination?.route
                             val canNavigateBack = navController.previousBackStackEntry != null
 
-                            if (canNavigateBack && currentDestination != null) {
+                            if (currentDestination != "main" && canNavigateBack) {
                                 navController.popBackStack()
                             }
                         }

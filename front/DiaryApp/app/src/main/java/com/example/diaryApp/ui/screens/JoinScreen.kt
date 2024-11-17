@@ -8,16 +8,20 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,10 +30,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -37,9 +43,13 @@ import androidx.navigation.NavController
 import com.example.diaryApp.R
 import com.example.diaryApp.ui.components.DailyButton
 import com.example.diaryApp.ui.components.MyTextField
+import com.example.diaryApp.ui.components.quiz.QuizAlert
 import com.example.diaryApp.ui.theme.BackgroundPlacement
 import com.example.diaryApp.ui.theme.BackgroundType
+import com.example.diaryApp.ui.theme.MyTypography
+import com.example.diaryApp.ui.theme.PastelGreen
 import com.example.diaryApp.ui.theme.PastelNavy
+import com.example.diaryApp.ui.theme.PastelRed
 import com.example.diaryApp.ui.theme.White
 import com.example.diaryApp.viewmodel.JoinViewModel
 
@@ -60,7 +70,8 @@ fun JoinScreen(
     var isPasswordCheckTouched by remember { mutableStateOf(false) }
     val allValid = isUsernameValid && isPasswordValid && isPasswordCheckValid
     val usernameErrorMessage = joinViewModel.usernameErrorMessage
-
+    val WarningColor = Color(0xFFF44336) // 밝은 레드
+    val SuccessColor = Color(0xFF4CAF50)
 
     fun validateUsername() {
         isUsernameValid = joinViewModel.username.value.length in 4..20 &&
@@ -101,30 +112,34 @@ fun JoinScreen(
 
         Column(
             modifier = Modifier
+                .width(screenWidth * 0.75f)
                 .align(Alignment.Center)
                 .padding(top = screenHeight * 0.4f),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
+            Spacer( modifier = Modifier
+                .height(screenWidth * 0.02f)
+            )
             if (isUsernameTouched) {
                 if (!isUsernameValid) {
                     Text(
-                        fontSize = (screenWidth.value * 0.025f).sp,
+                        fontSize = (screenWidth.value * 0.03f).sp,
                         text = "아이디는 영어, 숫자 포함 4-20자",
-                        color = Color.Red,
+                        color = WarningColor,
                         modifier = Modifier.offset(x = -screenWidth * 0.2f)
                     )
                 } else {
                     Text(
-                        fontSize = (screenWidth.value * 0.025f).sp,
+                        fontSize = (screenWidth.value * 0.03f).sp,
                         text = usernameErrorMessage.value,
-                        color = if (joinViewModel.isUsernameAvailable.value == true) Color.Green else Color.Red,
+                        color = if (joinViewModel.isUsernameAvailable.value == true) SuccessColor  else WarningColor,
                         modifier = Modifier.offset(x = -screenWidth * 0.2f)
                     )
                 }
             } else {
                 Spacer( modifier = Modifier
-                    .height(screenWidth * 0.03f)
+                    .height(screenWidth * 0.036f)
                 )
             }
             Spacer( modifier = Modifier
@@ -141,7 +156,8 @@ fun JoinScreen(
                     onValueChange = {
                         if (it.length <= 20) { // 글자 수 제한 확인
                             joinViewModel.username.value = it
-                            if (isUsernameTouched) validateUsername()
+                            isUsernameTouched = true
+                            validateUsername()
                             joinViewModel.usernameErrorMessage.value = ""
                             isCheckUsername = false
                         }
@@ -156,6 +172,7 @@ fun JoinScreen(
                         if (isUsernameValid) {
                             focusManager.clearFocus()
                         }
+
 
                     }
                 )
@@ -181,9 +198,33 @@ fun JoinScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(screenHeight * 0.03f))
-
-
+            Spacer( modifier = Modifier
+                .height(screenWidth * 0.02f)
+            )
+            if (isPasswordTouched) {
+                if (!isPasswordValid) {
+                    Text(
+                        fontSize = (screenWidth.value * 0.03f).sp,
+                        fontWeight = FontWeight.Thin,
+                        text = "비밀번호는 영어, 숫자, 특수문자 포함 8-20자",
+                        color = WarningColor,
+                        modifier = Modifier.offset(x = -screenWidth * 0.2f)
+                    )
+                } else {
+                    Text(
+                        fontSize = (screenWidth.value * 0.03f).sp,
+                        fontWeight = FontWeight.Thin,
+                        text = "사용 가능한 비밀번호입니다.",
+                        color = SuccessColor ,
+                        modifier = Modifier.offset(x = -screenWidth * 0.2f)
+                    )
+                }
+            } else {
+                Spacer(modifier = Modifier.height(screenWidth * 0.036f))
+            }
+            Spacer( modifier = Modifier
+                .height(screenWidth * 0.02f)
+            )
 
             MyTextField(
                 value = joinViewModel.password.value,
@@ -207,22 +248,33 @@ fun JoinScreen(
                     }
                 }
             )
-            Spacer(modifier = Modifier.height(screenWidth * 0.035f))
-
-            if (!isPasswordValid && isPasswordTouched) {
-                Text(
-                    fontSize = (screenWidth.value * 0.025f).sp,
-                    fontWeight = FontWeight.Thin,
-                    text = "비밀번호는 영어, 숫자, 특수문자 포함 8-20자",
-                    color = Color.Red,
-                    modifier = Modifier.offset(x = -screenWidth * 0.1f)
-                )
+            Spacer( modifier = Modifier
+                .height(screenWidth * 0.02f)
+            )
+            if (isPasswordCheckTouched) {
+                if (!isPasswordCheckValid) {
+                    Text(
+                        fontSize = (screenWidth.value * 0.03f).sp,
+                        fontWeight = FontWeight.Thin,
+                        text = "비밀번호가 일치하지 않습니다.",
+                        color = WarningColor,
+                        modifier = Modifier.offset(x = -screenWidth * 0.2f)
+                    )
+                } else {
+                    Text(
+                        fontSize = (screenWidth.value * 0.03f).sp,
+                        fontWeight = FontWeight.Thin,
+                        text = "비밀번호가 일치합니다.",
+                        color = SuccessColor ,
+                        modifier = Modifier.offset(x = -screenWidth * 0.2f)
+                    )
+                }
             } else {
-
-                Spacer(modifier = Modifier.height(screenHeight * 0.014f))
+                Spacer(modifier = Modifier.height(screenWidth * 0.036f))
             }
-            Spacer(modifier = Modifier.height(screenHeight * 0.016f))
-
+            Spacer( modifier = Modifier
+                .height(screenWidth * 0.02f)
+            )
             MyTextField(
                 value = joinViewModel.passwordCheck.value,
                 placeholder = "비밀번호 확인",
@@ -239,29 +291,20 @@ fun JoinScreen(
                 height = screenHeight * 0.9f,
                 imeAction = ImeAction.Done,
                 onImeAction = {
-                    isPasswordCheckTouched = true
-                    validatePassword()
-                    if (isPasswordCheckValid) {
-                        focusManager.clearFocus()
+                    if (allValid) {
+                        joinViewModel.join(
+                            onSuccess = {
+                                Log.d("JoinScreen", "JoinSuccess called")
+                                showSuccessDialog = true
+                            },
+                            onErrorPassword = { showErrorDialog = true },
+                            onError = { showErrorDialog = true }
+                        )
                     }
                 }
 
             )
-            Spacer(modifier = Modifier.height(screenWidth * 0.035f))
-
-            if (!isPasswordCheckValid && isPasswordCheckTouched) {
-                Text(
-                    fontSize = (screenWidth.value * 0.025f).sp,
-                    fontWeight = FontWeight.Thin,
-                    text = "비밀번호가 일치하지 않습니다.",
-                    color = Color.Red,
-                    modifier = Modifier.offset(x = -screenWidth * 0.1f)
-                )
-            } else {
-
-                Spacer(modifier = Modifier.height(screenHeight * 0.014f))
-            }
-            Spacer(modifier = Modifier.height(screenWidth * 0.035f))
+            Spacer(modifier = Modifier.height(screenWidth * 0.07f))
 
             DailyButton(
                 text = "회원가입",
@@ -277,10 +320,7 @@ fun JoinScreen(
                         joinViewModel.join(
                             onSuccess = {
                                 Log.d("JoinScreen", "JoinSuccess called")
-                                navController.navigate("login") {
-                                    popUpTo("join") { inclusive = true }
-                                    showSuccessDialog = true
-                                }
+                                showSuccessDialog = true
                             },
                             onErrorPassword = { showErrorDialog = true },
                             onError = { showErrorDialog = true }
@@ -304,55 +344,91 @@ fun JoinScreen(
             )
         }
 
+
         if (showSuccessDialog) {
-            // `AlertDialog`는 최상위 레이어에서 분리
-            androidx.compose.ui.window.Dialog(onDismissRequest = { showSuccessDialog = false }) {
+            LaunchedEffect(Unit) {
+                kotlinx.coroutines.delay(2000) // 2초 후 닫힘
+                showErrorDialog = false
+                navController.navigate("main") {
+                    popUpTo("join") { inclusive = true }
+                }
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.6f)), // 어두운 반투명 배경
+                contentAlignment = Alignment.Center
+            ) {
                 Box(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.White.copy(alpha = 0.9f))
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
+                        .fillMaxWidth(0.8f) // 너비 80%
+                        .fillMaxHeight(0.2f) // 높이 20%
+                        .background(color = Color.White, shape = RoundedCornerShape(15.dp)),
                 ) {
-                    AlertDialog(
-                        onDismissRequest = { showSuccessDialog = false },
-                        title = { Text("회원가입 성공") },
-                        text = { Text("회원가입이 성공적으로 완료되었습니다.") },
-                        confirmButton = {
-                            Button(onClick = {
-                                showSuccessDialog = false
-                                navController.navigate("login") // 로그인 화면으로 이동
-                            }) {
-                                Text("확인")
-                            }
-                        }
-                    )
+                    BoxWithConstraints(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        val boxHeight = with(LocalDensity.current) { maxHeight.toPx() }
+                        val lineHeight = boxHeight * 0.1f
+
+                        Text(
+                            text = "회원가입이 완료되었습니다.",
+                            fontSize = (boxHeight * 0.05f).sp,
+                            style = MyTypography.bodyLarge,
+                            color = Color.Black,
+                            textAlign = TextAlign.Center,
+                            lineHeight = lineHeight.sp
+                        )
+                    }
                 }
             }
         }
 
+
         if (showErrorDialog) {
-            androidx.compose.ui.window.Dialog(onDismissRequest = { showErrorDialog = false }) {
+            LaunchedEffect(Unit) {
+                    kotlinx.coroutines.delay(2000) // 2초 후 닫힘
+                    showErrorDialog = false
+                    navController.navigate("login") {
+                    popUpTo("join") { inclusive = true }
+                }
+                }
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color.White.copy(alpha = 0.9f))
-                        .padding(16.dp),
+                        .background(Color.Black.copy(alpha = 0.6f)), // 어두운 반투명 배경
                     contentAlignment = Alignment.Center
                 ) {
-                    AlertDialog(
-                        onDismissRequest = { showErrorDialog = false },
-                        title = { Text("회원가입 실패") },
-                        text = { Text("정확한 정보를 기입해 주세요.") },
-                        confirmButton = {
-                            Button(onClick = { showErrorDialog = false }) {
-                                Text("확인")
-                            }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(0.8f) // 너비 80%
+                            .fillMaxHeight(0.2f) // 높이 20%
+                            .background(color = Color.White, shape = RoundedCornerShape(15.dp)),
+                    ) {
+                        BoxWithConstraints(
+                            modifier = Modifier
+                                .fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            val boxHeight = with(LocalDensity.current) { maxHeight.toPx() }
+                            val lineHeight = boxHeight * 0.1f
+
+                            Text(
+                                text = "회원가입 실패\n\n정보를 다시 확인해주세요.",
+                                fontSize = (boxHeight * 0.05f).sp,
+                                style = MyTypography.bodyLarge,
+                                color = Color.Black,
+                                textAlign = TextAlign.Center,
+                                lineHeight = lineHeight.sp
+                            )
                         }
-                    )
+                    }
                 }
             }
-        }
+
+
 
     }
 }

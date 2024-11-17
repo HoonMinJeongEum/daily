@@ -68,6 +68,7 @@ import com.example.diaryApp.ui.theme.MyTypography
 import com.example.diaryApp.ui.theme.PastelRed
 import com.example.diaryApp.ui.theme.PastelSkyBlue
 import com.example.diaryApp.ui.theme.myFontFamily
+import com.example.diaryApp.utils.clearFocusOnClick
 import com.example.diaryApp.viewmodel.ProfileViewModel
 import kotlinx.coroutines.launch
 
@@ -96,6 +97,8 @@ fun CreateProfile(
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier.fillMaxSize()
+                .clearFocusOnClick()
+
         ) {
             Surface(
                 shape = RoundedCornerShape(10),
@@ -274,7 +277,7 @@ fun CreateProfile(
                         fontSize = (screenWidth * 0.05f).value.toInt(),
                         textColor = Color.White,
                         fontWeight = FontWeight.Normal,
-                        backgroundColor = if (isLoading || showWarning) Color.Gray else PastelSkyBlue,
+                        backgroundColor = if (isLoading || showWarning || profileViewModel.memberName.value.isBlank() ) Color.Gray else DeepPastelNavy,
                         cornerRadius = 50,
                         width = (screenWidth * 0.25f).value.toInt(),
                         height = (screenHeight * 0.06f).value.toInt(),

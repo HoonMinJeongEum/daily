@@ -101,7 +101,7 @@ fun Alert(
                         Spacer(modifier = Modifier.weight(0.2f))
                         Button(
                             modifier = Modifier
-                                .weight(0.6f)
+                                .weight(1f)
                                 .align(Alignment.CenterVertically),
                             onClick = {
                                 onConfirm()

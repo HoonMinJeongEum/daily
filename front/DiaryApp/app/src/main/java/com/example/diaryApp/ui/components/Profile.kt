@@ -284,69 +284,20 @@ fun DeleteProfileItem(profile: Profile) {
             }
         }
 
-        if (showDialog) {
-            Dialog(onDismissRequest = { showDialog = false }) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    Surface(
-                        modifier = Modifier
-                            .width(screenWidth * 0.8f)
-                            .wrapContentHeight()
-                            .background(Color.White, shape = RoundedCornerShape(15))
-                            .padding(screenWidth * 0.1f)
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(screenWidth * 0.04f),
-                            modifier = Modifier.fillMaxWidth()
-                                .background(Color.White)
-                        )  {
-                            Text(
-                                text = "정말 삭제하시겠습니까?",
-                                color = DeepPastelNavy,
-                                style = MyTypography.bodySmall,
-                                modifier = Modifier.padding(bottom = screenWidth * 0.06f)
-                            )
-
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(screenWidth * 0.04f)
-                            ) {
-                                DailyButton(
-                                    text = "취소",
-                                    fontSize = (screenWidth.value * 0.06f).toInt(),
-                                    textColor = Color.White,
-                                    fontWeight = FontWeight.SemiBold,
-                                    backgroundColor = Gray,
-                                    cornerRadius = 35,
-                                    width = (screenWidth.value * 0.2f).toInt(),
-                                    height = (screenWidth.value * 0.14f).toInt(),
-                                    onClick = { showDialog = false }
-                                )
-
-                                DailyButton(
-                                    text = "삭제",
-                                    fontSize = (screenWidth.value * 0.06f).toInt(),
-                                    textColor = Color.White,
-                                    fontWeight = FontWeight.SemiBold,
-                                    backgroundColor = PastelRed,
-                                    cornerRadius = 35,
-                                    width = (screenWidth.value * 0.2f).toInt(),
-                                    height = (screenWidth.value * 0.14f).toInt(),
-                                    onClick = {
-                                        coroutineScope.launch {
-                                            profileViewModel.deleteProfile(profile.id)
-                                            showDialog = false
-                                        }
-                                    }
-                                )
-                            }
-                        }
-                    }
+        BasicModal(
+            isDialogVisible = showDialog,
+            screenWidth = screenWidth,
+            mainText = "정말 삭제하시겠습니까?",
+            buttonText = "삭제",
+            successButtonColor = PastelRed,
+            onDismiss = { showDialog = false },
+            onSuccessClick = {
+                coroutineScope.launch {
+                    profileViewModel.deleteProfile(profile.id)
+                    showDialog = false
                 }
             }
-        }
+        )
     }
 }
 
