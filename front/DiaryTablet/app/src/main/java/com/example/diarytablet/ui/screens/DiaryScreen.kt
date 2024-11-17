@@ -522,7 +522,7 @@ fun DiaryScreen(
         CommonModal(
             onDismissRequest = { isWarningDialogVisible = false },
             titleText = "그림 일기를 다시 작성할 수 없어요!",
-            cancelText = "다시 쓰기",
+            cancelText = "이어 쓰기",
             confirmText = "일기 완성",
             confirmButtonColor = PastelNavy,
             onConfirm = {
@@ -622,13 +622,14 @@ fun DiaryScreen(
             }
         }
     }
-
+    data class LoadingItem(
+        val message: String,
+        val imageResId: Int
+    )
 
     if (isLoading) {
-        // Animatable을 사용하여 회전 값을 애니메이션화
+        // Animatable을 사용하여 흔들림 애니메이션 설정
         val rotation = remember { Animatable(0f) }
-
-        // 로딩 중일 때 반복 애니메이션 설정
         LaunchedEffect(isLoading) {
             rotation.animateTo(
                 targetValue = 10f,
@@ -639,33 +640,58 @@ fun DiaryScreen(
             )
         }
 
+        // 순차적으로 메시지와 이미지를 보여주기 위한 상태
+        var currentIndex by remember { mutableStateOf(0) }
+        var displayedText by remember { mutableStateOf("") } // 현재 타이핑된 텍스트
+        val loadingItems = listOf(
+            LoadingItem("기록 버튼을 누르면 저장된 일기를 볼 수 있어요 !", R.drawable.main_char),
+            LoadingItem("전 해달이라 해꽁이입니다 !", R.drawable.main_char2),
+            LoadingItem("오늘 단어학습 해꽁 ??", R.drawable.main_char3),
+            LoadingItem("저는 물에 누워서 조개를 먹기도 하고, 잠을 자기도 해요 ~", R.drawable.main_char4),
+            LoadingItem("오늘 부모님께 사랑한다고 해봐요 !", R.drawable.main_char5),
+        )
+
+        // 타이핑 효과와 순환
+        LaunchedEffect(currentIndex) {
+            val currentItem = loadingItems[currentIndex]
+            displayedText = "" // 텍스트 초기화
+            currentItem.message.forEach { char ->
+                displayedText += char // 한 글자씩 추가
+                delay(100L) // 타이핑 속도
+            }
+            delay(2000L) // 메시지 타이핑이 끝난 후 1초 대기
+            currentIndex = (currentIndex + 1) % loadingItems.size // 다음 메시지로 이동
+        }
+
         // 화면 전체를 차지하는 Box
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.5f)),
+                .background(Color.Black.copy(alpha = 0.5f)), // 반투명 배경
             contentAlignment = Alignment.Center
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                // 타이핑 효과가 적용된 텍스트
                 Text(
-                    "해꽁이가 노래를 만들고 있어요!!",
+                    text = displayedText,
                     color = Color.White,
                     fontSize = 50.sp // 텍스트 크기
                 )
+
+                // 흔들림 애니메이션이 적용된 이미지
                 Image(
-                    painter = painterResource(id = R.drawable.main_char), // 이미지 리소스
+                    painter = painterResource(id = loadingItems[currentIndex].imageResId), // 현재 이미지
                     contentDescription = "로딩 중 이미지",
                     modifier = Modifier
                         .size(400.dp) // 이미지 크기
-                        .graphicsLayer { rotationZ = rotation.value } // 회전 값 적용
+                        .graphicsLayer { rotationZ = rotation.value } // 흔들리는 애니메이션 적용
                 )
             }
         }
     }
-
 
     responseMessage?.let { message ->
         CommonPopup(
