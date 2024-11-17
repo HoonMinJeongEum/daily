@@ -61,6 +61,7 @@ import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
@@ -285,6 +286,44 @@ fun DiaryScreen(
                             .fillMaxSize()
                             .clipToBounds()
                             .pointerInput(isDrawingMode) {
+                                detectTapGestures(
+                                    onTap = { offset ->
+                                        if (isDrawingMode) {
+                                            val canvas = AndroidCanvas(currentBitmap)
+                                            val paint = createPaintForTool(
+                                                toolType = selectedTool,
+                                                color = selectedColor,
+                                                thickness = brushSize
+                                            )
+
+                                            // 점을 그림
+                                            canvas.drawCircle(offset.x, offset.y, brushSize / 2, paint)
+
+                                            // 드로잉 스텝 저장
+                                            if (pagerState.currentPage == 0) {
+                                                firstPageDrawingSteps.add(
+                                                    DrawingStep(
+                                                        path = Path().apply {
+                                                            addOval(
+                                                                Rect(
+                                                                    offset.x - brushSize / 2,
+                                                                    offset.y - brushSize / 2,
+                                                                    offset.x + brushSize / 2,
+                                                                    offset.y + brushSize / 2
+                                                                )
+                                                            )
+                                                        },
+                                                        color = selectedColor,
+                                                        thickness = brushSize,
+                                                        toolType = selectedTool
+                                                    )
+                                                )
+                                            }
+                                        }
+                                    }
+                                )
+                            }
+                            .pointerInput(isDrawingMode) {
                                 if (isDrawingMode) {
                                     detectDragGestures(
                                         onDragStart = { offset ->
@@ -411,7 +450,10 @@ fun DiaryScreen(
                         if (tool == ToolType.PENCIL || tool == ToolType.ERASER) {
                             selectedStickerIndex = null
                             isDrawingMode = true
+                            selectedColor = Color.Black
                             if (tool == ToolType.ERASER) {
+                                selectedStickerIndex = null
+                                isDrawingMode = true
                                 selectedColor = Color.Transparent
                             } else {
                             }
