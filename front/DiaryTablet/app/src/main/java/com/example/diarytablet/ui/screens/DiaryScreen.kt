@@ -358,6 +358,7 @@ fun DiaryScreen(
                                             )
 
                                             if (selectedTool == ToolType.ERASER) {
+                                                selectedColor = Color.Transparent
                                                 paint.xfermode = android.graphics.PorterDuffXfermode(android.graphics.PorterDuff.Mode.CLEAR)
                                             }
 
