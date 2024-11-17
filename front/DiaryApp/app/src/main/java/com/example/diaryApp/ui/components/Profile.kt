@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Surface
@@ -221,7 +223,10 @@ fun DeleteProfileItem(profile: Profile) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()  // 화면 너비에 맞춰 확장
-                .padding(horizontal = screenWidth * 0.06f, vertical = screenWidth * 0.04f)  // 양옆과 위아래에 여백 설정
+                .padding(
+                    horizontal = screenWidth * 0.06f,
+                    vertical = screenWidth * 0.04f
+                )  // 양옆과 위아래에 여백 설정
                 .height(screenWidth * 0.3f),
             contentAlignment = Alignment.Center
         ) {
@@ -270,7 +275,7 @@ fun DeleteProfileItem(profile: Profile) {
                     backgroundColor = PastelRed,
                     cornerRadius = 30,
                     width = (screenWidth.value * 0.2f).toInt(),
-                    height =(screenWidth.value * 0.15f).toInt(),
+                    height = (screenWidth.value * 0.15f).toInt(),
                     shadowElevation = 8.dp,
                     onClick = {
                         showDialog = true
@@ -281,60 +286,62 @@ fun DeleteProfileItem(profile: Profile) {
 
         if (showDialog) {
             Dialog(onDismissRequest = { showDialog = false }) {
-                Surface(
-                    shape = RoundedCornerShape(25),
-                    color = Color.White,
-                    modifier = Modifier.padding(screenWidth * 0.02f)
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    Column(
+                    Surface(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(
-                                top = screenWidth * 0.12f,
-                                bottom = screenWidth * 0.08f,
-                                start = screenWidth * 0.06f,
-                                end = screenWidth * 0.06f
-                            )                            .background(Color.White),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                            .width(screenWidth * 0.8f)
+                            .wrapContentHeight()
+                            .background(Color.White, shape = RoundedCornerShape(15))
+                            .padding(screenWidth * 0.1f)
                     ) {
-                        Text(
-                            text = "정말 삭제하시겠습니까?",
-                            color = DeepPastelNavy,
-                            style = MyTypography.bodySmall,
-                            modifier = Modifier.padding(bottom = screenWidth * 0.06f)
-                        )
-
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(screenWidth * 0.04f)
-                        ) {
-                            DailyButton(
-                                text = "취소",
-                                fontSize = (screenWidth.value * 0.06f).toInt(),
-                                textColor = Color.White,
-                                fontWeight = FontWeight.SemiBold,
-                                backgroundColor = Gray,
-                                cornerRadius = 35,
-                                width = (screenWidth.value * 0.2f).toInt(),
-                                height = (screenWidth.value * 0.14f).toInt(),
-                                onClick = { showDialog = false }
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(screenWidth * 0.04f),
+                            modifier = Modifier.fillMaxWidth()
+                                .background(Color.White)
+                        )  {
+                            Text(
+                                text = "정말 삭제하시겠습니까?",
+                                color = DeepPastelNavy,
+                                style = MyTypography.bodySmall,
+                                modifier = Modifier.padding(bottom = screenWidth * 0.06f)
                             )
 
-                            DailyButton(
-                                text = "삭제",
-                                fontSize = (screenWidth.value * 0.06f).toInt(),
-                                textColor = Color.White,
-                                fontWeight = FontWeight.SemiBold,
-                                backgroundColor = PastelRed,
-                                cornerRadius = 35,
-                                width = (screenWidth.value * 0.2f).toInt(),
-                                height = (screenWidth.value * 0.14f).toInt(),
-                                onClick = {
-                                    coroutineScope.launch {
-                                        profileViewModel.deleteProfile(profile.id)
-                                        showDialog = false
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(screenWidth * 0.04f)
+                            ) {
+                                DailyButton(
+                                    text = "취소",
+                                    fontSize = (screenWidth.value * 0.06f).toInt(),
+                                    textColor = Color.White,
+                                    fontWeight = FontWeight.SemiBold,
+                                    backgroundColor = Gray,
+                                    cornerRadius = 35,
+                                    width = (screenWidth.value * 0.2f).toInt(),
+                                    height = (screenWidth.value * 0.14f).toInt(),
+                                    onClick = { showDialog = false }
+                                )
+
+                                DailyButton(
+                                    text = "삭제",
+                                    fontSize = (screenWidth.value * 0.06f).toInt(),
+                                    textColor = Color.White,
+                                    fontWeight = FontWeight.SemiBold,
+                                    backgroundColor = PastelRed,
+                                    cornerRadius = 35,
+                                    width = (screenWidth.value * 0.2f).toInt(),
+                                    height = (screenWidth.value * 0.14f).toInt(),
+                                    onClick = {
+                                        coroutineScope.launch {
+                                            profileViewModel.deleteProfile(profile.id)
+                                            showDialog = false
+                                        }
                                     }
-                                }
-                            )
+                                )
+                            }
                         }
                     }
                 }

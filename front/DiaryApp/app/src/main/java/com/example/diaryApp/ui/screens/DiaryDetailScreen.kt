@@ -378,11 +378,10 @@ fun DiaryDetailScreen(
                 val context = LocalContext.current
                 var isLoading by remember { mutableStateOf(true) } // 로딩 상태 관리
 
-                // Video Player 설정
                 val videoPlayer = remember {
                     ExoPlayer.Builder(context).build().apply {
                         diaryDetail.value?.video?.let {
-                            val mediaItem = MediaItem.fromUri(Uri.parse(it))
+                            val mediaItem = MediaItem.fromUri(it)
                             setMediaItem(mediaItem)
                             repeatMode = Player.REPEAT_MODE_ONE // 비디오 반복 재생 설정
                             prepare()
@@ -390,16 +389,33 @@ fun DiaryDetailScreen(
                         }
 
                         addListener(object : Player.Listener {
-                            override fun onIsLoadingChanged(isLoadingNow: Boolean) {
-                                isLoading = isLoadingNow // 로딩 상태 업데이트
+                            override fun onPlaybackStateChanged(state: Int) {
+                                isLoading = when (state) {
+                                    Player.STATE_BUFFERING -> true // 로딩 중
+                                    Player.STATE_READY -> false // 준비 완료
+                                    else -> isLoading
+                                }
                             }
                         })
+                    }
+                }
+                val soundPlayer = remember {
+                    ExoPlayer.Builder(context).build().apply {
+                        diaryDetail.value?.sound?.let {
+                            val mediaItem = MediaItem.fromUri(it)
+                            setMediaItem(mediaItem)
+                            repeatMode = Player.REPEAT_MODE_ONE // 사운드 반복 재생 설정
+                            prepare()
+                            playWhenReady = true
+                        }
                     }
                 }
 
                 DisposableEffect(Unit) {
                     onDispose {
                         videoPlayer.release() // ExoPlayer 해제
+                        soundPlayer?.release()
+
                     }
                 }
 

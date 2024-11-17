@@ -158,20 +158,7 @@ fun MainScreen(
         }
 
 
-        BasicModal(
-            screenWidth = screenWidth,
-            isDialogVisible = logoutModal,
-            onDismiss = { logoutModal = false },
-            onSuccessClick = {
-                RetrofitClient.logout()
-                navController.navigate("login") {
-                    popUpTo("main") { inclusive = true }
-                }
-            },
-            mainText = "로그아웃 하시겠습니까?",
-            buttonText = "로그아웃",
-            successButtonColor = PastelNavy
-        )
+
 
     }
 }

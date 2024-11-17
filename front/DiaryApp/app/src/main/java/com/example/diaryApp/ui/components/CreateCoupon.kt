@@ -80,6 +80,7 @@ fun CreateCoupon(
                 shape = RoundedCornerShape(screenWidth * 0.08f),
                 color = Color.White,
                 modifier = Modifier
+                    .padding(screenWidth * 0.1f)
                     .fillMaxWidth()
                     .wrapContentHeight()
             ) {
@@ -113,15 +114,15 @@ fun CreateCoupon(
                         textAlign = TextAlign.Center,
                         style = MyTypography.bodyMedium.copy(
                             color = DeepPastelNavy,
-                            fontSize = (screenWidth * 0.08f).value.sp
+                            fontSize = (screenWidth * 0.07f).value.sp
                         )
                     )
 
-                    Spacer(modifier = Modifier.height(screenWidth * 0.06f))
+                    Spacer(modifier = Modifier.height(screenWidth * 0.05f))
                     Text(
                         text = "소원명",
                         style = MyTypography.bodySmall.copy(
-                            fontSize = (screenWidth.value * 0.05f).sp,
+                            fontSize = (screenWidth.value * 0.04f).sp,
                             color = DeepPastelNavy
                         ),
                         modifier = Modifier
@@ -163,7 +164,7 @@ fun CreateCoupon(
                     Text(
                         text = "가격",
                         style = MyTypography.bodySmall.copy(
-                            fontSize = (screenWidth.value * 0.05f).sp,
+                            fontSize = (screenWidth.value * 0.04f).sp,
                             color = DeepPastelNavy
                         ),
                         modifier = Modifier

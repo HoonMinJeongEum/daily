@@ -2,6 +2,7 @@ package com.example.diaryApp.ui.screens
 
 import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -304,32 +305,53 @@ fun JoinScreen(
         }
 
         if (showSuccessDialog) {
-            AlertDialog(
-                onDismissRequest = { showSuccessDialog = false },
-                title = { Text("회원가입 성공") },
-                text = { Text("회원가입이 성공적으로 완료되었습니다.") },
-                confirmButton = {
-                    Button(onClick = {
-                        showSuccessDialog = false
-                        navController.navigate("login") // 로그인 화면으로 이동
-                    }) {
-                        Text("확인")
-                    }
+            // `AlertDialog`는 최상위 레이어에서 분리
+            androidx.compose.ui.window.Dialog(onDismissRequest = { showSuccessDialog = false }) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.White.copy(alpha = 0.9f))
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    AlertDialog(
+                        onDismissRequest = { showSuccessDialog = false },
+                        title = { Text("회원가입 성공") },
+                        text = { Text("회원가입이 성공적으로 완료되었습니다.") },
+                        confirmButton = {
+                            Button(onClick = {
+                                showSuccessDialog = false
+                                navController.navigate("login") // 로그인 화면으로 이동
+                            }) {
+                                Text("확인")
+                            }
+                        }
+                    )
                 }
-            )
+            }
         }
 
         if (showErrorDialog) {
-            AlertDialog(
-                onDismissRequest = { showErrorDialog = false },
-                title = { Text("회원가입 실패") },
-                text = { Text("정확한 정보를 기입해 주세요.") },
-                confirmButton = {
-                    Button(onClick = { showErrorDialog = false }) {
-                        Text("확인")
-                    }
+            androidx.compose.ui.window.Dialog(onDismissRequest = { showErrorDialog = false }) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.White.copy(alpha = 0.9f))
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    AlertDialog(
+                        onDismissRequest = { showErrorDialog = false },
+                        title = { Text("회원가입 실패") },
+                        text = { Text("정확한 정보를 기입해 주세요.") },
+                        confirmButton = {
+                            Button(onClick = { showErrorDialog = false }) {
+                                Text("확인")
+                            }
+                        }
+                    )
                 }
-            )
+            }
         }
 
     }
