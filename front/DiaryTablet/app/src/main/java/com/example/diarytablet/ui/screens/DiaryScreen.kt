@@ -134,30 +134,6 @@ fun DiaryScreen(
     val interactionSource = remember { pagerState.interactionSource }
     val firstPageDrawingSteps = remember { mutableStateListOf<DrawingStep>() }
 
-    val undoStack = remember { mutableStateListOf<DrawingStep>() }
-    val redoStack = remember { mutableStateListOf<DrawingStep>() }
-    val redrawTrigger = remember { mutableStateOf(0) }
-
-    fun undo() {
-        if (firstPageDrawingSteps.isNotEmpty()) {
-            val lastStroke = firstPageDrawingSteps.removeLast()
-            redoStack.add(lastStroke)
-            redrawTrigger.value++
-        } else {
-            Log.d("DiaryScreen", "Undo: No steps to undo.")
-        }
-    }
-
-    fun redo() {
-        if (redoStack.isNotEmpty()) {
-            val lastUndoneStroke = redoStack.removeLast()
-            firstPageDrawingSteps.add(lastUndoneStroke)
-            redrawTrigger.value++
-        } else {
-            Log.d("DiaryScreen", "Redo: No steps to redo.")
-        }
-    }
-
     suspend fun saveAndUploadImages() {
         val imageFiles = savePageImagesWithTemplate(
             bitmapsList,
@@ -289,41 +265,61 @@ fun DiaryScreen(
                             .pointerInput(isDrawingMode) {
                                 detectTapGestures(
                                     onTap = { offset ->
-                                        if (isDrawingMode) {
-                                            val canvas = AndroidCanvas(currentBitmap)
-                                            val paint = createPaintForTool(
-                                                toolType = selectedTool,
-                                                color = selectedColor,
-                                                thickness = brushSize
-                                            )
+                                        val clickedStickerIndex = firstPageStickers.indexOfFirst { sticker ->
+                                            val stickerPosition = sticker.position.value
+                                            offset.x in stickerPosition.x..(stickerPosition.x + sticker.bitmap.width) &&
+                                                    offset.y in stickerPosition.y..(stickerPosition.y + sticker.bitmap.height)
+                                        }
 
-                                            // 점을 그림
-                                            canvas.drawCircle(offset.x, offset.y, brushSize / 2, paint)
+                                        if (clickedStickerIndex >= 0) {
+                                            // 스티커를 클릭한 경우
+                                            selectedStickerIndex = clickedStickerIndex
+                                            isDrawingMode = false // 스크롤 모드로 전환
+                                            selectedTool = ToolType.FINGER
+                                        } else {
+                                            // 스티커 외부를 클릭한 경우
+                                            selectedStickerIndex = null
+                                            isDrawingMode = true // 드로잉 모드로 전환
+                                            selectedTool = ToolType.PENCIL
 
-                                            // 드로잉 스텝 저장
-                                            if (pagerState.currentPage == 0) {
-                                                firstPageDrawingSteps.add(
-                                                    DrawingStep(
-                                                        path = Path().apply {
-                                                            addOval(
-                                                                Rect(
-                                                                    offset.x - brushSize / 2,
-                                                                    offset.y - brushSize / 2,
-                                                                    offset.x + brushSize / 2,
-                                                                    offset.y + brushSize / 2
-                                                                )
-                                                            )
-                                                        },
-                                                        color = selectedColor,
-                                                        thickness = brushSize,
-                                                        toolType = selectedTool
-                                                    )
+                                            // 드로잉 모드일 경우 점 찍기
+                                            if (isDrawingMode) {
+                                                val canvas = AndroidCanvas(currentBitmap)
+                                                val paint = createPaintForTool(
+                                                    toolType = selectedTool,
+                                                    color = selectedColor,
+                                                    thickness = brushSize
                                                 )
+
+                                                // 점을 그림
+                                                canvas.drawCircle(offset.x, offset.y, brushSize / 2, paint)
+
+                                                // 드로잉 스텝 저장
+                                                if (pagerState.currentPage == 0) {
+                                                    firstPageDrawingSteps.add(
+                                                        DrawingStep(
+                                                            path = Path().apply {
+                                                                addOval(
+                                                                    Rect(
+                                                                        offset.x - brushSize / 2,
+                                                                        offset.y - brushSize / 2,
+                                                                        offset.x + brushSize / 2,
+                                                                        offset.y + brushSize / 2
+                                                                    )
+                                                                )
+                                                            },
+                                                            color = selectedColor,
+                                                            thickness = brushSize,
+                                                            toolType = selectedTool
+                                                        )
+                                                    )
+                                                }
                                             }
                                         }
                                     }
                                 )
                             }
+
                             .pointerInput(isDrawingMode) {
                                 if (isDrawingMode) {
                                     detectDragGestures(
