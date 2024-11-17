@@ -158,6 +158,7 @@ fun Navbar(
                         ),
                         modifier = Modifier
                             .clickable {
+                                playButtonSound(context, R.raw.all_button )
                                 isProfileModalVisible = true
                                 isProfileMenuVisible = false
                             }
@@ -171,6 +172,7 @@ fun Navbar(
                         ),
                         modifier = Modifier
                             .clickable {
+                                playButtonSound(context, R.raw.all_button )
                                 navController.navigate("profileList") {
                                     popUpTo("main") { inclusive = true }
                                 }
@@ -186,6 +188,7 @@ fun Navbar(
                         ),
                         modifier = Modifier
                             .clickable {
+                                playButtonSound(context, R.raw.all_button )
                                 RetrofitClient.logout()
                                 isProfileMenuVisible = false
                                 navController.navigate("login") {

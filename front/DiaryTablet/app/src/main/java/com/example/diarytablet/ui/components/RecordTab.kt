@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -45,6 +46,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.example.diarytablet.R
 import com.example.diarytablet.ui.theme.DarkGray
+import com.example.diarytablet.utils.playButtonSound
 import com.example.diarytablet.viewmodel.LogViewModel
 
 @Composable
@@ -55,7 +57,7 @@ fun RecordTab(
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
-
+    val context = LocalContext.current
 
     var selectedTabIndex by remember { mutableStateOf(0) }
     val tabTitles = listOf("단어장", "일기장")
@@ -123,7 +125,10 @@ fun RecordTab(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { selectedTabIndex = index }
+                            .clickable {
+                                selectedTabIndex = index
+                                playButtonSound(context,R.raw.all_button )
+                            }
                             .padding(vertical = 1.dp)
                     ) {
                         Row(

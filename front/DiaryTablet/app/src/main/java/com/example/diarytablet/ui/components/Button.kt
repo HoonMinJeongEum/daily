@@ -75,7 +75,8 @@ fun BasicButton(
     imageResId: Int? = null, // 이미지를 선택적으로 받음
     fontSize: Float = 24f,
     ButtonColor: Color = Color.White,
-    useDisabledColor: Boolean = false
+    useDisabledColor: Boolean = false,
+    sound : Int = R.raw.all_button
 ) {
     val context = LocalContext.current
     val buttonShape = BasicButtonShape.ROUNDED
@@ -91,7 +92,7 @@ fun BasicButton(
 
     Button(
         onClick = {
-            playButtonSound(context,R.raw.all_button )
+            playButtonSound(context,sound )
             onClick()
         },
         modifier = modifier
@@ -186,6 +187,7 @@ fun DynamicColorButton(
         targetValue = if (isPressed.value) 0.8f else 1.0f,
         label = "Button Press Alpha Animation"
     )
+    val context = LocalContext.current
 
     val backgroundColor = if (isSelected) Color(0xFF83B4FF) else Color(0xFFD1D1D1)
     val textColor = Color.White
@@ -211,7 +213,10 @@ fun DynamicColorButton(
                             tryAwaitRelease()
                             isPressed.value = false
                         },
-                        onTap = { onClick() }
+                        onTap = {
+                            onClick()
+                            playButtonSound(context,R.raw.all_button )
+                        }
                     )
                 }
                 .padding(horizontal = 24.dp, vertical = 16.dp), // 버튼 내용과 맞게 패딩 설정
@@ -244,6 +249,7 @@ fun DailyButton(
     onClick: () -> Unit
 ) {
     val isPressed = remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     val alpha by animateFloatAsState(
         targetValue = if (isPressed.value) 0.8f else 1.0f,
@@ -270,7 +276,11 @@ fun DailyButton(
                             tryAwaitRelease() // 사용자가 터치에서 손을 뗄 때까지 대기
                             isPressed.value = false
                         },
-                        onTap = { onClick() }
+                        onTap = {
+                            onClick()
+                            playButtonSound(context,R.raw.all_button)
+
+                        }
                     )
                 },
             contentAlignment = Alignment.Center // 중앙 정렬 설정

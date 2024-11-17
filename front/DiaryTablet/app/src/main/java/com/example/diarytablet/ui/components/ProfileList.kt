@@ -32,6 +32,7 @@ import com.example.diarytablet.ui.theme.GrayDetail
 import com.example.diarytablet.ui.theme.GrayText
 import com.example.diarytablet.ui.theme.MyTypography
 import com.example.diarytablet.ui.theme.PastelNavy
+import com.example.diarytablet.utils.playButtonSound
 
 @Composable
 fun ProfileList(
@@ -77,6 +78,7 @@ fun ProfileItem(
 
     // 눌림 상태에 따라 이미지 변경
     val img = if (isPressed) R.drawable.profile_container_select else R.drawable.profile_container
+    val context = LocalContext.current
 
 
     Box(
@@ -87,6 +89,7 @@ fun ProfileItem(
                 indication = null, // 클릭 효과 없애기
                 interactionSource = interactionSource,
             ){
+                playButtonSound(context,R.raw.all_button )
                 onChooseProfile(profile) }
 //            .padding(containerWidth * 0.02f)
     ) {

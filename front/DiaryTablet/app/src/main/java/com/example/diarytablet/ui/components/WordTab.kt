@@ -87,6 +87,7 @@ import com.example.diarytablet.ui.theme.DeepPastelBlue
 import com.example.diarytablet.ui.theme.MyTypography
 import com.example.diarytablet.ui.theme.PastelNavy
 import com.example.diarytablet.ui.theme.PastelSkyBlue
+import com.example.diarytablet.utils.playButtonSound
 import createPaintForTool
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -117,8 +118,16 @@ fun WordTap(
 
         // 단어마다 독립적인 Bitmap 생성
         val writtenBitmaps = remember(wordList) {
-            wordList.map { Bitmap.createBitmap(canvasWidth, canvasHeight, Bitmap.Config.ARGB_8888) }
-        }
+            wordList.map { word ->
+                val characterCount = word.word.length
+                val targetWidth = characterCount * 220 // 글자 수에 따라 너비 조정
+                val targetHeight = 210 // 고정 높이 또는 필요에 따라 조정
+
+                Bitmap.createBitmap(targetWidth, targetHeight, Bitmap.Config.ARGB_8888).also {
+                    Log.d("BitmapCreation", "Created Bitmap for word '${word.word}' with width: $targetWidth, height: $targetHeight")
+                }
+            }
+        }.toMutableList()
 
         val context = LocalContext.current
         val isDrawingMode by remember { mutableStateOf(true) }
@@ -147,7 +156,6 @@ fun WordTap(
 
         var popupMessage by remember { mutableStateOf("") }
         var isButtonEnabled by remember { mutableStateOf(true) } // 버튼 활성화 상태 변수 추가
-
         // 버튼 클릭 이벤트 처리
         fun onButtonClick() {
             if (isButtonEnabled && currentIndex == finishedIndex + 1 && !isCanvasEmpty(writtenBitmaps[currentIndex])) {
@@ -158,6 +166,7 @@ fun WordTap(
 
                     when (statusCode) {
                         200 -> {
+                            playButtonSound(context,R.raw.word_pass )
                             finishedIndex = currentIndex
                             buttonText = "제출"
                             buttonColor = Color.White
@@ -173,6 +182,7 @@ fun WordTap(
                             }
                         }
                         400, 422 -> {
+                            playButtonSound(context,R.raw.word_fail )
                             buttonText = "다시제출"
                             buttonColor = Color(0xFFD27979) // Hex color D27979
                         }
@@ -328,14 +338,23 @@ fun WordTap(
                                                 val targetWidth = characterCount * 220
                                                 val targetHeight = 210
 
-                                                if (!initialized && (canvasWidth != targetWidth || canvasHeight != targetHeight)) {
+                                                if (canvasWidth != targetWidth || canvasHeight != targetHeight) {
                                                     canvasWidth = targetWidth
                                                     canvasHeight = targetHeight
-                                                    initialized = true
+
+                                                    // 현재 인덱스의 비트맵을 새 크기로 재생성
+                                                    writtenBitmaps[currentIndex] = Bitmap.createBitmap(
+                                                        targetWidth,
+                                                        targetHeight,
+                                                        Bitmap.Config.ARGB_8888
+                                                    ).also {
+                                                        Log.d("BitmapUpdate", "Updated Bitmap for index $currentIndex with width: $targetWidth, height: $targetHeight")
+                                                    }
                                                 }
                                             },
                                         contentAlignment = Alignment.Center
-                                    ) {
+                                    )
+                                    {
                                         val characters = wordList[currentIndex].word.chunked(1)
                                         Row(
                                             horizontalArrangement = Arrangement.spacedBy(0.dp),

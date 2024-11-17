@@ -19,10 +19,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.example.diarytablet.R
 import com.example.diarytablet.ui.theme.BackgroundPlacement
 import com.example.diarytablet.ui.theme.BackgroundType
 import com.example.diarytablet.domain.dto.response.WordLearnedResponseDto
+import com.example.diarytablet.utils.playButtonSound
 import com.example.diarytablet.viewmodel.LogViewModel
 import retrofit2.Response
 
@@ -45,8 +48,8 @@ fun LearnedWordTab(
     val wordListResponse by viewModel.wordList.observeAsState(Response.success(emptyList()))
     val wordList = wordListResponse.body() ?: emptyList()
     val sortedWordList by viewModel.dateSortedWordList.observeAsState(emptyList())
-
     val displayedList = if (selectedTab == "날짜순") sortedWordList else wordList
+    val context = LocalContext.current
 
     Box(
         modifier = Modifier.fillMaxSize()
@@ -100,6 +103,11 @@ fun LearnedWordTab(
                     )
                     // 모달 창 표시 (isModalOpen이 true일 때만)
                     if (isModalOpen && selectedWord != null) {
+                        LaunchedEffect(isModalOpen) {
+                            if (isModalOpen) {
+                                playButtonSound(context, R.raw.all_button) // 모달 열릴 때 소리 재생
+                            }
+                        }
                         WordDetail(
                             word = selectedWord!!,
                             onDismissRequest = { isModalOpen = false }

@@ -131,6 +131,10 @@ fun CouponShopList(
                 }
 
                 CouponModalState.PURCHASE_SUCCESS -> {
+                    LaunchedEffect(couponModalState) {
+                        playButtonSound(context,R.raw.main_clear)
+                    }
+
                     CommonPopup(
                         onDismissRequest = {
                             showDialog = false
@@ -149,6 +153,7 @@ fun CouponShopList(
 @Composable
 fun CouponBox(coupon: Coupon, index: Int, onClick: (Coupon) -> Unit) {
     var isPressed by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     val backgroundImage = if (isPressed) {
         if (index % 2 == 0) R.drawable.coupon_yellow_down else R.drawable.coupon_blue_down
@@ -209,7 +214,10 @@ fun CouponBox(coupon: Coupon, index: Int, onClick: (Coupon) -> Unit) {
                 )
 
                 Button(
-                    onClick = { onClick(coupon) },
+                    onClick = {
+                        playButtonSound(context, R.raw.shop_buy )
+                        onClick(coupon)
+                              },
                     modifier = Modifier
                         .weight(0.15f)
                         .height(64.dp),

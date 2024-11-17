@@ -36,6 +36,7 @@ import com.example.diarytablet.ui.components.modal.CommonModal
 import com.example.diarytablet.ui.components.modal.CommonPopup
 import com.example.diarytablet.ui.theme.DarkGray
 import com.example.diarytablet.ui.theme.MyTypography
+import com.example.diarytablet.utils.playButtonSound
 import com.example.diarytablet.viewmodel.NavBarViewModel
 import com.example.diarytablet.viewmodel.ShopStockViewModel
 import kotlinx.coroutines.delay
@@ -73,7 +74,7 @@ fun StickerShopList(
     var stickerModalState by remember { mutableStateOf(StickerModalState.NONE) }
 
     val shellCount by navBarViewModel.shellCount
-
+    val context = LocalContext.current
     LaunchedEffect(Unit) {
         navBarViewModel.initializeData()
     }
@@ -131,11 +132,10 @@ fun StickerShopList(
                     )
                 }
 
-                StickerModalState.INSUFFICIENT_SHELLS, StickerModalState.PURCHASE_SUCCESS -> {
-                    val titleText = when (stickerModalState) {
-                        StickerModalState.INSUFFICIENT_SHELLS -> "조개를 조금 더 모아보아요!"
-                        StickerModalState.PURCHASE_SUCCESS -> "구매가 완료되었습니다!"
-                        else -> ""
+                StickerModalState.INSUFFICIENT_SHELLS -> {
+                    // 소리 재생
+                    LaunchedEffect(stickerModalState) {
+                        playButtonSound(context,R.raw.warning)
                     }
 
                     CommonPopup(
@@ -143,9 +143,25 @@ fun StickerShopList(
                             isModalVisible = false
                             stickerModalState = StickerModalState.NONE
                         },
-                        titleText = titleText
+                        titleText = "조개를 조금 더 모아보아요!"
                     )
                 }
+
+                StickerModalState.PURCHASE_SUCCESS -> {
+                    // 소리 재생
+                    LaunchedEffect(stickerModalState) {
+                        playButtonSound(context,R.raw.main_clear)
+                    }
+
+                    CommonPopup(
+                        onDismissRequest = {
+                            isModalVisible = false
+                            stickerModalState = StickerModalState.NONE
+                        },
+                        titleText = "구매가 완료되었습니다!"
+                    )
+                }
+
 
                 else -> Unit
             }
@@ -176,9 +192,13 @@ fun StickerCard(sticker: Sticker, index: Int, onStickerClick: () -> Unit, viewMo
             .aspectRatio(1f)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onStickerClick
+                indication = null
             )
+                {
+                    onStickerClick()
+                    playButtonSound(context, R.raw.shop_buy)
+
+                }
     ) {
         Box(
             modifier = Modifier

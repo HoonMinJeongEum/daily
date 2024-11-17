@@ -111,35 +111,39 @@ class WordLearningViewModel @Inject constructor(
 
 
 
-    // 템플릿 이미지와 그려진 비트맵 합성 함수
     private suspend fun mergeBitmapWithTemplate(
         context: Context,
         drawnBitmap: Bitmap,
-
     ): Bitmap = withContext(Dispatchers.IO) {
         // 템플릿 생성
-        val width = (drawnBitmap.width * 1.5).toInt() // 예: 드로잉 비트맵의 1.5배 크기
-        val height = (drawnBitmap.height * 1.2).toInt()
+        val width = 1500 // 드로잉 비트맵의 1.5배 크기
+        val height = 800
 
         val templateBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).apply {
-            eraseColor(AndroidColor.WHITE) // 템플릿 배경을 흰색으로 설정
+            eraseColor(AndroidColor.WHITE) // 템플릿 배경 흰색
         }
 
         val combinedBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(combinedBitmap)
 
-        // 템플릿과 드로잉 비트맵을 순서대로 합성
+        // 템플릿 배경 그리기
         canvas.drawBitmap(templateBitmap, 0f, 0f, null)
 
-        // 글자 비트맵을 배경의 가운데에 그리기
-        canvas.drawBitmap(
-            drawnBitmap,
-            ((width - drawnBitmap.width) / 2).toFloat(),
-            ((height - drawnBitmap.height) / 2).toFloat(),
-            null
-        )
+        // 중앙 좌표 계산
+        val left = (width - drawnBitmap.width) / 2f
+        val top = (height - drawnBitmap.height) / 2f
+
+        // 디버그 로그로 좌표 확인
+        Log.d("BitmapMerge", "Width: $width, Height: $height")
+        Log.d("BitmapMerge", "Bitmap Width: ${drawnBitmap.width}, Bitmap Height: ${drawnBitmap.height}")
+        Log.d("BitmapMerge", "Calculated Left: $left, Top: $top")
+
+        // 드로잉 비트맵 중앙에 배치
+        canvas.drawBitmap(drawnBitmap, left, top, null)
+
         combinedBitmap
     }
+
 
     // 비트맵을 파일로 저장 후 MultipartBody.Part로 변환
     private suspend fun bitmapToMultipart(

@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
@@ -24,6 +25,7 @@ import androidx.navigation.NavController
 import com.example.diarytablet.R
 import com.example.diarytablet.ui.theme.MyTypography
 import com.example.diarytablet.ui.theme.PastelNavy
+import com.example.diarytablet.utils.playButtonSound
 
 enum class ButtonType {
     DRAWING_DIARY, WORD_LEARNING, DRAWING_QUIZ
@@ -45,6 +47,7 @@ fun BlockButton(
     }
 
     // Hover 상태를 기억하는 변수
+    val context = LocalContext.current
     var isHovered by remember { mutableStateOf(false) }
     val backgroundResId = if (isHovered) R.drawable.clicked_container_shadow else R.drawable.container_shadow
 
@@ -57,6 +60,7 @@ fun BlockButton(
                     onPress = {
                         isHovered = true
                         tryAwaitRelease() // 사용자가 손을 뗄 때까지 대기
+                        playButtonSound(context,R.raw.all_button )
                         onClick()
                         isHovered = false
                     }
