@@ -34,11 +34,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -51,6 +55,7 @@ import com.example.diaryApp.ui.theme.MyTypography
 import com.example.diaryApp.ui.theme.PastelNavy
 import com.example.diaryApp.ui.theme.PastelSkyBlue
 import com.example.diaryApp.ui.theme.White
+import com.example.diaryApp.utils.clearFocusOnClick
 import com.example.diaryApp.viewmodel.CouponViewModel
 
 @Composable
@@ -62,7 +67,10 @@ fun CreateCoupon(
     val context = LocalContext.current
     var showAlertDescription by remember { mutableStateOf(false) } // 소원명 경고 상태
     var showAlertPrice by remember { mutableStateOf(false) } // 가격 경고 상태
-
+    val focusManager = LocalFocusManager.current
+    val WarningColor = Color(0xFFF44336)
+    val descriptionFocusRequester = remember { FocusRequester() }
+    val priceFocusRequester = remember { FocusRequester() }
     LaunchedEffect(Unit) {
         showAlertDescription = false
         showAlertPrice = false
@@ -74,12 +82,15 @@ fun CreateCoupon(
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier.fillMaxSize()
+                .clearFocusOnClick()
+
         ) {
 
             Surface(
                 shape = RoundedCornerShape(screenWidth * 0.08f),
                 color = Color.White,
                 modifier = Modifier
+                    .padding(screenWidth * 0.1f)
                     .fillMaxWidth()
                     .wrapContentHeight()
             ) {
@@ -113,21 +124,37 @@ fun CreateCoupon(
                         textAlign = TextAlign.Center,
                         style = MyTypography.bodyMedium.copy(
                             color = DeepPastelNavy,
-                            fontSize = (screenWidth * 0.08f).value.sp
+                            fontSize = (screenWidth * 0.07f).value.sp
                         )
                     )
+                    Spacer(modifier = Modifier.height(screenWidth * 0.05f))
 
-                    Spacer(modifier = Modifier.height(screenWidth * 0.06f))
                     Text(
                         text = "소원명",
                         style = MyTypography.bodySmall.copy(
-                            fontSize = (screenWidth.value * 0.05f).sp,
+                            fontSize = (screenWidth.value * 0.04f).sp,
                             color = DeepPastelNavy
                         ),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(start = screenWidth * 0.02f, bottom = screenWidth * 0.02f)
+                            .padding(start = screenWidth * 0.02f, bottom = screenWidth * 0.02f),
+
+
                     )
+                    Spacer(modifier = Modifier.height(screenWidth * 0.01f))
+
+
+                    if (showAlertDescription) {
+                        Text(
+                            fontSize = (screenWidth.value * 0.03f).sp,
+                            fontWeight = FontWeight.Thin,
+                            text = "소원명은 최대 12글자까지 입력할 수 있습니다.",
+                            color = WarningColor,
+                        )
+                    } else {
+                        Spacer(modifier = Modifier.height(screenWidth * 0.036f)) // 빈 공간으로 높이 확보
+                    }
+                    Spacer(modifier = Modifier.height(screenWidth * 0.01f))
                     MyTextField(
                         value = couponViewModel.couponDescription.value,
                         placeholder = "소원명",
@@ -140,36 +167,46 @@ fun CreateCoupon(
                             }
                         },
                         width = screenWidth,
-                        height = screenWidth * 1.9f
+                        height = screenWidth * 1.9f,
+                        imeAction = ImeAction.Next,
+                        onImeAction = {
+                            if (!showAlertDescription && couponViewModel.couponDescription.value.isNotBlank()) {
+                                priceFocusRequester.requestFocus()
+                            }
+                        },
+                        focusRequester = descriptionFocusRequester
+
                     )
-
-                    if (showAlertDescription) {
-                        Text(
-                            text = "소원명은 최대 12글자까지 입력할 수 있습니다.",
-                            color = Color.Red,
-                            style = MyTypography.bodySmall.copy(
-                                fontSize = (screenWidth.value * 0.03f).sp
-                            ),
-                            modifier = Modifier
-                                .padding(top = screenWidth * 0.02f)
-                                .offset(x = (-screenWidth * 0.1f))
-                        )
-                    } else {
-                        Spacer(modifier = Modifier.height(screenWidth * 0.055f)) // 빈 공간으로 높이 확보
-                    }
-
                     Spacer(modifier = Modifier.height(screenWidth * 0.05f))
 
                     Text(
                         text = "가격",
                         style = MyTypography.bodySmall.copy(
-                            fontSize = (screenWidth.value * 0.05f).sp,
+                            fontSize = (screenWidth.value * 0.04f).sp,
                             color = DeepPastelNavy
                         ),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(start = screenWidth * 0.02f, bottom = screenWidth * 0.02f)
                     )
+                    Spacer(modifier = Modifier.height(screenWidth * 0.01f))
+
+                    if (showAlertPrice) {
+                        Text(
+                            fontSize = (screenWidth.value * 0.03f).sp,
+                            fontWeight = FontWeight.Thin,
+                            text = "가격은 최대 세 자리까지만 입력할 수 있습니다.",
+                            color = WarningColor,
+                        )
+
+                    } else {
+                        Spacer(modifier = Modifier.height(screenWidth * 0.036f)) // 빈 공간으로 높이 확보
+                    }
+
+
+                    Spacer(modifier = Modifier.height(screenWidth * 0.01f))
+
+
                     MyTextField(
                         value = if (couponViewModel.couponPrice.value == 0) "" else couponViewModel.couponPrice.value.toString(),
                         placeholder = "가격",
@@ -182,22 +219,35 @@ fun CreateCoupon(
                             } else if (it.length > 3) {
                                 showAlertPrice = true
                             }
+                        },
+                        focusRequester = priceFocusRequester,
+                        imeAction = ImeAction.Done,
+                        onImeAction = {
+                            val isDescriptionEmpty =
+                                couponViewModel.couponDescription.value.isBlank()
+                            val isPriceEmpty = couponViewModel.couponPrice.value == 0
+
+                            if (isDescriptionEmpty || isPriceEmpty) {
+                                showAlertDescription = isDescriptionEmpty
+                                showAlertPrice = isPriceEmpty
+                            } else {
+                                showAlertDescription = false
+                                showAlertPrice = false
+                                couponViewModel.createCoupon(
+                                    onSuccess = {
+                                        Log.d("CouponScreen", "Coupon Success called")
+                                        onCancel()
+                                    },
+                                    onError = {
+                                        Log.d("CouponScreen", "Coupon creation failed")
+                                    }
+                                )
+                                onCancel()
+                            }
                         }
                     )
 
-                    if (showAlertPrice) {
-                        Text(
-                            text = "가격은 최대 세 자리까지만 입력할 수 있습니다.",
-                            color = Color.Red,
-                            style = MyTypography.bodySmall.copy(
-                                fontSize = (screenWidth.value * 0.03f).sp
-                            ),
-                            modifier = Modifier.padding(top = screenWidth * 0.02f)
-                                .offset(x = (-screenWidth * 0.1f))
-                        )
-                    } else {
-                        Spacer(modifier = Modifier.height(screenWidth * 0.055f)) // 빈 공간으로 높이 확보
-                    }
+
 
                     Spacer(modifier = Modifier.height(screenWidth * 0.06f))
 

@@ -141,7 +141,16 @@ fun TabletHeader(
 
                 else -> {
                     // 왼쪽 뒤로 가기 버튼
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(
+                        onClick = {
+                            val currentDestination = navController.currentDestination?.route
+                            val canNavigateBack = navController.previousBackStackEntry != null
+
+                            if (currentDestination != "main" && canNavigateBack) {
+                                navController.popBackStack()
+                            }
+                        }
+                    ) {
                         Icon(
                             painter = painterResource(R.drawable.navigate_back),
                             contentDescription = "Back",

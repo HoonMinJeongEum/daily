@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -98,7 +99,7 @@ fun CouponItem(
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.End,
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     modifier = Modifier.weight(0.3f)
                         .padding(end = screenWidth * 0.04f)
                 ) {
@@ -111,12 +112,13 @@ fun CouponItem(
 
                     Spacer(modifier = Modifier.width(screenWidth * 0.025f))
 
-                    Text(
-                        text = coupon.price,
-                        fontSize = (screenWidth.value * 0.05f).sp,
-                        fontWeight = FontWeight.Thin,
-                        color = DeepPastelNavy
-                    )
+                        Text(
+                            text = coupon.price,
+                            fontSize = (screenWidth.value * 0.05f).sp,
+                            fontWeight = FontWeight.Thin,
+                            color = DeepPastelNavy
+                        )
+
                 }
             }
         }

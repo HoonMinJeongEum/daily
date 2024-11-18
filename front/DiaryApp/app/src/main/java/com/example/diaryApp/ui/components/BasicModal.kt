@@ -48,10 +48,10 @@ fun BasicModal(
 
                 Surface(
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .width(screenWidth * 0.8f)
                         .wrapContentHeight()
                         .background(Color.White, shape = RoundedCornerShape(15))
-                        .padding(screenWidth * 0.08f)
+                        .padding(screenWidth * 0.1f)
                 ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
