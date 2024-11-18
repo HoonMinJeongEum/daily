@@ -285,6 +285,16 @@ fun DiaryDetailScreen(
                             color = DeepPastelNavy,
                             style = MyTypography.bodyLarge.copy(fontSize = (screenWidth.value * 0.05f).sp)
                         )
+                        Spacer(modifier = Modifier.weight(1f))
+                        Text(
+                            text = "${commentText.value.length}/250",
+                            style = MyTypography.bodySmall.copy(
+                                fontSize = (screenWidth.value * 0.035f).sp,
+                                color = Color.Gray
+                            )
+                        )
+                        Spacer(modifier = Modifier.width(screenWidth * 0.02f))
+
                     }
 
                     Spacer(modifier = Modifier.height(screenHeight * 0.01f))
@@ -295,7 +305,11 @@ fun DiaryDetailScreen(
                     ) {
                         TextField(
                             value = commentText.value,
-                            onValueChange = { commentText.value = it },
+                            onValueChange = {
+                                if (it.length <= 250) {
+                                    commentText.value = it
+                                }
+                            },
                             modifier = Modifier
                                 .height(textFieldHeight)
                                 .weight(1f)
