@@ -44,6 +44,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -197,6 +198,8 @@ fun MyDiaryDetail(
 fun MyDiaryContent(
     diary: Diary
 ) {
+    var isLoading by remember { mutableStateOf(true) }
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize(),
@@ -208,7 +211,10 @@ fun MyDiaryContent(
                     .fillMaxWidth() // 이미지 너비를 최대 너비로 설정
             ) {
                 Image(
-                    painter = rememberAsyncImagePainter(diary.drawImg),
+                    painter = rememberAsyncImagePainter(
+                        diary.drawImg,
+                        placeholder = painterResource(R.drawable.logo), // 로딩 중 기본 이미지
+                        error = painterResource(R.drawable.logo)),
                     contentDescription = "Draw Image",
                     modifier = Modifier.fillMaxWidth() // 이미지의 너비를 최대 너비로 설정
                 )
@@ -221,7 +227,10 @@ fun MyDiaryContent(
                     .fillMaxWidth() // 이미지 너비를 최대 너비로 설정
             ) {
                 Image(
-                    painter = rememberAsyncImagePainter(diary.writeImg),
+                    painter = rememberAsyncImagePainter(diary.writeImg
+                        ,
+                        placeholder = painterResource(R.drawable.logo), // 로딩 중 기본 이미지
+                        error = painterResource(R.drawable.logo)),
                     contentDescription = "Write Image",
                     modifier = Modifier.fillMaxWidth() // 이미지의 너비를 최대 너비로 설정
                 )
@@ -237,6 +246,8 @@ fun MyDiaryVideo(
     onDismissRequest: () -> Unit
 ) {
     val context = LocalContext.current
+    var isLoading by remember { mutableStateOf(true) }
+
 
     val videoPlayer = remember {
         ExoPlayer.Builder(context).build().apply {
@@ -259,6 +270,15 @@ fun MyDiaryVideo(
                 prepare()
                 playWhenReady = true
             }
+            addListener(object : Player.Listener {
+                override fun onPlaybackStateChanged(state: Int) {
+                    isLoading = when (state) {
+                        Player.STATE_BUFFERING -> true // 로딩 중
+                        Player.STATE_READY -> false // 준비 완료
+                        else -> isLoading
+                    }
+                }
+            })
         }
     }
 
@@ -299,7 +319,18 @@ fun MyDiaryVideo(
                 }
             }
 
-            if (video != null) {
+
+            if (isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(1808 / 1231f)
+                        .background(Color.LightGray), // 로딩 중 배경색
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator() // 로딩 표시
+                }
+            } else {
                 AndroidView(
                     factory = {
                         PlayerView(context).apply {
@@ -309,16 +340,6 @@ fun MyDiaryVideo(
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(1808 / 1231f) // 원하는 비율 설정
-                )
-            } else {
-                Text(
-                    text = "저장된 영상이 없어요.",
-                    style = MyTypography.bodyMedium,
-                    color = PastelNavy,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 20.dp),
-                    textAlign = TextAlign.Center
                 )
             }
         }

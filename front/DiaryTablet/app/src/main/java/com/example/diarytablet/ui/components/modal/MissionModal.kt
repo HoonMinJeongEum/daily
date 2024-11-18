@@ -63,7 +63,6 @@ fun MissionModal(
                     .padding(horizontal = screenHeight * 0.03f)
                     .padding(top =  screenHeight * 0.03f , bottom = screenHeight * 0.1f)
             ) {
-                // 닫기 버튼
                 Box(
                     modifier = Modifier
                         .align(alignment = Alignment.TopEnd)
