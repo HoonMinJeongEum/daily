@@ -349,7 +349,7 @@ fun JoinScreen(
             LaunchedEffect(Unit) {
                 kotlinx.coroutines.delay(2000) // 2초 후 닫힘
                 showErrorDialog = false
-                navController.navigate("main") {
+                navController.navigate("login") {
                     popUpTo("join") { inclusive = true }
                 }
             }

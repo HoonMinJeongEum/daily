@@ -23,6 +23,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import java.util.concurrent.TimeUnit
 
 
 object RetrofitClient {
@@ -53,6 +54,9 @@ object RetrofitClient {
 
     private fun initInstance() {
         val client = OkHttpClient.Builder()
+            .connectTimeout(60, TimeUnit.SECONDS) // 연결 타임아웃
+            .readTimeout(60, TimeUnit.SECONDS)    // 읽기 타임아웃
+            .writeTimeout(60, TimeUnit.SECONDS)
             .addInterceptor { chain ->
                 val originalRequest = chain.request()
                 val isLoginRequest = originalRequest.url.encodedPath.contains("/login")
