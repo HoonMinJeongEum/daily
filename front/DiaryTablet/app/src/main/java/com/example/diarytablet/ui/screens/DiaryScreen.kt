@@ -290,7 +290,7 @@ fun DiaryScreen(
                                                 selectedStickerIndex = null // 선택 해제
                                                 isDrawingMode = true // 드로잉 모드로 전환
                                                 selectedTool = ToolType.PENCIL // 기본 도구 선택
-                                                selectedColor = selectedColor
+                                                selectedColor = Color.Black
                                             }
 
                                             // 드로잉 모드일 경우 점 찍기
@@ -337,15 +337,15 @@ fun DiaryScreen(
                                         onDragStart = { offset ->
                                             path.value = Path().apply { moveTo(offset.x, offset.y) }
 
-                                            if (selectedTool == ToolType.ERASER) {
-                                                val canvas = AndroidCanvas(currentBitmap)
-                                                val eraserPaint = createPaintForTool(
-                                                    toolType = selectedTool,
-                                                    color = Color.Transparent,
-                                                    thickness = brushSize
-                                                )
-//                                                canvas.drawCircle(offset.x, offset.y, brushSize / 2, eraserPaint)
-                                            }
+//                                            if (selectedTool == ToolType.ERASER) {
+//                                                val canvas = AndroidCanvas(currentBitmap)
+//                                                val eraserPaint = createPaintForTool(
+//                                                    toolType = selectedTool,
+//                                                    color = Color.Transparent,
+//                                                    thickness = brushSize
+//                                                )
+////                                                canvas.drawCircle(offset.x, offset.y, brushSize / 2, eraserPaint)
+//                                            }
                                         },
                                         onDrag = { change, _ ->
                                             path.value.lineTo(change.position.x, change.position.y)
