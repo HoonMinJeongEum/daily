@@ -260,6 +260,7 @@ class QuizViewModel @Inject constructor(
         if (stream.audioTracks.isNotEmpty()) {
             stream.audioTracks[0].setEnabled(true) // 오디오 트랙 활성화
         }
+        session.setSpeakerMode(true)
         _remoteMediaStream.postValue(stream)
     }
 

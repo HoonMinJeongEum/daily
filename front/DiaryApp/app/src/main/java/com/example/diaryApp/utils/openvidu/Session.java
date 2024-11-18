@@ -1,5 +1,7 @@
 package com.example.diaryApp.utils.openvidu;
 
+import android.content.Context;
+import android.media.AudioManager;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.view.View;
@@ -292,6 +294,18 @@ public class Session {
                     Log.d("Session", "Remote participant's audio track muted.");
                 }
             }
+        }
+    }
+
+    public void setSpeakerMode(boolean enableSpeaker) {
+        AudioManager audioManager = (AudioManager) activity.getSystemService(Context.AUDIO_SERVICE);
+
+        if (enableSpeaker) {
+            audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION); // 통신 모드로 설정
+            audioManager.setSpeakerphoneOn(true); // 스피커폰 활성화
+        } else {
+            audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION); // 통신 모드 유지
+            audioManager.setSpeakerphoneOn(false); // 기본 출력 (이어폰 또는 수화기)
         }
     }
 }
