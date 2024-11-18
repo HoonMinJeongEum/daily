@@ -71,6 +71,8 @@ import com.example.diarytablet.utils.DrawingStep
 import com.example.diarytablet.utils.loadBitmapFromUrl
 import com.example.diarytablet.utils.playButtonSound
 import com.example.diarytablet.utils.savePageImagesWithTemplate
+import com.example.diarytablet.viewmodel.SpenEventViewModel
+import com.samsung.android.sdk.penremote.ButtonEvent
 import kotlinx.coroutines.delay
 
 data class StickerItem(
@@ -82,7 +84,8 @@ data class StickerItem(
 fun DiaryScreen(
     navController: NavController,
     backgroundType: BackgroundType = BackgroundType.DRAWING_DIARY,
-    diaryViewModel: DiaryViewModel = hiltViewModel()
+    diaryViewModel: DiaryViewModel = hiltViewModel(),
+    spenEventViewModel: SpenEventViewModel
 ) {
     BackgroundPlacement(backgroundType = backgroundType)
     val userStickers by diaryViewModel.userStickers.observeAsState(emptyList())
@@ -129,7 +132,41 @@ fun DiaryScreen(
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { 2 })
     val interactionSource = remember { pagerState.interactionSource }
     val firstPageDrawingSteps = remember { mutableStateListOf<DrawingStep>() }
+    LaunchedEffect(Unit) {
+        spenEventViewModel.spenEventFlow.collect { event ->
+            val buttonEvent = ButtonEvent(event)
 
+            when (buttonEvent.action) {
+                ButtonEvent.ACTION_DOWN -> {
+                    selectedTool = when (selectedTool) {
+                        ToolType.PENCIL -> {
+                            selectedStickerIndex = null
+                            isDrawingMode = true
+                            ToolType.ERASER
+                        }
+                        ToolType.ERASER -> {
+                            isDrawingMode = false
+                            ToolType.FINGER
+                        }
+                        ToolType.FINGER -> {
+                            selectedStickerIndex = null
+                            isDrawingMode = true
+                            selectedColor = Color.Black
+                            ToolType.PENCIL
+                        }
+                        ToolType.CRAYON -> {
+                            isDrawingMode = true
+                            ToolType.PENCIL
+                        } // 예시로 CRAYON에서 PENCIL로 변경
+                    }
+                    Log.d("ToolSwitcher", "Tool switched to: $selectedTool")
+                }
+                ButtonEvent.ACTION_UP -> {
+                    Log.d("ToolSwitcher", "Button Up Detected")
+                }
+            }
+        }
+    }
     suspend fun saveAndUploadImages() {
         val imageFiles = savePageImagesWithTemplate(
             bitmapsList,

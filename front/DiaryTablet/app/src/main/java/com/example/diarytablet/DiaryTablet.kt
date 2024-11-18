@@ -108,7 +108,7 @@ fun DiaryTabletApp(
                     )
                 }
                 composable("diary") {
-                    DiaryScreen(navController = navController)
+                    DiaryScreen(navController = navController, spenEventViewModel = spentEventViewmodel)
                 }
                 composable("wordLearning") {
                     WordLearningScreen(navController = navController, spenEventViewModel = spentEventViewmodel)
