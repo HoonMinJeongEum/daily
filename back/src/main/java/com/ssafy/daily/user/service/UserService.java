@@ -1,5 +1,9 @@
 package com.ssafy.daily.user.service;
 
+import com.ssafy.daily.alarm.entity.FCMToken;
+import com.ssafy.daily.alarm.repository.AlarmRepository;
+import com.ssafy.daily.alarm.service.AlarmService;
+import com.ssafy.daily.common.Role;
 import com.ssafy.daily.diary.entity.Diary;
 import com.ssafy.daily.diary.repository.DiaryCommentRepository;
 import com.ssafy.daily.diary.repository.DiaryRepository;
@@ -63,6 +67,8 @@ public class UserService {
     private final ShellRepository shellRepository;
     private final EarnedStickerRepository earnedStickerRepository;
     private final DiaryCommentRepository diaryCommentRepository;
+    private final AlarmService alarmService;
+    private final AlarmRepository alarmRepository;
 
     public void checkExist(String username){
         Boolean isExist = familyRepository.existsByUsername(username);
@@ -106,8 +112,8 @@ public class UserService {
     }
 
     public void addProfile(CustomUserDetails userDetails, MultipartFile file, String memberName) {
-        if (memberName.length() > 20 || memberName.isEmpty()){
-            throw new IllegalArgumentException("이름은 20자 이내로 설정해야 합니다.");
+        if (memberName.length() > 5 || memberName.isEmpty()){
+            throw new IllegalArgumentException("이름은 5자 이내로 설정해야 합니다.");
         }
 
         int familyId = userDetails.getFamily().getId();
@@ -264,6 +270,15 @@ public class UserService {
         shellRepository.deleteByMemberId(memberId);
         earnedStickerRepository.deleteByMemberId(memberId);
         quizRepository.deleteByMemberId(memberId);
+
+        
+        // 알림 삭제
+        Member member = memberRepository.findById(memberId).orElseThrow(() -> new IllegalArgumentException("Member not found for id: " + memberId));
+        FCMToken fcmToken = alarmService.getToken(member.getFamily().getId(), Role.PARENT);
+
+        if (fcmToken != null) {
+            alarmRepository.deleteByNameAndFcmToken_Id(member.getName(), fcmToken.getId());
+        }
         memberRepository.deleteById(memberId);
     }
 
@@ -275,6 +290,9 @@ public class UserService {
         }
 
         int memberId = userDetails.getMemberId();
+
+        FCMToken fcmToken = alarmService.getToken(userDetails.getFamilyId(), Role.PARENT);
+        alarmRepository.updateAlarmNameByFcmToken(userDetails.getMember().getName(), newName, fcmToken.getId());
         Member orgMember = memberRepository.findById(memberId)
                 .orElseThrow(() -> new EmptyResultDataAccessException("해당 프로필을 찾을 수 없습니다.", 1));
 
@@ -282,14 +300,11 @@ public class UserService {
     }
 
     @Transactional
-    public void modifyProfileImg(MultipartFile file, CustomUserDetails userDetails) {
+    public ModifyImgResponse modifyProfileImg(MultipartFile file, CustomUserDetails userDetails) {
         int memberId = userDetails.getMemberId();
 
         Member orgMember = memberRepository.findById(memberId)
                 .orElseThrow(() -> new EmptyResultDataAccessException("해당 프로필을 찾을 수 없습니다.", 1));
-
-        String orgImg = s3UploadService.getFileNameFromUrl(orgMember.getImg());
-        s3UploadService.deleteImage(orgImg);
 
         String imageUrl = null;
         try {
@@ -299,5 +314,6 @@ public class UserService {
         }
 
         orgMember.updateImg(imageUrl);
+        return new ModifyImgResponse(imageUrl);
     }
 }

@@ -33,6 +33,9 @@ public class Diary {
     private String writeImg;
 
     @Column(nullable = false)
+    private String video;
+
+    @Column(nullable = false)
     private String sound;
 
     @Column(nullable = false, updatable = false)

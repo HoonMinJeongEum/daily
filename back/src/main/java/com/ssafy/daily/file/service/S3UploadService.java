@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -36,7 +38,11 @@ public class S3UploadService {
             return ".jpg";
         } else if ("image/png".equals(contentType)) {
             return ".png";
-        } else {
+        } else if ("video/mp4".equals(contentType)){
+            return ".mp4";
+        } else if ("video/webm".equals(contentType)){
+            return ".webm";
+        }else {
             throw new IllegalArgumentException("지원하지 않는 파일 형식: " + contentType);
         }
     }
@@ -52,6 +58,32 @@ public class S3UploadService {
 
         amazonS3.putObject(bucket, originalFilename, multipartFile.getInputStream(), metadata);
         return amazonS3.getUrl(bucket, originalFilename).toString();
+    }
+
+    public String saveFile(File file, String contentType) throws IOException {
+        String uniqueID = UUID.randomUUID().toString();
+        String fileExtension = getFileExtension(contentType);
+        String originalFilename = uniqueID + fileExtension;
+
+        ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setContentLength(file.length());
+        metadata.setContentType(contentType);
+
+        amazonS3.putObject(bucket, originalFilename, new FileInputStream(file), metadata);
+        return amazonS3.getUrl(bucket, originalFilename).toString();
+    }
+    private String getFileExtension(String contentType) {
+        if ("image/jpeg".equals(contentType)) {
+            return ".jpg";
+        } else if ("image/png".equals(contentType)) {
+            return ".png";
+        } else if ("video/mp4".equals(contentType)){
+            return ".mp4";
+        } else if ("video/webm".equals(contentType)){
+            return ".webm";
+        } else {
+            throw new IllegalArgumentException("지원하지 않는 파일 형식: " + contentType);
+        }
     }
 
     public String getWordDownloadUrl(Long learnedWordId) {

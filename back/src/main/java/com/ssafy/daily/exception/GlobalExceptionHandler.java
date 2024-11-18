@@ -20,8 +20,8 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
     }
 
-    @ExceptionHandler(CouponNotFoundException.class)
-    public ResponseEntity<String> handleCouponNotFoundException(CouponNotFoundException e) {
+    @ExceptionHandler(MyNotFoundException.class)
+    public ResponseEntity<String> handleMyNotFoundException(MyNotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
     }
 

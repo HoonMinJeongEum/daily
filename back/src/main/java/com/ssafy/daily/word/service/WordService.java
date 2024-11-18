@@ -82,7 +82,7 @@ public class WordService {
     }
 
     public List<LearningWordResponse> getUnlearnedWords(int memberId) {
-        List<Word> unlearnedWords = wordRepository.findUnlearnedWordsByMemberId(memberId, PageRequest.of(0, 10));
+        List<Word> unlearnedWords = wordRepository.findUnlearnedWordsByMemberId(memberId, PageRequest.of(0, 5));
         return unlearnedWords.stream()
                 .map(word -> new LearningWordResponse(word.getId(), word.getWord(), word.getImg()))
                 .collect(Collectors.toList());
@@ -138,19 +138,12 @@ public class WordService {
             throw new S3UploadException("S3 작성한 단어 이미지 업로드 실패");
         }
 
-        List<FieldDto> fields = diaryService.processOcr(writeUrl);
-        log.info("OCR 프로세스 완료. 인식된 텍스트 수: {}", fields.size());
-
-        StringBuilder result = new StringBuilder();
-        for (FieldDto field : fields) {
-            log.debug("인식된 텍스트: {}", field.getInferText());
-            result.append(field.getInferText());
-        }
+        String content = diaryService.processOcr(writeUrl);
 
         String orgImg = s3UploadService.getFileNameFromUrl(writeUrl);
         s3UploadService.deleteImage(orgImg);
 
-        String resultWord = result.toString().trim().replaceAll("\\s+", "");
+        String resultWord = content.trim().replaceAll("\\s+", "");
 
         if (resultWord.isEmpty()) {
             log.warn("OCR 결과가 비어 있습니다.");

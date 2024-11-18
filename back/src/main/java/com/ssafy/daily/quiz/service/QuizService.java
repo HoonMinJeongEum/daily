@@ -8,7 +8,9 @@ import com.ssafy.daily.quiz.dto.*;
 import com.ssafy.daily.quiz.entity.Quiz;
 import com.ssafy.daily.quiz.repository.QuizRepository;
 import com.ssafy.daily.user.dto.CustomUserDetails;
+import com.ssafy.daily.user.entity.Family;
 import com.ssafy.daily.user.entity.Member;
+import com.ssafy.daily.user.repository.MemberRepository;
 import com.ssafy.daily.word.entity.LearnedWord;
 import com.ssafy.daily.word.entity.Word;
 import com.ssafy.daily.word.repository.LearnedWordRepository;
@@ -32,6 +34,7 @@ public class QuizService {
     private final QuizRepository quizRepository;
     private final AlarmService alarmService;
     private final AlarmRepository alarmRepository;
+    private final MemberRepository memberRepository;
 
     @Value("${openvidu.url}")
     private String OPENVIDU_URL;
@@ -53,8 +56,7 @@ public class QuizService {
         Member member = userDetails.getMember();
         String username = userDetails.getUsername();
         String childName = userDetails.getMember().getName();
-        String customSessionId = childName + username;
-
+        String customSessionId = userDetails.getMember().getId() + username;
         Quiz quiz = quizRepository.findByMemberId(userDetails.getMember().getId());
 
         // 세션 생성
@@ -63,7 +65,7 @@ public class QuizService {
         SessionProperties properties = SessionProperties.fromJson(map).build();
         Session session = openvidu.createSession(properties);
         String sessionId = session.getSessionId();
-
+        
         if (quiz == null) {
             Quiz newQuiz = Quiz.builder()
                     .sessionId(sessionId)
@@ -72,12 +74,13 @@ public class QuizService {
             quizRepository.save(newQuiz);
         }
         else {
+            quiz.updateSessionId(sessionId);
             quiz.updateEndAt(null);
             quizRepository.save(quiz);
         }
 
         // 알림
-        alarmService.sendNotification(childName, sessionId, userDetails.getFamily().getId(), Role.PARENT, "그림 퀴즈", "요청");
+        alarmService.sendNotification(childName, sessionId, userDetails.getFamily().getId(), Role.PARENT, "그림 퀴즈", childName + " - 그림 퀴즈를 요청 했어요");
         return new SessionResponse(sessionId);
     }
 
@@ -101,7 +104,7 @@ public class QuizService {
 
         // 학습한 단어에서 랜덤으로 9개 추출
         if (learnedWords.size() >= 9) {
-            Collections.shuffle(learnedWords); // 랜덤으로 섞기
+            Collections.shuffle(learnedWords);
             for (int i = 0; i < 9; i++) {
                 LearnedWord learnedWord = learnedWords.get(i);
                 recommendedWords.add(new RecommendWordResponse(learnedWord.getWord().getId(), learnedWord.getWord().getWord()));
@@ -109,7 +112,7 @@ public class QuizService {
         }
         else {  // 만약 9개가 되지 않으면 Word에서 랜덤으로 9개 추출
             List<Word> allWords = wordRepository.findAll();
-            Collections.shuffle(allWords); // 랜덤으로 섞기
+            Collections.shuffle(allWords);
             for (int i = 0; i < 9; i++) {
                 Word word = allWords.get(i);
                 recommendedWords.add(new RecommendWordResponse(word.getId(), word.getWord()));
@@ -122,12 +125,12 @@ public class QuizService {
     public CheckSessionResponse checkSession(CustomUserDetails userDetails, CheckSessionRequest request) {
         String username = userDetails.getUsername();
         String childName = request.getChildName();
-        String customSessionId = childName + username;
+        Member member = memberRepository.findByFamilyIdAndName(userDetails.getFamily().getId(), childName);
+        String customSessionId = member.getId() + username;
 
         Quiz quiz = quizRepository.findBySessionId(customSessionId);
-        confirmAlarmsByTitleAndTitleId(" 그림 퀴즈", customSessionId);
 
-        if(quiz.getEndAt() != null) {
+        if(quiz == null || quiz.getEndAt() != null) {
             return new CheckSessionResponse(null);
         }
         else {
@@ -139,13 +142,13 @@ public class QuizService {
     public void endSession(CustomUserDetails userDetails) {
         // 알림 완료 처리
         String username = userDetails.getUsername();
-        String childName = userDetails.getMember().getName();
-        String customSessionId = childName + username;
-        confirmAlarmsByTitleAndTitleId(" 그림 퀴즈", customSessionId);
+        String customSessionId = userDetails.getMember().getId() + username;
+        confirmAlarmsByTitleAndTitleId("그림 퀴즈", customSessionId);
 
         // 세션 종료
         Quiz quiz = quizRepository.findBySessionId(customSessionId);
         quiz.updateEndAt(LocalDateTime.now());
+        quizRepository.save(quiz);
     }
 
     // 알림 확인 처리
@@ -155,5 +158,6 @@ public class QuizService {
         for (Alarm alarm : alarms) {
             alarm.confirm();
         }
+        alarmRepository.saveAll(alarms);
     }
 }

@@ -1,9 +1,14 @@
 # open jdk 17
-FROM openjdk:17
+FROM openjdk:17-slim
 
 # 타임존 설정
 RUN ln -snf /usr/share/zoneinfo/Asia/Seoul /etc/localtime && echo Asia/Seoul > /etc/timezone
 
+# FFmpeg 설치
+RUN apt-get update && \
+    apt-get install -y ffmpeg && \
+    rm -rf /var/lib/apt/lists/*
+	
 # build 시점에 JAR_FILE 변수 선언
 ARG JAR_FILE=build/libs/daily-0.0.1-SNAPSHOT.jar
 

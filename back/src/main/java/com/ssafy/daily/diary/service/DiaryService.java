@@ -4,11 +4,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssafy.daily.alarm.service.AlarmService;
 import com.ssafy.daily.common.Role;
+import com.ssafy.daily.common.StatusResponse;
 import com.ssafy.daily.diary.dto.*;
 import com.ssafy.daily.diary.entity.Diary;
 import com.ssafy.daily.diary.entity.DiaryComment;
 import com.ssafy.daily.diary.repository.DiaryCommentRepository;
 import com.ssafy.daily.diary.repository.DiaryRepository;
+import com.ssafy.daily.exception.AlreadyOwnedException;
 import com.ssafy.daily.exception.S3UploadException;
 import com.ssafy.daily.file.service.S3UploadService;
 import com.ssafy.daily.reward.dto.CouponResponse;
@@ -19,6 +21,7 @@ import com.ssafy.daily.user.repository.FamilyRepository;
 import com.ssafy.daily.user.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.hc.core5.http.RequestHeaderFieldsTooLargeException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.*;
@@ -26,7 +29,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
@@ -44,12 +50,16 @@ public class DiaryService {
     private final FamilyRepository familyRepository;
     private final ObjectMapper objectMapper;
     private final S3UploadService s3UploadService;
+    private final RestTemplate restTemplate;
+    private static final int DEFAULT_TOKENS = 500;
 
     @Value(("${clova.ocr.apiUrl}"))
     private String apiUrl;
 
     @Value("${clova.ocr.secretKey}")
     private String secretKey;
+
+    String fastApiUrl = "http://175.209.203.185:9290/generate-bgm/";
 
     public List<MonthlyDiaryResponse> getDiaries(CustomUserDetails userDetails, Integer memberId,
                                           int year, int month) {
@@ -63,13 +73,13 @@ public class DiaryService {
                 .collect(Collectors.toList());
     }
 
-    public void writeDiary(CustomUserDetails userDetails, MultipartFile drawFile, MultipartFile writeFile) {
+    public StatusResponse writeDiary(CustomUserDetails userDetails, MultipartFile drawFile, MultipartFile writeFile, MultipartFile videoFile) {
         int memberId = userDetails.getMemberId();
         LocalDate today = LocalDate.now();
         boolean diaryExists = diaryRepository.findByMemberIdAndDate(memberId, today).isPresent();
 
         if (diaryExists) {
-            throw new IllegalStateException("오늘 날짜의 일기는 이미 존재합니다.");
+            throw new AlreadyOwnedException("오늘 날짜의 일기는 이미 존재합니다.");
         }
 
         if (drawFile == null || drawFile.isEmpty()) {
@@ -77,6 +87,9 @@ public class DiaryService {
         }
         if (writeFile == null || writeFile.isEmpty()) {
             throw new IllegalArgumentException("일기 파일이 유효하지 않습니다.");
+        }
+        if (videoFile == null || videoFile.isEmpty()) {
+            throw new IllegalArgumentException("동영상 파일이 유효하지 않습니다.");
         }
 
         String drawImgUrl = null;
@@ -91,21 +104,82 @@ public class DiaryService {
         } catch (IOException e) {
             throw new S3UploadException("S3 일기 이미지 업로드 실패");
         }
+        String videoUrl;
+        File mp4TempFile = null;
+        File webmTempFile = null;
+        try {
+            // MultipartFile을 임시 mp4 파일로 저장
+            mp4TempFile = File.createTempFile("temp-video", ".mp4");
+            videoFile.transferTo(mp4TempFile);
 
-        List<FieldDto> fields = processOcr(writeImgUrl);
+            // 임시 webm 파일 생성
+            webmTempFile = File.createTempFile("temp-video", ".webm");
 
-        String sound = generateBgm(fields);
+            System.out.println("mp4TempFile: " + mp4TempFile.getAbsolutePath());
+            System.out.println("webmTempFile: " + webmTempFile.getAbsolutePath());
 
-        // DB에 저장
+
+            // FFmpeg로 mp4를 webm으로 변환
+            ProcessBuilder processBuilder = new ProcessBuilder(
+                    "ffmpeg",
+                    "-y",
+                    "-i", mp4TempFile.getAbsolutePath(),
+                    "-c:v", "libvpx",
+                    "-c:a", "libvorbis",
+                    webmTempFile.getAbsolutePath()
+            );
+
+            processBuilder.redirectErrorStream(true);
+            Process process = processBuilder.start();
+
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    System.out.println("FFmpeg: " + line);
+                }
+            }
+
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                System.out.println("동영상 변환 실패");
+                throw new S3UploadException("동영상 변환 실패");
+            }
+
+            if (!webmTempFile.exists()) {
+                System.out.println("변환된 파일이 존재하지 않습니다.");
+                throw new S3UploadException("변환된 파일이 존재하지 않습니다.");
+            }
+
+            // 변환된 webm 파일을 S3에 업로드
+            videoUrl = s3UploadService.saveFile(webmTempFile, "video/webm");
+
+        } catch (IOException | InterruptedException e) {
+            System.out.println("예외 발생: " + e.getMessage());
+            throw new S3UploadException("S3 동영상 업로드 실패: " + e.getMessage());
+        } finally {
+            // 임시 파일 삭제
+            if (mp4TempFile != null && mp4TempFile.exists()) {
+                mp4TempFile.delete();
+            }
+            if (webmTempFile != null && webmTempFile.exists()) {
+                webmTempFile.delete();
+            }
+        }
+
+        String content = processOcr(writeImgUrl);
+
+        String sound = generateBgm(content);
+
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new EmptyResultDataAccessException("해당 프로필을 찾을 수 없습니다.", 1));
+                .orElseThrow();
 
         Diary diary = Diary.builder()
-                .content(sound)     // 임시로 sound 데이터 저장
+                .content(content)
                 .drawImg(drawImgUrl)
                 .writeImg(writeImgUrl)
                 .sound(sound)
                 .member(member)
+                .video(videoUrl)
                 .build();
         diaryRepository.save(diary);
 
@@ -123,15 +197,16 @@ public class DiaryService {
         int toId = userDetails.getFamilyId();
         Role role = Role.PARENT;
         String title = "그림 일기";
-        String body = "업로드";
+        String body = name + " - 그림 일기를 업로드 했어요";
         try {
             alarmService.sendNotification(name, titleId, toId, role, title, body);
         } catch (Exception e) {
-            throw new RuntimeException("그림일기 작성 알림 전송에 실패");
+            throw new S3UploadException("그림일기 작성 알림 전송에 실패");
         }
+        return new StatusResponse(200, "그림일기가 정상적으로 저장되었습니다.");
     }
 
-    public List<FieldDto> processOcr(String imgUrl) {
+    public String processOcr(String imgUrl) {
         Map<String, Object> requestBody = createRequestBody(imgUrl);
         ResponseEntity<String> response = callOcrApi(requestBody);
 
@@ -139,7 +214,14 @@ public class DiaryService {
         OcrResponse ocrResponse = mapOcrResponse(response.getBody());
 
         // images 배열의 첫 번째 요소에서 fields 배열 가져오기
-        return ocrResponse.getImages().get(0).getFields();
+        List<FieldDto> fields = ocrResponse.getImages().get(0).getFields();
+
+        StringBuilder ocrText = new StringBuilder();
+        for (FieldDto field : fields) {
+            ocrText.append(field.getInferText()).append(" ");
+        }
+
+        return ocrText.toString().trim();
     }
 
     private Map<String, Object> createRequestBody(String imgUrl) {
@@ -176,15 +258,23 @@ public class DiaryService {
             throw new RuntimeException("Failed to parse OCR response", e);
         }
     }
-    private String generateBgm(List<FieldDto> fields) {
-        // BGM 생성 로직 (필요한 처리를 수행)
-        StringBuilder bgmText = new StringBuilder();
-        for (FieldDto field : fields) {
-            bgmText.append(field.getInferText()).append(" ");
-        }
-        // BGM 생성 로직 구현
+    private String generateBgm(String content) {
 
-        return bgmText.toString().trim(); // 예시로 텍스트만 반환
+        BgmRequestDto request = new BgmRequestDto(content, DEFAULT_TOKENS);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<BgmRequestDto> entity = new HttpEntity<>(request, headers);
+
+        ResponseEntity<String> response = restTemplate.postForEntity(fastApiUrl, entity, String.class);
+        String responseBody = response.getBody();
+        try {
+            // JSON 응답을 Map으로 변환
+            Map<String, Object> responseMap = objectMapper.readValue(responseBody, Map.class);
+            return (String) responseMap.get("s3_url");
+        } catch (Exception e) {
+            throw new RuntimeException("응답에서 s3_url을 추출할 수 없습니다.", e);
+        }
     }
 
     public DiaryResponse getOneDiary(int diaryId) {
@@ -228,4 +318,5 @@ public class DiaryService {
             throw new RuntimeException("그림일기 작성 알림 전송에 실패");
         }
     }
+
 }

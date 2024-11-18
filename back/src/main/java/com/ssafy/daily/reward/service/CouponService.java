@@ -1,14 +1,15 @@
 package com.ssafy.daily.reward.service;
 
+import com.ssafy.daily.alarm.service.AlarmService;
 import com.ssafy.daily.common.Content;
+import com.ssafy.daily.common.Role;
 import com.ssafy.daily.exception.AlreadyOwnedException;
-import com.ssafy.daily.exception.CouponNotFoundException;
+import com.ssafy.daily.exception.MyNotFoundException;
 import com.ssafy.daily.exception.InsufficientFundsException;
 import com.ssafy.daily.reward.dto.*;
 import com.ssafy.daily.reward.entity.*;
 import com.ssafy.daily.reward.repository.CouponRepository;
 import com.ssafy.daily.reward.repository.EarnedCouponRepository;
-import com.ssafy.daily.reward.repository.ShellRepository;
 import com.ssafy.daily.user.dto.CustomUserDetails;
 import com.ssafy.daily.user.entity.Family;
 import com.ssafy.daily.user.entity.Member;
@@ -19,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,7 +32,7 @@ public class CouponService {
     private final MemberRepository memberRepository;
     private final FamilyRepository familyRepository;
     private final ShellService shellService;
-
+    private final AlarmService alarmService;
     // 쿠폰 등록
     @Transactional
     public void addCoupon(CustomUserDetails userDetails, AddCouponRequest request) {
@@ -59,7 +61,7 @@ public class CouponService {
     // 쿠폰 삭제
     public void deleteCoupon(long couponId) {
         Coupon coupon = couponRepository.findById(couponId)
-                .orElseThrow(() -> new CouponNotFoundException("해당 쿠폰을 찾을 수 없습니다."));
+                .orElseThrow(() -> new MyNotFoundException("해당 쿠폰을 찾을 수 없습니다."));
         if (coupon.getPurchasedAt() != null) {
             throw new AlreadyOwnedException("이미 구매한 쿠폰입니다.");
         }
@@ -81,7 +83,7 @@ public class CouponService {
 
     // 쿠폰 구매
     @Transactional
-    public int buyCoupon(CustomUserDetails userDetails, BuyCouponRequest request) {
+    public int buyCoupon(CustomUserDetails userDetails, BuyCouponRequest request) throws Exception {
         // 멤버 있는지 확인
         int memberId =  userDetails.getMember().getId();
         Member member = memberRepository.findById(memberId)
@@ -89,7 +91,7 @@ public class CouponService {
 
         // 쿠폰 있는지 확인
         Coupon coupon = couponRepository.findById(request.getCouponId())
-                .orElseThrow(() -> new CouponNotFoundException("해당 쿠폰을 찾을 수 없습니다."));
+                .orElseThrow(() -> new MyNotFoundException("해당 쿠폰을 찾을 수 없습니다."));
 
         // 이미 구매한 쿠폰인지 확인
         if (coupon.getPurchasedAt() != null) {
@@ -114,8 +116,10 @@ public class CouponService {
         earnedCouponRepository.save(earnedCoupon);
 
         // Shell 로그
-        shellService.saveShellLog(member, (byte) (-coupon.getPrice()), Content.COUPON);
+        shellService.saveShellLog(member, (-coupon.getPrice()), Content.COUPON);
 
+        // 알림
+        alarmService.sendNotification(member.getName(), String.valueOf(coupon.getId()), userDetails.getFamily().getId(), Role.PARENT, "쿠폰", member.getName() + " - 쿠폰을 구매했어요");
         return shellService.getUserShell(memberId);
     }
 
@@ -140,7 +144,7 @@ public class CouponService {
     public void useCoupon(UseCouponRequest request) {
         // 획득한 쿠폰이 존재하는지 확인
         EarnedCoupon earnedCoupon = earnedCouponRepository.findById(request.getEarnedCouponId())
-                .orElseThrow(() -> new CouponNotFoundException("쿠폰이 존재하지 않습니다."));
+                .orElseThrow(() -> new MyNotFoundException("쿠폰이 존재하지 않습니다."));
 
         if(earnedCoupon.getUsedAt() != null) {
             throw new AlreadyOwnedException("이미 사용된 쿠폰 입니다.");
@@ -154,8 +158,26 @@ public class CouponService {
     public List<ChildCouponResponse> getChildCoupons(CustomUserDetails userDetails) {
         int familyId = userDetails.getFamily().getId();
 
+//        return memberRepository.findByFamilyId(familyId).stream()
+//                .flatMap(member -> earnedCouponRepository.findByMemberIdWithSorting(member.getId()).stream())
+//                .map(ChildCouponResponse::new)
+//                .collect(Collectors.toList());
         return memberRepository.findByFamilyId(familyId).stream()
                 .flatMap(member -> earnedCouponRepository.findByMemberId(member.getId()).stream())
+                .sorted((ec1, ec2) -> {
+                    // usedAt이 null인 경우를 우선적으로 정렬
+                    if (ec1.getUsedAt() == null && ec2.getUsedAt() != null) {
+                        return -1;
+                    } else if (ec1.getUsedAt() != null && ec2.getUsedAt() == null) {
+                        return 1;
+                    } else if (ec1.getUsedAt() == null) {
+                        // 둘 다 usedAt이 null인 경우 createdAt 기준으로 최신 순으로 정렬
+                        return ec2.getCoupon().getCreatedAt().compareTo(ec1.getCoupon().getCreatedAt());
+                    } else {
+                        // 둘 다 usedAt이 있는 경우 최신 사용일 순으로 정렬
+                        return ec2.getUsedAt().compareTo(ec1.getUsedAt());
+                    }
+                })
                 .map(ChildCouponResponse::new)
                 .collect(Collectors.toList());
     }

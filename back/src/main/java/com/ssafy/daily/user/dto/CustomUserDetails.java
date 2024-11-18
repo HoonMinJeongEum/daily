@@ -39,7 +39,7 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public String getUsername() {
-        return member != null ? member.getName() : family.getUsername();
+        return family.getUsername();
     }
 
     public int getFamilyId(){

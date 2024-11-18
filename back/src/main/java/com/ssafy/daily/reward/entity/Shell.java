@@ -22,7 +22,7 @@ public class Shell {
     private Member member;
 
     @Column(nullable = false)
-    private byte stock;
+    private int stock;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

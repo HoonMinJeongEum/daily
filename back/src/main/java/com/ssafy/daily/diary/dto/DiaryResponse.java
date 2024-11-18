@@ -13,6 +13,7 @@ public class DiaryResponse {
     private String drawImg;
     private String writeImg;
     private String sound;
+    private String video;
     private LocalDateTime createdAt;
     private List<CommentResponse> comments;
 
@@ -22,6 +23,7 @@ public class DiaryResponse {
         this.drawImg = diary.getDrawImg();
         this.writeImg = diary.getWriteImg();
         this.sound = diary.getSound();
+        this.video = diary.getVideo();
         this.createdAt = diary.getCreatedAt();
         this.comments = comments;
     }

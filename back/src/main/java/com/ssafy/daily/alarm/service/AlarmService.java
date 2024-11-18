@@ -32,7 +32,8 @@ public class AlarmService {
 
         int id = userDetails.getMember() == null ? userDetails.getFamily().getId() : userDetails.getMember().getId();
         Role role = userDetails.getMember() == null ? Role.PARENT : Role.CHILD;
-
+        System.out.println("FCM Role: " + role);
+        System.out.println("FCM Id: " + id);
         // 기존 토큰 조회
         FCMToken existingToken = fcmTokenRepository.findByUserIdAndRole(id, role);
 
@@ -73,6 +74,9 @@ public class AlarmService {
                         .setTitle(title)
                         .setBody(body)
                         .build())
+                .putData("title", title)
+                .putData("titleId", titleId)
+                .putData("name", name)
                 .build();
 
         // 알림 전송
@@ -89,11 +93,14 @@ public class AlarmService {
         
         // 알림 조회
         FCMToken fcmToken = getToken(id, role);
-        List<Alarm> list = alarmRepository.findByFcmTokenId(fcmToken.getId());
+        List<Alarm> list = alarmRepository.findByFcmTokenIdWithSorting(fcmToken.getId());
 
-        return new AlarmListResponse(list.stream()
+        List<AlarmResponse> limitedAlarms = list.stream()
+                .limit(15)
                 .map(AlarmResponse::new)
-                .collect(Collectors.toList()));
+                .collect(Collectors.toList());
+
+        return new AlarmListResponse(limitedAlarms);
     }
 
     // 알림 확인
@@ -107,7 +114,7 @@ public class AlarmService {
     }
 
     // 토큰 조회
-    private FCMToken getToken(int userId, Role role) {
+    public FCMToken getToken(int userId, Role role) {
         FCMToken fcmTokens = fcmTokenRepository.findByUserIdAndRole(userId, role);;
         if (fcmTokens == null) {
             throw new IllegalArgumentException("유효하지 않은 토큰입니다.");
