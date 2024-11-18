@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.InputTransformation.Companion.keyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -144,6 +145,7 @@ fun ProfileModal(
                                 .clickable(
                                     enabled = !isProfileUpdating // 프로필 업데이트 중 비활성화
                                 ) {
+                                    isProfileUpdating = true
                                     playButtonSound(context, R.raw.all_button)
                                     imagePickerLauncher.launch("image/*")
                                 }
@@ -169,7 +171,18 @@ fun ProfileModal(
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(screenHeight * 0.03f))
+                        Spacer(modifier = Modifier.height(screenHeight * 0.005f))
+                        if (showWarning) {
+                            Text(
+                                text = "닉네임은 5글자 이하로 입력해주세요.",
+                                color = DarkRed,
+                                fontSize = (screenHeight.value * 0.025f).sp
+                            )
+                        } else {
+                            // 경고 메시지가 없을 때도 동일한 높이의 Spacer를 추가하여 레이아웃 차이를 없앰
+                            Spacer(modifier = Modifier.height(screenHeight * 0.025f))
+                        }
+                        Spacer(modifier = Modifier.height(screenHeight * 0.005f))
 
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -198,7 +211,11 @@ fun ProfileModal(
                                         },
                                     placeholder = {
                                         if (!isTextFieldFocused) {
-                                            Text(text = userName)
+                                            Text(
+                                                text = userName,
+                                                style = MaterialTheme.typography.bodyMedium.copy(
+                                                    fontSize = (screenHeight.value * 0.05f).sp
+                                                )                                                )
                                         }
                                     },
                                     colors = TextFieldDefaults.textFieldColors(
@@ -207,7 +224,7 @@ fun ProfileModal(
                                         unfocusedIndicatorColor = Color.Gray
                                     ),
                                     textStyle = MaterialTheme.typography.bodyMedium.copy(
-                                        fontSize = 36.sp
+                                        fontSize = (screenHeight.value * 0.05f).sp
                                     ),
                                             keyboardOptions = KeyboardOptions.Default.copy(
                                             imeAction = androidx.compose.ui.text.input.ImeAction.Done
@@ -240,7 +257,7 @@ fun ProfileModal(
                                 ) {
                                     Text(
                                         text = userName,
-                                        fontSize = (screenHeight.value * 0.07f).sp,
+                                        fontSize = (screenHeight.value * 0.05f).sp,
                                         color = DeepPastelNavy
                                     )
                                     Spacer(modifier = Modifier.width(screenHeight * 0.025f))
@@ -254,13 +271,7 @@ fun ProfileModal(
                                 }
                             }
                         }
-                        if (showWarning) {
-                            Text(
-                                text = "닉네임은 5글자 이하로 입력해주세요.",
-                                color = DarkRed,
-                                fontSize = (screenHeight.value * 0.025f).sp
-                            )
-                        }
+
                     }
                 }
             }
