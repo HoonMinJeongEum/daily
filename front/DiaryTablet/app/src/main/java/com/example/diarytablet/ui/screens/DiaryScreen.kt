@@ -218,7 +218,7 @@ fun DiaryScreen(
                                         selectedStickerIndex = null // 선택 해제
                                         isDrawingMode = true // 드로잉 모드로 전환
                                         selectedTool = ToolType.PENCIL // 기본 도구 선택
-                                        selectedColor = selectedColor
+                                        selectedColor = Color.Black
                                     }
                                 }
                             }
