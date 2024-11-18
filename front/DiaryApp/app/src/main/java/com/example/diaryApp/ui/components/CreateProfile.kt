@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -96,7 +97,8 @@ fun CreateProfile(
     Dialog(onDismissRequest = { onCancel() }) {
         Box(
             contentAlignment = Alignment.Center,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
                 .clearFocusOnClick()
 
         ) {
@@ -133,6 +135,20 @@ fun CreateProfile(
                                 modifier = Modifier.size(screenWidth * 0.08f)
                             )
                         }
+                    }
+
+                    if (showWarning) {
+                        Text(
+                            text = warningMessage,
+                            color = Color.Red,
+                            fontSize = (screenWidth * 0.035f).value.sp,
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                        )
+                    } else {
+                        Spacer(
+                            modifier = Modifier
+                                .height(screenWidth * 0.04f)
+                        )
                     }
 
                     Row(
@@ -204,7 +220,6 @@ fun CreateProfile(
                                 onValueChange = {
                                     if (it.length <= 5) {
                                         profileViewModel.memberName.value = it
-                                        showWarning = false
                                     } else {
                                         showWarning = true
 
@@ -253,23 +268,10 @@ fun CreateProfile(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(screenHeight * 0.01f))
+                    Spacer(modifier = Modifier.height(screenHeight * 0.05f))
 
-                    if (showWarning) {
-                        Text(
-                            text = warningMessage,
-                            color = Color.Red,
-                            fontSize = (screenWidth * 0.035f).value.sp,
-                            modifier = Modifier.align(Alignment.CenterHorizontally)
-                        )
-                    } else {
-                        Spacer(
-                            modifier = Modifier
-                                .height(screenWidth * 0.04f)
-                        )
-                    }
 
-                    Spacer(modifier = Modifier.height(screenHeight * 0.02f))
+
 
                     // 비활성화 여부를 조건으로 설정
                     DailyButton(

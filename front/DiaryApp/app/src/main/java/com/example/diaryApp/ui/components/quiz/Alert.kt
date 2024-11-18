@@ -36,7 +36,7 @@ fun Alert(
         ) {
             Box (
                 modifier = Modifier
-                    .fillMaxWidth(0.7f)
+                    .fillMaxWidth(0.8f)
                     .fillMaxHeight(0.25f)
                     .align(Alignment.Center)
                     .background(color = Color.White, shape = RoundedCornerShape(15))
@@ -58,7 +58,7 @@ fun Alert(
                         val boxHeight = with(LocalDensity.current) { maxHeight.toPx() }
                         Text(
                             text = title,
-                            fontSize = (boxHeight * 0.15f).sp,
+                            fontSize = (boxHeight * 0.13f).sp,
                             style = MyTypography.bodyLarge,
                             color = Color(0xFF49566F),
                             textAlign = TextAlign.Center,
@@ -92,13 +92,13 @@ fun Alert(
                                 Text(
                                     text = "아니오",
                                     color = Color.White,
-                                    fontSize = (buttonHeight * 0.15f).sp,
+                                    fontSize = (buttonHeight * 0.13f).sp,
                                     style = MyTypography.bodyLarge,
                                     textAlign = TextAlign.Center,
                                 )
                             }
                         }
-                        Spacer(modifier = Modifier.weight(0.2f))
+                        Spacer(modifier = Modifier.weight(0.1f))
                         Button(
                             modifier = Modifier
                                 .weight(1f)

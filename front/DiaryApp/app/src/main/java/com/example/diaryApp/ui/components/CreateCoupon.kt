@@ -161,7 +161,6 @@ fun CreateCoupon(
                         onValueChange = {
                             if (it.length <= 12) {
                                 couponViewModel.couponDescription.value = it
-                                showAlertDescription = false
                             } else {
                                 showAlertDescription = true
                             }
@@ -170,7 +169,7 @@ fun CreateCoupon(
                         height = screenWidth * 1.9f,
                         imeAction = ImeAction.Next,
                         onImeAction = {
-                            if (!showAlertDescription && couponViewModel.couponDescription.value.isNotBlank()) {
+                            if (couponViewModel.couponDescription.value.isNotBlank()) {
                                 priceFocusRequester.requestFocus()
                             }
                         },
@@ -215,7 +214,6 @@ fun CreateCoupon(
                         onValueChange = {
                             if (it.all { char -> char.isDigit() } && it.length <= 3) {
                                 couponViewModel.couponPrice.value = it.toIntOrNull() ?: 0
-                                showAlertPrice = false
                             } else if (it.length > 3) {
                                 showAlertPrice = true
                             }

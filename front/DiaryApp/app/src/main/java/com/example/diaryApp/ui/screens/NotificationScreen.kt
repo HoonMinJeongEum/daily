@@ -36,6 +36,7 @@ import com.example.diaryApp.ui.components.TopLogoImg
 import com.example.diaryApp.ui.theme.BackgroundPlacement
 import com.example.diaryApp.ui.theme.BackgroundType
 import com.example.diaryApp.R
+import com.example.diaryApp.ui.components.BasicModal
 import com.example.diaryApp.ui.components.DeleteProfileList
 import com.example.diaryApp.ui.components.NavMenu
 import com.example.diaryApp.ui.components.TabletHeader
@@ -122,20 +123,25 @@ fun NotificationScreen(
         ) {
             NavMenu(navController, "notification", "notification")
         }
+            BasicModal(
+                screenWidth = screenWidth, // 스크린 크기를 전달
+                isDialogVisible = (showQuizConfirmDialog && sessionId != null),
+                onDismiss = {
+                    showQuizConfirmDialog = false
+                },
+                onSuccessClick = {
+                    showQuizConfirmDialog = false
+                    navController.navigate("catchMind/$sessionId/$childName")
+                },
+                mainText = "그림 퀴즈에 입장할까요?",
+                buttonText = "네",
+                successButtonColor = Color(0xFF5A72A0) // "네" 버튼의 색상
+            )
+
     }
-    if (showQuizConfirmDialog && sessionId != null) {
-        Alert(
-            isVisible = true,
-            onDismiss = {
-                showQuizConfirmDialog = false
-            },
-            onConfirm = {
-                showQuizConfirmDialog = false
-                navController.navigate("catchMind/$sessionId/$childName")
-            },
-            title = "그림 퀴즈에 입장할까요?",
-        )
-    }
+
+
+
 
     if (showQuizAlert) {
         QuizAlert(
