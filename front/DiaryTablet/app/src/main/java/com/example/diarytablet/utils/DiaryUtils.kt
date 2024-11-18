@@ -161,13 +161,13 @@ fun drawToBitmap(
     // 먼저 흰색 배경을 그리기
     canvas.drawColor(android.graphics.Color.WHITE)
 
+    // overlayBitmap을 그리기 (경로와 지우개 효과 포함)
+    canvas.drawBitmap(overlayBitmap, 0f, 0f, null)
+
     // 템플릿을 배경에 그리기
     val templateBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.draw_template)
     val resizedTemplateBitmap = Bitmap.createScaledBitmap(templateBitmap, width, height, true)
     canvas.drawBitmap(resizedTemplateBitmap, 0f, 0f, null)
-
-    // overlayBitmap을 그리기 (경로와 지우개 효과 포함)
-    canvas.drawBitmap(overlayBitmap, 0f, 0f, null)
 }
 
 // Bitmap을 파일로 저장하는 함수에 로그 추가

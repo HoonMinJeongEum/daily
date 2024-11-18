@@ -12,6 +12,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -46,6 +47,7 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import com.example.diarytablet.utils.clearFocusOnClick
 import com.example.diarytablet.utils.playButtonSound
 
 
@@ -66,14 +68,14 @@ fun ProfileModal(
     var imageUri by remember(key1 = isModalVisible) { mutableStateOf<Uri?>(null) }
     val focusRequester = remember { FocusRequester() }
     var isTextFieldFocused by remember(key1 = isModalVisible) { mutableStateOf(false) }
-
+    var isProfileUpdating by remember { mutableStateOf(false) }
     var showWarning by remember { mutableStateOf(false) } // 경고 문구 표시 여부
     val context = LocalContext.current
 
     // 모달이 열릴 때 초기화
     if (isModalVisible) {
         isEditing = false
-        editedName = userName
+        editedName = ""
         showWarning = false
     }
 
@@ -82,155 +84,183 @@ fun ProfileModal(
         rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
             uri?.let {
                 imageUri = it
+                isProfileUpdating = true // 프로필 업데이트 중
                 val filePath = getFilePathFromUri(context, it)
-                filePath?.let { path -> onEditProfileClick(path) }
+                filePath?.let { path ->
+                    onEditProfileClick(path)
+                    isProfileUpdating = false // 업데이트 완료
+                }
             }
         }
 
     if (isModalVisible) {
         Dialog(
             onDismissRequest = {
-                onDismiss()
-            },
+                if (!isProfileUpdating) onDismiss()
+                               },
             properties = DialogProperties(dismissOnClickOutside = false)
         ) {
             Box(
+                contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(screenHeight * 0.6f, screenHeight * 0.65f)
-                    .background(Color.White, shape = RoundedCornerShape(screenWidth * 0.02f))
-                    .padding(screenHeight * 0.04f)
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(screenHeight * 0.02f),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.End)
-                            .clickable {
-                                onDismiss()
-                                playButtonSound(context, R.raw.all_button )
-                            }
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.mission_close),
-                            contentDescription = "Close",
-                            modifier = Modifier.size(screenHeight * 0.05f)
-                        )
-                    }
+                    .fillMaxSize()
+                    .clearFocusOnClick()
 
-                    Box(
-                        modifier = Modifier
-                            .size(screenHeight * 0.25f)
-                            .clip(CircleShape)
-                            .clickable {
-                                playButtonSound(context, R.raw.all_button )
-                                imagePickerLauncher.launch("image/*")
-                            }
+            )
+            {
+                Box(
+                    modifier = Modifier
+                        .size(screenHeight * 0.6f, screenHeight * 0.65f)
+                        .background(Color.White, shape = RoundedCornerShape(screenWidth * 0.02f))
+                        .padding(screenHeight * 0.04f)
+                        .clearFocusOnClick()
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(screenHeight * 0.02f),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        AsyncImage(
-                            model = imageUri ?: profileImageUrl,
-                            contentDescription = null,
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
-                        )
                         Box(
                             modifier = Modifier
-                                .fillMaxSize()
-                                .background(Color.Black.copy(alpha = 0.3f))
-                        )
-                        Icon(
-                            painter = painterResource(id = R.drawable.pencil),
-                            contentDescription = "Edit Profile",
+                                .align(Alignment.End)
+                                .clickable(
+                                    enabled = !isProfileUpdating
+                                ) {
+                                    onDismiss()
+                                    playButtonSound(context, R.raw.all_button)
+                                }
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.mission_close),
+                                contentDescription = "Close",
+                                modifier = Modifier.size(screenHeight * 0.05f)
+                            )
+                        }
+
+                        Box(
                             modifier = Modifier
-                                .size(screenHeight * 0.05f)
-                                .align(Alignment.Center),
-                            tint = Color.White
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(screenHeight * 0.03f))
-
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        if (isEditing) {
-                            TextField(
-                                value = editedName,
-                                onValueChange = {
-                                    if (it.length <= 5) { // 5글자 이하로 제한
-                                        editedName = it
-                                        showWarning = false
-                                    } else {
-                                        showWarning = true
-                                    }
-                                },
-                                singleLine = true,
+                                .size(screenHeight * 0.25f)
+                                .clip(CircleShape)
+                                .clickable(
+                                    enabled = !isProfileUpdating // 프로필 업데이트 중 비활성화
+                                ) {
+                                    playButtonSound(context, R.raw.all_button)
+                                    imagePickerLauncher.launch("image/*")
+                                }
+                        ) {
+                            AsyncImage(
+                                model = imageUri ?: profileImageUrl,
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                            Box(
                                 modifier = Modifier
-                                    .width(screenHeight * 0.3f)
-                                    .height(screenHeight * 0.1f)
-                                    .focusRequester(focusRequester)
-                                    .onFocusChanged { focusState ->
-                                        isTextFieldFocused = focusState.isFocused
-                                        if (focusState.isFocused && editedName == userName) {
-                                            editedName = ""
+                                    .fillMaxSize()
+                                    .background(Color.Black.copy(alpha = 0.3f))
+                            )
+                            Icon(
+                                painter = painterResource(id = R.drawable.pencil),
+                                contentDescription = "Edit Profile",
+                                modifier = Modifier
+                                    .size(screenHeight * 0.05f)
+                                    .align(Alignment.Center),
+                                tint = Color.White
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(screenHeight * 0.03f))
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            if (isEditing) {
+                                TextField(
+                                    value = editedName,
+                                    onValueChange = {
+                                        if (it.length <= 5) { // 5글자 이하로 제한
+                                            editedName = it
+                                        } else {
+                                            showWarning = true
                                         }
                                     },
-                                placeholder = {
-                                    if (!isTextFieldFocused) {
-                                        Text(text = userName)
-                                    }
-                                },
-                                colors = TextFieldDefaults.textFieldColors(
-                                    containerColor = Color(0xFFF0F0F0),
-                                    focusedIndicatorColor = DeepPastelNavy,
-                                    unfocusedIndicatorColor = Color.Gray
-                                ),
-                                textStyle = MaterialTheme.typography.bodyMedium.copy(
-                                    fontSize = 36.sp
-                                )
-                            )
-
-                            Spacer(modifier = Modifier.width(screenHeight * 0.02f))
-                            BasicButton(
-                                text = "완료",
-                                imageResId = 11,
-                                onClick = {
-                                    onEditNameClick(editedName)
-                                    isEditing = false
-                                },
-                                enabled = !showWarning
-                            )
-
-                        } else {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                Text(
-                                    text = userName,
-                                    fontSize = (screenHeight.value * 0.07f).sp,
-                                    color = DeepPastelNavy
-                                )
-                                Spacer(modifier = Modifier.width(screenHeight * 0.025f))
-                                Image(
-                                    painter = painterResource(id = R.drawable.pencil),
-                                    contentDescription = "Edit Name",
+                                    singleLine = true,
                                     modifier = Modifier
-                                        .size(screenHeight * 0.07f)
-                                        .clickable { isEditing = true }
+                                        .width(screenHeight * 0.3f)
+                                        .height(screenHeight * 0.1f)
+                                        .focusRequester(focusRequester)
+                                        .onFocusChanged { focusState ->
+                                            isTextFieldFocused = focusState.isFocused
+                                            if (focusState.isFocused && editedName == userName) {
+                                                editedName = ""
+                                            }
+                                        },
+                                    placeholder = {
+                                        if (!isTextFieldFocused) {
+                                            Text(text = userName)
+                                        }
+                                    },
+                                    colors = TextFieldDefaults.textFieldColors(
+                                        containerColor = Color(0xFFF0F0F0),
+                                        focusedIndicatorColor = DeepPastelNavy,
+                                        unfocusedIndicatorColor = Color.Gray
+                                    ),
+                                    textStyle = MaterialTheme.typography.bodyMedium.copy(
+                                        fontSize = 36.sp
+                                    ),
+                                            keyboardOptions = KeyboardOptions.Default.copy(
+                                            imeAction = androidx.compose.ui.text.input.ImeAction.Done
+                                            ),
+                                    keyboardActions = androidx.compose.foundation.text.KeyboardActions(
+                                        onDone = {
+                                            if (editedName.isNotBlank() && editedName != userName) {
+                                                onEditNameClick(editedName)
+                                                isEditing = false
+                                            }
+                                        }
+                                    )
                                 )
+
+                                Spacer(modifier = Modifier.width(screenHeight * 0.02f))
+                                BasicButton(
+                                    text = "완료",
+                                    imageResId = 11,
+                                    onClick = {
+                                        onEditNameClick(editedName)
+                                        isEditing = false
+                                    },
+                                    enabled = !editedName.isEmpty()
+                                )
+
+                            } else {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Text(
+                                        text = userName,
+                                        fontSize = (screenHeight.value * 0.07f).sp,
+                                        color = DeepPastelNavy
+                                    )
+                                    Spacer(modifier = Modifier.width(screenHeight * 0.025f))
+                                    Image(
+                                        painter = painterResource(id = R.drawable.pencil),
+                                        contentDescription = "Edit Name",
+                                        modifier = Modifier
+                                            .size(screenHeight * 0.07f)
+                                            .clickable { isEditing = true }
+                                    )
+                                }
                             }
                         }
-                    }
-                    if (showWarning) {
-                        Text(
-                            text = "닉네임은 5글자 이하로 입력해주세요.",
-                            color = DarkRed,
-                            fontSize = (screenHeight.value * 0.025f).sp
-                        )
+                        if (showWarning) {
+                            Text(
+                                text = "닉네임은 5글자 이하로 입력해주세요.",
+                                color = DarkRed,
+                                fontSize = (screenHeight.value * 0.025f).sp
+                            )
+                        }
                     }
                 }
             }
