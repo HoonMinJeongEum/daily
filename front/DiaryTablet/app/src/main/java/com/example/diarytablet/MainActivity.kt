@@ -13,6 +13,7 @@ import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
@@ -30,6 +31,7 @@ import com.samsung.android.sdk.penremote.SpenUnit
 import com.samsung.android.sdk.penremote.SpenUnitManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import retrofit2.Response
 import javax.inject.Inject
@@ -155,10 +157,9 @@ class MainActivity : ComponentActivity() {
 
     // 버튼 이벤트 리스너
     private val mButtonEventListener = SpenEventListener { ev ->
-        val buttonEvent = ButtonEvent(ev)
-        when (buttonEvent.action) {
-            ButtonEvent.ACTION_DOWN -> Log.d(TAG, "S Pen 버튼이 눌렸습니다.")
-            ButtonEvent.ACTION_UP -> Log.d(TAG, "S Pen 버튼이 해제되었습니다.")
+        Log.d(TAG, "S Pen 버튼이 눌렸습니다.")
+        lifecycleScope.launch {
+            spenEventViewModel.emitSpenEvent(ev) // 이벤트 발행
         }
     }
 

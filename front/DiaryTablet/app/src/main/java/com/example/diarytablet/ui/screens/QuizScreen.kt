@@ -70,6 +70,9 @@ import com.example.diarytablet.ui.components.quiz.ToggleMicButton
 import com.example.diarytablet.ui.components.quiz.Video
 import com.example.diarytablet.ui.theme.MyTypography
 import com.example.diarytablet.utils.playButtonSound
+import com.example.diarytablet.viewmodel.SpenEventViewModel
+import com.samsung.android.sdk.penremote.ButtonEvent
+import com.samsung.android.sdk.penremote.SpenEvent
 
 enum class QuizModalState {
     NONE,
@@ -83,7 +86,8 @@ enum class QuizModalState {
 fun QuizScreen(
     navController: NavController,
     viewModel: QuizViewModel = hiltViewModel(),
-    backgroundType: BackgroundType = BackgroundType.DRAWING_QUIZ
+    backgroundType: BackgroundType = BackgroundType.DRAWING_QUIZ,
+    spenEventViewModel: SpenEventViewModel
 ) {
     BackgroundPlacement(backgroundType = backgroundType)
 
@@ -105,10 +109,37 @@ fun QuizScreen(
     val parentWord by viewModel.parentWord.observeAsState()
     var isExitInProgress by remember { mutableStateOf(false) }
 
+    val penScale by animateFloatAsState(targetValue = if (selectedImage == "pen") 1.2f else 1f)
+    val eraserScale by animateFloatAsState(targetValue = if (selectedImage == "eraser") 1.2f else 1f)
+    val penColor = remember { mutableStateOf(Color.Black) }
     val context = LocalContext.current
     LaunchedEffect(isParentJoined) {
         if (isParentJoined) {
             isQuizStartEnabled = true
+        }
+    }
+    LaunchedEffect(Unit) {
+        spenEventViewModel.spenEventFlow.collect { event ->
+            val buttonEvent = ButtonEvent(event)
+
+            when (buttonEvent.action) {
+                ButtonEvent.ACTION_DOWN -> {
+                    if (selectedImage == "pen") {
+                        selectedImage = "eraser"
+                        penColor.value =
+                            pathStyle?.color ?: Color.Black
+                        viewModel.updateColor(Color.White)
+                        selectedImage = "eraser"
+                    }
+                    else {
+                        selectedImage = "pen"
+                        viewModel.updateColor(penColor.value)
+                    }
+                }
+                ButtonEvent.ACTION_UP -> {
+                    Log.d("QuizScreen", "Button Up Detected")
+                }
+            }
         }
     }
 
@@ -320,9 +351,7 @@ fun QuizScreen(
                                             horizontalArrangement = Arrangement.SpaceEvenly,
                                             verticalAlignment = Alignment.CenterVertically
                                         ){
-                                            val penScale by animateFloatAsState(targetValue = if (selectedImage == "pen") 1.2f else 1f)
-                                            val eraserScale by animateFloatAsState(targetValue = if (selectedImage == "eraser") 1.2f else 1f)
-                                            val penColor = remember { mutableStateOf(Color.Black) }
+
                                             Spacer(modifier = Modifier.weight(0.2f))
                                             BoxWithConstraints(
                                                 modifier = Modifier

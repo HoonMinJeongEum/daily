@@ -114,7 +114,7 @@ fun DiaryTabletApp(
                     WordLearningScreen(navController = navController, spenEventViewModel = spentEventViewmodel)
                 }
                 composable("quiz") {
-                    QuizScreen(navController = navController)
+                    QuizScreen(navController = navController, spenEventViewModel = spentEventViewmodel)
                 }
             }
     }
