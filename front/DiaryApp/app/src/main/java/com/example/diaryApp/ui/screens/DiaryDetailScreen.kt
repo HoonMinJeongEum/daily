@@ -90,7 +90,7 @@ fun DiaryDetailScreen(
     navController: NavController,
     diaryId: String?,
     diaryViewModel: DiaryViewModel,
-    backgroundType: BackgroundType = BackgroundType.ACTIVE,
+    backgroundType: BackgroundType = BackgroundType.NORMAL,
     childName: String
 ) {
     LaunchedEffect(diaryId) {

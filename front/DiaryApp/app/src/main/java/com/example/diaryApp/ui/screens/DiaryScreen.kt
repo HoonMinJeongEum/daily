@@ -36,7 +36,7 @@ import com.example.diaryApp.viewmodel.ProfileViewModel
 fun DiaryScreen(
     navController: NavController,
     diaryViewModel: DiaryViewModel,
-    backgroundType: BackgroundType = BackgroundType.ACTIVE,
+    backgroundType: BackgroundType = BackgroundType.NORMAL,
 ) {
     BackgroundPlacement(backgroundType = backgroundType)
 
