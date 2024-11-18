@@ -31,6 +31,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.example.diarytablet.ui.components.BasicButton
 import com.example.diarytablet.ui.components.DailyButton
 import com.example.diarytablet.ui.theme.DeepPastelNavy
@@ -146,7 +147,10 @@ fun CommonPopup(
         delay(2000)
         onDismissRequest()
     }
-    Dialog(onDismissRequest = onDismissRequest) {
+    Dialog(
+        onDismissRequest = onDismissRequest,
+        properties = DialogProperties(dismissOnClickOutside = false)
+    ) {
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier.fillMaxSize()
