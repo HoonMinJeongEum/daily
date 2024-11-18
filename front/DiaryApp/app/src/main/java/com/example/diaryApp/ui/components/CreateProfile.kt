@@ -127,7 +127,14 @@ fun CreateProfile(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Spacer(modifier = Modifier.weight(1f))
-                        IconButton(onClick = onCancel) {
+                        IconButton(
+                            onClick = {
+                                if (!isLoading) { // isLoading이 false일 때만 동작
+                                    onCancel()
+                                }
+                            },
+                            enabled = !isLoading // isLoading이 true일 때 비활성화
+                        ) {
                             Icon(
                                 imageVector = Icons.Filled.Close,
                                 contentDescription = "Close",
@@ -170,7 +177,7 @@ fun CreateProfile(
                                 .size(screenWidth * 0.3f)
                                 .clip(RoundedCornerShape(50))
                                 .border(1.dp, Color.LightGray, RoundedCornerShape(50))
-                                .clickable { launcher.launch("image/*") },
+                                .clickable(enabled = !isLoading) { launcher.launch("image/*") },
                             contentAlignment = Alignment.Center
                         ) {
                             if (selectedImageUri != null) {
@@ -279,12 +286,12 @@ fun CreateProfile(
                         fontSize = (screenWidth * 0.05f).value.toInt(),
                         textColor = Color.White,
                         fontWeight = FontWeight.Normal,
-                        backgroundColor = if (isLoading || showWarning || profileViewModel.memberName.value.isBlank() ) Color.Gray else DeepPastelNavy,
+                        backgroundColor = if (isLoading || profileViewModel.memberName.value.isBlank() ) Color.Gray else DeepPastelNavy,
                         cornerRadius = 50,
                         width = (screenWidth * 0.25f).value.toInt(),
                         height = (screenHeight * 0.06f).value.toInt(),
                         onClick = {
-                            if (!isLoading && !showWarning) {
+                            if (!isLoading) {
                                 if (profileViewModel.memberName.value.isBlank()) {
                                     showWarning = true
                                     warningMessage = "이름을 입력해주세요."

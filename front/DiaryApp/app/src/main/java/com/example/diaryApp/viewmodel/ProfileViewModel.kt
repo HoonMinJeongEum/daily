@@ -67,9 +67,16 @@ class ProfileViewModel @Inject constructor(
                 val requestBody = memberName.value.toRequestBody("text/plain".toMediaTypeOrNull())
                 val imgRequestBody = memberImgFile.asRequestBody("image/jpeg".toMediaTypeOrNull())
                 val imgPart = MultipartBody.Part.createFormData("file", memberImgFile.name, imgRequestBody)
-                profileListRepository.createProfile(requestBody, imgPart)
-                loadProfiles()
-                onSuccess()
+                val response = profileListRepository.createProfile(requestBody, imgPart)
+                if (response.isSuccessful) {
+                    loadProfiles()
+                    onSuccess()
+
+                } else {
+                    onError()
+
+                }
+
             } catch (e: Exception) {
                 errorMessage.value = e.message
                 Log.e("ProfileViewModel", "Error adding profile: ${e.message}")
