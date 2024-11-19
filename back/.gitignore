@@ -35,3 +35,8 @@ out/
 
 ### VS Code ###
 .vscode/
+
+# Spring application
+**/application-secret.yml
+**/serviceAccountKey.json
+
