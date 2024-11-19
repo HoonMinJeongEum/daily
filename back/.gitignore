@@ -38,3 +38,5 @@ out/
 
 # Spring application
 **/application-secret.yml
+**/serviceAccountKey.json
+
