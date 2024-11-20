@@ -370,53 +370,106 @@ fun DiaryScreen(
 
                             .pointerInput(isDrawingMode) {
                                 if (isDrawingMode) {
-                                    detectDragGestures(
-                                        onDragStart = { offset ->
-                                            path.value = Path().apply { moveTo(offset.x, offset.y) }
-
+//                                    detectDragGestures(
+//                                        onDragStart = { offset ->
+//                                            path.value = Path().apply { moveTo(offset.x, offset.y) }
+//
+////                                            if (selectedTool == ToolType.ERASER) {
+////                                                val canvas = AndroidCanvas(currentBitmap)
+////                                                val eraserPaint = createPaintForTool(
+////                                                    toolType = selectedTool,
+////                                                    color = Color.Transparent,
+////                                                    thickness = brushSize
+////                                                )
+//////                                                canvas.drawCircle(offset.x, offset.y, brushSize / 2, eraserPaint)
+////                                            }
+//                                        },
+//                                        onDrag = { change, _ ->
+//                                            path.value.lineTo(change.position.x, change.position.y)
+//
+//                                            val canvas = AndroidCanvas(currentBitmap)
+//                                            val paint = createPaintForTool(
+//                                                toolType = selectedTool,
+//                                                color = selectedColor,
+//                                                thickness = brushSize
+//                                            )
+//
 //                                            if (selectedTool == ToolType.ERASER) {
-//                                                val canvas = AndroidCanvas(currentBitmap)
-//                                                val eraserPaint = createPaintForTool(
-//                                                    toolType = selectedTool,
-//                                                    color = Color.Transparent,
-//                                                    thickness = brushSize
-//                                                )
-////                                                canvas.drawCircle(offset.x, offset.y, brushSize / 2, eraserPaint)
+//                                                selectedColor = Color.Transparent
+//                                                paint.xfermode = android.graphics.PorterDuffXfermode(android.graphics.PorterDuff.Mode.CLEAR)
 //                                            }
-                                        },
-                                        onDrag = { change, _ ->
-                                            path.value.lineTo(change.position.x, change.position.y)
+//
+//                                            canvas.drawPath(path.value.asAndroidPath(), paint)
+//
+//                                            if (pagerState.currentPage == 0) {
+//                                                firstPageDrawingSteps.add(
+//                                                    DrawingStep(
+//                                                        path = Path().apply { addPath(path.value) },
+//                                                        color = if (selectedTool == ToolType.ERASER) Color.Transparent else selectedColor,
+//                                                        thickness = brushSize,
+//                                                        toolType = selectedTool
+//                                                    )
+//                                                )
+//                                            }
+//                                            change.consume()
+//                                        },
+//                                        onDragEnd = {
+//                                            path.value = Path()
+//                                        }
+//                                    )
+                                    awaitPointerEventScope {
+                                        var lastPosition: Offset? = null // 마지막 터치 위치를 저장
 
-                                            val canvas = AndroidCanvas(currentBitmap)
-                                            val paint = createPaintForTool(
-                                                toolType = selectedTool,
-                                                color = selectedColor,
-                                                thickness = brushSize
-                                            )
+                                        while (true) {
+                                            val event = awaitPointerEvent()
+                                            val position = event.changes.first().position
 
-                                            if (selectedTool == ToolType.ERASER) {
-                                                selectedColor = Color.Transparent
-                                                paint.xfermode = android.graphics.PorterDuffXfermode(android.graphics.PorterDuff.Mode.CLEAR)
+                                            // 터치 이벤트 처리
+                                            event.changes.first().apply {
+                                                if (pressed) {
+                                                    // 드래그 시작
+                                                    if (lastPosition == null) {
+                                                        path.value = Path().apply { moveTo(position.x, position.y) }
+                                                    } else {
+                                                        // 드래그 중
+                                                        path.value.lineTo(position.x, position.y)
+                                                        val canvas = AndroidCanvas(currentBitmap)
+                                                        val paint = createPaintForTool(
+                                                            toolType = selectedTool,
+                                                            color = selectedColor,
+                                                            thickness = brushSize
+                                                        )
+
+                                                        if (selectedTool == ToolType.ERASER) {
+                                                            paint.xfermode =
+                                                                android.graphics.PorterDuffXfermode(android.graphics.PorterDuff.Mode.CLEAR)
+                                                        }
+
+                                                        canvas.drawPath(path.value.asAndroidPath(), paint)
+
+                                                        if (pagerState.currentPage == 0) {
+                                                            firstPageDrawingSteps.add(
+                                                                DrawingStep(
+                                                                    path = Path().apply { addPath(path.value) },
+                                                                    color = if (selectedTool == ToolType.ERASER) Color.Transparent else selectedColor,
+                                                                    thickness = brushSize,
+                                                                    toolType = selectedTool
+                                                                )
+                                                            )
+                                                        }
+                                                    }
+                                                    lastPosition = position // 마지막 위치 업데이트
+                                                } else if (!pressed && lastPosition != null) {
+                                                    // 터치가 끝난 경우 초기화
+                                                    path.value = Path()
+                                                    lastPosition = null
+                                                }
+
+                                                // 이벤트 소비
+                                                consume()
                                             }
-
-                                            canvas.drawPath(path.value.asAndroidPath(), paint)
-
-                                            if (pagerState.currentPage == 0) {
-                                                firstPageDrawingSteps.add(
-                                                    DrawingStep(
-                                                        path = Path().apply { addPath(path.value) },
-                                                        color = if (selectedTool == ToolType.ERASER) Color.Transparent else selectedColor,
-                                                        thickness = brushSize,
-                                                        toolType = selectedTool
-                                                    )
-                                                )
-                                            }
-                                            change.consume()
-                                        },
-                                        onDragEnd = {
-                                            path.value = Path()
                                         }
-                                    )
+                                    }
                                 }
                             }
                     ) {
