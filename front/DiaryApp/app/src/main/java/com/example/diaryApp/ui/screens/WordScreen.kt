@@ -80,7 +80,7 @@ fun WordScreen(
 
             ){
             TabletHeader(
-                pageName = "${wordViewModel.memberName.value}의 그림 일기",
+                pageName = "${wordViewModel.memberName.value}의 단어장",
                 navController = navController,
                 modifier = Modifier
                     .fillMaxWidth()

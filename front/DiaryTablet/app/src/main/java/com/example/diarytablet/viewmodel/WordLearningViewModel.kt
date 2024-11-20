@@ -27,6 +27,7 @@ import java.io.File
 import java.io.FileOutputStream
 import javax.inject.Inject
 import android.graphics.Color as AndroidColor
+import kotlinx.coroutines.withTimeout
 
 @HiltViewModel
 class WordLearningViewModel @Inject constructor(
@@ -69,42 +70,43 @@ class WordLearningViewModel @Inject constructor(
 
 
     // 단어 검증 함수
-    suspend fun checkWordValidate(context: Context, word: WordResponseDto, writtenBitmap: Bitmap):Int {
+    suspend fun checkWordValidate(context: Context, word: WordResponseDto, writtenBitmap: Bitmap): Int {
         isLoading.value = true
         return withContext(Dispatchers.IO) {
             try {
+                withTimeout(8000) { // 5초 타임아웃 설정
+                    val mergedBitmap = mergeBitmapWithTemplate(context, writtenBitmap)
+                    val fileName = "word_image_${word.id}.jpg"
 
-                val mergedBitmap = mergeBitmapWithTemplate(context, writtenBitmap)
-                val fileName = "word_image_${word.id}.jpg"
+                    val writeFilePart = bitmapToMultipart(context, mergedBitmap, fileName)
+                    val wordPart = word.word.toRequestBody("text/plain".toMediaTypeOrNull())
 
-                val writeFilePart  = bitmapToMultipart(context, mergedBitmap,fileName)
+                    val validationResponse = wordRepository.checkWordValidate(writeFilePart, wordPart)
 
-                val wordPart = word.word.toRequestBody("text/plain".toMediaTypeOrNull())
+                    val statusCode = validationResponse.code()
+                    Log.d("function", "success $statusCode")
 
-                val validationResponse = wordRepository.checkWordValidate(writeFilePart,wordPart)
-
-                val statusCode = validationResponse.code()
-                Log.d("function","success ${statusCode}")
-
-                when (statusCode) {
-                    200 -> {
-                        _learnedWordList.value += WordRequestDto(id = word.id, image = writeFilePart)
-                        Log.d("gon", "Validation successful")
+                    when (statusCode) {
+                        200 -> {
+                            _learnedWordList.value += WordRequestDto(id = word.id, image = writeFilePart)
+                            Log.d("gon", "Validation successful")
+                        }
+                        400 -> Log.d("gon", "Bad Request - Unrecognized text")
+                        422 -> Log.d("gon", "Validation error - Incorrect format")
+                        else -> Log.d("gon", "Unexpected error: $statusCode")
                     }
-                    400 -> Log.d("gon", "Bad Request - Unrecognized text")
-                    422 -> Log.d("gon", "Validation error - Incorrect format")
-                    else -> Log.d("gon", "Unexpected error: $statusCode")
+                    statusCode
                 }
-                statusCode
             } catch (e: Exception) {
-                Log.d("gon", "${e.message}")
-
+                if (e is kotlinx.coroutines.TimeoutCancellationException) {
+                    Log.d("gon", "Timeout occurred during word validation")
+                } else {
+                    Log.d("gon", "Error: ${e.message}")
+                }
                 errorMessage.value = e.message
                 -1
-
             } finally {
                 isLoading.value = false
-
             }
         }
     }

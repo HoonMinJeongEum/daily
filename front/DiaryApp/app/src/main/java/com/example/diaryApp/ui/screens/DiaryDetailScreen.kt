@@ -260,7 +260,7 @@ fun DiaryDetailScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .align(Alignment.BottomCenter)
-                        .padding(horizontal = screenWidth * 0.04f, vertical = screenHeight * 0.02f),
+                        .padding(horizontal = screenWidth * 0.02f, vertical = screenHeight * 0.02f),
                     horizontalAlignment = Alignment.Start
                 ) {
                     Box(
