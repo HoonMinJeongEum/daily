@@ -115,7 +115,7 @@ fun WordTap(
         var canvasWidth by remember { mutableStateOf(780) }
         var canvasHeight by remember { mutableStateOf(510) }
         var showPopup by remember { mutableStateOf(false) }
-
+        var isFalsePopup by remember { mutableStateOf(false) }
         // 단어마다 독립적인 Bitmap 생성
         val writtenBitmaps = remember(wordList) {
             wordList.map { word ->
@@ -160,6 +160,8 @@ fun WordTap(
         fun onButtonClick() {
             if (isButtonEnabled && currentIndex == finishedIndex + 1 && !isCanvasEmpty(writtenBitmaps[currentIndex])) {
                 isButtonEnabled = false // 버튼 비활성화로 설정
+                buttonText = "보내는 중..."
+
                 coroutineScope.launch {
                     val statusCode = onValidate(context, wordList[currentIndex], writtenBitmaps[currentIndex])
                     Log.d("wordTap", "success $statusCode")
@@ -185,9 +187,17 @@ fun WordTap(
                             playButtonSound(context,R.raw.word_fail )
                             buttonText = "다시제출"
                             buttonColor = Color(0xFFD27979) // Hex color D27979
+                            popupMessage = "틀렸어요! 다시 시도해 보세요."
+                            isFalsePopup = true
+                            showPopup = true
                         }
                         else -> {
-                            // 다른 에러 처리
+                            playButtonSound(context,R.raw.word_fail )
+                            buttonText = "다시제출"
+                            buttonColor = Color(0xFFD27979)
+                            popupMessage = "틀렸어요! 다시 시도해 보세요."
+                            isFalsePopup = true
+                            showPopup = true
                         }
                     }
                     clearCanvas()
@@ -218,7 +228,7 @@ fun WordTap(
                             .graphicsLayer(alpha = alpha)
                     ) {
                         Image(
-                            painter = painterResource(id = R.drawable.main_char),
+                            painter = if (!isFalsePopup) painterResource(id = R.drawable.main_char) else painterResource(id = R.drawable.main_char3),
                             contentDescription = "Character",
                             modifier = Modifier.width(screenWidth * 0.3f).aspectRatio(1.67f)
                         )
@@ -255,11 +265,14 @@ fun WordTap(
                 }
 
                 LaunchedEffect(showPopup) {
-                    popupMessage = popupMessages.random().replace("{}", username)
+                    if (!isFalsePopup) {
+                        popupMessage = popupMessages.random().replace("{}", username)
+                    }
                     delay(2000)
                     popupAlpha = 0f  // 투명도 점진적 감소 시작
                     delay(1000)  // 페이드 아웃 애니메이션 지속 시간
                     showPopup = false  // 완료 후 팝업 종료
+                    isFalsePopup = false
                     popupAlpha = 1f
                 }
             }
@@ -391,7 +404,7 @@ fun WordTap(
                                             }
                                         },
                                         text = if (currentIndex != finishedIndex + 1) "완료" else buttonText,
-                                        ButtonColor = if (currentIndex == finishedIndex + 1) buttonColor else Color.Gray, // 비활성화 시 색상 변경
+                                        ButtonColor = if (currentIndex == finishedIndex + 1 && isButtonEnabled) buttonColor else Color.Gray, // 비활성화 시 색상 변경
                                         imageResId = 11
                                     )
                                 }
