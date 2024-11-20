@@ -331,38 +331,38 @@ fun DiaryScreen(
                                             }
 
                                             // 드로잉 모드일 경우 점 찍기
-                                            if (isDrawingMode) {
-                                                val canvas = AndroidCanvas(currentBitmap)
-                                                val paint = createPaintForTool(
-                                                    toolType = selectedTool,
-                                                    color = selectedColor,
-                                                    thickness = brushSize
-                                                )
-
-                                                // 점을 그림
-                                                canvas.drawCircle(offset.x, offset.y, brushSize / 2, paint)
-
-                                                // 드로잉 스텝 저장
-                                                if (pagerState.currentPage == 0) {
-                                                    firstPageDrawingSteps.add(
-                                                        DrawingStep(
-                                                            path = Path().apply {
-                                                                addOval(
-                                                                    Rect(
-                                                                        offset.x - brushSize / 2,
-                                                                        offset.y - brushSize / 2,
-                                                                        offset.x + brushSize / 2,
-                                                                        offset.y + brushSize / 2
-                                                                    )
-                                                                )
-                                                            },
-                                                            color = selectedColor,
-                                                            thickness = brushSize,
-                                                            toolType = selectedTool
-                                                        )
-                                                    )
-                                                }
-                                            }
+//                                            if (isDrawingMode) {
+//                                                val canvas = AndroidCanvas(currentBitmap)
+//                                                val paint = createPaintForTool(
+//                                                    toolType = selectedTool,
+//                                                    color = selectedColor,
+//                                                    thickness = brushSize
+//                                                )
+//
+//                                                // 점을 그림
+//                                                canvas.drawCircle(offset.x, offset.y, brushSize / 2, paint)
+//
+//                                                // 드로잉 스텝 저장
+//                                                if (pagerState.currentPage == 0) {
+//                                                    firstPageDrawingSteps.add(
+//                                                        DrawingStep(
+//                                                            path = Path().apply {
+//                                                                addOval(
+//                                                                    Rect(
+//                                                                        offset.x - brushSize / 2,
+//                                                                        offset.y - brushSize / 2,
+//                                                                        offset.x + brushSize / 2,
+//                                                                        offset.y + brushSize / 2
+//                                                                    )
+//                                                                )
+//                                                            },
+//                                                            color = selectedColor,
+//                                                            thickness = brushSize,
+//                                                            toolType = selectedTool
+//                                                        )
+//                                                    )
+//                                                }
+//                                            }
                                         }
                                     }
                                 )
