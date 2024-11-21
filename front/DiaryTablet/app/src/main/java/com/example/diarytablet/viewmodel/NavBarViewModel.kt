@@ -42,7 +42,7 @@ class NavBarViewModel @Inject constructor(
 
     fun initializeData() {
         loadStatus()
-        saveFcmToken()
+//        saveFcmToken()
     }
 
     init {
