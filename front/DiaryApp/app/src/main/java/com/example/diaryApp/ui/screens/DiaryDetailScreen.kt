@@ -101,12 +101,20 @@ fun DiaryDetailScreen(
         }
     }
 
+
     val diaryDetail = diaryViewModel.diaryDetail.observeAsState()
     val comments = remember(diaryDetail.value?.comments) { mutableStateOf(diaryDetail.value?.comments ?: emptyList()) }
     val commentText = remember { mutableStateOf("") }
     val listState = rememberLazyListState() // LazyColumn 상태 관리
     val coroutineScope = rememberCoroutineScope()
 
+    LaunchedEffect(comments.value.size) {
+        if (comments.value.isNotEmpty()) {
+            coroutineScope.launch {
+                listState.animateScrollToItem(comments.value.size - 1)
+            }
+        }
+    }
     BackgroundPlacement(backgroundType = backgroundType)
 
     BoxWithConstraints(
@@ -348,9 +356,6 @@ fun DiaryDetailScreen(
                                         comments.value = comments.value + newComment
                                         commentText.value = ""
 
-                                        coroutineScope.launch {
-                                            listState.animateScrollToItem(comments.value.size - 1)
-                                        }
                                     }
                                 }
                             )
@@ -376,9 +381,7 @@ fun DiaryDetailScreen(
                                     comments.value = comments.value + newComment
                                     commentText.value = ""
 
-                                    coroutineScope.launch {
-                                        listState.animateScrollToItem(comments.value.size - 1)
-                                    }
+
                                 }
                             }
                         )
@@ -389,6 +392,8 @@ fun DiaryDetailScreen(
                             )
                         }
                     }
+
+
                 }
             }
         }

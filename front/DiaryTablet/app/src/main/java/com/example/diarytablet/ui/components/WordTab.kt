@@ -173,7 +173,7 @@ fun WordTap(
                             buttonText = "제출"
                             buttonColor = Color.White
                             initialized = false
-                            if (finishedIndex == 4) {
+                            if (finishedIndex == 2) {
                                 onFinish()
                                 navController.navigate("main?origin=wordLearning&isFinished=true") {
                                     popUpTo("wordLearning") { inclusive = true }
@@ -201,7 +201,7 @@ fun WordTap(
                         }
                     }
                     clearCanvas()
-                    isButtonEnabled = true // 요청 완료 후 버튼 다시 활성화
+                    isButtonEnabled = true
                 }
             }
         }
