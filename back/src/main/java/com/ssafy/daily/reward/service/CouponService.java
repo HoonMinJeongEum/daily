@@ -4,10 +4,11 @@ import com.ssafy.daily.alarm.service.AlarmService;
 import com.ssafy.daily.common.Content;
 import com.ssafy.daily.common.Role;
 import com.ssafy.daily.exception.AlreadyOwnedException;
-import com.ssafy.daily.exception.MyNotFoundException;
 import com.ssafy.daily.exception.InsufficientFundsException;
+import com.ssafy.daily.exception.MyNotFoundException;
 import com.ssafy.daily.reward.dto.*;
-import com.ssafy.daily.reward.entity.*;
+import com.ssafy.daily.reward.entity.Coupon;
+import com.ssafy.daily.reward.entity.EarnedCoupon;
 import com.ssafy.daily.reward.repository.CouponRepository;
 import com.ssafy.daily.reward.repository.EarnedCouponRepository;
 import com.ssafy.daily.user.dto.CustomUserDetails;
@@ -19,8 +20,8 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
+
 import java.time.LocalDateTime;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -33,16 +34,10 @@ public class CouponService {
     private final FamilyRepository familyRepository;
     private final ShellService shellService;
     private final AlarmService alarmService;
+
     // 쿠폰 등록
     @Transactional
     public void addCoupon(CustomUserDetails userDetails, AddCouponRequest request) {
-        // 입력값 유효성 검사
-        if (request.getDescription() == null || request.getDescription().isEmpty()) {
-            throw new IllegalArgumentException("쿠폰 설명을 입력해 주세요.");  // 잘못된 요청
-        }
-        if (request.getPrice() <= 0) {
-            throw new IllegalArgumentException("쿠폰 가격은 0보다 커야 합니다.");  // 잘못된 요청
-        }
 
         // 부모님 계정이 존재하는지 확인
         int familyId = userDetails.getFamily().getId();

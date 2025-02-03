@@ -5,6 +5,7 @@ import com.ssafy.daily.reward.dto.BuyCouponRequest;
 import com.ssafy.daily.reward.dto.UseCouponRequest;
 import com.ssafy.daily.reward.service.CouponService;
 import com.ssafy.daily.user.dto.CustomUserDetails;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -18,7 +19,7 @@ public class CouponController {
 
     // 쿠폰 등록
     @PostMapping
-    public ResponseEntity<?> addCoupon(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody AddCouponRequest request) {
+    public ResponseEntity<?> addCoupon(@AuthenticationPrincipal CustomUserDetails userDetails, @Valid @RequestBody AddCouponRequest request) {
         couponService.addCoupon(userDetails, request);
         return ResponseEntity.ok("쿠폰이 정상적으로 등록되었습니다.");
     }
