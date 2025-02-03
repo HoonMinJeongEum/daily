@@ -27,7 +27,9 @@ public class AlarmService {
     private final FCMTokenRepository fcmTokenRepository;
     private final AlarmRepository alarmRepository;
 
-    // 토큰 저장
+    /**
+     * 토큰 저장
+     */
     public StatusResponse saveToken(CustomUserDetails userDetails, SaveTokenRequest request) {
 
         int id = userDetails.getMember() == null ? userDetails.getFamily().getId() : userDetails.getMember().getId();
@@ -53,15 +55,16 @@ public class AlarmService {
         return new StatusResponse(200, "알림 토큰이 정상적으로 등록되었습니다.");
     }
 
-    // 알림 전송
-    /*
-    name : 보내는 사람의 이름
-    titleId : 수락이나 확인 누를 시 이동할 페이지에 필요한 id (그림 일기의 id or 그림 퀴즈 sessionId)
-    toId : 받는 사람의 Id
-    role : 받는 사람의 role(PARENT or CHILD)
-    title : 알림 제목 (그림 일기 or 그림 퀴즈)
-    body : 알림 내용 ex) 그림 퀴즈 요청
-    */
+    /**
+     * 알림 전송
+     *
+     * @param name 보내는 사람의 이름
+     * @param titleId 수락이나 확인 누를 시 이동할 페이지에 필요한 id (그림 일기의 id or 그림 퀴즈 sessionId)
+     * @param toId 받는 사람의 Id
+     * @param role 받는 사람의 role(PARENT or CHILD)
+     * @param title 알림 제목 (그림 일기 or 그림 퀴즈)
+     * @param body 알림 내용 (예: "그림 퀴즈 요청")
+     */
     public void sendNotification(String name, String titleId, int toId, Role role, String title, String body) throws Exception {
         // 토큰 조회
         FCMToken fcmToken = getToken(toId, role);
@@ -86,7 +89,9 @@ public class AlarmService {
         saveAlarm(name, titleId, fcmToken, title, body);
     }
 
-    // 알림 조회
+    /**
+     * 알림 조회
+     */
     public AlarmListResponse getAlarms(CustomUserDetails userDetails) {
         int id = userDetails.getMember() == null ? userDetails.getFamily().getId() : userDetails.getMember().getId();
         Role role = userDetails.getMember() == null ? Role.PARENT : Role.CHILD;
@@ -103,7 +108,9 @@ public class AlarmService {
         return new AlarmListResponse(limitedAlarms);
     }
 
-    // 알림 확인
+    /**
+     * 알림 확인
+     */
     public StatusResponse checkAlarm(CheckAlarmRequest request) {
         Alarm alarm = alarmRepository.findById(request.getAlarmId())
                 .orElseThrow(() -> new EmptyResultDataAccessException("해당 알림을 찾을 수 없습니다.", 1));
@@ -113,7 +120,9 @@ public class AlarmService {
         return new StatusResponse(200, "알림 정상적으로 확인되었습니다.");
     }
 
-    // 토큰 조회
+    /**
+     * 토큰 조회
+     */
     public FCMToken getToken(int userId, Role role) {
         FCMToken fcmTokens = fcmTokenRepository.findByUserIdAndRole(userId, role);;
         if (fcmTokens == null) {
@@ -122,7 +131,9 @@ public class AlarmService {
         return fcmTokens;
     }
 
-    // 알림 저장
+    /**
+     * 알림 저장
+     */
     private void saveAlarm(String name, String titleId, FCMToken fcmToken, String title, String body) {
         Alarm alarm = Alarm.builder()
                 .titleId(titleId)

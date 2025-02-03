@@ -8,7 +8,6 @@ import com.ssafy.daily.quiz.dto.*;
 import com.ssafy.daily.quiz.entity.Quiz;
 import com.ssafy.daily.quiz.repository.QuizRepository;
 import com.ssafy.daily.user.dto.CustomUserDetails;
-import com.ssafy.daily.user.entity.Family;
 import com.ssafy.daily.user.entity.Member;
 import com.ssafy.daily.user.repository.MemberRepository;
 import com.ssafy.daily.word.entity.LearnedWord;
@@ -49,7 +48,9 @@ public class QuizService {
         this.openvidu = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET);
     }
 
-    // 세션 아이디 생성
+    /**
+     * 세션 아이디 생성
+     */
     public SessionResponse initializeSession(CustomUserDetails userDetails, SessionRequest request) throws Exception {
 
         // 세션 아이디 생성
@@ -84,7 +85,9 @@ public class QuizService {
         return new SessionResponse(sessionId);
     }
 
-    // 토큰 생성
+    /**
+     * 토큰 생성
+     */
     public TokenResponse createConnection(String sessionId) throws OpenViduJavaClientException, OpenViduHttpException {
         Session session = openvidu.getActiveSession(sessionId);
         if (session == null) {
@@ -96,7 +99,9 @@ public class QuizService {
         return new TokenResponse(connection.getToken());
     }
 
-    // 단어 추천
+    /**
+     * 단어 추천
+     */
     public List<RecommendWordResponse> recommendWord(CustomUserDetails userDetails) {
         int memberId = userDetails.getMember().getId();
         List<LearnedWord> learnedWords = learnedWordRepository.findByMemberId(memberId);
@@ -121,7 +126,9 @@ public class QuizService {
         return recommendedWords;
     }
 
-    // 세션 체크
+    /**
+     * 세션 체크
+     */
     public CheckSessionResponse checkSession(CustomUserDetails userDetails, CheckSessionRequest request) {
         String username = userDetails.getUsername();
         String childName = request.getChildName();
@@ -137,8 +144,10 @@ public class QuizService {
             return new CheckSessionResponse(customSessionId);
         }
     }
-
-    // 세션 종료
+    
+    /**
+     * 세션 종료
+     */
     public void endSession(CustomUserDetails userDetails) {
         // 알림 완료 처리
         String username = userDetails.getUsername();
@@ -151,7 +160,9 @@ public class QuizService {
         quizRepository.save(quiz);
     }
 
-    // 알림 확인 처리
+    /**
+     * 알림 확인 처리
+     */
     public void confirmAlarmsByTitleAndTitleId(String title, String titleId) {
         List<Alarm> alarms = alarmRepository.findByTitleAndTitleIdAndConfirmedAtIsNull(title, titleId);
 

@@ -6,10 +6,6 @@ spring:
       max-file-size: 30MB
       max-request-size: 30MB
 
-# OpenVidu 설정
-openvidu:
-  url: https://k11e204.p.ssafy.io:8443
-
 server:
   port: 8081
 
