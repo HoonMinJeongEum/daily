@@ -1,5 +1,6 @@
 package com.ssafy.daily.reward.entity;
 
+import com.ssafy.daily.exception.AlreadyOwnedException;
 import com.ssafy.daily.user.entity.Member;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -30,7 +31,14 @@ public class EarnedCoupon {
     @Column
     private LocalDateTime usedAt;
 
-    public void updateUsedAt(LocalDateTime usedAt) {
+    /**
+     * 쿠폰 사용
+     * @param usedAt 사용 날짜
+     */
+    public void use(LocalDateTime usedAt) {
+        if(this.getUsedAt() != null) {
+            throw new AlreadyOwnedException("이미 사용된 쿠폰 입니다.");
+        }
         this.usedAt = usedAt;
     }
 }
