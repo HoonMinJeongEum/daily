@@ -1,9 +1,13 @@
 package com.ssafy.daily.reward.entity;
 
+import com.ssafy.daily.exception.AlreadyOwnedException;
 import com.ssafy.daily.user.entity.Family;
 import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.DynamicUpdate;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -38,7 +42,23 @@ public class Coupon {
         this.createdAt = LocalDateTime.now();
     }
 
-    public void updatePurchasedAt(LocalDateTime purchasedAt) {
+    /**
+     * 쿠폰 구매
+     * @param purchasedAt 구매 날짜
+     */
+    public void buy(LocalDateTime purchasedAt) {
+        if (this.getPurchasedAt() != null) {
+            throw new AlreadyOwnedException("이미 구매한 쿠폰입니다.");
+        }
         this.purchasedAt = purchasedAt;
+    }
+
+    /**
+     * 쿠폰 삭제 가능 여부 체크 후 삭제
+     */
+    public void validateDeletable() {
+        if (this.purchasedAt != null) {
+            throw new AlreadyOwnedException("이미 구매한 쿠폰은 삭제할 수 없습니다.");
+        }
     }
 }
