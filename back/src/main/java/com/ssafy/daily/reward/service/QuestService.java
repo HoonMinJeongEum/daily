@@ -55,8 +55,6 @@ public class QuestService {
             quest.setQuizStatus(false);
             quest.setWordStatus(false);
         }
-
-        questRepository.saveAll(quests);
     }
 
     /**
