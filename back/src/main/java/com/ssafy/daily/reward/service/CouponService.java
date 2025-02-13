@@ -3,6 +3,7 @@ package com.ssafy.daily.reward.service;
 import com.ssafy.daily.alarm.service.AlarmService;
 import com.ssafy.daily.common.Content;
 import com.ssafy.daily.common.Role;
+import com.ssafy.daily.exception.AlreadyOwnedException;
 import com.ssafy.daily.exception.MyNotFoundException;
 import com.ssafy.daily.reward.dto.*;
 import com.ssafy.daily.reward.entity.Coupon;
@@ -33,7 +34,9 @@ public class CouponService {
 
     /**
      * 쿠폰 등록
+     * @param userDetails 사용자 정보
      * @param request 등록하는 쿠폰 정보
+     * @throws MyNotFoundException 해당 가족 계정을 찾을 수 없을 때 던지는 예외
      */
     @Transactional
     public void addCoupon(CustomUserDetails userDetails, AddCouponRequest request) {
@@ -50,6 +53,8 @@ public class CouponService {
     /**
      * 쿠폰 삭제
      * @param couponId 쿠폰 고유 번호
+     * @throws MyNotFoundException 쿠폰을 찾을 수 없을 때 던지는 예외
+     * @throws AlreadyOwnedException 이미 구매한 쿠폰일 때 던지는 예외
      */
     @Transactional
     public void deleteCoupon(long couponId) {
@@ -63,6 +68,8 @@ public class CouponService {
 
     /**
      * 사용 가능한 쿠폰 목록 조회
+     * @param userDetails 사용자 정보
+     * @return 아직 구매하지 않은 쿠폰 리스트
      */
     public List<CouponResponse> getCoupons(CustomUserDetails userDetails) {
         return couponRepository.findByPurchasedAtIsNullAndFamilyId(userDetails.getFamily().getId()).stream()
@@ -72,9 +79,12 @@ public class CouponService {
 
     /**
      * 쿠폰 구매
-     * @param request 구매하는 쿠펀 정보
-     * @return 남은 조개 수 반환
-     * @throws Exception 알림 에러
+     * @param userDetails 사용자 정보
+     * @param request 구매하는 쿠폰 정보
+     * @return 남은 조개 수
+     * @throws MyNotFoundException 쿠폰을 찾을 수 없을 때 던지는 예외
+     * @throws AlreadyOwnedException 이미 구매한 쿠폰일 때 던지는 예외
+     * @throws Exception 알림에서 에러가 발생했을 때 던지는 예외
      */
     @Transactional
     public int buyCoupon(CustomUserDetails userDetails, BuyCouponRequest request) throws Exception {
@@ -99,6 +109,8 @@ public class CouponService {
 
     /**
      * 사용자가 보유한 쿠폰 조회
+     * @param userDetails 사용자 정보
+     * @return 사용자가 보유한 쿠폰 리스트
      */
     public List<EarnedCouponResponse> getUserCoupons(CustomUserDetails userDetails) {
         return earnedCouponRepository.findByMemberIdAndUsedAtIsNull(userDetails.getMember().getId()).stream()
@@ -120,6 +132,8 @@ public class CouponService {
 
     /**
      * 자식들의 쿠폰 조회
+     * @param userDetails 사용자 정보
+     * @return 자식들이 구매한 쿠폰 리스트
      */
     public List<ChildCouponResponse> getChildCoupons(CustomUserDetails userDetails) {
         return memberRepository.findByFamilyId(userDetails.getFamily().getId()).stream()
