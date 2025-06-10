@@ -136,21 +136,6 @@ public class CouponService {
      * @return 자식들이 구매한 쿠폰 리스트
      */
     public List<ChildCouponResponse> getChildCoupons(CustomUserDetails userDetails) {
-        return memberRepository.findByFamilyId(userDetails.getFamily().getId()).stream()
-                .flatMap(member -> earnedCouponRepository.findByMemberId(member.getId()).stream())
-                .sorted((ec1, ec2) -> {
-                    // 사용되지 않은 쿠폰을 우선 정렬
-                    if (ec1.getUsedAt() == null && ec2.getUsedAt() != null) {
-                        return -1;
-                    } else if (ec1.getUsedAt() != null && ec2.getUsedAt() == null) {
-                        return 1;
-                    } else if (ec1.getUsedAt() == null) {
-                        return ec2.getCoupon().getCreatedAt().compareTo(ec1.getCoupon().getCreatedAt());
-                    } else {
-                        return ec2.getUsedAt().compareTo(ec1.getUsedAt());
-                    }
-                })
-                .map(ChildCouponResponse::new)
-                .collect(Collectors.toList());
+        return earnedCouponRepository.findChildCouponsByFamilyId(userDetails.getFamilyId());
     }
 }

@@ -1,5 +1,6 @@
 package com.ssafy.daily.reward.repository;
 
+import com.ssafy.daily.reward.dto.ChildCouponResponse;
 import com.ssafy.daily.reward.entity.EarnedCoupon;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -16,9 +17,17 @@ public interface EarnedCouponRepository extends JpaRepository<EarnedCoupon, Long
 
     List<EarnedCoupon> findByMemberIdAndUsedAtIsNull(int memberId);
 
-//    @Query("SELECT ec FROM EarnedCoupon ec " +
-//            "WHERE ec.member.id = :memberId " +
-//            "ORDER BY ec.usedAt NULLS FIRST, " +
-//            "COALESCE(ec.usedAt, ec.coupon.purchasedAt) DESC")
-//    List<EarnedCoupon> findByMemberIdWithSorting(@Param("memberId") int memberId);
+    @Query("""
+        SELECT new com.ssafy.daily.reward.dto.ChildCouponResponse(
+            m.id, ec.id, m.name, c.description, ec.usedAt, c.purchasedAt
+        )
+        FROM EarnedCoupon ec
+        JOIN ec.member m
+        JOIN ec.coupon c
+        WHERE m.family.id = :familyId
+        ORDER BY
+             ec.usedAt, c.purchasedAt DESC
+    """)
+    List<ChildCouponResponse> findChildCouponsByFamilyId(@Param("familyId") int familyId);
+
 }
