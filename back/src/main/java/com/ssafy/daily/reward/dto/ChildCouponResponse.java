@@ -1,6 +1,5 @@
 package com.ssafy.daily.reward.dto;
 
-import com.ssafy.daily.reward.entity.EarnedCoupon;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -14,12 +13,19 @@ public class ChildCouponResponse {
     private final LocalDateTime usedAt;
     private final LocalDateTime createdAt;
 
-    public ChildCouponResponse(EarnedCoupon earnedCoupon) {
-        this.memberId = earnedCoupon.getMember().getId();
-        this.earnedCouponId = earnedCoupon.getId();
-        this.name = earnedCoupon.getMember().getName();
-        this.description = earnedCoupon.getCoupon().getDescription();
-        this.usedAt = earnedCoupon.getUsedAt();
-        this.createdAt = earnedCoupon.getCoupon().getPurchasedAt();
+    public ChildCouponResponse(
+            int memberId,
+            long earnedCouponId,
+            String name,
+            String description,
+            LocalDateTime usedAt,
+            LocalDateTime createdAt
+    ) {
+        this.memberId = memberId;
+        this.earnedCouponId = earnedCouponId;
+        this.name = name;
+        this.description = description;
+        this.usedAt = usedAt;
+        this.createdAt = createdAt;
     }
 }
