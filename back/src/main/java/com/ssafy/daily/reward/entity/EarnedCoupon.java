@@ -14,6 +14,9 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Table(indexes = {
+        @Index(name = "idx_member_usedat", columnList = "member_id, used_at")
+})
 public class EarnedCoupon {
 
     @Id

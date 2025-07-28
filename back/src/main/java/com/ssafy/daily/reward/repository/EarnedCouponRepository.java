@@ -15,7 +15,12 @@ public interface EarnedCouponRepository extends JpaRepository<EarnedCoupon, Long
 
     void deleteByMemberId(int memberId);
 
-    List<EarnedCoupon> findByMemberIdAndUsedAtIsNull(int memberId);
+    @Query("""
+        SELECT ec FROM EarnedCoupon  ec
+        JOIN FETCH ec.coupon
+        WHERE ec.member.id = :memberId AND ec.usedAt IS NULL
+    """)
+    List<EarnedCoupon> findByMemberIdAndUsedAtIsNull(@Param("memberId") int memberId);
 
     @Query("""
         SELECT new com.ssafy.daily.reward.dto.ChildCouponResponse(
