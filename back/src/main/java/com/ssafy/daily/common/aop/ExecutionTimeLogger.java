@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class ExecutionTimeLogger {
 
-    @Around("execution(* com.ssafy.daily.reward.service.*.*(..))")
+    @Around("execution(* com.ssafy.daily..service.*.*(..))")
     public Object logExecutionTime(ProceedingJoinPoint joinPoint) throws Throwable {
         long start = System.currentTimeMillis();
 

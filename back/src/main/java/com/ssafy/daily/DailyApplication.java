@@ -5,20 +5,21 @@ import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.TimeZone;
 
 @SpringBootApplication
 @EnableScheduling
+@EnableAsync
 public class DailyApplication {
 
 	public static void main(String[] args) throws IOException {
 		if (FirebaseApp.getApps().isEmpty()) {
-			InputStream serviceAccount = DailyApplication.class.getClassLoader().getResourceAsStream("serviceAccountKey.json");
+			InputStream serviceAccount = DailyApplication.class.getClassLoader().getResourceAsStream("serviceAccountKey_test.json");
 
 			FirebaseOptions options = new FirebaseOptions.Builder()
 					.setCredentials(GoogleCredentials.fromStream(serviceAccount))
