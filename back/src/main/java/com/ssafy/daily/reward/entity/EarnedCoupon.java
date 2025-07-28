@@ -14,6 +14,14 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Table(
+        indexes = {
+                @Index(name = "idx_member_usedat", columnList = "member_id, used_at"),
+        },
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_member_coupon", columnNames = {"member_id", "coupon_id"})
+        }
+)
 public class EarnedCoupon {
 
     @Id

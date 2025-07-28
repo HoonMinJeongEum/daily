@@ -2,8 +2,8 @@ package com.ssafy.daily.reward.service;
 
 import com.ssafy.daily.alarm.service.AlarmService;
 import com.ssafy.daily.common.Content;
-import com.ssafy.daily.common.Role;
 import com.ssafy.daily.exception.AlreadyOwnedException;
+import com.ssafy.daily.exception.InsufficientFundsException;
 import com.ssafy.daily.exception.MyNotFoundException;
 import com.ssafy.daily.reward.dto.*;
 import com.ssafy.daily.reward.entity.Coupon;
@@ -15,6 +15,9 @@ import com.ssafy.daily.user.entity.Family;
 import com.ssafy.daily.user.entity.Member;
 import com.ssafy.daily.user.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +41,7 @@ public class CouponService {
      * @param request 등록하는 쿠폰 정보
      * @throws MyNotFoundException 해당 가족 계정을 찾을 수 없을 때 던지는 예외
      */
+    @CacheEvict(value = "coupons", key = "#userDetails.family.id")
     @Transactional
     public void addCoupon(CustomUserDetails userDetails, AddCouponRequest request) {
         Family family = shellService.validateFamily(userDetails.getFamily().getId());
@@ -56,8 +60,9 @@ public class CouponService {
      * @throws MyNotFoundException 쿠폰을 찾을 수 없을 때 던지는 예외
      * @throws AlreadyOwnedException 이미 구매한 쿠폰일 때 던지는 예외
      */
+    @CacheEvict(value = "coupons", key = "#userDetails.family.id")
     @Transactional
-    public void deleteCoupon(long couponId) {
+    public void deleteCoupon(CustomUserDetails userDetails, long couponId) {
         Coupon coupon = couponRepository.findById(couponId)
                 .orElseThrow(() -> new MyNotFoundException("해당 쿠폰을 찾을 수 없습니다."));
 
@@ -71,6 +76,11 @@ public class CouponService {
      * @param userDetails 사용자 정보
      * @return 아직 구매하지 않은 쿠폰 리스트
      */
+    @Cacheable(
+            value = "coupons",
+            key = "#userDetails.family.id",
+            sync = true
+    )
     public List<CouponResponse> getCoupons(CustomUserDetails userDetails) {
         return couponRepository.findByPurchasedAtIsNullAndFamilyId(userDetails.getFamily().getId()).stream()
                 .map(CouponResponse::new)
@@ -86,6 +96,11 @@ public class CouponService {
      * @throws AlreadyOwnedException 이미 구매한 쿠폰일 때 던지는 예외
      * @throws Exception 알림에서 에러가 발생했을 때 던지는 예외
      */
+    @Caching(evict = {
+        @CacheEvict(value = "coupons", key = "#userDetails.family.id"),
+        @CacheEvict(value = "coupons-user", key = "#userDetails.member.id"),
+        @CacheEvict(value = "coupons-child", key = "#userDetails.family.id")
+    })
     @Transactional
     public int buyCoupon(CustomUserDetails userDetails, BuyCouponRequest request) throws Exception {
         Member member = shellService.validateMember(userDetails.getMember().getId());
@@ -103,7 +118,7 @@ public class CouponService {
 
         shellService.saveShellLog(member, -coupon.getPrice(), Content.COUPON);
 
-        alarmService.sendNotification(member.getName(), String.valueOf(coupon.getId()), userDetails.getFamily().getId(), Role.PARENT, "쿠폰", member.getName() + " - 쿠폰을 구매했어요");
+//        alarmService.sendNotification(member.getName(), String.valueOf(coupon.getId()), userDetails.getFamily().getId(), Role.PARENT, "쿠폰", member.getName() + " - 쿠폰을 구매했어요");
         return shellService.getUserShell(member.getId());
     }
 
@@ -112,6 +127,11 @@ public class CouponService {
      * @param userDetails 사용자 정보
      * @return 사용자가 보유한 쿠폰 리스트
      */
+    @Cacheable(
+            value = "coupons-user",
+            key = "#userDetails.member.id",
+            sync = true
+    )
     public List<EarnedCouponResponse> getUserCoupons(CustomUserDetails userDetails) {
         return earnedCouponRepository.findByMemberIdAndUsedAtIsNull(userDetails.getMember().getId()).stream()
                 .map(EarnedCouponResponse::new)
@@ -122,8 +142,12 @@ public class CouponService {
      * 쿠폰 사용
      * @param request 사용하는 쿠폰 정보
      */
+    @Caching(evict = {
+        @CacheEvict(value = "coupons-user", key = "#userDetails.member.id"),
+        @CacheEvict(value = "coupons-child", key = "#userDetails.family.id")
+    })
     @Transactional
-    public void useCoupon(UseCouponRequest request) {
+    public void useCoupon(CustomUserDetails userDetails, UseCouponRequest request) {
         EarnedCoupon earnedCoupon = earnedCouponRepository.findById(request.getEarnedCouponId())
                 .orElseThrow(() -> new MyNotFoundException("쿠폰이 존재하지 않습니다."));
 
@@ -135,6 +159,11 @@ public class CouponService {
      * @param userDetails 사용자 정보
      * @return 자식들이 구매한 쿠폰 리스트
      */
+    @Cacheable(
+            value = "coupons-child",
+            key = "#userDetails.family.id",
+            sync=true
+    )
     public List<ChildCouponResponse> getChildCoupons(CustomUserDetails userDetails) {
         return earnedCouponRepository.findChildCouponsByFamilyId(userDetails.getFamilyId());
     }

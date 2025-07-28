@@ -15,6 +15,9 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Table(indexes = {
+        @Index(name = "idx_family_purchased", columnList = "family_id, purchased_at")
+})
 public class Coupon {
 
     @Id

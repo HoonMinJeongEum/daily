@@ -1,0 +1,97 @@
+version: "2.4"
+
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ssafy
+      MYSQL_DATABASE: test
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql-init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-pssafy"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 10s
+    cpuset: "0-1,5"
+    mem_limit: "3g"
+
+  app:
+    build:
+      context: ./back
+      dockerfile: Dockerfile_test 
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      db:
+        condition: service_healthy 
+    ports:
+      - "18080:8080"
+    cpuset: "2-3"
+    mem_limit: "4g"
+
+  k6:
+    image: grafana/k6:0.51.0
+    command: run /scripts/script.js
+    environment:
+      TARGET_BASE_URL: http://app:8080
+    volumes:
+      - ./k6:/scripts:ro
+    depends_on:
+      - app
+    cpuset: "4"
+    mem_limit: "1g"
+
+  mysqld-exporter:
+    image: prom/mysqld-exporter:latest
+    depends_on:
+      - db
+    ports:
+      - "9104:9104"
+    volumes:
+      - ./mysqld-exporter/.my.cnf:/etc/.my.cnf:ro
+    command:
+      - --config.my-cnf=/etc/.my.cnf
+      - --collect.auto_increment.columns
+      - --collect.info_schema.innodb_metrics
+      - --collect.perf_schema.eventsstatements
+      - --collect.perf_schema.eventswaits
+      - --collect.perf_schema.tablelocks
+    cpuset: "6"
+    mem_limit: "256m"
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - promdata:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=15d
+    ports:
+      - "9090:9090"
+    depends_on:
+      - mysqld-exporter
+      - app
+    cpuset: "7"
+    mem_limit: "512m"
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafdata:/var/lib/grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    depends_on:
+      - prometheus
+    cpuset: "7"
+    mem_limit: "512m"
+
+volumes:                               
+  promdata:                                
+  grafdata: 

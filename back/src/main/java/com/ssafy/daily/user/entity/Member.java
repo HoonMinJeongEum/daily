@@ -29,6 +29,9 @@ public class Member {
     @Column
     private String img;
 
+    @Column
+    private int shell;
+
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();

@@ -50,6 +50,9 @@ public class ShellService {
         Integer totalStock = shellRepository.findTotalStockByMemberId(memberId);
         return totalStock != null ? totalStock : 0;
     }
+//    public int getUserShell(int memberId) {
+//        return validateMember(memberId).getShell();
+//    }
 
     /**
      * Shell 로그 저장
@@ -62,16 +65,6 @@ public class ShellService {
                 .content(content)
                 .lastUpdated(LocalDateTime.now())
                 .build());
-    }
-
-    /**
-     * 잔액 검증
-     */
-    public void validateShellBalance(int memberId, int stickerPrice) {
-        int shellCount = getUserShell(memberId);
-        if (shellCount < stickerPrice) {
-            throw new InsufficientFundsException("재화가 부족합니다.");
-        }
     }
 
     /**
@@ -88,5 +81,10 @@ public class ShellService {
     public Family validateFamily(int familyId) {
         return familyRepository.findById(familyId)
                 .orElseThrow(() -> new MyNotFoundException("해당 가족 계정을 찾을 수 없습니다."));
+    }
+
+    public void validateShellBalance(int id, int price) {
+        int shell = getUserShell(id);
+        if (shell < price) throw new InsufficientFundsException("재화가 부족합니다.");
     }
 }

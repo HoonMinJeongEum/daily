@@ -1,7 +1,13 @@
 package com.ssafy.daily.user.repository;
 
+import com.ssafy.daily.reward.entity.Coupon;
 import com.ssafy.daily.user.entity.Member;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -13,4 +19,17 @@ public interface MemberRepository extends JpaRepository<Member, Integer> {
     Optional<Member> findByIdAndFamilyId(int memberId, int familyId);
     boolean existsByFamilyIdAndName(int familyId, String name);
     Member findByFamilyIdAndName(int familyId, String name);
+
+    @Modifying
+    @Query("""
+      update Member m
+         set m.shell = m.shell + :delta
+       where m.id = :id
+         and m.shell + :delta >= 0
+    """)
+    int updateShell(@Param("id") long id, @Param("delta") int delta);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select m from Member m where m.id = :id")
+    Optional<Member> findByIdForUpdate(int id);
 }

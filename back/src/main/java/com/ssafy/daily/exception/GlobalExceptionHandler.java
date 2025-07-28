@@ -12,28 +12,33 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InsufficientFundsException.class)
     public ResponseEntity<String> handleInsufficientFundsException(InsufficientFundsException e) {
+        System.out.println(e.getMessage());
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(e.getMessage());
     }
 
     @ExceptionHandler(StickerNotFoundException.class)
     public ResponseEntity<String> handleStickerNotFoundException(StickerNotFoundException e) {
+        System.out.println(e.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
     }
 
     @ExceptionHandler(MyNotFoundException.class)
     public ResponseEntity<String> handleMyNotFoundException(MyNotFoundException e) {
+        System.out.println(e.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
     }
 
     @ExceptionHandler(AlreadyOwnedException.class)
     public ResponseEntity<StatusResponse> handleAlreadyOwnedException(AlreadyOwnedException e) {
         StatusResponse response = new StatusResponse(409, e.getMessage());
+        System.out.println(e.getMessage());
         return new ResponseEntity<>(response, HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<StatusResponse> handleIllegalArgumentException(IllegalArgumentException ex) {
         StatusResponse response = new StatusResponse(400, ex.getMessage());
+        System.out.println(ex.getMessage());
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 

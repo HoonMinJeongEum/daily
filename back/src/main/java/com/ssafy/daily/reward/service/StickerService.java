@@ -2,6 +2,7 @@ package com.ssafy.daily.reward.service;
 
 import com.ssafy.daily.common.Content;
 import com.ssafy.daily.exception.AlreadyOwnedException;
+import com.ssafy.daily.exception.InsufficientFundsException;
 import com.ssafy.daily.exception.StickerNotFoundException;
 import com.ssafy.daily.reward.dto.BuyStickerRequest;
 import com.ssafy.daily.reward.dto.EarnedStickerResponse;
@@ -12,6 +13,7 @@ import com.ssafy.daily.reward.repository.EarnedStickerRepository;
 import com.ssafy.daily.reward.repository.StickerRepository;
 import com.ssafy.daily.user.dto.CustomUserDetails;
 import com.ssafy.daily.user.entity.Member;
+import com.ssafy.daily.user.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +28,7 @@ public class StickerService {
     private final StickerRepository stickerRepository;
     private final EarnedStickerRepository earnedStickerRepository;
     private final ShellService shellService;
+    private final MemberRepository memberRepository;
 
     /**
      * 사용자가 보유한 스티커 목록 조회
@@ -57,7 +60,9 @@ public class StickerService {
         Member member = shellService.validateMember(userDetails.getMember().getId());
         Sticker sticker = validateSticker(request.getStickerId());
         validateOwnership(member.getId(), sticker.getId());
-        shellService.validateShellBalance(member.getId(), sticker.getPrice());
+
+        int updated = memberRepository.updateShell(member.getId(), -sticker.getPrice());
+        if (updated == 0) throw new InsufficientFundsException("재화가 부족합니다.");
 
         EarnedSticker earnedSticker = EarnedSticker.builder()
                 .sticker(sticker)
@@ -65,7 +70,6 @@ public class StickerService {
                 .build();
         earnedStickerRepository.save(earnedSticker);
 
-        // Shell 차감
         shellService.saveShellLog(member, -sticker.getPrice(), Content.STICKER);
 
         return shellService.getUserShell(member.getId());

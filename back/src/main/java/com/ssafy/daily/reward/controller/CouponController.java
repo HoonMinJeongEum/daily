@@ -42,9 +42,10 @@ public class CouponController {
      */
     @DeleteMapping("/{couponId}")
     public ResponseEntity<Void> deleteCoupon(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable long couponId
     ) {
-        couponService.deleteCoupon(couponId);
+        couponService.deleteCoupon(userDetails, couponId);
         return ResponseEntity.noContent().build();
     }
 
@@ -99,9 +100,10 @@ public class CouponController {
      */
     @PatchMapping("/use")
     public ResponseEntity<Void> useCoupon(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody UseCouponRequest request
     ) {
-        couponService.useCoupon(request);
+        couponService.useCoupon(userDetails, request);
         return ResponseEntity.noContent().build();
     }
 

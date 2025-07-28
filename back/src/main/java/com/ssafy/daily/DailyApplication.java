@@ -19,7 +19,7 @@ public class DailyApplication {
 
 	public static void main(String[] args) throws IOException {
 		if (FirebaseApp.getApps().isEmpty()) {
-			InputStream serviceAccount = DailyApplication.class.getClassLoader().getResourceAsStream("serviceAccountKey_test.json");
+			InputStream serviceAccount = DailyApplication.class.getClassLoader().getResourceAsStream("serviceAccountKey.json");
 
 			FirebaseOptions options = new FirebaseOptions.Builder()
 					.setCredentials(GoogleCredentials.fromStream(serviceAccount))
