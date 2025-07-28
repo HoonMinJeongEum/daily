@@ -16,6 +16,7 @@ import com.ssafy.daily.common.StatusResponse;
 import com.ssafy.daily.user.dto.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -65,7 +66,9 @@ public class AlarmService {
      * @param title 알림 제목 (그림 일기 or 그림 퀴즈)
      * @param body 알림 내용 (예: "그림 퀴즈 요청")
      */
+    @Async
     public void sendNotification(String name, String titleId, int toId, Role role, String title, String body) throws Exception {
+
         // 토큰 조회
         FCMToken fcmToken = getToken(toId, role);
 
