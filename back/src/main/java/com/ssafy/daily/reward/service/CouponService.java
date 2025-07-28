@@ -2,7 +2,6 @@ package com.ssafy.daily.reward.service;
 
 import com.ssafy.daily.alarm.service.AlarmService;
 import com.ssafy.daily.common.Content;
-import com.ssafy.daily.common.Role;
 import com.ssafy.daily.exception.AlreadyOwnedException;
 import com.ssafy.daily.exception.MyNotFoundException;
 import com.ssafy.daily.reward.dto.*;
@@ -103,7 +102,7 @@ public class CouponService {
 
         shellService.saveShellLog(member, -coupon.getPrice(), Content.COUPON);
 
-        alarmService.sendNotification(member.getName(), String.valueOf(coupon.getId()), userDetails.getFamily().getId(), Role.PARENT, "쿠폰", member.getName() + " - 쿠폰을 구매했어요");
+//        alarmService.sendNotification(member.getName(), String.valueOf(coupon.getId()), userDetails.getFamily().getId(), Role.PARENT, "쿠폰", member.getName() + " - 쿠폰을 구매했어요");
         return shellService.getUserShell(member.getId());
     }
 
