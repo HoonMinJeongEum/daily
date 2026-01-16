@@ -1,20 +1,30 @@
-import { sleep } from 'k6';
-import { Trend, Rate } from 'k6/metrics';
-import { loginGetToken, selectProfile } from './auth.js';
-import { addCoupon, deleteCoupon, buyCoupon, useCoupon, getCoupons, getCouponsChild, getCouponsUser, insertCoupons, insertAndBuyCoupons } from './apis.js';
+import { sleep } from "k6";
+import { Trend, Rate } from "k6/metrics";
+import { loginGetToken, selectProfile } from "./auth.js";
+import {
+  addCoupon,
+  deleteCoupon,
+  buyCoupon,
+  useCoupon,
+  getCoupons,
+  getCouponsChild,
+  getCouponsUser,
+  insertCoupons,
+  insertAndBuyCoupons,
+} from "./apis.js";
 
 export const options = {
   vus: Number(__ENV.VUS),
-  duration: '1m',
-  setupTimeout: '5m',
+  duration: "1m",
+  setupTimeout: "5m",
   thresholds: {
-    http_req_failed: ['rate<0.01'],
-    http_req_duration: ['p(95)<500'],  
+    http_req_failed: ["rate<0.01"],
+    http_req_duration: ["p(95)<500"],
   },
 };
 
-const targetTrend = new Trend('target_duration');
-const targetOK    = new Rate('target_ok');
+const targetTrend = new Trend("target_duration");
+const targetOK = new Rate("target_ok");
 
 export function setup() {
   let token = loginGetToken();
@@ -28,20 +38,19 @@ export function setup() {
 
   const couponIds = insertCouponSetup(profileToken);
 
-  return {profileTokens, couponIds};
+  return { profileTokens, couponIds };
 }
 
 export default function (data) {
-  const {profileTokens, couponIds} = data;
-
+  const { profileTokens, couponIds } = data;
 
   const total = couponIds.length;
-  const vus   = Number(__ENV.VUS);
+  const vus = Number(__ENV.VUS);
   const slice = Math.floor(total / vus) || 1;
-  const start = ( __VU - 1 ) * slice;
-  const end   = __VU === vus ? total : start + slice;
-  
-  if (start >= total) return; 
+  const start = (__VU - 1) * slice;
+  const end = __VU === vus ? total : start + slice;
+
+  if (start >= total) return;
 
   const idxInSlice = start + (__ITER % Math.max(1, end - start));
   const id = couponIds[idxInSlice];
@@ -60,7 +69,7 @@ export default function (data) {
 //   let token = loginGetToken();
 //   let profileToken = selectProfile(token, 1);
 //   return { token, profileToken };
-  
+
 //   // const couponIds = insertCouponSetup(token);
 //   // const couponIds = insertAndBuyCouponSetup(profileToken);
 //   // return { token, profileToken, couponIds };
@@ -82,14 +91,14 @@ export default function (data) {
 //   // const slice = Math.floor(total / vus) || 1;
 //   // const start = ( __VU - 1 ) * slice;
 //   // const end   = __VU === vus ? total : start + slice;
-  
-//   // if (start >= total) return; 
+
+//   // if (start >= total) return;
 
 //   // const idxInSlice = start + (__ITER % Math.max(1, end - start));
 //   // const id = couponIds[idxInSlice];
 
 //   // const res = deleteCoupon(token, id);
-  
+
 //   // const res = useCoupon(profileToken, {earnedCouponId: id});
 
 //   targetOK.add(res.status >= 200 && res.status < 300);
