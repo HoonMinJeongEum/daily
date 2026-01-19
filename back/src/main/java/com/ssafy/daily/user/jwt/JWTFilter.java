@@ -56,24 +56,36 @@ public class JWTFilter extends OncePerRequestFilter {
 
         String username = jwtUtil.getUsername(accessToken);
         int memberId = jwtUtil.getMemberId(accessToken);
-        Family family = familyRepository.findByUsername(username);
-        if (family == null) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            return;
-        }
+        int familyId = jwtUtil.getFamilyId(accessToken);
+//        Family family = familyRepository.findByUsername(username);
+        Family family = Family.builder()
+                .id(familyId)
+                .username(username)
+                .build();
+
+//        if (family == null) {
+//            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+//            return;
+//        }
 
         CustomUserDetails customUserDetails;
         if (memberId == 0) {
             customUserDetails = new CustomUserDetails(family, null);
         } else {
-            Member member = memberRepository.findById(memberId).orElse(null);
+//            Member member = memberRepository.findById(memberId).orElse(null);
+//
+//            if (member != null) {
+//                customUserDetails = new CustomUserDetails(family, member);
+//            } else {
+//                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+//                return;
+//            }
+            Member member = Member.builder()
+                    .id(memberId)
+                    .family(family)
+                    .build();
 
-            if (member != null) {
-                customUserDetails = new CustomUserDetails(family, member);
-            } else {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                return;
-            }
+            customUserDetails = new CustomUserDetails(family, member);
         }
         Authentication authToken = new UsernamePasswordAuthenticationToken(customUserDetails, null, customUserDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authToken);
