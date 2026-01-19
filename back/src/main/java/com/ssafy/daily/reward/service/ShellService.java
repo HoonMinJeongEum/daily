@@ -17,8 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -34,25 +32,15 @@ public class ShellService {
     public List<ChildShellResponse> getChildShells(CustomUserDetails userDetails) {
         int familyId = userDetails.getFamily().getId();
 
-        return memberRepository.findByFamilyId(familyId).stream()
-                .map(member -> {
-                    int totalShellCount = Optional.ofNullable(shellRepository.findTotalStockByMemberId(member.getId()))
-                            .orElse(0);
-                    return new ChildShellResponse(member, totalShellCount);
-                })
-                .collect(Collectors.toList());
+        return memberRepository.findChildShellsByFamilyId(familyId);
     }
 
     /**
      * 사용자 소유 조개 개수 반환
      */
     public int getUserShell(int memberId) {
-        Integer totalStock = shellRepository.findTotalStockByMemberId(memberId);
-        return totalStock != null ? totalStock : 0;
+        return validateMember(memberId).getShell();
     }
-//    public int getUserShell(int memberId) {
-//        return validateMember(memberId).getShell();
-//    }
 
     /**
      * Shell 로그 저장

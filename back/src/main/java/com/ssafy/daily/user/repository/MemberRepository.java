@@ -1,6 +1,6 @@
 package com.ssafy.daily.user.repository;
 
-import com.ssafy.daily.reward.entity.Coupon;
+import com.ssafy.daily.reward.dto.ChildShellResponse;
 import com.ssafy.daily.user.entity.Member;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,7 +20,7 @@ public interface MemberRepository extends JpaRepository<Member, Integer> {
     boolean existsByFamilyIdAndName(int familyId, String name);
     Member findByFamilyIdAndName(int familyId, String name);
 
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Query("""
       update Member m
          set m.shell = m.shell + :delta
@@ -28,6 +28,10 @@ public interface MemberRepository extends JpaRepository<Member, Integer> {
          and m.shell + :delta >= 0
     """)
     int updateShell(@Param("id") long id, @Param("delta") int delta);
+
+    @Query("SELECT new com.ssafy.daily.reward.dto.ChildShellResponse(m.id, m.name, m.shell) " +
+            "FROM Member m WHERE m.family.id = :familyId")
+    List<ChildShellResponse> findChildShellsByFamilyId(@Param("familyId") int familyId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select m from Member m where m.id = :id")
