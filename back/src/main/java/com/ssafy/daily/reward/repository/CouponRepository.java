@@ -17,9 +17,6 @@ import java.util.Optional;
 public interface CouponRepository extends JpaRepository<Coupon, Long> {
     List<Coupon> findByPurchasedAtIsNullAndFamilyId(int familyId);
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    Optional<Coupon> findById(Long id);
-
     @Modifying
     @Query("""
         update Coupon c

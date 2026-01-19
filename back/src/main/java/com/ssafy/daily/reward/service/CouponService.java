@@ -111,17 +111,19 @@ public class CouponService {
         Coupon coupon = couponRepository.findById(request.getCouponId())
                 .orElseThrow(() -> new MyNotFoundException("해당 쿠폰을 찾을 수 없습니다."));
 
-        coupon.buy(LocalDateTime.now());
+        int updated = memberRepository.updateShell(member.getId(), -coupon.getPrice());
+
+        if (updated == 0) throw new InsufficientFundsException("재화가 부족합니다.");
+
+        int purchased  = couponRepository.buyCoupon(coupon.getId());
+
+        if (purchased == 0) throw new AlreadyOwnedException("이미 구매한 쿠폰입니다.");
 
         EarnedCoupon earnedCoupon = EarnedCoupon.builder()
                 .coupon(coupon)
                 .member(member)
                 .build();
         earnedCouponRepository.save(earnedCoupon);
-
-        int updated = memberRepository.updateShell(member.getId(), -coupon.getPrice());
-
-        if (updated == 0) throw new InsufficientFundsException("재화가 부족합니다.");
 
         member.updateShell(-coupon.getPrice());
         shellService.saveShellLog(member, -coupon.getPrice(), Content.COUPON);
