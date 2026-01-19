@@ -44,4 +44,8 @@ public class Member {
     public void updateImg(String img){
         this.img = img;
     }
+
+    public void updateShell(int shell){
+        this.shell += shell;
+    }
 }

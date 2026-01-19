@@ -3,6 +3,7 @@ package com.ssafy.daily.reward.service;
 import com.ssafy.daily.alarm.service.AlarmService;
 import com.ssafy.daily.common.Content;
 import com.ssafy.daily.exception.AlreadyOwnedException;
+import com.ssafy.daily.exception.InsufficientFundsException;
 import com.ssafy.daily.exception.MyNotFoundException;
 import com.ssafy.daily.reward.dto.*;
 import com.ssafy.daily.reward.entity.Coupon;
@@ -109,7 +110,6 @@ public class CouponService {
         Member member = shellService.validateMember(userDetails.getMember().getId());
         Coupon coupon = couponRepository.findById(request.getCouponId())
                 .orElseThrow(() -> new MyNotFoundException("해당 쿠폰을 찾을 수 없습니다."));
-        shellService.validateShellBalance(member.getId(), coupon.getPrice());
 
         coupon.buy(LocalDateTime.now());
 
@@ -119,10 +119,15 @@ public class CouponService {
                 .build();
         earnedCouponRepository.save(earnedCoupon);
 
+        int updated = memberRepository.updateShell(member.getId(), -coupon.getPrice());
+
+        if (updated == 0) throw new InsufficientFundsException("재화가 부족합니다.");
+
+        member.updateShell(-coupon.getPrice());
         shellService.saveShellLog(member, -coupon.getPrice(), Content.COUPON);
 
 //        alarmService.sendNotification(member.getName(), String.valueOf(coupon.getId()), userDetails.getFamily().getId(), Role.PARENT, "쿠폰", member.getName() + " - 쿠폰을 구매했어요");
-        return shellService.getUserShell(member.getId());
+        return member.getShell();
     }
 
     /**

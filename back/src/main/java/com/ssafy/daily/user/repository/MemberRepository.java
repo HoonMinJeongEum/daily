@@ -20,7 +20,7 @@ public interface MemberRepository extends JpaRepository<Member, Integer> {
     boolean existsByFamilyIdAndName(int familyId, String name);
     Member findByFamilyIdAndName(int familyId, String name);
 
-    @Modifying(clearAutomatically = true)
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
       update Member m
          set m.shell = m.shell + :delta
